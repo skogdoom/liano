@@ -133,10 +133,10 @@ Implement in order. Each milestone ends in a runnable, testable state.
 - [x] `npm test` runs
 
 **2. Swing, release, grab.** Liana and monkey sim with placeholder rendering (lines and circles). Grip slide. Excluded-liana rule.
-- [ ] Monkey swings with fixed amplitude/period regardless of arrival speed
-- [ ] Release produces the correct tangential velocity (unit tested)
-- [ ] Monkey auto-grabs the next liana on contact; cannot regrab the one just released
-- [ ] Backward release can land on the previous liana
+- [x] Monkey swings with fixed amplitude/period regardless of arrival speed
+- [x] Release produces the correct tangential velocity (unit tested)
+- [x] Monkey auto-grabs the next liana on contact; cannot regrab the one just released
+- [x] Backward release can land on the previous liana
 
 **3. World, camera, fall.** Lazy generation/culling of lianas, horizontal camera follow, fall detection, game over and restart.
 - [ ] Endless lianas in both directions as needed; entity count stays bounded

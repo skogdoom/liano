@@ -1,4 +1,5 @@
 import { GAMEOVER_INPUT_LOCK_MS } from '../config.js';
+import { World } from './world.js';
 
 export const GameState = Object.freeze({
   READY: 'READY',
@@ -7,9 +8,11 @@ export const GameState = Object.freeze({
 });
 
 // Top-level flow: READY -> PLAYING -> GAME_OVER -> PLAYING ...
-// Holds the run score and the best score for this page session.
+// Owns the current world, the run score and the best score for this page session.
+// In READY the monkey already swings on the first liana; the first Space only starts the run.
 export class Game {
   constructor() {
+    this.world = new World();
     this.state = GameState.READY;
     this.stateTime = 0;
     this.score = 0;
@@ -18,6 +21,7 @@ export class Game {
 
   step(dt) {
     this.stateTime += dt;
+    this.world.step(dt);
   }
 
   // Handles a Space press. Returns true if the press changed the game state.
@@ -26,8 +30,12 @@ export class Game {
       case GameState.READY:
         this.#startRun();
         return true;
+      case GameState.PLAYING:
+        this.world.release();
+        return false;
       case GameState.GAME_OVER:
         if (!this.canRestart()) return false;
+        this.world = new World();
         this.#startRun();
         return true;
       default:

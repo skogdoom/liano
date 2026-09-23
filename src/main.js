@@ -1,9 +1,11 @@
 import { Application, Container, Graphics, Text } from 'pixi.js';
-import { SCREEN_WIDTH, SCREEN_HEIGHT, SIM_DT, MAX_FRAME_DT } from './config.js';
+import { SCREEN_WIDTH, SCREEN_HEIGHT, SIM_DT, MAX_FRAME_DT, CAMERA_TARGET_X } from './config.js';
 import { createFixedStepLoop } from './loop.js';
 import { createInput } from './input.js';
 import { Game, GameState } from './sim/game.js';
 import { Overlays } from './render/overlays.js';
+import { LianaView } from './render/lianaView.js';
+import { MonkeyView } from './render/monkeyView.js';
 
 const app = new Application();
 await app.init({
@@ -45,6 +47,15 @@ const scene = new Graphics()
   .fill(0x16241b);
 root.addChild(scene);
 
+// World-space layer. Fixed view with the first liana at the camera target until
+// the follow camera arrives in milestone 3.
+const worldLayer = new Container();
+worldLayer.x = CAMERA_TARGET_X;
+const lianaView = new LianaView();
+const monkeyView = new MonkeyView();
+worldLayer.addChild(lianaView.view, monkeyView.view);
+root.addChild(worldLayer);
+
 const debugText = new Text({
   text: '',
   style: { fontFamily: 'monospace', fontSize: 18, fill: 0xffffff },
@@ -57,6 +68,7 @@ root.addChild(overlays.view);
 
 const game = new Game();
 const input = createInput(window);
+if (import.meta.env.DEV) window.__liano = { get game() { return game; } };
 let simSteps = 0;
 
 const loop = createFixedStepLoop({
@@ -71,7 +83,12 @@ const loop = createFixedStepLoop({
 
 app.ticker.add((ticker) => {
   loop.advance(ticker.deltaMS / 1000);
+  lianaView.update(game.world.lianas.values());
+  monkeyView.update(game.world.monkey);
   overlays.update(game);
+  const { monkey } = game.world;
   debugText.visible = game.state === GameState.PLAYING;
-  debugText.text = `${game.state}  t=${game.stateTime.toFixed(2)}s  steps=${simSteps}`;
+  debugText.text =
+    `${game.state}  t=${game.stateTime.toFixed(2)}s  steps=${simSteps}  ` +
+    `${monkey.state}${monkey.liana ? ` #${monkey.liana.index}` : ''}`;
 });

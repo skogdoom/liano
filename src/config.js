@@ -9,10 +9,12 @@ export const MAX_FRAME_DT = 0.1;
 export const ANCHOR_Y = -20;
 export const LIANA_LENGTH = 420;
 export const GRIP_RADIUS = 0.9 * LIANA_LENGTH;
+export const GRIP_SLIDE_TIME = 0.15; // slide from contact point to GRIP_RADIUS
 export const LIANA_SPACING = 380;
 
 export const SWING_AMPLITUDE = (50 * Math.PI) / 180;
 export const SWING_PERIOD = 1.8;
+export const LIANA_SETTLE_DAMPING = 0.35; // damping ratio of the cosmetic sway after release
 
 export const GRAVITY = 1800;
 export const MONKEY_RADIUS = 22;
