@@ -139,8 +139,8 @@ Implement in order. Each milestone ends in a runnable, testable state.
 - [x] Backward release can land on the previous liana
 
 **3. World, camera, fall.** Lazy generation/culling of lianas, horizontal camera follow, fall detection, game over and restart.
-- [ ] Endless lianas in both directions as needed; entity count stays bounded
-- [ ] Falling below the screen ends the run; restart works after the input lock
+- [x] Endless lianas in both directions as needed; entity count stays bounded
+- [x] Falling below the screen ends the run; restart works after the input lock
 
 **4. Obstacles and scoring.** Obstacle types with hitboxes, collision, per-obstacle scoring, HUD with session best.
 - [ ] Obstacle hit ends the run (including while hanging)

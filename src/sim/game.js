@@ -22,6 +22,7 @@ export class Game {
   step(dt) {
     this.stateTime += dt;
     this.world.step(dt);
+    if (this.state === GameState.PLAYING && !this.world.alive) this.end();
   }
 
   // Handles a Space press. Returns true if the press changed the game state.

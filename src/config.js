@@ -25,4 +25,8 @@ export const MIN_RELEASE_WINDOW_MS = 90;
 export const CAMERA_TARGET_X = 0.35 * SCREEN_WIDTH;
 export const CAMERA_LERP = 8;
 
+// Entities are generated this far beyond the view on each side, and discarded
+// once they are further than this plus one liana spacing.
+export const WORLD_MARGIN = 2 * SCREEN_WIDTH;
+
 export const GAMEOVER_INPUT_LOCK_MS = 400;

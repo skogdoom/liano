@@ -1,21 +1,20 @@
-import { GRIP_RADIUS, LIANA_SPACING, MONKEY_RADIUS } from '../config.js';
+import { GRIP_RADIUS, LIANA_SPACING, MONKEY_RADIUS, SCREEN_HEIGHT } from '../config.js';
 import { closestPointOnSegment } from './physics.js';
-import { Liana } from './liana.js';
+import { updateLianas } from './generator.js';
 import { Monkey, MonkeyState } from './monkey.js';
 
-// Fixed strip of lianas for now; lazy generation and culling replace this in milestone 3.
-const FIRST_LIANA = -4;
-const LAST_LIANA = 24;
-
+// Lianas are keyed by index and generated lazily around the monkey.
 export class World {
   constructor() {
     this.lianas = new Map();
-    for (let i = FIRST_LIANA; i <= LAST_LIANA; i++) {
-      this.lianas.set(i, new Liana(i, i * LIANA_SPACING));
-    }
     this.monkey = new Monkey();
+    updateLianas(this.lianas, 0, null);
     this.monkey.grab(this.lianas.get(0), GRIP_RADIUS);
     this.events = [];
+  }
+
+  get alive() {
+    return this.monkey.state !== MonkeyState.DEAD;
   }
 
   // Space while hanging. Returns false (and does nothing) while airborne.
@@ -27,9 +26,13 @@ export class World {
   }
 
   step(dt) {
+    const { monkey } = this;
+    updateLianas(this.lianas, monkey.x, monkey.liana);
     for (const liana of this.lianas.values()) liana.step(dt);
-    this.monkey.step(dt);
-    if (this.monkey.state === MonkeyState.AIRBORNE) this.#tryGrab();
+    monkey.step(dt);
+    if (monkey.state === MonkeyState.AIRBORNE) this.#tryGrab();
+    // Only falling out of the bottom ends the run; flying above the top does not.
+    if (this.alive && monkey.y > SCREEN_HEIGHT + MONKEY_RADIUS) this.#die('fall');
   }
 
   // Returns and clears the events emitted since the last call.
@@ -37,6 +40,11 @@ export class World {
     const events = this.events;
     this.events = [];
     return events;
+  }
+
+  #die(cause) {
+    this.monkey.kill();
+    this.events.push({ type: 'death', cause });
   }
 
   #tryGrab() {

@@ -4,47 +4,22 @@ import { MonkeyState } from '../src/sim/monkey.js';
 import { LianaState } from '../src/sim/liana.js';
 import { tangentialVelocity } from '../src/sim/physics.js';
 import {
+  PERIOD_STEPS,
+  FORWARD_RELEASE_STEP,
+  BACKWARD_RELEASE_STEP,
+  stepN,
+  flyUntilGrab,
+  releaseAfter,
+  throwMonkey,
+} from './helpers.js';
+import {
   SIM_DT,
   SWING_AMPLITUDE,
-  SWING_PERIOD,
   GRIP_RADIUS,
   GRIP_SLIDE_TIME,
   LIANA_SPACING,
   ANCHOR_Y,
 } from '../src/config.js';
-
-const PERIOD_STEPS = Math.round(SWING_PERIOD / SIM_DT);
-// Release steps (sim steps after grabbing) inside the forward and backward windows.
-const FORWARD_RELEASE_STEP = 20;
-const BACKWARD_RELEASE_STEP = FORWARD_RELEASE_STEP + PERIOD_STEPS / 2;
-
-function stepN(world, n) {
-  for (let i = 0; i < n; i++) world.step(SIM_DT);
-}
-
-// Steps until a grab event, or until the monkey is far below the screen.
-function flyUntilGrab(world, maxSteps = 600) {
-  for (let i = 0; i < maxSteps; i++) {
-    world.step(SIM_DT);
-    const grab = world.takeEvents().find((e) => e.type === 'grab');
-    if (grab) return grab.liana;
-    if (world.monkey.y > 2000) return null;
-  }
-  return null;
-}
-
-function releaseAfter(world, steps) {
-  stepN(world, steps);
-  expect(world.release()).toBe(true);
-  world.takeEvents();
-}
-
-// Throws the monkey from the given state; it is excluded from nothing but liana 0.
-function throwMonkey(world, { x, y, vx, vy }) {
-  world.release();
-  world.takeEvents();
-  Object.assign(world.monkey, { x, y, vx, vy });
-}
 
 function recordSwing(world, steps) {
   const angles = [];

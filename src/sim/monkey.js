@@ -4,6 +4,7 @@ import { ballisticStep, pendulumPosition, tangentialVelocity } from './physics.j
 export const MonkeyState = Object.freeze({
   HANGING: 'HANGING',
   AIRBORNE: 'AIRBORNE',
+  DEAD: 'DEAD',
 });
 
 export class Monkey {
@@ -46,8 +47,18 @@ export class Monkey {
     return liana;
   }
 
+  // Compared by index: lianas are regenerated as new objects after being culled.
   canGrab(liana) {
-    return this.state === MonkeyState.AIRBORNE && liana !== this.excludedLiana;
+    return this.state === MonkeyState.AIRBORNE && liana.index !== this.excludedLiana?.index;
+  }
+
+  // Ends the run. The monkey keeps its velocity and falls ballistically.
+  kill() {
+    if (this.liana) {
+      this.liana.release();
+      this.liana = null;
+    }
+    this.state = MonkeyState.DEAD;
   }
 
   // Lianas must be stepped before the monkey so a hanging monkey follows the current angle.
