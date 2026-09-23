@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   releaseWindow,
   isFeasible,
+  isClearOfLianas,
   validReleaseSteps,
   longestRun,
   MIN_WINDOW_STEPS,
@@ -12,7 +13,17 @@ import { Obstacle, OBSTACLE_TYPES } from '../src/sim/obstacle.js';
 import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { mulberry32 } from '../src/sim/rng.js';
-import { LIANA_SPACING, MIN_RELEASE_WINDOW_MS, OBSTACLE_Y_RANGE, SIM_DT } from '../src/config.js';
+import {
+  ANCHOR_Y,
+  GRIP_RADIUS,
+  LIANA_LENGTH,
+  LIANA_SPACING,
+  MIN_RELEASE_WINDOW_MS,
+  MONKEY_RADIUS,
+  OBSTACLE_Y_RANGE,
+  SIM_DT,
+  SWING_AMPLITUDE,
+} from '../src/config.js';
 import { FORWARD_RELEASE_STEP, FALL_RELEASE_STEP, worldWith, stepN, flyUntilGrab } from './helpers.js';
 
 const windowMs = (steps) => steps * SIM_DT * 1000;
@@ -36,19 +47,23 @@ describe('release window solver', () => {
     expect(w.valid).toHaveLength(RELEASE_STEPS + 1);
   });
 
-  it('rejects obstacles across the swing and flight band', () => {
-    for (const type of OBSTACLE_TYPES) expect(isFeasible(type, 320)).toBe(false);
+  it('rejects obstacles in the middle heights, where the swings reach', () => {
+    for (const type of OBSTACLE_TYPES) {
+      const o = new Obstacle(0, type, LIANA_SPACING / 2, 250);
+      expect(isClearOfLianas(o, 0)).toBe(false);
+      expect(isFeasible(type, 250)).toBe(false);
+    }
   });
 
   it('agrees with the real world for every release step', () => {
     // Heights at the edges of the passable ranges, where the window is tight.
     const cases = [
-      ['branch', 215], ['branch', 250], ['branch', 395],
-      ['thornBush', 225], ['thornBush', 405],
-      ['rock', 240], ['rock', 385],
+      ['branch', 135], ['branch', 150], ['branch', 355],
+      ['thornBush', 170], ['thornBush', 335],
+      ['rock', 190], ['rock', 325],
     ];
     for (const [type, y] of cases) {
-      for (const c of [234, 300, 378, 420]) {
+      for (const c of [0, 150, 300, 378, 420]) {
         const obstacle = new Obstacle(0, type, LIANA_SPACING / 2, y);
         const { valid } = validReleaseSteps(obstacle, c);
         for (let k = 0; k <= RELEASE_STEPS; k++) {
@@ -82,6 +97,32 @@ describe('fair generation', () => {
       }
     }
     expect(checked).toBe(1000);
+  });
+
+  it('keeps every generated obstacle clear of the swinging lianas and hanging monkey', () => {
+    // Brute force, independent of the sector maths: sweep the rope and the monkey
+    // (hanging anywhere on it) through the full swing of both neighbouring lianas.
+    const angles = [];
+    for (let a = -SWING_AMPLITUDE; a <= SWING_AMPLITUDE + 1e-9; a += SWING_AMPLITUDE / 40) angles.push(a);
+    const seen = new Set();
+    const hits = [];
+    for (let gap = 1; gap <= 400; gap++) {
+      const o = createObstacle(77, gap);
+      const key = `${o.type}:${o.y}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      for (const lianaX of [gap * LIANA_SPACING, (gap + 1) * LIANA_SPACING]) {
+        for (const a of angles) {
+          for (let r = 0; r <= LIANA_LENGTH; r += 4) {
+            const x = lianaX + r * Math.sin(a);
+            const y = ANCHOR_Y + r * Math.cos(a);
+            if (o.hitsCircle(x, y, MONKEY_RADIUS)) hits.push({ key, lianaX, a, r });
+          }
+        }
+      }
+    }
+    expect(hits).toEqual([]);
+    expect(seen.size).toBeGreaterThan(100);
   });
 
   it('rerolls infeasible heights and falls back to a known-passable one', () => {

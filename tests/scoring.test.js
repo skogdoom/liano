@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { LIANA_SPACING, SIM_DT } from '../src/config.js';
-import { FORWARD_RELEASE_STEP, BACKWARD_RELEASE_STEP, lowRockWorld, stepN } from './helpers.js';
+import { FORWARD_RELEASE_STEP, BACKWARD_RELEASE_STEP, PERIOD_STEPS, lowRockWorld, stepN } from './helpers.js';
 
 // Releases after `steps` and flies to the next grab, returning the liana index
 // and the gaps scored on the way.
@@ -55,13 +55,17 @@ describe('scoring', () => {
     }
   });
 
-  it('does not score while swinging past the next obstacle', () => {
-    // The forward swing on liana 2 reaches past gap 2's obstacle.
+  it('does not score while swinging on a liana', () => {
     const world = lowRockWorld();
     hop(world, FORWARD_RELEASE_STEP);
     hop(world, FORWARD_RELEASE_STEP);
-    stepN(world, 60);
-    expect(world.monkey.x).toBeGreaterThan(2.5 * LIANA_SPACING + 36);
+    let maxX = -Infinity;
+    for (let i = 0; i < 2 * PERIOD_STEPS; i++) {
+      world.step(SIM_DT);
+      maxX = Math.max(maxX, world.monkey.x);
+    }
+    // The swing stays short of the next obstacle.
+    expect(maxX).toBeLessThan(2.5 * LIANA_SPACING - 36);
     expect(world.takeEvents()).toEqual([]);
     expect(world.score).toBe(1);
   });
@@ -70,7 +74,7 @@ describe('scoring', () => {
     const world = lowRockWorld();
     hop(world, FORWARD_RELEASE_STEP);
     // From liana 1, over and past gap 1's rock, below the tip of liana 2.
-    releaseAs(world, FORWARD_RELEASE_STEP, { x: 1.5 * LIANA_SPACING - 10, y: 450, vx: 300, vy: 0 });
+    releaseAs(world, FORWARD_RELEASE_STEP, { x: 1.5 * LIANA_SPACING - 10, y: 450, vx: 200, vy: 0 });
     for (let i = 0; i < 300 && world.alive; i++) world.step(SIM_DT);
     expect(world.monkey.x).toBeGreaterThan(1.5 * LIANA_SPACING + 36);
     expect(world.takeEvents()).toEqual([{ type: 'death', cause: 'fall' }]);
@@ -80,7 +84,7 @@ describe('scoring', () => {
   it('scores every gap crossed when flying over lianas above the canopy', () => {
     const world = lowRockWorld();
     hop(world, FORWARD_RELEASE_STEP);
-    releaseAs(world, FORWARD_RELEASE_STEP, { x: 1.2 * LIANA_SPACING, y: -100, vx: 900, vy: -600 });
+    releaseAs(world, FORWARD_RELEASE_STEP, { x: 1.2 * LIANA_SPACING, y: -100, vx: 700, vy: -300 });
     const events = [];
     while (world.monkey.state === MonkeyState.AIRBORNE) {
       world.step(SIM_DT);

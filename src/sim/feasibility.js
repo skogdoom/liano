@@ -1,10 +1,15 @@
 import {
   SIM_DT,
   GRAVITY,
+  ANCHOR_Y,
+  GRIP_RADIUS,
+  GRIP_SLIDE_TIME,
   LIANA_LENGTH,
   LIANA_SPACING,
+  LIANA_CLEARANCE,
   MONKEY_RADIUS,
   SCREEN_HEIGHT,
+  SWING_AMPLITUDE,
   SWING_PERIOD,
   MIN_RELEASE_WINDOW_MS,
 } from '../config.js';
@@ -13,9 +18,10 @@ import { Monkey } from './monkey.js';
 import { Obstacle } from './obstacle.js';
 import { ballisticStep, circleIntersectsSegment } from './physics.js';
 
-// Release-window solver. A gap is passable going forward when, after grabbing
-// liana i moving forward, there is a long enough run of release steps that
-// survive the swing, miss the obstacle and grab liana i + 1.
+// Release-window solver. A gap is passable going forward when its obstacle stays
+// clear of both lianas' swept areas and, after grabbing liana i moving forward,
+// there is a long enough run of release steps that miss the obstacle and grab
+// liana i + 1.
 //
 // Releases are only possible at sim steps, so windows are counted in steps since
 // the grab. Forward releases happen in the first quarter period, while the swing
@@ -23,11 +29,23 @@ import { ballisticStep, circleIntersectsSegment } from './physics.js';
 export const RELEASE_STEPS = Math.round(SWING_PERIOD / SIM_DT / 4);
 export const MIN_WINDOW_STEPS = Math.ceil(MIN_RELEASE_WINDOW_MS / (SIM_DT * 1000) - 1e-9);
 
-// The first steps after a grab depend on where the liana was caught (grip slide).
-// Forward landings catch the liana between about 234 px from the anchor and the tip;
-// every window must hold for all of them.
+// The first steps after a grab depend on where the liana was caught (grip slide);
+// every window must hold for any point along the liana. After the slide the swing
+// is the same whatever the contact point was.
 export const ARRIVAL_CONTACT_RADII = [];
-for (let c = 200; c <= LIANA_LENGTH; c += 10) ARRIVAL_CONTACT_RADII.push(c);
+for (let c = 0; c <= LIANA_LENGTH; c += 10) ARRIVAL_CONTACT_RADII.push(c);
+const SLIDE_STEPS = Math.ceil(GRIP_SLIDE_TIME / SIM_DT);
+
+// True if the obstacle keeps LIANA_CLEARANCE away from everything the lianas on both
+// sides of its gap can sweep: the rope over the full swing and the monkey hanging
+// anywhere on it. The margin also covers the rope's width and the small overshoot
+// of the cosmetic settle sway.
+export function isClearOfLianas(obstacle, leftLianaX) {
+  const minDistance = MONKEY_RADIUS + LIANA_CLEARANCE;
+  return [leftLianaX, leftLianaX + LIANA_SPACING].every(
+    (x) => obstacle.distanceToSector(x, ANCHOR_Y, LIANA_LENGTH, SWING_AMPLITUDE) > minDistance,
+  );
+}
 
 const MAX_FLIGHT_STEPS = 600;
 
@@ -46,10 +64,11 @@ export function simulateFlight(body, obstacle, target) {
   return 'timeout';
 }
 
-// For each release step k in [0, RELEASE_STEPS] after grabbing the liana at `lianaX`
-// at `contactRadius` while moving in `dir`: whether releasing then reaches the next
-// liana in that direction. Also returns the hanging position at each step.
-export function validReleaseSteps(obstacle, contactRadius, lianaX = 0, dir = 1) {
+// For each release step k in [0, lastStep] after grabbing the liana at `lianaX` at
+// `contactRadius` while moving in `dir`: whether releasing then reaches the next
+// liana in that direction. Also returns the hanging position at each step and
+// whether the monkey was still alive at `lastStep`.
+export function validReleaseSteps(obstacle, contactRadius, lianaX = 0, dir = 1, lastStep = RELEASE_STEPS) {
   const liana = new Liana(0, lianaX);
   const target = { x: lianaX + dir * LIANA_SPACING, anchorY: liana.anchorY, tipY: liana.tipY };
   const monkey = new Monkey();
@@ -59,7 +78,7 @@ export function validReleaseSteps(obstacle, contactRadius, lianaX = 0, dir = 1) 
   const valid = [];
   const positions = [];
   let alive = true;
-  for (let k = 0; k <= RELEASE_STEPS; k++) {
+  for (let k = 0; k <= lastStep; k++) {
     if (k > 0 && alive) {
       liana.step(SIM_DT);
       monkey.step(SIM_DT);
@@ -68,7 +87,7 @@ export function validReleaseSteps(obstacle, contactRadius, lianaX = 0, dir = 1) 
     positions.push({ x: monkey.x, y: monkey.y });
     valid.push(alive && simulateFlight(monkey, obstacle, target) === 'grab');
   }
-  return { valid, positions };
+  return { valid, positions, alive };
 }
 
 export function longestRun(valid) {
@@ -91,10 +110,11 @@ export function releaseWindow(type, y) {
   let result = windows.get(key);
   if (!result) {
     const obstacle = type ? new Obstacle(0, type, LIANA_SPACING / 2, y) : null;
-    let valid = null;
+    const valid = validReleaseSteps(obstacle, GRIP_RADIUS).valid;
     for (const c of ARRIVAL_CONTACT_RADII) {
-      const v = validReleaseSteps(obstacle, c).valid;
-      valid = valid ? valid.map((ok, k) => ok && v[k]) : v;
+      const slide = validReleaseSteps(obstacle, c, 0, 1, SLIDE_STEPS);
+      for (let k = 0; k <= SLIDE_STEPS; k++) valid[k] &&= slide.valid[k];
+      if (!slide.alive) valid.fill(false, SLIDE_STEPS + 1);
     }
     result = { valid, ...longestRun(valid) };
     windows.set(key, result);
@@ -102,6 +122,11 @@ export function releaseWindow(type, y) {
   return result;
 }
 
+// An obstacle of `type` at height `y` may be generated: clear of the lianas and
+// passable with a window of at least MIN_RELEASE_WINDOW_MS.
 export function isFeasible(type, y) {
-  return releaseWindow(type, y).length >= MIN_WINDOW_STEPS;
+  return (
+    isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y), 0) &&
+    releaseWindow(type, y).length >= MIN_WINDOW_STEPS
+  );
 }

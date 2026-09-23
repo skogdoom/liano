@@ -67,8 +67,9 @@ describe('obstacle collision', () => {
   });
 
   it('ends the run while hanging when the swing reaches an obstacle', () => {
-    // Where the hanging monkey's arc crosses the middle of gap 0.
-    const x = LIANA_SPACING / 2;
+    // Generated obstacles never sit on a swing (see feasibility tests), but the world
+    // still handles one that does: here on the hanging monkey's arc.
+    const x = 200;
     const y = ANCHOR_Y + Math.sqrt(GRIP_RADIUS ** 2 - x ** 2);
     const world = worldWith({ 0: new Obstacle(0, ObstacleType.ROCK, x, y) });
     const liana = world.monkey.liana;

@@ -10,20 +10,24 @@ export const ANCHOR_Y = -20;
 export const LIANA_LENGTH = 420;
 export const GRIP_RADIUS = 0.9 * LIANA_LENGTH;
 export const GRIP_SLIDE_TIME = 0.15; // slide from contact point to GRIP_RADIUS
-export const LIANA_SPACING = 380;
+// Wide enough that neighbouring swings (reach LIANA_LENGTH · sin(SWING_AMPLITUDE) ≈ 322)
+// leave the middle of each gap free for obstacles.
+export const LIANA_SPACING = 700;
 
 export const SWING_AMPLITUDE = (50 * Math.PI) / 180;
-export const SWING_PERIOD = 1.8;
+export const SWING_PERIOD = 2.6;
 export const LIANA_SETTLE_DAMPING = 0.35; // damping ratio of the cosmetic sway after release
 
-export const GRAVITY = 1800;
+export const GRAVITY = 400; // low, for long flights across the wide gaps
 export const MONKEY_RADIUS = 22;
 
-// Obstacle centre y. Outside roughly [200, 450] an obstacle never touches a forward
-// swing or flight, so it would not affect the release window at all; the middle
-// (about 255-385) is impassable and rerolled. [215, 430] keeps most generated gaps
-// narrower than the 44-step obstacle-free window.
-export const OBSTACLE_Y_RANGE = [215, 430];
+// Obstacle centre y. Obstacles must stay clear of both neighbouring lianas' swept area
+// (rope and hanging monkey), which rules out the middle heights near the swing tips.
+// Above that the monkey has to fly under the obstacle, below it over it; outside this
+// range an obstacle would not touch any forward flight.
+export const OBSTACLE_Y_RANGE = [125, 385];
+// Extra space kept between an obstacle and a liana's swept area, beyond MONKEY_RADIUS.
+export const LIANA_CLEARANCE = 6;
 // Hitbox shapes relative to the obstacle centre. Rects use their top-left corner.
 export const OBSTACLE_HITBOXES = {
   branch: [{ kind: 'rect', dx: -80, dy: -12, w: 160, h: 24 }],

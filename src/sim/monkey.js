@@ -69,7 +69,8 @@ export class Monkey {
   #updateHanging() {
     const u = GRIP_SLIDE_TIME > 0 ? Math.min(this.gripTime / GRIP_SLIDE_TIME, 1) : 1;
     const eased = 1 - (1 - u) * (1 - u);
-    this.gripRadius = this.gripFrom + (GRIP_RADIUS - this.gripFrom) * eased;
+    // Exactly GRIP_RADIUS once the slide is over, whatever the contact point was.
+    this.gripRadius = u >= 1 ? GRIP_RADIUS : this.gripFrom + (GRIP_RADIUS - this.gripFrom) * eased;
 
     const { liana } = this;
     const p = pendulumPosition(liana.x, liana.anchorY, this.gripRadius, liana.angle);

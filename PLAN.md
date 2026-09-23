@@ -18,7 +18,7 @@ A one-button browser game. A monkey swings on lianas through a jungle; pressing 
 | Grab | Automatic on contact anywhere along the liana, while airborne. The liana just released cannot be regrabbed until a different liana has been grabbed. |
 | Backward | Releasing on the backswing is allowed; the monkey may fly backward and grab the previous liana. |
 | Layout | Lianas have identical length and identical horizontal spacing. |
-| Obstacles | Static only: branch, thorn bush, rock. One per gap, horizontally centered in the gap, at a random height. |
+| Obstacles | Static only: branch, thorn bush, rock. One per gap, horizontally centered in the gap, at a random height. A liana never sweeps over an obstacle: obstacles stay clear of the area either neighbouring liana (rope and hanging monkey) can swing through. |
 | Difficulty | Constant. No ramp. |
 | Fail | Collision with an obstacle, or monkey falls below the bottom edge of the screen. Going above the top is not a fail. |
 | Scoring | +1 for an obstacle when the monkey, moving forward, grabs the liana on the far side of its gap. Swinging or flying past it without reaching that liana does not score. Each obstacle scores at most once (flying backward and forward again does not re-score). |
@@ -55,7 +55,7 @@ Keep all simulation in pure functions/classes with no Pixi imports so it can be 
 
 **Generation.** Seeded RNG (e.g. mulberry32; random seed per run, fixed seed in tests). Generate lianas and obstacles lazily ahead of the camera (≥ 2 screens), and discard those more than 2 screens behind. Liana i sits at x = i · LIANA_SPACING.
 
-**Feasibility.** Because every swing is identical (decision 1), a gap is defined only by its obstacle's type and height. Releases can only happen on sim steps, so the solver sweeps release steps rather than milliseconds, over the first quarter period after a forward grab (while the swing still moves forward). A step is valid when the monkey survives hanging until then, misses the obstacle in flight and grabs the next liana. Because the grip slide makes the first 150 ms depend on where the liana was caught, a step must be valid for every arrival radius (200 px to the tip, sampled every 10 px; forward landings measure 234–420). Accept only if the longest run of valid steps is at least MIN_RELEASE_WINDOW_MS (11 steps). Otherwise reroll the height (20 tries, then fall back to the lowest passable height). Results are memoized per (type, whole-pixel height). Implemented in `src/sim/feasibility.js`.
+**Feasibility.** Because every swing is identical (decision 1), a gap is defined only by its obstacle's type and height. Releases can only happen on sim steps, so the solver sweeps release steps rather than milliseconds, over the first quarter period after a forward grab (while the swing still moves forward). A step is valid when the monkey survives hanging until then, misses the obstacle in flight and grabs the next liana. Because the grip slide makes the first 150 ms depend on where the liana was caught, a step must be valid for every arrival radius (anchor to tip, sampled every 10 px); after the slide the swing is the same for all of them, so it is simulated once. The obstacle must also be clear of both neighbouring lianas' swept sectors by MONKEY_RADIUS + LIANA_CLEARANCE, so the monkey can never hit it while hanging. Accept only if the longest run of valid steps is at least MIN_RELEASE_WINDOW_MS (11 steps). Otherwise reroll the height (20 tries, then fall back to the lowest passable height). Results are memoized per (type, whole-pixel height). Implemented in `src/sim/feasibility.js`.
 
 ## Tunables (`src/config.js`)
 
@@ -67,12 +67,13 @@ Starting values, all expected to change during tuning.
 | ANCHOR_Y | −20 | Liana anchors just above the top edge |
 | LIANA_LENGTH | 420 | Tips hang around y = 400 |
 | GRIP_RADIUS | 0.9 × LIANA_LENGTH | |
-| LIANA_SPACING | 380 | |
+| LIANA_SPACING | 700 | Was 380. Wide enough that the swings (reach ≈ 322) leave the middle of each gap free |
 | SWING_AMPLITUDE | 50° | |
-| SWING_PERIOD | 1.8 s | |
-| GRAVITY | 1800 px/s² | |
+| SWING_PERIOD | 2.6 s | Was 1.8 s (slower swing) |
+| GRAVITY | 400 px/s² | Was 1800. Low, for ~0.9 s flights across the wide gaps |
 | MONKEY_RADIUS | 22 | Hitbox |
-| OBSTACLE_Y_RANGE | [215, 430] | Tuned from [140, 620]: outside ~[200, 450] obstacles never touch a forward swing or flight; ~255–385 is impassable and rerolled |
+| OBSTACLE_Y_RANGE | [125, 385] | Heights ~[195, 320] are rejected (the swing tips reach there). Above: fly under the obstacle; below: fly over it |
+| LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a liana's swept area, beyond MONKEY_RADIUS |
 | MIN_RELEASE_WINDOW_MS | 90 | Fairness floor |
 | CAMERA_TARGET_X | 0.35 × width | Monkey's screen position |
 | CAMERA_LERP | 8 /s | Smoothing |

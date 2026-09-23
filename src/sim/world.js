@@ -70,7 +70,7 @@ export class World {
 
   // Where the monkey would fly if released now (or where its current flight goes),
   // with the same rules as step(). For the debug overlay.
-  predictFlight(maxSteps = 240) {
+  predictFlight(maxSteps = 720) {
     const m = this.monkey;
     if (m.state === MonkeyState.DEAD) return { path: [], outcome: 'dead' };
     const excluded = m.state === MonkeyState.HANGING ? m.liana.index : m.excludedLiana?.index;

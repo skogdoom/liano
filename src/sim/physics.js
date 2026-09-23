@@ -42,6 +42,22 @@ export function circleIntersectsSegment(cx, cy, radius, ax, ay, bx, by) {
   return dx * dx + dy * dy <= radius * radius;
 }
 
+// Distance from (px, py) to a circular sector hanging from (ox, oy): radius `radius`,
+// spanning `halfAngle` either side of straight down (halfAngle ≤ 90°). 0 inside.
+export function pointSectorDistance(px, py, ox, oy, radius, halfAngle) {
+  const dx = px - ox;
+  const dy = py - oy;
+  if (Math.abs(Math.atan2(dx, dy)) <= halfAngle) return Math.max(0, Math.hypot(dx, dy) - radius);
+  // Outside the angular range the closest point lies on one of the two edges.
+  const ex = radius * Math.sin(halfAngle);
+  const ey = radius * Math.cos(halfAngle);
+  const edge = (sx) => {
+    const p = closestPointOnSegment(px, py, ox, oy, ox + sx, oy + ey);
+    return Math.hypot(px - p.x, py - p.y);
+  };
+  return Math.min(edge(ex), edge(-ex));
+}
+
 export function circleIntersectsCircle(ax, ay, ar, bx, by, br) {
   const dx = ax - bx;
   const dy = ay - by;
