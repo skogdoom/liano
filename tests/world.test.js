@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { lianaIndexRange } from '../src/sim/generator.js';
 import { LIANA_SPACING, SCREEN_WIDTH, SCREEN_HEIGHT, MONKEY_RADIUS, WORLD_MARGIN, SIM_DT } from '../src/config.js';
@@ -7,6 +6,7 @@ import {
   FORWARD_RELEASE_STEP,
   BACKWARD_RELEASE_STEP,
   FALL_RELEASE_STEP,
+  emptyWorld,
   stepN,
   flyUntilGrab,
   releaseAfter,
@@ -47,11 +47,11 @@ function chain(world, firstReleaseStep, hops) {
 
 describe('endless lianas', () => {
   it('generates lianas around the start', () => {
-    expectLianasAroundMonkey(new World());
+    expectLianasAroundMonkey(emptyWorld());
   });
 
   it('keeps generating forward with a bounded entity count', () => {
-    const world = new World();
+    const world = emptyWorld();
     const { visited, maxSize } = chain(world, FORWARD_RELEASE_STEP, 120);
     expect(visited).toEqual(Array.from({ length: 120 }, (_, k) => k + 1));
     expect(maxSize).toBeLessThanOrEqual(MAX_LIANAS);
@@ -59,7 +59,7 @@ describe('endless lianas', () => {
   });
 
   it('keeps generating backward with a bounded entity count', () => {
-    const world = new World();
+    const world = emptyWorld();
     const { visited, maxSize } = chain(world, BACKWARD_RELEASE_STEP, 60);
     expect(visited).toEqual(Array.from({ length: 60 }, (_, k) => -(k + 1)));
     expect(maxSize).toBeLessThanOrEqual(MAX_LIANAS);
@@ -67,7 +67,7 @@ describe('endless lianas', () => {
   });
 
   it('keeps the exclusion when the released liana is culled and regenerated', () => {
-    const world = new World();
+    const world = emptyWorld();
     throwMonkey(world, { x: 5, y: 200, vx: 0, vy: 0 });
     const original = world.lianas.get(0);
     world.lianas.delete(0);
@@ -80,7 +80,7 @@ describe('endless lianas', () => {
 
 describe('fall', () => {
   it('ends the run when the monkey falls below the screen', () => {
-    const world = new World();
+    const world = emptyWorld();
     releaseAfter(world, FALL_RELEASE_STEP);
     expect(flyUntilGrab(world)).toBeNull();
     expect(world.alive).toBe(false);
@@ -89,7 +89,7 @@ describe('fall', () => {
   });
 
   it('dies exactly when the centre passes SCREEN_HEIGHT + MONKEY_RADIUS', () => {
-    const world = new World();
+    const world = emptyWorld();
     throwMonkey(world, { x: LIANA_SPACING / 2, y: SCREEN_HEIGHT + MONKEY_RADIUS - 1, vx: 0, vy: 0 });
     world.step(SIM_DT);
     expect(world.alive).toBe(true);
@@ -102,7 +102,7 @@ describe('fall', () => {
   });
 
   it('does not end the run when the monkey goes above the top', () => {
-    const world = new World();
+    const world = emptyWorld();
     throwMonkey(world, { x: LIANA_SPACING / 2, y: -300, vx: 0, vy: -800 });
     stepN(world, 30);
     expect(world.monkey.y).toBeLessThan(-400);
@@ -110,7 +110,7 @@ describe('fall', () => {
   });
 
   it('ignores release and grabs once dead', () => {
-    const world = new World();
+    const world = emptyWorld();
     releaseAfter(world, FALL_RELEASE_STEP);
     flyUntilGrab(world);
     expect(world.release()).toBe(false);

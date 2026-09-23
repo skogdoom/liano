@@ -11,8 +11,10 @@ export const GameState = Object.freeze({
 // Owns the current world, the run score and the best score for this page session.
 // In READY the monkey already swings on the first liana; the first Space only starts the run.
 export class Game {
-  constructor() {
-    this.world = new World();
+  // `createWorld` can be replaced in tests.
+  constructor({ createWorld = () => new World() } = {}) {
+    this.createWorld = createWorld;
+    this.world = createWorld();
     this.state = GameState.READY;
     this.stateTime = 0;
     this.score = 0;
@@ -22,7 +24,9 @@ export class Game {
   step(dt) {
     this.stateTime += dt;
     this.world.step(dt);
-    if (this.state === GameState.PLAYING && !this.world.alive) this.end();
+    if (this.state !== GameState.PLAYING) return;
+    this.score = this.world.score;
+    if (!this.world.alive) this.end();
   }
 
   // Handles a Space press. Returns true if the press changed the game state.
@@ -36,7 +40,7 @@ export class Game {
         return false;
       case GameState.GAME_OVER:
         if (!this.canRestart()) return false;
-        this.world = new World();
+        this.world = this.createWorld();
         this.#startRun();
         return true;
       default:

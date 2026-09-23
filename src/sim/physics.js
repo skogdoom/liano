@@ -41,3 +41,17 @@ export function circleIntersectsSegment(cx, cy, radius, ax, ay, bx, by) {
   const dy = cy - p.y;
   return dx * dx + dy * dy <= radius * radius;
 }
+
+export function circleIntersectsCircle(ax, ay, ar, bx, by, br) {
+  const dx = ax - bx;
+  const dy = ay - by;
+  const r = ar + br;
+  return dx * dx + dy * dy <= r * r;
+}
+
+// Axis-aligned rect given by its top-left corner (x, y) and size.
+export function circleIntersectsRect(cx, cy, radius, x, y, w, h) {
+  const dx = cx - Math.min(Math.max(cx, x), x + w);
+  const dy = cy - Math.min(Math.max(cy, y), y + h);
+  return dx * dx + dy * dy <= radius * radius;
+}

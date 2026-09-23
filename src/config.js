@@ -19,7 +19,17 @@ export const LIANA_SETTLE_DAMPING = 0.35; // damping ratio of the cosmetic sway 
 export const GRAVITY = 1800;
 export const MONKEY_RADIUS = 22;
 
-export const OBSTACLE_Y_RANGE = [140, 620];
+export const OBSTACLE_Y_RANGE = [140, 620]; // obstacle centre y
+// Hitbox shapes relative to the obstacle centre. Rects use their top-left corner.
+export const OBSTACLE_HITBOXES = {
+  branch: [{ kind: 'rect', dx: -80, dy: -12, w: 160, h: 24 }],
+  thornBush: [
+    { kind: 'circle', dx: -26, dy: 6, r: 30 },
+    { kind: 'circle', dx: 26, dy: 6, r: 30 },
+    { kind: 'circle', dx: 0, dy: -14, r: 34 },
+  ],
+  rock: [{ kind: 'circle', dx: 0, dy: 0, r: 36 }],
+};
 export const MIN_RELEASE_WINDOW_MS = 90;
 
 export const CAMERA_TARGET_X = 0.35 * SCREEN_WIDTH;

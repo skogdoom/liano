@@ -29,7 +29,7 @@ A one-button browser game. A monkey swings on lianas through a jungle; pressing 
 1. **Grip slides to a fixed point.** After grabbing at the contact point, the monkey slides along the liana to a fixed grip radius (90% of length) over ~150 ms. This makes every swing identical, so each gap's difficulty depends only on the obstacle height, and feasibility can be precomputed. Alternative: hold where grabbed (more skill variance, harder to guarantee fairness).
 2. **Swing starts at vertical, in the direction of travel.** On grab the liana is vertical (θ = 0); the swing begins moving in the direction of the monkey's horizontal velocity: θ(t) = dir · A · sin(ω·t).
 3. **Released lianas settle** back to vertical with a damped cosmetic sway (no gameplay effect).
-4. **First gap has no obstacle** so the player learns the release timing.
+4. **First gap has no obstacle** so the player learns the release timing. The gap behind the start liana is empty too, since the title-screen swing passes over it.
 5. **Every generated gap is guaranteed passable** with a minimum human-reasonable release window (see Feasibility).
 6. **Camera is horizontal-only.** Vertical view is fixed (canopy at top, jungle floor at bottom). If the monkey goes above the top edge, show a small arrow indicator at its x.
 7. **Game flow:** first load shows a title overlay with the monkey swinging on the first liana; Space starts the run. On game over, input is locked for 400 ms, then Space starts a new run immediately.
@@ -143,9 +143,9 @@ Implement in order. Each milestone ends in a runnable, testable state.
 - [x] Falling below the screen ends the run; restart works after the input lock
 
 **4. Obstacles and scoring.** Obstacle types with hitboxes, collision, per-obstacle scoring, HUD with session best.
-- [ ] Obstacle hit ends the run (including while hanging)
-- [ ] Each obstacle scores once; backward/forward re-crossing does not re-score (unit tested)
-- [ ] Best score survives restarts, resets on page reload
+- [x] Obstacle hit ends the run (including while hanging)
+- [x] Each obstacle scores once; backward/forward re-crossing does not re-score (unit tested)
+- [x] Best score survives restarts, resets on page reload
 
 **5. Feasibility and tuning.** Release-window solver, generator rerolls, fairness tests. Tune constants.
 - [ ] Test: for 1,000 seeded gaps, every generated gap has a valid window ≥ MIN_RELEASE_WINDOW_MS

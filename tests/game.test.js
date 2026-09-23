@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Game, GameState } from '../src/sim/game.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { GAMEOVER_INPUT_LOCK_MS, SIM_DT } from '../src/config.js';
-import { FALL_RELEASE_STEP, FORWARD_RELEASE_STEP } from './helpers.js';
+import { FALL_RELEASE_STEP, FORWARD_RELEASE_STEP, emptyWorld, lowRockWorld } from './helpers.js';
 
 function stepFor(game, seconds) {
   const steps = Math.round(seconds / SIM_DT);
@@ -89,7 +89,7 @@ describe('Game state machine', () => {
   });
 
   it('falling ends the run, and Space restarts it after the input lock', () => {
-    const game = new Game();
+    const game = new Game({ createWorld: emptyWorld });
     game.press();
     stepFor(game, FALL_RELEASE_STEP * SIM_DT);
     game.press();
@@ -114,5 +114,60 @@ describe('Game state machine', () => {
     stepFor(game, 1);
     expect(game.state).toBe(GameState.PLAYING);
     expect(game.world.monkey.liana.index).toBe(1);
+  });
+
+  describe('score and best', () => {
+    function playUntilOver(game) {
+      let steps = 0;
+      while (game.state === GameState.PLAYING && steps++ < 2000) game.step(SIM_DT);
+    }
+
+    function restart(game) {
+      stepFor(game, GAMEOVER_INPUT_LOCK_MS / 1000);
+      expect(game.press()).toBe(true);
+    }
+
+    // Hops forward `hops` times, then misses.
+    function playRun(game, hops) {
+      for (let i = 0; i < hops; i++) {
+        stepFor(game, FORWARD_RELEASE_STEP * SIM_DT);
+        game.press();
+        while (game.world.monkey.state === MonkeyState.AIRBORNE) game.step(SIM_DT);
+      }
+      stepFor(game, FALL_RELEASE_STEP * SIM_DT);
+      game.press();
+      playUntilOver(game);
+      expect(game.state).toBe(GameState.GAME_OVER);
+    }
+
+    it('tracks the world score during the run', () => {
+      const game = new Game({ createWorld: lowRockWorld });
+      game.press();
+      // Flights pass gaps 1 and 2; the swing on liana 3 before missing passes gap 3.
+      playRun(game, 3);
+      expect(game.score).toBe(3);
+      expect(game.best).toBe(3);
+    });
+
+    it('keeps the best score across restarts and resets it on a new page', () => {
+      const game = new Game({ createWorld: lowRockWorld });
+      game.press();
+      playRun(game, 4);
+      expect(game.best).toBe(4);
+
+      restart(game);
+      expect(game.score).toBe(0);
+      expect(game.best).toBe(4);
+      playRun(game, 2);
+      expect(game.score).toBe(2);
+      expect(game.best).toBe(4);
+
+      restart(game);
+      playRun(game, 6);
+      expect(game.best).toBe(6);
+
+      // A page reload creates a new Game.
+      expect(new Game({ createWorld: lowRockWorld }).best).toBe(0);
+    });
   });
 });

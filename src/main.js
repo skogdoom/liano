@@ -7,6 +7,8 @@ import { Overlays } from './render/overlays.js';
 import { LianaView } from './render/lianaView.js';
 import { MonkeyView } from './render/monkeyView.js';
 import { Camera } from './render/camera.js';
+import { ObstacleViews } from './render/obstacleViews.js';
+import { Hud } from './render/hud.js';
 
 const app = new Application();
 await app.init({
@@ -52,7 +54,8 @@ root.addChild(scene);
 const worldLayer = new Container();
 const lianaView = new LianaView();
 const monkeyView = new MonkeyView();
-worldLayer.addChild(lianaView.view, monkeyView.view);
+const obstacleViews = new ObstacleViews();
+worldLayer.addChild(lianaView.view, obstacleViews.view, monkeyView.view);
 root.addChild(worldLayer);
 
 const debugText = new Text({
@@ -61,6 +64,9 @@ const debugText = new Text({
 });
 debugText.position.set(16, 56);
 root.addChild(debugText);
+
+const hud = new Hud();
+root.addChild(hud.view);
 
 const overlays = new Overlays();
 root.addChild(overlays.view);
@@ -93,6 +99,8 @@ app.ticker.add((ticker) => {
   worldLayer.x = -camera.x;
   lianaView.update(game.world.lianas.values());
   monkeyView.update(game.world.monkey);
+  obstacleViews.update(game.world.obstacles.values());
+  hud.update(game);
   overlays.update(game);
   const { monkey } = game.world;
   debugText.visible = game.state === GameState.PLAYING;

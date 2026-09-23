@@ -1,6 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { createLiana, lianaIndexRange, updateLianas } from '../src/sim/generator.js';
-import { LIANA_SPACING, SCREEN_WIDTH, CAMERA_TARGET_X, WORLD_MARGIN } from '../src/config.js';
+import {
+  createLiana,
+  createObstacle,
+  gapIndexRange,
+  lianaIndexRange,
+  updateLianas,
+  updateObstacles,
+} from '../src/sim/generator.js';
+import { mulberry32, mixSeed } from '../src/sim/rng.js';
+import { OBSTACLE_TYPES } from '../src/sim/obstacle.js';
+import { World } from '../src/sim/world.js';
+import {
+  LIANA_SPACING,
+  SCREEN_WIDTH,
+  CAMERA_TARGET_X,
+  WORLD_MARGIN,
+  OBSTACLE_Y_RANGE,
+} from '../src/config.js';
 
 describe('liana generation', () => {
   it('places liana i at i · LIANA_SPACING', () => {
@@ -58,5 +74,83 @@ describe('liana generation', () => {
     const held = lianas.get(0);
     updateLianas(lianas, 100 * SCREEN_WIDTH, held);
     expect(lianas.get(0)).toBe(held);
+  });
+});
+
+describe('rng', () => {
+  it('is deterministic and in [0, 1)', () => {
+    const a = mulberry32(42);
+    const b = mulberry32(42);
+    for (let i = 0; i < 1000; i++) {
+      const v = a();
+      expect(v).toBe(b());
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThan(1);
+    }
+  });
+
+  it('mixes seed and index into distinct seeds', () => {
+    const seeds = new Set();
+    for (let i = -500; i < 500; i++) seeds.add(mixSeed(7, i));
+    expect(seeds.size).toBe(1000);
+    expect(mixSeed(7, 3)).not.toBe(mixSeed(8, 3));
+  });
+});
+
+describe('obstacle generation', () => {
+  const SEED = 12345;
+
+  it('leaves the gaps on both sides of the start liana empty', () => {
+    expect(createObstacle(SEED, -1)).toBeNull();
+    expect(createObstacle(SEED, 0)).toBeNull();
+  });
+
+  it('puts one obstacle, horizontally centred, in every other gap', () => {
+    for (let gap = -50; gap < 300; gap++) {
+      if (gap === -1 || gap === 0) continue;
+      const o = createObstacle(SEED, gap);
+      expect(o.gap).toBe(gap);
+      expect(o.x).toBe((gap + 0.5) * LIANA_SPACING);
+      expect(o.y).toBeGreaterThanOrEqual(OBSTACLE_Y_RANGE[0]);
+      expect(o.y).toBeLessThanOrEqual(OBSTACLE_Y_RANGE[1]);
+    }
+  });
+
+  it('uses all types, roughly evenly', () => {
+    const counts = Object.fromEntries(OBSTACLE_TYPES.map((t) => [t, 0]));
+    for (let gap = 1; gap <= 3000; gap++) counts[createObstacle(SEED, gap).type]++;
+    for (const t of OBSTACLE_TYPES) expect(counts[t]).toBeGreaterThan(800);
+  });
+
+  it('is deterministic per seed and gap, and differs between seeds', () => {
+    const same = (a, b) => a.type === b.type && a.y === b.y;
+    for (let gap = 1; gap < 50; gap++) expect(same(createObstacle(SEED, gap), createObstacle(SEED, gap))).toBe(true);
+    let differing = 0;
+    for (let gap = 1; gap < 50; gap++) if (!same(createObstacle(SEED, gap), createObstacle(SEED + 1, gap))) differing++;
+    expect(differing).toBeGreaterThan(40);
+  });
+
+  it('keeps obstacles in the gap range and culls far ones, empty gaps included', () => {
+    const obstacles = new Map();
+    const make = (gap) => createObstacle(SEED, gap);
+    updateObstacles(obstacles, 0, make);
+    expect(obstacles.has(-1)).toBe(true);
+    expect(obstacles.get(0)).toBeNull();
+
+    const far = 40 * SCREEN_WIDTH;
+    updateObstacles(obstacles, far, make);
+    const range = gapIndexRange(far);
+    expect([...obstacles.keys()].every((g) => g >= range.first && g <= range.last)).toBe(true);
+    expect(obstacles.size).toBe(range.last - range.first + 1);
+  });
+
+  it('regenerates the same obstacle in a world after it is culled', () => {
+    const world = new World({ seed: SEED });
+    const before = world.obstacles.get(3);
+    world.obstacles.delete(3);
+    world.step(1 / 120);
+    const again = world.obstacles.get(3);
+    expect(again).not.toBe(before);
+    expect({ type: again.type, x: again.x, y: again.y }).toEqual({ type: before.type, x: before.x, y: before.y });
   });
 });

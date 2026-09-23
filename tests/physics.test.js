@@ -7,6 +7,8 @@ import {
   ballisticStep,
   closestPointOnSegment,
   circleIntersectsSegment,
+  circleIntersectsCircle,
+  circleIntersectsRect,
 } from '../src/sim/physics.js';
 
 const A = 0.8;
@@ -81,5 +83,21 @@ describe('segment tests', () => {
     // Near the tip: distance to the end point, not to the infinite line.
     expect(circleIntersectsSegment(15, 115, 22, 0, 0, 0, 100)).toBe(true);
     expect(circleIntersectsSegment(15, 120, 22, 0, 0, 0, 100)).toBe(false);
+  });
+});
+
+describe('circle tests', () => {
+  it('detects circle–circle overlap, touching counts', () => {
+    expect(circleIntersectsCircle(0, 0, 10, 25, 0, 15)).toBe(true);
+    expect(circleIntersectsCircle(0, 0, 10, 25.01, 0, 15)).toBe(false);
+  });
+
+  it('detects circle–rect overlap on edges and corners', () => {
+    // Rect from (0, 0) to (100, 20).
+    expect(circleIntersectsRect(50, 10, 5, 0, 0, 100, 20)).toBe(true); // inside
+    expect(circleIntersectsRect(50, -9, 10, 0, 0, 100, 20)).toBe(true); // above the top edge
+    expect(circleIntersectsRect(50, -11, 10, 0, 0, 100, 20)).toBe(false);
+    expect(circleIntersectsRect(107, 27, 10, 0, 0, 100, 20)).toBe(true); // near the corner: 7√2 < 10
+    expect(circleIntersectsRect(108, 28, 10, 0, 0, 100, 20)).toBe(false); // 8√2 > 10
   });
 });
