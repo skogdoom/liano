@@ -10,6 +10,7 @@ import { Camera } from './render/camera.js';
 import { ObstacleViews } from './render/obstacleViews.js';
 import { Hud } from './render/hud.js';
 import { DebugOverlay } from './render/debugOverlay.js';
+import { Background } from './render/background.js';
 
 const app = new Application();
 await app.init({
@@ -41,25 +42,23 @@ function layout() {
 window.addEventListener('resize', layout);
 layout();
 
-// Placeholder scene: sky, canopy strip, jungle floor band.
-const scene = new Graphics()
-  .rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
-  .fill(0x2f6b4f)
-  .rect(0, 0, SCREEN_WIDTH, 40)
-  .fill(0x1c4430)
-  .rect(0, SCREEN_HEIGHT - 60, SCREEN_WIDTH, 60)
-  .fill(0x16241b);
-root.addChild(scene);
+// Back to front: sky and parallax layers, the world (scrolled by the camera), the
+// canopy strip and floor band, then HUD and overlays.
+const background = new Background();
+root.addChild(background.back);
 
-// World-space layer, scrolled horizontally by the camera.
 const worldLayer = new Container();
 const lianaView = new LianaView();
 const monkeyView = new MonkeyView();
 const obstacleViews = new ObstacleViews();
 const debugOverlay = new DebugOverlay();
-worldLayer.addChild(lianaView.view, obstacleViews.view, monkeyView.view, debugOverlay.worldView);
-root.addChild(worldLayer);
-root.addChild(debugOverlay.screenView);
+worldLayer.addChild(obstacleViews.view, lianaView.view, monkeyView.view);
+root.addChild(worldLayer, background.front);
+
+// The debug overlay goes over everything in the world, including the floor band.
+const debugWorldLayer = new Container();
+debugWorldLayer.addChild(debugOverlay.worldView);
+root.addChild(debugWorldLayer, debugOverlay.screenView);
 
 const hud = new Hud();
 root.addChild(hud.view);
@@ -69,7 +68,7 @@ root.addChild(overlays.view);
 
 const game = new Game();
 const input = createInput(window);
-if (import.meta.env.DEV) window.__liano = { get game() { return game; } };
+if (import.meta.env.DEV) window.__liano = { app, get game() { return game; } };
 const camera = new Camera(game.world.monkey.x);
 let cameraWorld = game.world;
 
@@ -90,12 +89,15 @@ const loop = createFixedStepLoop({
 
 app.ticker.add((ticker) => {
   if (input.consumeDebugToggle()) debugOverlay.toggle();
-  loop.advance(ticker.deltaMS / 1000);
+  const frameDt = Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
+  loop.advance(frameDt);
   worldLayer.x = -camera.x;
-  lianaView.update(game.world.lianas.values());
-  monkeyView.update(game.world.monkey);
+  debugWorldLayer.x = -camera.x;
+  background.update(camera.x);
+  lianaView.update(game.world.lianas.values(), camera.x);
+  monkeyView.update(game.world.monkey, frameDt);
   obstacleViews.update(game.world.obstacles.values());
   hud.update(game);
-  overlays.update(game);
+  overlays.update(game, camera.x);
   debugOverlay.update(game);
 });

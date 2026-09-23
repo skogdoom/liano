@@ -1,5 +1,5 @@
-import { Container, Text } from 'pixi.js';
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../config.js';
+import { Container, Graphics, Text } from 'pixi.js';
+import { SCREEN_WIDTH, SCREEN_HEIGHT, MONKEY_RADIUS } from '../config.js';
 import { GameState } from '../sim/game.js';
 
 const titleStyle = {
@@ -24,7 +24,24 @@ function centered(text, style, y) {
   return t;
 }
 
-// Placeholder title / game-over overlays. Replaced with proper art in milestone 7.
+// Arrow at the top edge, at the monkey's x, while it is above the screen.
+class OffscreenIndicator {
+  constructor() {
+    this.view = new Graphics()
+      .poly([0, 0, 11, 16, 4, 16, 4, 26, -4, 26, -4, 16, -11, 16])
+      .fill(0xf4e7c5)
+      .stroke({ width: 2, color: 0x2a1a0c, join: 'round' });
+    this.view.y = 8;
+  }
+
+  update(monkey, cameraX) {
+    this.view.visible = monkey.y < -MONKEY_RADIUS;
+    this.view.x = Math.min(Math.max(monkey.x - cameraX, 16), SCREEN_WIDTH - 16);
+  }
+}
+
+// Placeholder title / game-over overlays (proper ones come in milestone 7) and the
+// off-screen indicator.
 export class Overlays {
   constructor() {
     this.view = new Container();
@@ -39,10 +56,12 @@ export class Overlays {
     this.gameOverPrompt = centered('Press Space to play again', promptStyle, SCREEN_HEIGHT / 2 + 40);
     this.gameOver.addChild(centered('GAME OVER', titleStyle, SCREEN_HEIGHT / 2 - 60), this.gameOverPrompt);
 
-    this.view.addChild(this.title, this.gameOver);
+    this.indicator = new OffscreenIndicator();
+    this.view.addChild(this.indicator.view, this.title, this.gameOver);
   }
 
-  update(game) {
+  update(game, cameraX) {
+    this.indicator.update(game.world.monkey, cameraX);
     this.title.visible = game.state === GameState.READY;
     this.gameOver.visible = game.state === GameState.GAME_OVER;
     this.gameOverPrompt.visible = game.canRestart();
