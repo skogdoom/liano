@@ -159,6 +159,96 @@ Implement in order. Each milestone ends in a runnable, testable state.
 **7. Polish.** Title and game-over overlays with score, small death feedback (monkey tumble, brief screen shake), pause simulation on window blur.
 - [x] Full loop: title → play → die → restart with no reload
 
+## Phase 2: sound, touch devices, performance, release
+
+Four additions: synthesized sound effects, phone and iPad support (tap instead of Space), performance tuning and hardening, and a public release on GitHub Pages.
+
+### Decisions (not specified by the user — confirm or change)
+
+9. **Deploy early, release last.** The GitHub Pages pipeline comes first, so every later milestone can be tried on a real phone or iPad at a public URL. The versioned release (v1.0.0) is the last milestone.
+10. **Any pointer press counts as Space.** A tap, or a mouse click on desktop, is one press, handled by the same code as Space. One `pointerdown` is one press; extra fingers are extra presses, `pointercancel` is ignored.
+11. **Landscape only.** The game stays 16:9. On a portrait screen a "rotate your device" overlay pauses the game instead of shrinking it into a letterbox.
+12. **Sound is on by default**, starting at the first press (browsers block audio before a user gesture). `M` or an on-screen speaker button toggles mute. The mute setting lives in memory only, consistent with no persistence.
+13. **"Swish" plays once per pass through the bottom of the swing**, louder with speed, rather than as a continuous wind sound.
+14. **Reduced motion is respected:** with `prefers-reduced-motion` the death shake is off.
+
+### Sound design
+
+All sounds are synthesized with the Web Audio API at runtime; no audio files.
+
+| Event | Sim trigger | Synthesis |
+|---|---|---|
+| "Wheee" | `release` event | A sawtooth voice through two band-pass formant filters shaped like an "ee" vowel (about 300 Hz and 2300 Hz). Pitch glides up and back down over about 0.7 s with a little vibrato. |
+| "Swish" | the held liana's angle crosses zero | A burst of white noise through a band-pass filter sweeping upward, about 0.25 s, with volume scaled by swing speed. |
+| "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock low, branch mid, bush higher. |
+| "Crash" | `death` with cause `fall` | A low-passed noise burst plus a falling low sine thud, about 0.8 s. |
+
+- **Structure:** each sound is a pure "recipe" function that returns oscillators, filters and envelopes as data. These are unit-tested in Node. A thin player turns recipes into Web Audio nodes. It is the only code that touches `AudioContext`.
+- **Game events for sound:** `Game` keeps the world events it drains each step and passes them on to a per-frame consumer. The swing's zero crossing becomes a new sim event, so sounds are driven by the sim and stay testable.
+- **Pause:** the `AudioContext` is suspended with the game (window blur, hidden tab, portrait prompt) and resumed after.
+- **iOS:** Web Audio follows the ring/silent switch, so sound is muted when the phone is on silent. This is platform behaviour, noted in the README rather than worked around.
+
+### Touch and mobile
+
+- **Input:** `pointerdown` on the canvas feeds the same press queue as Space. The page sets `touch-action: none`, prevents double-tap zoom and text selection, and the viewport meta tag disables pinch zoom and uses `viewport-fit=cover`.
+- **Resume without a press:** the press that brings focus back after a pause resumes the game but is not also used as a press. That avoids an unwanted release when tapping or clicking to resume.
+- **Prompts:** say "Tap" or "Press Space" depending on the last input type used. They start from `(pointer: coarse)`.
+- **Layout:** handles orientation changes and the iOS address bar showing and hiding (`visualViewport` resize). Canvas resolution is capped at 2× device pixels, since 3× phones cost fill rate for no visible gain.
+- **Home screen app:** a web app manifest (`display: fullscreen`, landscape) and an `apple-touch-icon`. "Add to Home Screen" then gives a full-screen game without browser chrome. iPhone Safari has no Fullscreen API for web pages, so this is the only way to get full screen there.
+
+### Performance and hardening
+
+Measured at the start of this phase in headless Chromium:
+- **Per-frame work** (updates plus render submission): 1.0 ms median at full speed; 3.7 ms median and 9.5 ms worst at 4× CPU throttling.
+- **Generating a gap** whose (type, height) is not yet cached costs up to 12.4 ms of solver time in one sim step, unthrottled. On a phone that would be a visible stutter whenever a new gap appears.
+
+Performance:
+- **Precomputed windows:** compute the release-window table (3 types × each whole-pixel height) at build time and ship it as a small JSON module. Generation becomes a table lookup. A unit test checks the shipped table against the live solver, so a changed tunable fails CI until the table is rebuilt.
+- **Lianas:** redraw a liana's `Graphics` only when its angle changes. Idle lianas are static.
+- **Background:** try `cacheAsTexture` on the static background layers if the GPU is fill-limited on phones. It is kept only if it measurably helps on a device.
+- **Budget:** at 4× CPU throttling, per-frame work under 6 ms at p95 and no frame over 16 ms during generation, restarts or deaths. Then check on real devices via the Pages URL.
+
+Hardening:
+- **Renderer:** force WebGL (`preference: 'webgl'`). WebGPU support is still uneven on mobile browsers.
+- **Lost GPU context** (common when a phone backgrounds a tab): pause on `webglcontextlost` and restore on `webglcontextrestored`, or show a "tap to reload" overlay if restoring fails.
+- **Errors:** a global error handler shows a friendly "Something went wrong — tap to reload" overlay instead of a frozen canvas.
+- **Long sessions:**
+  - A soak test plays 5,000 gaps with the fairness bot. Entity counts and the event queue must stay bounded, and the heap must stay flat across restarts.
+  - Rendering must stay precise at large world x (millions of pixels): check for jitter and, if it appears, shift the world origin.
+- **Input edge cases:** Space held across a restart; taps during the game-over lock; multi-touch; a key or pointer held while the window loses focus.
+
+### Release
+
+- **Vite:** `base: '/liano/'` so the build works at `https://skogdoom.github.io/liano/`.
+- **CI** (GitHub Actions): run `npm ci`, `npm test` and `npm run build` on every PR and on pushes to `master`.
+- **Deploy:** a second job publishes `dist/` to GitHub Pages on every push to `master` (`actions/upload-pages-artifact` and `actions/deploy-pages`). This needs a one-time repository setting from the owner: Settings → Pages → Source: GitHub Actions.
+- **Release:** a README with how to play, controls and local development; a real favicon (small SVG) and page description; the version from `package.json` shown small on the title screen; tag `v1.0.0` and a GitHub release with notes.
+
+### Milestones
+
+**8. Deploy pipeline.** CI on PRs and pushes, Pages deploy on `master`, `base` path.
+- [ ] PRs show a passing test and build check
+- [ ] The game loads and plays at `https://skogdoom.github.io/liano/` (after the owner enables Pages)
+
+**9. Touch and mobile.** Pointer input, viewport and gesture handling, landscape-only overlay, input-dependent prompts, resolution cap, manifest and icon.
+- [ ] Tap starts, releases and restarts on phone and iPad (Playwright touch emulation, then real devices via the Pages URL)
+- [ ] No zoom, scroll or text selection from taps; the portrait overlay pauses the game
+- [ ] The press that resumes from pause is not also used as a press (unit tested)
+
+**10. Sound.** Recipes, player, mute toggle and button, and the swing zero-crossing event.
+- [ ] Each sound fires on its event and at most once per event (unit tested against sim events)
+- [ ] No audio before the first press; audio suspends while paused
+- [ ] Mute toggles with `M` and the on-screen button
+
+**11. Performance and hardening.** Precomputed window table, liana redraw on change, renderer and GPU-context handling, error overlay, soak test, input edge cases.
+- [ ] No sim step spends time in the solver during play (table lookup only; unit tested)
+- [ ] At 4× CPU throttling: p95 frame work under 6 ms, no frame over 16 ms during generation
+- [ ] Soak test: 5,000 gaps with bounded entities and no heap growth across 20 restarts
+- [ ] Losing the GPU context pauses and recovers (simulated with `WEBGL_lose_context`)
+
+**12. Release v1.0.0.** README, favicon and meta, version on the title screen, tag and GitHub release.
+- [ ] v1.0.0 is live on Pages and tagged, with release notes
+
 ## Out of scope
 
-Mobile/touch input, sound, persistent high scores, difficulty ramp, moving obstacles, power-ups, menus beyond title/game over.
+Persistent high scores, difficulty ramp, moving obstacles, power-ups, menus beyond title/game over, music.
