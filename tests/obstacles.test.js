@@ -2,7 +2,18 @@ import { describe, it, expect } from 'vitest';
 import { Obstacle, ObstacleType, OBSTACLE_TYPES } from '../src/sim/obstacle.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { LianaState } from '../src/sim/liana.js';
-import { LIANA_SPACING, MONKEY_RADIUS, GRIP_RADIUS, ANCHOR_Y, SIM_DT, SWING_PERIOD } from '../src/config.js';
+import {
+  LIANA_SPACING,
+  MONKEY_RADIUS,
+  GRIP_RADIUS,
+  ANCHOR_Y,
+  SIM_DT,
+  SWING_PERIOD,
+  GRAVITY,
+  SCREEN_HEIGHT,
+  DEATH_BOUNCE,
+  DEATH_POP,
+} from '../src/config.js';
 import { FORWARD_RELEASE_STEP, emptyWorld, worldWith, stepN, releaseAfter, flyUntilGrab, throwMonkey } from './helpers.js';
 
 describe('obstacle hitboxes', () => {
@@ -57,6 +68,22 @@ describe('obstacle collision', () => {
     }
     expect(events).toEqual([{ type: 'death', cause: 'obstacle' }]);
     expect(world.monkey.state).toBe(MonkeyState.DEAD);
+  });
+
+  it('bounces the monkey back and up on a hit, then lets it fall out of the screen', () => {
+    const p = midFlightPoint();
+    const world = worldWith({ 0: new Obstacle(0, ObstacleType.ROCK, p.x, p.y) });
+    releaseAfter(world, FORWARD_RELEASE_STEP);
+    let before = null;
+    while (world.alive) {
+      before = { vx: world.monkey.vx, vy: world.monkey.vy };
+      world.step(SIM_DT);
+    }
+    const vyAfterGravity = before.vy + GRAVITY * SIM_DT;
+    expect(world.monkey.vx).toBeCloseTo(-DEATH_BOUNCE * before.vx, 9);
+    expect(world.monkey.vy).toBeCloseTo(Math.min(vyAfterGravity, 0) - DEATH_POP, 9);
+    stepN(world, 600);
+    expect(world.monkey.y).toBeGreaterThan(SCREEN_HEIGHT + MONKEY_RADIUS);
   });
 
   it('does not hit the same obstacle when it is placed away from the path', () => {

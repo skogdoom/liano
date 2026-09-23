@@ -19,6 +19,8 @@ export class Game {
     this.stateTime = 0;
     this.score = 0;
     this.best = 0;
+    // Whether the run that just ended beat the previous best.
+    this.newBest = false;
   }
 
   step(dt) {
@@ -54,6 +56,7 @@ export class Game {
 
   end() {
     if (this.state !== GameState.PLAYING) return;
+    this.newBest = this.score > this.best;
     this.best = Math.max(this.best, this.score);
     this.#enter(GameState.GAME_OVER);
   }
@@ -65,6 +68,7 @@ export class Game {
 
   #startRun() {
     this.score = 0;
+    this.newBest = false;
     this.#enter(GameState.PLAYING);
   }
 

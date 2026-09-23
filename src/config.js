@@ -48,3 +48,10 @@ export const CAMERA_LERP = 8;
 export const WORLD_MARGIN = 2 * SCREEN_WIDTH;
 
 export const GAMEOVER_INPUT_LOCK_MS = 400;
+
+// Death feedback. Hitting an obstacle bounces the monkey back (fraction of its
+// horizontal speed) and pops it up (px/s) so the tumble is visible.
+export const DEATH_BOUNCE = 0.4;
+export const DEATH_POP = 260;
+export const DEATH_SHAKE_PX = 9;
+export const DEATH_SHAKE_TIME = 0.35;

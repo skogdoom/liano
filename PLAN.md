@@ -157,7 +157,7 @@ Implement in order. Each milestone ends in a runnable, testable state.
 - [ ] Stable 60 fps on a mid-range laptop (not yet checked on hardware; per-frame update + render submission measured at 1.0 ms median, 2.0 ms p95 in headless Chromium)
 
 **7. Polish.** Title and game-over overlays with score, small death feedback (monkey tumble, brief screen shake), pause simulation on window blur.
-- [ ] Full loop: title → play → die → restart with no reload
+- [x] Full loop: title → play → die → restart with no reload
 
 ## Out of scope
 

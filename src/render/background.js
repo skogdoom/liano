@@ -41,14 +41,20 @@ function wrapped(x, draw) {
   draw(x + TILE);
 }
 
+// Extends past the screen edges so the death shake never uncovers the letterbox.
+const SKY_MARGIN = 24;
+
 function sky() {
   const g = new Graphics();
   const bands = 32;
   const h = FLOOR_Y / bands;
+  const x = -SKY_MARGIN;
+  const w = SCREEN_WIDTH + 2 * SKY_MARGIN;
   for (let i = 0; i < bands; i++) {
-    g.rect(0, i * h, SCREEN_WIDTH, h + 1).fill(mixColor(SKY_TOP, SKY_BOTTOM, i / (bands - 1)));
+    const top = i === 0 ? -SKY_MARGIN : i * h;
+    g.rect(x, top, w, (i + 1) * h - top + 1).fill(mixColor(SKY_TOP, SKY_BOTTOM, i / (bands - 1)));
   }
-  return g.rect(0, FLOOR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - FLOOR_Y).fill(SKY_BOTTOM);
+  return g.rect(x, FLOOR_Y, w, SCREEN_HEIGHT - FLOOR_Y + SKY_MARGIN).fill(SKY_BOTTOM);
 }
 
 // Far: hazy tree silhouettes and canopy masses.
@@ -126,7 +132,7 @@ function canopyLayer() {
   const rand = mulberry32(404);
   const dark = 0x0f2517;
   const light = 0x1d4429;
-  ctx.rect(-TILE, 0, 3 * TILE, CANOPY_BOTTOM - 8).fill(dark);
+  ctx.rect(-TILE, -SKY_MARGIN, 3 * TILE, CANOPY_BOTTOM - 8 + SKY_MARGIN).fill(dark);
   for (let x = 0; x < TILE; x += 18 + rand() * 18) {
     const r = 10 + rand() * 14;
     const y = CANOPY_BOTTOM - 14 + rand() * 10;
@@ -147,7 +153,7 @@ function floorLayer() {
   const rand = mulberry32(505);
   const floor = 0x0a140d;
   const growth = 0x0f1e14;
-  ctx.rect(-TILE, FLOOR_Y, 3 * TILE, SCREEN_HEIGHT - FLOOR_Y).fill(floor);
+  ctx.rect(-TILE, FLOOR_Y, 3 * TILE, SCREEN_HEIGHT - FLOOR_Y + SKY_MARGIN).fill(floor);
   for (let x = 0; x < TILE; x += 10 + rand() * 16) {
     const h = 10 + rand() * 22;
     const lean = (rand() - 0.5) * 12;

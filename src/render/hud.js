@@ -1,5 +1,6 @@
 import { Text } from 'pixi.js';
 import { SCREEN_WIDTH } from '../config.js';
+import { GameState } from '../sim/game.js';
 
 // Top-right: current score and the best score of this page session.
 export class Hud {
@@ -20,6 +21,7 @@ export class Hud {
   }
 
   update(game) {
+    this.view.visible = game.state !== GameState.READY;
     // game.best is only updated when a run ends; show a best that tracks the live score.
     const text = `${game.score}  BEST ${Math.max(game.best, game.score)}`;
     if (text !== this.shown) {

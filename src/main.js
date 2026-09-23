@@ -1,8 +1,9 @@
 import { Application, Container, Graphics } from 'pixi.js';
-import { SCREEN_WIDTH, SCREEN_HEIGHT, SIM_DT, MAX_FRAME_DT } from './config.js';
+import { SCREEN_WIDTH, SCREEN_HEIGHT, SIM_DT, MAX_FRAME_DT, DEATH_SHAKE_PX, DEATH_SHAKE_TIME } from './config.js';
 import { createFixedStepLoop } from './loop.js';
 import { createInput } from './input.js';
-import { Game } from './sim/game.js';
+import { Game, GameState } from './sim/game.js';
+import { createFocusPause } from './pause.js';
 import { Overlays } from './render/overlays.js';
 import { LianaView } from './render/lianaView.js';
 import { MonkeyView } from './render/monkeyView.js';
@@ -11,6 +12,7 @@ import { ObstacleViews } from './render/obstacleViews.js';
 import { Hud } from './render/hud.js';
 import { DebugOverlay } from './render/debugOverlay.js';
 import { Background } from './render/background.js';
+import { Shake } from './render/shake.js';
 
 const app = new Application();
 await app.init({
@@ -44,8 +46,11 @@ layout();
 
 // Back to front: sky and parallax layers, the world (scrolled by the camera), the
 // canopy strip and floor band, then HUD and overlays.
+// Everything but the HUD and overlays sits in `scene`, which the death shake moves.
+const scene = new Container();
+root.addChild(scene);
 const background = new Background();
-root.addChild(background.back);
+scene.addChild(background.back);
 
 const worldLayer = new Container();
 const lianaView = new LianaView();
@@ -53,12 +58,13 @@ const monkeyView = new MonkeyView();
 const obstacleViews = new ObstacleViews();
 const debugOverlay = new DebugOverlay();
 worldLayer.addChild(obstacleViews.view, lianaView.view, monkeyView.view);
-root.addChild(worldLayer, background.front);
+scene.addChild(worldLayer, background.front);
 
 // The debug overlay goes over everything in the world, including the floor band.
 const debugWorldLayer = new Container();
 debugWorldLayer.addChild(debugOverlay.worldView);
-root.addChild(debugWorldLayer, debugOverlay.screenView);
+scene.addChild(debugWorldLayer);
+root.addChild(debugOverlay.screenView);
 
 const hud = new Hud();
 root.addChild(hud.view);
@@ -68,6 +74,9 @@ root.addChild(overlays.view);
 
 const game = new Game();
 const input = createInput(window);
+const pause = createFocusPause(window, document);
+const shake = new Shake();
+let lastState = game.state;
 if (import.meta.env.DEV) window.__liano = { app, get game() { return game; } };
 const camera = new Camera(game.world.monkey.x);
 let cameraWorld = game.world;
@@ -89,8 +98,16 @@ const loop = createFixedStepLoop({
 
 app.ticker.add((ticker) => {
   if (input.consumeDebugToggle()) debugOverlay.toggle();
-  const frameDt = Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
+  // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
+  const paused = pause.paused;
+  const frameDt = paused ? 0 : Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
   loop.advance(frameDt);
+  if (lastState === GameState.PLAYING && game.state === GameState.GAME_OVER) {
+    shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
+  }
+  lastState = game.state;
+  shake.update(frameDt);
+  scene.position.set(shake.x, shake.y);
   worldLayer.x = -camera.x;
   debugWorldLayer.x = -camera.x;
   background.update(camera.x);
@@ -98,6 +115,6 @@ app.ticker.add((ticker) => {
   monkeyView.update(game.world.monkey, frameDt);
   obstacleViews.update(game.world.obstacles.values());
   hud.update(game);
-  overlays.update(game, camera.x);
+  overlays.update(game, camera.x, { paused, dt: frameDt });
   debugOverlay.update(game);
 });

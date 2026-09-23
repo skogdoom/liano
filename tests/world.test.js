@@ -101,6 +101,15 @@ describe('fall', () => {
     expect(world.takeEvents()).toEqual([]);
   });
 
+  it('keeps the velocity on a fall death (no bounce)', () => {
+    const world = emptyWorld();
+    throwMonkey(world, { x: LIANA_SPACING / 2, y: SCREEN_HEIGHT + MONKEY_RADIUS - 1, vx: 120, vy: 200 });
+    world.step(SIM_DT);
+    expect(world.alive).toBe(false);
+    expect(world.monkey.vx).toBe(120);
+    expect(world.monkey.vy).toBeGreaterThan(200);
+  });
+
   it('does not end the run when the monkey goes above the top', () => {
     const world = emptyWorld();
     throwMonkey(world, { x: LIANA_SPACING / 2, y: -300, vx: 0, vy: -800 });

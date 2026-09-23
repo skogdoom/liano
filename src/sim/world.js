@@ -1,4 +1,13 @@
-import { GRIP_RADIUS, LIANA_SPACING, MONKEY_RADIUS, SCREEN_HEIGHT, SIM_DT, GRAVITY } from '../config.js';
+import {
+  GRIP_RADIUS,
+  LIANA_SPACING,
+  MONKEY_RADIUS,
+  SCREEN_HEIGHT,
+  SIM_DT,
+  GRAVITY,
+  DEATH_BOUNCE,
+  DEATH_POP,
+} from '../config.js';
 import { ballisticStep, closestPointOnSegment } from './physics.js';
 import { createObstacle, updateLianas, updateObstacles } from './generator.js';
 import { Monkey, MonkeyState } from './monkey.js';
@@ -64,7 +73,13 @@ export class World {
   }
 
   #die(cause) {
-    this.monkey.kill();
+    const m = this.monkey;
+    m.kill();
+    if (cause === 'obstacle') {
+      // Bounce off and pop up, then tumble down out of the screen.
+      m.vx = -DEATH_BOUNCE * m.vx;
+      m.vy = Math.min(m.vy, 0) - DEATH_POP;
+    }
     this.events.push({ type: 'death', cause });
   }
 

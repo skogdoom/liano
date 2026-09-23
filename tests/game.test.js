@@ -149,6 +149,27 @@ describe('Game state machine', () => {
       expect(game.best).toBe(2);
     });
 
+    it('flags a run that beats the previous best', () => {
+      const game = new Game({ createWorld: lowRockWorld });
+      game.press();
+      playRun(game, 3);
+      expect(game.newBest).toBe(true); // 2 > 0
+
+      restart(game);
+      expect(game.newBest).toBe(false);
+      playRun(game, 2);
+      expect(game.newBest).toBe(false); // 1 < 2
+
+      restart(game);
+      playRun(game, 3);
+      expect(game.newBest).toBe(false); // equal is not new
+
+      restart(game);
+      playRun(game, 1);
+      expect(game.score).toBe(0);
+      expect(game.newBest).toBe(false);
+    });
+
     it('keeps the best score across restarts and resets it on a new page', () => {
       const game = new Game({ createWorld: lowRockWorld });
       game.press();
