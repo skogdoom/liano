@@ -18,14 +18,14 @@ export const SWING_AMPLITUDE = (50 * Math.PI) / 180;
 export const SWING_PERIOD = 2.6;
 export const LIANA_SETTLE_DAMPING = 0.35; // damping ratio of the cosmetic sway after release
 
-export const GRAVITY = 400; // low, for long flights across the wide gaps
+export const GRAVITY = 600; // low, for long flights across the wide gaps (400 felt too floaty)
 export const MONKEY_RADIUS = 22;
 
 // Obstacle centre y. Obstacles must stay clear of both neighbouring lianas' swept area
 // (rope and hanging monkey), which rules out the middle heights near the swing tips.
 // Above that the monkey has to fly under the obstacle, below it over it; outside this
 // range an obstacle would not touch any forward flight.
-export const OBSTACLE_Y_RANGE = [125, 385];
+export const OBSTACLE_Y_RANGE = [140, 375];
 // Extra space kept between an obstacle and a liana's swept area, beyond MONKEY_RADIUS.
 export const LIANA_CLEARANCE = 6;
 // Hitbox shapes relative to the obstacle centre. Rects use their top-left corner.

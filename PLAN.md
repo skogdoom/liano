@@ -70,9 +70,9 @@ Starting values, all expected to change during tuning.
 | LIANA_SPACING | 700 | Was 380. Wide enough that the swings (reach ≈ 322) leave the middle of each gap free |
 | SWING_AMPLITUDE | 50° | |
 | SWING_PERIOD | 2.6 s | Was 1.8 s (slower swing) |
-| GRAVITY | 400 px/s² | Was 1800. Low, for ~0.9 s flights across the wide gaps |
+| GRAVITY | 600 px/s² | Was 1800. Low, for ~0.8 s flights across the wide gaps; 400 felt too floaty |
 | MONKEY_RADIUS | 22 | Hitbox |
-| OBSTACLE_Y_RANGE | [125, 385] | Heights ~[195, 320] are rejected (the swing tips reach there). Above: fly under the obstacle; below: fly over it |
+| OBSTACLE_Y_RANGE | [140, 375] | Heights ~[195, 315] are rejected (the swing tips reach there). Above: fly under the obstacle; below: fly over it |
 | LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a liana's swept area, beyond MONKEY_RADIUS |
 | MIN_RELEASE_WINDOW_MS | 90 | Fairness floor |
 | CAMERA_TARGET_X | 0.35 × width | Monkey's screen position |
