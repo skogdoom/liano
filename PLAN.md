@@ -21,7 +21,7 @@ A one-button browser game. A monkey swings on lianas through a jungle; pressing 
 | Obstacles | Static only: branch, thorn bush, rock. One per gap, horizontally centered in the gap, at a random height. |
 | Difficulty | Constant. No ramp. |
 | Fail | Collision with an obstacle, or monkey falls below the bottom edge of the screen. Going above the top is not a fail. |
-| Scoring | +1 the first time the monkey's x passes an obstacle's right edge. Each obstacle scores at most once (flying backward and forward again does not re-score). |
+| Scoring | +1 for an obstacle when the monkey, moving forward, grabs the liana on the far side of its gap. Swinging or flying past it without reaching that liana does not score. Each obstacle scores at most once (flying backward and forward again does not re-score). |
 | HUD | Top-right corner: current score and best score for this session. |
 
 ## Decisions filled in (not specified by the user — confirm or change)

@@ -43,7 +43,6 @@ export class World {
     }
     for (const liana of this.lianas.values()) liana.step(dt);
 
-    const prevX = monkey.x;
     monkey.step(dt);
     if (!this.alive) return;
 
@@ -53,7 +52,6 @@ export class World {
       return;
     }
     if (monkey.state === MonkeyState.AIRBORNE) this.#tryGrab();
-    this.#score(prevX, monkey.x);
     // Only falling out of the bottom ends the run; flying above the top does not.
     if (monkey.y > SCREEN_HEIGHT + MONKEY_RADIUS) this.#die('fall');
   }
@@ -78,15 +76,16 @@ export class World {
     return false;
   }
 
-  // +1 the first time the monkey's x moves past an obstacle's right edge.
-  #score(prevX, x) {
-    for (const obstacle of this.obstacles.values()) {
-      if (!obstacle || this.scoredGaps.has(obstacle.gap)) continue;
-      if (prevX <= obstacle.right && x > obstacle.right) {
-        this.scoredGaps.add(obstacle.gap);
-        this.score++;
-        this.events.push({ type: 'score', gap: obstacle.gap, score: this.score });
-      }
+  // Reaching liana `to` forward from liana `from` scores the obstacle in every gap
+  // between them (normally one; more if the monkey flew over lianas above the canopy).
+  #score(from, to) {
+    for (let gap = from; gap < to; gap++) {
+      if (this.scoredGaps.has(gap)) continue;
+      const obstacle = this.obstacles.has(gap) ? this.obstacles.get(gap) : this.makeObstacle(gap);
+      if (!obstacle) continue;
+      this.scoredGaps.add(gap);
+      this.score++;
+      this.events.push({ type: 'score', gap, score: this.score });
     }
   }
 
@@ -109,8 +108,10 @@ export class World {
     }
 
     if (best) {
+      const from = m.excludedLiana.index; // the liana released for this flight
       m.grab(best.liana, best.contactRadius);
       this.events.push({ type: 'grab', liana: best.liana.index });
+      this.#score(from, best.liana.index);
     }
   }
 }

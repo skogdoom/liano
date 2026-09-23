@@ -143,28 +143,28 @@ describe('Game state machine', () => {
     it('tracks the world score during the run', () => {
       const game = new Game({ createWorld: lowRockWorld });
       game.press();
-      // Flights pass gaps 1 and 2; the swing on liana 3 before missing passes gap 3.
+      // Lianas 2 and 3 are reached past gaps 1 and 2; gap 0 is empty.
       playRun(game, 3);
-      expect(game.score).toBe(3);
-      expect(game.best).toBe(3);
+      expect(game.score).toBe(2);
+      expect(game.best).toBe(2);
     });
 
     it('keeps the best score across restarts and resets it on a new page', () => {
       const game = new Game({ createWorld: lowRockWorld });
       game.press();
       playRun(game, 4);
-      expect(game.best).toBe(4);
+      expect(game.best).toBe(3);
 
       restart(game);
       expect(game.score).toBe(0);
-      expect(game.best).toBe(4);
+      expect(game.best).toBe(3);
       playRun(game, 2);
-      expect(game.score).toBe(2);
-      expect(game.best).toBe(4);
+      expect(game.score).toBe(1);
+      expect(game.best).toBe(3);
 
       restart(game);
       playRun(game, 6);
-      expect(game.best).toBe(6);
+      expect(game.best).toBe(5);
 
       // A page reload creates a new Game.
       expect(new Game({ createWorld: lowRockWorld }).best).toBe(0);

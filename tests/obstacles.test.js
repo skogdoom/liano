@@ -11,12 +11,6 @@ describe('obstacle hitboxes', () => {
     for (const type of OBSTACLE_TYPES) expect(new Obstacle(0, type, 0, 0).hitbox.length).toBeGreaterThan(0);
   });
 
-  it('puts the scoring line at the right edge of the hitbox', () => {
-    expect(new Obstacle(0, ObstacleType.BRANCH, 1000, 300).right).toBe(1080);
-    expect(new Obstacle(0, ObstacleType.ROCK, 1000, 300).right).toBe(1036);
-    expect(new Obstacle(0, ObstacleType.THORN_BUSH, 1000, 300).right).toBe(1056);
-  });
-
   it('rock is a circle', () => {
     const rock = new Obstacle(0, ObstacleType.ROCK, 0, 0);
     expect(rock.hitsCircle(36 + MONKEY_RADIUS, 0, MONKEY_RADIUS)).toBe(true);
