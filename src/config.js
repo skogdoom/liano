@@ -1,0 +1,26 @@
+// All gameplay tunables. Distances in logical pixels, times in seconds unless suffixed.
+
+export const SCREEN_WIDTH = 1280;
+export const SCREEN_HEIGHT = 720;
+
+export const SIM_DT = 1 / 120;
+export const MAX_FRAME_DT = 0.1;
+
+export const ANCHOR_Y = -20;
+export const LIANA_LENGTH = 420;
+export const GRIP_RADIUS = 0.9 * LIANA_LENGTH;
+export const LIANA_SPACING = 380;
+
+export const SWING_AMPLITUDE = (50 * Math.PI) / 180;
+export const SWING_PERIOD = 1.8;
+
+export const GRAVITY = 1800;
+export const MONKEY_RADIUS = 22;
+
+export const OBSTACLE_Y_RANGE = [140, 620];
+export const MIN_RELEASE_WINDOW_MS = 90;
+
+export const CAMERA_TARGET_X = 0.35 * SCREEN_WIDTH;
+export const CAMERA_LERP = 8;
+
+export const GAMEOVER_INPUT_LOCK_MS = 400;

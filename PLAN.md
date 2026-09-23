@@ -128,9 +128,9 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
 Implement in order. Each milestone ends in a runnable, testable state.
 
 **1. Scaffold.** Vite + Pixi setup, letterboxed scaling, fixed-step loop, state machine with placeholder overlays, input module.
-- [ ] `npm run dev` shows a 1280×720 scaled canvas
-- [ ] Space transitions READY → PLAYING; held Space does not repeat
-- [ ] `npm test` runs
+- [x] `npm run dev` shows a 1280×720 scaled canvas
+- [x] Space transitions READY → PLAYING; held Space does not repeat
+- [x] `npm test` runs
 
 **2. Swing, release, grab.** Liana and monkey sim with placeholder rendering (lines and circles). Grip slide. Excluded-liana rule.
 - [ ] Monkey swings with fixed amplitude/period regardless of arrival speed
