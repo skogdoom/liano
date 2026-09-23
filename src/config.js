@@ -19,7 +19,11 @@ export const LIANA_SETTLE_DAMPING = 0.35; // damping ratio of the cosmetic sway 
 export const GRAVITY = 1800;
 export const MONKEY_RADIUS = 22;
 
-export const OBSTACLE_Y_RANGE = [140, 620]; // obstacle centre y
+// Obstacle centre y. Outside roughly [200, 450] an obstacle never touches a forward
+// swing or flight, so it would not affect the release window at all; the middle
+// (about 255-385) is impassable and rerolled. [215, 430] keeps most generated gaps
+// narrower than the 44-step obstacle-free window.
+export const OBSTACLE_Y_RANGE = [215, 430];
 // Hitbox shapes relative to the obstacle centre. Rects use their top-left corner.
 export const OBSTACLE_HITBOXES = {
   branch: [{ kind: 'rect', dx: -80, dy: -12, w: 160, h: 24 }],

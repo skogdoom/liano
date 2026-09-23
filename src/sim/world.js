@@ -1,5 +1,5 @@
-import { GRIP_RADIUS, LIANA_SPACING, MONKEY_RADIUS, SCREEN_HEIGHT } from '../config.js';
-import { closestPointOnSegment } from './physics.js';
+import { GRIP_RADIUS, LIANA_SPACING, MONKEY_RADIUS, SCREEN_HEIGHT, SIM_DT, GRAVITY } from '../config.js';
+import { ballisticStep, closestPointOnSegment } from './physics.js';
 import { createObstacle, updateLianas, updateObstacles } from './generator.js';
 import { Monkey, MonkeyState } from './monkey.js';
 import { randomSeed } from './rng.js';
@@ -47,7 +47,7 @@ export class World {
     if (!this.alive) return;
 
     // An obstacle hit wins over a grab in the same step, and applies while hanging too.
-    if (this.#hitsObstacle()) {
+    if (this.#hitsObstacle(monkey.x, monkey.y)) {
       this.#die('obstacle');
       return;
     }
@@ -68,8 +68,25 @@ export class World {
     this.events.push({ type: 'death', cause });
   }
 
-  #hitsObstacle() {
-    const { x, y } = this.monkey;
+  // Where the monkey would fly if released now (or where its current flight goes),
+  // with the same rules as step(). For the debug overlay.
+  predictFlight(maxSteps = 240) {
+    const m = this.monkey;
+    if (m.state === MonkeyState.DEAD) return { path: [], outcome: 'dead' };
+    const excluded = m.state === MonkeyState.HANGING ? m.liana.index : m.excludedLiana?.index;
+    const body = { x: m.x, y: m.y, vx: m.vx, vy: m.vy };
+    const path = [{ x: body.x, y: body.y }];
+    for (let i = 0; i < maxSteps; i++) {
+      ballisticStep(body, SIM_DT, GRAVITY);
+      path.push({ x: body.x, y: body.y });
+      if (this.#hitsObstacle(body.x, body.y)) return { path, outcome: 'hit' };
+      if (this.#grabCandidate(body.x, body.y, excluded)) return { path, outcome: 'grab' };
+      if (body.y > SCREEN_HEIGHT + MONKEY_RADIUS) return { path, outcome: 'fall' };
+    }
+    return { path, outcome: 'none' };
+  }
+
+  #hitsObstacle(x, y) {
     for (const obstacle of this.obstacles.values()) {
       if (obstacle && obstacle.hitsCircle(x, y, MONKEY_RADIUS)) return true;
     }
@@ -89,24 +106,29 @@ export class World {
     }
   }
 
-  #tryGrab() {
-    const m = this.monkey;
-    const first = Math.ceil((m.x - MONKEY_RADIUS) / LIANA_SPACING);
-    const last = Math.floor((m.x + MONKEY_RADIUS) / LIANA_SPACING);
-
+  // Closest liana touching a monkey at (x, y), other than `excludedIndex`. Compared by
+  // index: lianas are regenerated as new objects after being culled.
+  #grabCandidate(x, y, excludedIndex) {
+    const first = Math.ceil((x - MONKEY_RADIUS) / LIANA_SPACING);
+    const last = Math.floor((x + MONKEY_RADIUS) / LIANA_SPACING);
     let best = null;
     let bestDistSq = MONKEY_RADIUS * MONKEY_RADIUS;
     for (let i = first; i <= last; i++) {
       const liana = this.lianas.get(i);
-      if (!liana || !m.canGrab(liana)) continue;
-      const p = closestPointOnSegment(m.x, m.y, liana.x, liana.anchorY, liana.x, liana.tipY);
-      const distSq = (m.x - p.x) ** 2 + (m.y - p.y) ** 2;
+      if (!liana || i === excludedIndex) continue;
+      const p = closestPointOnSegment(x, y, liana.x, liana.anchorY, liana.x, liana.tipY);
+      const distSq = (x - p.x) ** 2 + (y - p.y) ** 2;
       if (distSq <= bestDistSq) {
         best = { liana, contactRadius: p.t * liana.length };
         bestDistSq = distSq;
       }
     }
+    return best;
+  }
 
+  #tryGrab() {
+    const m = this.monkey;
+    const best = this.#grabCandidate(m.x, m.y, m.excludedLiana?.index);
     if (best) {
       const from = m.excludedLiana.index; // the liana released for this flight
       m.grab(best.liana, best.contactRadius);

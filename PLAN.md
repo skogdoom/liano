@@ -55,7 +55,7 @@ Keep all simulation in pure functions/classes with no Pixi imports so it can be 
 
 **Generation.** Seeded RNG (e.g. mulberry32; random seed per run, fixed seed in tests). Generate lianas and obstacles lazily ahead of the camera (≥ 2 screens), and discard those more than 2 screens behind. Liana i sits at x = i · LIANA_SPACING.
 
-**Feasibility.** Because every swing is identical (decision 1), a gap is defined only by its obstacle's type and height. For a candidate obstacle, sweep release times across one swing period (e.g. 1 ms steps), simulate each flight, and count the release times that reach the next liana without hitting the obstacle or falling out. Accept only if the valid window is contiguous for at least MIN_RELEASE_WINDOW_MS. Otherwise reroll the height (max N tries, then fall back to a known-safe height). Optionally precompute a lookup table of valid heights per obstacle type at startup.
+**Feasibility.** Because every swing is identical (decision 1), a gap is defined only by its obstacle's type and height. Releases can only happen on sim steps, so the solver sweeps release steps rather than milliseconds, over the first quarter period after a forward grab (while the swing still moves forward). A step is valid when the monkey survives hanging until then, misses the obstacle in flight and grabs the next liana. Because the grip slide makes the first 150 ms depend on where the liana was caught, a step must be valid for every arrival radius (200 px to the tip, sampled every 10 px; forward landings measure 234–420). Accept only if the longest run of valid steps is at least MIN_RELEASE_WINDOW_MS (11 steps). Otherwise reroll the height (20 tries, then fall back to the lowest passable height). Results are memoized per (type, whole-pixel height). Implemented in `src/sim/feasibility.js`.
 
 ## Tunables (`src/config.js`)
 
@@ -72,7 +72,7 @@ Starting values, all expected to change during tuning.
 | SWING_PERIOD | 1.8 s | |
 | GRAVITY | 1800 px/s² | |
 | MONKEY_RADIUS | 22 | Hitbox |
-| OBSTACLE_Y_RANGE | [140, 620] | Before feasibility filtering |
+| OBSTACLE_Y_RANGE | [215, 430] | Tuned from [140, 620]: outside ~[200, 450] obstacles never touch a forward swing or flight; ~255–385 is impassable and rerolled |
 | MIN_RELEASE_WINDOW_MS | 90 | Fairness floor |
 | CAMERA_TARGET_X | 0.35 × width | Monkey's screen position |
 | CAMERA_LERP | 8 /s | Smoothing |
@@ -148,8 +148,8 @@ Implement in order. Each milestone ends in a runnable, testable state.
 - [x] Best score survives restarts, resets on page reload
 
 **5. Feasibility and tuning.** Release-window solver, generator rerolls, fairness tests. Tune constants.
-- [ ] Test: for 1,000 seeded gaps, every generated gap has a valid window ≥ MIN_RELEASE_WINDOW_MS
-- [ ] Debug overlay (toggle with `D`) draws hitboxes, the predicted trajectory, and the valid release window for the current gap
+- [x] Test: for 1,000 seeded gaps, every generated gap has a valid window ≥ MIN_RELEASE_WINDOW_MS
+- [x] Debug overlay (toggle with `D`) draws hitboxes, the predicted trajectory, and the valid release window for the current gap
 
 **6. Art.** Replace placeholders with vector art, parallax background, monkey poses, liana settle sway, off-screen indicator.
 - [ ] Hitboxes still match visuals (check with debug overlay)

@@ -1,14 +1,15 @@
-import { Application, Container, Graphics, Text } from 'pixi.js';
+import { Application, Container, Graphics } from 'pixi.js';
 import { SCREEN_WIDTH, SCREEN_HEIGHT, SIM_DT, MAX_FRAME_DT } from './config.js';
 import { createFixedStepLoop } from './loop.js';
 import { createInput } from './input.js';
-import { Game, GameState } from './sim/game.js';
+import { Game } from './sim/game.js';
 import { Overlays } from './render/overlays.js';
 import { LianaView } from './render/lianaView.js';
 import { MonkeyView } from './render/monkeyView.js';
 import { Camera } from './render/camera.js';
 import { ObstacleViews } from './render/obstacleViews.js';
 import { Hud } from './render/hud.js';
+import { DebugOverlay } from './render/debugOverlay.js';
 
 const app = new Application();
 await app.init({
@@ -55,15 +56,10 @@ const worldLayer = new Container();
 const lianaView = new LianaView();
 const monkeyView = new MonkeyView();
 const obstacleViews = new ObstacleViews();
-worldLayer.addChild(lianaView.view, obstacleViews.view, monkeyView.view);
+const debugOverlay = new DebugOverlay();
+worldLayer.addChild(lianaView.view, obstacleViews.view, monkeyView.view, debugOverlay.worldView);
 root.addChild(worldLayer);
-
-const debugText = new Text({
-  text: '',
-  style: { fontFamily: 'monospace', fontSize: 18, fill: 0xffffff },
-});
-debugText.position.set(16, 56);
-root.addChild(debugText);
+root.addChild(debugOverlay.screenView);
 
 const hud = new Hud();
 root.addChild(hud.view);
@@ -74,7 +70,6 @@ root.addChild(overlays.view);
 const game = new Game();
 const input = createInput(window);
 if (import.meta.env.DEV) window.__liano = { get game() { return game; } };
-let simSteps = 0;
 const camera = new Camera(game.world.monkey.x);
 let cameraWorld = game.world;
 
@@ -90,11 +85,11 @@ const loop = createFixedStepLoop({
     }
     // Hold the camera still once the run is over.
     if (game.world.alive) camera.update(game.world.monkey.x, dt);
-    simSteps++;
   },
 });
 
 app.ticker.add((ticker) => {
+  if (input.consumeDebugToggle()) debugOverlay.toggle();
   loop.advance(ticker.deltaMS / 1000);
   worldLayer.x = -camera.x;
   lianaView.update(game.world.lianas.values());
@@ -102,9 +97,5 @@ app.ticker.add((ticker) => {
   obstacleViews.update(game.world.obstacles.values());
   hud.update(game);
   overlays.update(game);
-  const { monkey } = game.world;
-  debugText.visible = game.state === GameState.PLAYING;
-  debugText.text =
-    `${game.state}  t=${game.stateTime.toFixed(2)}s  steps=${simSteps}  ` +
-    `${monkey.state}${monkey.liana ? ` #${monkey.liana.index}` : ''}  lianas=${game.world.lianas.size}`;
+  debugOverlay.update(game);
 });

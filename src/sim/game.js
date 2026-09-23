@@ -24,9 +24,13 @@ export class Game {
   step(dt) {
     this.stateTime += dt;
     this.world.step(dt);
+    // Drain events every step so they do not pile up in any state.
+    const events = this.world.takeEvents();
     if (this.state !== GameState.PLAYING) return;
-    this.score = this.world.score;
-    if (!this.world.alive) this.end();
+    for (const event of events) {
+      if (event.type === 'score') this.score = event.score;
+      else if (event.type === 'death') this.end();
+    }
   }
 
   // Handles a Space press. Returns true if the press changed the game state.

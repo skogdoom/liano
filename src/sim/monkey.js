@@ -47,11 +47,6 @@ export class Monkey {
     return liana;
   }
 
-  // Compared by index: lianas are regenerated as new objects after being culled.
-  canGrab(liana) {
-    return this.state === MonkeyState.AIRBORNE && liana.index !== this.excludedLiana?.index;
-  }
-
   // Ends the run. The monkey keeps its velocity and falls ballistically.
   kill() {
     if (this.liana) {

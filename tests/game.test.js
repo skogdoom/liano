@@ -170,4 +170,13 @@ describe('Game state machine', () => {
       expect(new Game({ createWorld: lowRockWorld }).best).toBe(0);
     });
   });
+
+  it('drains world events every step', () => {
+    const game = new Game({ createWorld: emptyWorld });
+    game.press();
+    stepFor(game, FORWARD_RELEASE_STEP * SIM_DT);
+    game.press();
+    stepFor(game, 1);
+    expect(game.world.events).toEqual([]);
+  });
 });

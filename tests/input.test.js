@@ -50,3 +50,24 @@ describe('input', () => {
     expect(input.consumePress()).toBe(false);
   });
 });
+
+describe('debug toggle', () => {
+  it('toggles on D, ignoring repeats', () => {
+    const target = new EventTarget();
+    const input = createInput(target);
+    expect(input.consumeDebugToggle()).toBe(false);
+    keydown(target, { code: 'KeyD' });
+    keydown(target, { code: 'KeyD', repeat: true });
+    expect(input.consumeDebugToggle()).toBe(true);
+    expect(input.consumeDebugToggle()).toBe(false);
+  });
+
+  it('cancels out two presses within one frame and does not affect Space', () => {
+    const target = new EventTarget();
+    const input = createInput(target);
+    keydown(target, { code: 'KeyD' });
+    keydown(target, { code: 'KeyD' });
+    expect(input.consumeDebugToggle()).toBe(false);
+    expect(input.consumePress()).toBe(false);
+  });
+});

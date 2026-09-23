@@ -2,6 +2,7 @@ import { LIANA_SPACING, SCREEN_WIDTH, CAMERA_TARGET_X, WORLD_MARGIN, OBSTACLE_Y_
 import { Liana } from './liana.js';
 import { Obstacle, OBSTACLE_TYPES } from './obstacle.js';
 import { mixSeed, mulberry32 } from './rng.js';
+import { isFeasible } from './feasibility.js';
 
 // Gaps on both sides of the start liana stay empty: the first forward gap lets the
 // player learn the timing, and the title-screen swing passes over the one behind.
@@ -12,15 +13,40 @@ export function createLiana(index) {
   return new Liana(index, index * LIANA_SPACING);
 }
 
+const HEIGHT_TRIES = 20;
+const fallbackHeights = new Map();
+
+// Lowest-risk passable height for `type`: the first feasible one scanning up from the
+// bottom of the range.
+export function fallbackHeight(type) {
+  if (!fallbackHeights.has(type)) {
+    const [minY, maxY] = OBSTACLE_Y_RANGE;
+    let found = null;
+    for (let y = maxY; y >= minY && found === null; y--) if (isFeasible(type, y)) found = y;
+    if (found === null) throw new Error(`No passable height for ${type} in OBSTACLE_Y_RANGE`);
+    fallbackHeights.set(type, found);
+  }
+  return fallbackHeights.get(type);
+}
+
+// Random whole-pixel height with a release window of at least MIN_RELEASE_WINDOW_MS,
+// rerolled up to HEIGHT_TRIES times before falling back to a known-passable height.
+export function pickHeight(type, rand) {
+  const [minY, maxY] = OBSTACLE_Y_RANGE;
+  for (let i = 0; i < HEIGHT_TRIES; i++) {
+    const y = Math.round(minY + rand() * (maxY - minY));
+    if (isFeasible(type, y)) return y;
+  }
+  return fallbackHeight(type);
+}
+
 // Obstacle for gap i (between lianas i and i + 1), or null. Deterministic in (seed, gap),
 // so a culled gap regenerates identically.
 export function createObstacle(seed, gap) {
   if (EMPTY_GAPS.has(gap)) return null;
   const rand = mulberry32(mixSeed(seed, gap));
   const type = OBSTACLE_TYPES[Math.floor(rand() * OBSTACLE_TYPES.length)];
-  const [minY, maxY] = OBSTACLE_Y_RANGE;
-  const y = minY + rand() * (maxY - minY);
-  return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, y);
+  return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, pickHeight(type, rand));
 }
 
 // Liana indices to keep around a monkey at x. The camera keeps the monkey near
