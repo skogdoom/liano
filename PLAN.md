@@ -167,7 +167,7 @@ Four additions: synthesized sound effects, phone and iPad support (tap instead o
 
 9. **Test locally first, deploy after hardening.** Until the Pages pipeline exists, phones and iPads test against the dev server on the local network (`npm run dev:host`, then open the printed network address on the device). The pipeline follows performance and hardening, and the versioned release (v1.0.0) is last.
 10. **Any pointer press counts as Space.** A tap, or a mouse click on desktop, is one press, handled by the same code as Space. One `pointerdown` is one press; extra fingers are extra presses, `pointercancel` is ignored.
-11. **Landscape only.** The game stays 16:9. On a portrait screen a "rotate your device" overlay pauses the game instead of shrinking it into a letterbox.
+11. **Landscape only** (superseded by phase 4). The game stays 16:9. On a portrait screen a "rotate your device" overlay pauses the game instead of shrinking it into a letterbox.
 12. **Sound is on by default**, starting at the first press (browsers block audio before a user gesture). `M` or an on-screen speaker button toggles mute. The mute setting lives in memory only, consistent with no persistence.
 13. **Sound only for the two deaths.** A "swish" on each pass through the bottom of the swing and a "wheee" on release were built and then dropped at the user's request, after several versions of the "wheee" ("ooweeee", "iiii", "eeee", "ooaaooaa") did not work out.
 14. **Reduced motion is respected:** with `prefers-reduced-motion` the death shake is off.
@@ -261,7 +261,7 @@ A button and a key that put the game in full screen, on browsers that allow it.
 15. **Controls:** a fullscreen button top-left next to the speaker, and `F` on the keyboard. Both toggle. Neither counts as a press, the same as the mute button.
 16. **The whole page goes full screen** (`document.documentElement`), not the canvas. The rotate, notice and error overlays are page elements and stay visible.
 17. **Hidden where it can't work.** iPhone Safari has no Fullscreen API for pages, so the button is hidden there, and the home-screen app stays the way to get full screen. The button is also hidden when already running as the home-screen app (`display-mode: fullscreen` or `standalone`).
-18. **Landscape lock where allowed.** After entering full screen, try `screen.orientation.lock('landscape')` (Android Chrome supports it, other browsers refuse). If the lock fails, the rotate overlay still covers portrait.
+18. **No orientation lock.** Portrait play is planned (phase 4), so full screen doesn't lock to landscape. Until then, the rotate overlay covers portrait.
 19. **Leaving full screen** (Esc, a system gesture or the button) doesn't pause the game. The layout already follows resizes.
 20. **Ships as v1.1.0.**
 
@@ -274,12 +274,43 @@ A button and a key that put the game in full screen, on browsers that allow it.
 
 ### Milestone
 
-**13. Fullscreen.** Button, `F` key, state sync, landscape lock, hidden where unsupported.
+**13. Fullscreen.** Button, `F` key, state sync, hidden where unsupported.
 - [ ] The button and `F` enter and leave full screen in desktop Chrome, Firefox and Safari, in Android Chrome and on iPad. The icon follows the state, including after Esc
 - [ ] Neither the button nor `F` releases the monkey or starts a run (unit tested)
 - [ ] The button is hidden on iPhone Safari and in the home-screen app
-- [ ] The game fills the screen after entering and leaving full screen, and after rotating while in full screen. On Android, full screen locks to landscape
+- [ ] The game fills the screen after entering and leaving full screen, and after rotating while in full screen
 - [ ] v1.1.0 is live on Pages and tagged, with release notes
+
+## Phase 4: portrait mode
+
+Play with the phone or iPad held upright, instead of being asked to rotate it.
+
+### Decisions (not specified by the user — confirm or change)
+
+21. **Same game, taller frame.** The simulation, tunables and fairness guarantees stay as they are, so scores in both orientations are comparable. Portrait shows a narrower slice of the same world, and fills the extra height with canopy above and undergrowth below. Portrait-specific tunables (for example shorter gaps) would be a different game, with its own window table; they are out of scope.
+22. **Portrait shows about 1,100 px of world width** (landscape shows 1,280). While the monkey hangs, the camera holds the liana's anchor at 30 % from the left, instead of following the monkey. In flight, it eases back to following the monkey. The whole swing (the monkey reaches 290 px either side of the anchor) and the next liana 700 px ahead then stay on screen, and the view doesn't pan back and forth with each swing. Both values are tunables.
+23. **Size trade-off.** On a phone the world is drawn about two-thirds as large as in landscape on the same phone: the monkey is roughly 16 CSS px across instead of 24. On an iPad the difference is small. If real phones show it's too small to play, stop and reconsider; don't scale the monkey's art away from its hitbox.
+24. **Layout follows the aspect ratio, not the device.** Any screen taller than wide gets the portrait layout, including a narrow desktop window. Wider than tall stays 16:9 with letterbox bars as now.
+25. **Rotating mid-run doesn't pause.** The layout switches in place and the run continues, the same as a desktop window resize. The rotate overlay and the `portrait` pause reason are removed. The manifest's `orientation` becomes `any`.
+26. **Ships as v1.2.0** (after milestone 13's v1.1.0).
+
+### Design
+
+- **World versus screen:** the sim uses `SCREEN_HEIGHT` as the fall line and `SCREEN_WIDTH` for generation margins. These become world constants (`WORLD_HEIGHT` and the margin), so nothing in the sim depends on the screen shape.
+- **Layout:** a pure `layoutFor(width, height)` returns the orientation, logical view size, scale, where the 720 px world band sits, and where the HUD, the buttons and the panels go. It is unit-tested for common phone, tablet and desktop sizes. `main.js`, the camera and the views read from it instead of `SCREEN_WIDTH` and `SCREEN_HEIGHT`.
+- **Vertical space:** the world band sits low enough that the sky above it shows high flights, so the off-screen arrow is rarer. The canopy tiles repeat upward, and a dark undergrowth layer continues below the fall line, so falling still reads as falling.
+- **Background:** the parallax layers extend vertically in portrait. The pixel count is about the same as landscape, so the frame budget doesn't change; check it again on a phone.
+- **HUD and panels:** the score sits at the top; the mute and fullscreen buttons stay top-left, clear of the notch (`safe-area-inset`). The title and game-over panels go in the space below the world band, stacked, with text sized to the screen width.
+
+### Milestone
+
+**14. Portrait mode.** World/screen split, layout module, anchor-following portrait camera, extended background, HUD and panel layouts, rotate overlay removed.
+- [ ] Held upright, a phone and an iPad play a full run: start, release, die, restart (Playwright emulation, then real devices)
+- [ ] The whole swing and the next liana are on screen while the monkey hangs, in portrait on the narrowest supported phone (unit tested against the layout and camera)
+- [ ] Rotating mid-run switches layout without pausing, losing the run or dropping a press
+- [ ] Landscape looks and plays as before (screenshots compared)
+- [ ] The monkey is readable on a real phone in portrait (see decision 23)
+- [ ] v1.2.0 is live on Pages and tagged, with release notes
 
 ## Out of scope
 
