@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { wheee, bong, crash, BONG_PITCH, END_VOWELS } from '../src/audio/recipes.js';
+import { wheee, bong, crash, BONG_PITCH, WHEEE_VOWELS } from '../src/audio/recipes.js';
 
 const recipes = {
-  'wheee (ee)': wheee('ee'),
   'wheee (ih)': wheee('ih'),
+  'wheee (ee)': wheee('ee'),
   'bong (rock)': bong('rock'),
   'bong (branch)': bong('branch'),
   'bong (thornBush)': bong('thornBush'),
@@ -70,40 +70,34 @@ describe('sound recipes', () => {
     });
   }
 
-  for (const vowel of Object.keys(END_VOWELS)) {
-    it(`moves the wheee from an "oo" vowel to "${vowel}"`, () => {
+  for (const vowel of Object.keys(WHEEE_VOWELS)) {
+    it(`sings one steady "${vowel}" vowel on one pitch`, () => {
       const voice = wheee(vowel).voices[0];
-      const [f1, f2, f3] = voice.formants.map((f) => f.freq);
-      const first = (env) => env[0].v;
-      const last = (env) => env[env.length - 1].v;
-      // The second formant carries the vowel: low for "oo", high for "ee"/"ih".
-      expect(first(f2)).toBeLessThan(1000);
-      expect(last(f2)).toBeGreaterThan(1800);
-      expect(last(f3)).toBeGreaterThan(first(f3));
-      expect(last(f1)).toBeLessThan(500);
-      // The end vowel gets most of the sound.
-      expect(f2.at(-1).t).toBeLessThan(wheee(vowel).duration / 2);
+      expect(voice.source.freq).toHaveLength(1);
+      for (const f of voice.formants) {
+        expect(f.freq).toHaveLength(1);
+        expect(f.gain).toHaveLength(1);
+      }
+      // Front vowels: low first formant, high second.
+      const [f1, f2] = voice.formants.map((f) => f.freq[0].v);
+      expect(f1).toBeLessThan(500);
+      expect(f2).toBeGreaterThan(2000);
     });
   }
 
+  it('makes "ee" (teach) higher and tighter than "ih" (hit)', () => {
+    const [ih1, ih2] = wheee('ih').voices[0].formants.map((f) => f.freq[0].v);
+    const [ee1, ee2] = wheee('ee').voices[0].formants.map((f) => f.freq[0].v);
+    expect(ee1).toBeLessThan(ih1);
+    expect(ee2).toBeGreaterThan(ih2);
+  });
+
   it('keeps the buzz of the upper harmonics out (soft, not harsh)', () => {
-    for (const vowel of Object.keys(END_VOWELS)) {
+    for (const vowel of Object.keys(WHEEE_VOWELS)) {
       const voice = wheee(vowel).voices[0];
       const lowpass = voice.filters.find((f) => f.type === 'lowpass');
       expect(lowpass.freq.every((p) => p.v <= 5000)).toBe(true);
-      expect(voice.formants.every((f) => f.freq.every((p) => p.v <= 3200))).toBe(true);
     }
-  });
-
-  it('rises into the "eee", then holds one pitch to the end', () => {
-    const recipe = wheee();
-    const freq = recipe.voices[0].source.freq;
-    const eeStart = recipe.voices[0].formants[1].freq.at(-1).t; // where the vowel glide ends
-    const top = freq.at(-1).v;
-    expect(top).toBeGreaterThan(2 * freq[0].v);
-    // The pitch arrives by the time the "eee" starts and nothing changes it after.
-    expect(freq.at(-1).t).toBeLessThanOrEqual(eeStart);
-    for (const p of freq) expect(p.v).toBeLessThanOrEqual(top);
   });
 
   it('pitches the bong by obstacle type, rock lowest', () => {

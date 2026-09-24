@@ -178,7 +178,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 
 | Event | Sim trigger | Synthesis |
 |---|---|---|
-| "Ooweeee" | `release` event | A sawtooth voice, low-passed at 4 kHz so it is soft rather than harsh, through three band-pass formant filters that glide from a round "oo" (second formant about 800 Hz) through "w" into a long end vowel: "ee" as in "see" (second formant about 2300 Hz, the default) or "ih" as in "hit" (about 2000 Hz). Pitch starts around 500 Hz and rises to 1180 Hz as the end vowel begins, then holds, over about 1 s with a little vibrato. Played a little quieter than the other sounds. |
+| "Wheee" | `release` event | One long vowel sung by a sawtooth voice, low-passed at 4 kHz so it is soft rather than harsh, through three band-pass formant filters: "ih" as in "hit" (the default) or "ee" as in "teach". Steady pitch of 1180 Hz with a little vibrato, about 0.9 s. Played a little quieter than the other sounds. |
 | "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock low, branch mid, bush higher. |
 | "Crash" | `death` with cause `fall` | A low-passed noise burst plus a falling low sine thud, about 0.8 s. |
 

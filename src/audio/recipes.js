@@ -12,64 +12,40 @@
 
 const SILENT = 0.0001;
 
-// Vowel formants for a small, high voice: centre frequencies (Hz) and the level of
-// the third. The "oo" is round and dark; the end vowel is either "ee" (as in "see")
-// or the rounder, warmer "ih" (as in "hit"). A low-pass on the source keeps the
-// buzz of the upper harmonics out, so the voice sounds happy rather than harsh.
-const OO = { f1: 330, f2: 800, f3: 2400, g3: 0.25 };
-// `level` evens out loudness: the "ih" formants fall between the few harmonics of so
-// high a voice, so it needs more gain to sound as loud.
-export const END_VOWELS = {
-  ee: { f1: 290, f2: 2300, f3: 3000, g3: 0.5, level: 1 },
-  ih: { f1: 430, f2: 2000, f3: 2600, g3: 0.45, level: 2.3 },
+// A single sung vowel for a small, high voice: formant centre frequencies (Hz) and
+// the level of the third. "ih" as in "hit", or "ee" as in "teach". A low-pass on the
+// source keeps the buzz of the upper harmonics out, so it sounds soft, not harsh.
+// `level` evens out loudness between the vowels.
+export const WHEEE_VOWELS = {
+  ih: { f1: 430, f2: 2400, f3: 3000, g3: 0.45, level: 0.85 },
+  ee: { f1: 310, f2: 2700, f3: 3300, g3: 0.5, level: 1.36 },
 };
-export const WHEEE_VOWEL = 'ee';
-const EE_PITCH = 1180; // Hz, steady through the end vowel
+export const WHEEE_VOWEL = 'ih';
+const WHEEE_PITCH = 1180; // Hz, steady throughout
 const SOFTEN_ABOVE = 4000; // Hz, low-pass on the source
-const OO_END = 0.18; // the "oo" holds until here...
-const EE_START = 0.36; // ...then glides through "w" into the end vowel
 
-// A formant frequency or level held on the "oo", then gliding to the end vowel.
-function glide(from, to) {
-  return [
-    { t: 0, v: from, ramp: 'set' },
-    { t: OO_END, v: from, ramp: 'linear' },
-    { t: EE_START, v: to, ramp: 'exp' },
-  ];
-}
+const constant = (v) => [{ t: 0, v, ramp: 'set' }];
 
-// "Ooweeee": a voice starting low on "oo", sliding up through "w" into a long "eee"
-// (or "iii") held on one pitch. (Named "wheee" in the code.)
+// "Wheee": one long vowel on a steady pitch, with a little vibrato.
 export function wheee(vowel = WHEEE_VOWEL) {
-  const end = END_VOWELS[vowel];
+  const v = WHEEE_VOWELS[vowel];
   return {
     name: 'wheee',
-    duration: 1,
+    duration: 0.9,
     voices: [
       {
-        source: {
-          kind: 'osc',
-          wave: 'sawtooth',
-          // Rises with the glide and reaches the end pitch as the vowel does, then holds.
-          freq: [
-            { t: 0, v: 500, ramp: 'set' },
-            { t: OO_END, v: 560, ramp: 'linear' },
-            { t: EE_START, v: EE_PITCH, ramp: 'exp' },
-          ],
-          vibrato: { rate: 6, depth: 18 },
-        },
-        filters: [{ type: 'lowpass', q: 0.7, freq: [{ t: 0, v: SOFTEN_ABOVE, ramp: 'set' }] }],
+        source: { kind: 'osc', wave: 'sawtooth', freq: constant(WHEEE_PITCH), vibrato: { rate: 6, depth: 18 } },
+        filters: [{ type: 'lowpass', q: 0.7, freq: constant(SOFTEN_ABOVE) }],
         formants: [
-          { freq: glide(OO.f1, end.f1), q: 4, gain: glide(0.6, 0.6) },
-          { freq: glide(OO.f2, end.f2), q: 7, gain: glide(1, 1) },
-          { freq: glide(OO.f3, end.f3), q: 9, gain: glide(OO.g3, end.g3) },
+          { freq: constant(v.f1), q: 4, gain: constant(0.6) },
+          { freq: constant(v.f2), q: 7, gain: constant(1) },
+          { freq: constant(v.f3), q: 9, gain: constant(v.g3) },
         ],
         gain: [
           { t: 0, v: SILENT, ramp: 'set' },
-          { t: 0.06, v: 0.16, ramp: 'linear' },
-          { t: EE_START, v: 0.2 * end.level, ramp: 'linear' },
-          { t: 0.72, v: 0.16 * end.level, ramp: 'linear' },
-          { t: 1, v: SILENT, ramp: 'exp' },
+          { t: 0.05, v: 0.2 * v.level, ramp: 'linear' },
+          { t: 0.62, v: 0.17 * v.level, ramp: 'linear' },
+          { t: 0.9, v: SILENT, ramp: 'exp' },
         ],
       },
     ],
