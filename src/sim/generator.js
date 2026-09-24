@@ -2,7 +2,7 @@ import { LIANA_SPACING, SCREEN_WIDTH, CAMERA_TARGET_X, WORLD_MARGIN, OBSTACLE_Y_
 import { Liana } from './liana.js';
 import { Obstacle, OBSTACLE_TYPES } from './obstacle.js';
 import { mixSeed, mulberry32 } from './rng.js';
-import { isFeasible } from './feasibility.js';
+import { isPassable } from './windowTable.js';
 
 // Gaps on both sides of the start liana stay empty: the first forward gap lets the
 // player learn the timing, and the title-screen swing passes over the one behind.
@@ -22,7 +22,7 @@ export function fallbackHeight(type) {
   if (!fallbackHeights.has(type)) {
     const [minY, maxY] = OBSTACLE_Y_RANGE;
     let found = null;
-    for (let y = maxY; y >= minY && found === null; y--) if (isFeasible(type, y)) found = y;
+    for (let y = maxY; y >= minY && found === null; y--) if (isPassable(type, y)) found = y;
     if (found === null) throw new Error(`No passable height for ${type} in OBSTACLE_Y_RANGE`);
     fallbackHeights.set(type, found);
   }
@@ -35,7 +35,7 @@ export function pickHeight(type, rand) {
   const [minY, maxY] = OBSTACLE_Y_RANGE;
   for (let i = 0; i < HEIGHT_TRIES; i++) {
     const y = Math.round(minY + rand() * (maxY - minY));
-    if (isFeasible(type, y)) return y;
+    if (isPassable(type, y)) return y;
   }
   return fallbackHeight(type);
 }

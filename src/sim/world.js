@@ -56,8 +56,9 @@ export class World {
     if (!this.alive) return;
 
     // An obstacle hit wins over a grab in the same step, and applies while hanging too.
-    if (this.#hitsObstacle(monkey.x, monkey.y)) {
-      this.#die('obstacle');
+    const hit = this.#hitsObstacle(monkey.x, monkey.y);
+    if (hit) {
+      this.#die('obstacle', hit.type);
       return;
     }
     if (monkey.state === MonkeyState.AIRBORNE) this.#tryGrab();
@@ -72,7 +73,8 @@ export class World {
     return events;
   }
 
-  #die(cause) {
+  // `obstacle` is the type of obstacle hit, for cause 'obstacle'.
+  #die(cause, obstacle) {
     const m = this.monkey;
     m.kill();
     if (cause === 'obstacle') {
@@ -80,7 +82,7 @@ export class World {
       m.vx = -DEATH_BOUNCE * m.vx;
       m.vy = Math.min(m.vy, 0) - DEATH_POP;
     }
-    this.events.push({ type: 'death', cause });
+    this.events.push(obstacle ? { type: 'death', cause, obstacle } : { type: 'death', cause });
   }
 
   // Where the monkey would fly if released now (or where its current flight goes),
@@ -101,11 +103,12 @@ export class World {
     return { path, outcome: 'none' };
   }
 
+  // The obstacle a monkey at (x, y) touches, or null.
   #hitsObstacle(x, y) {
     for (const obstacle of this.obstacles.values()) {
-      if (obstacle && obstacle.hitsCircle(x, y, MONKEY_RADIUS)) return true;
+      if (obstacle && obstacle.hitsCircle(x, y, MONKEY_RADIUS)) return obstacle;
     }
-    return false;
+    return null;
   }
 
   // Reaching liana `to` forward from liana `from` scores the obstacle in every gap

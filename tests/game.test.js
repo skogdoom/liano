@@ -200,4 +200,23 @@ describe('Game state machine', () => {
     stepFor(game, 1);
     expect(game.world.events).toEqual([]);
   });
+
+  it('passes world events on for sound, and caps them when nobody reads', () => {
+    const game = new Game({ createWorld: emptyWorld });
+    game.press();
+    stepFor(game, FORWARD_RELEASE_STEP * SIM_DT);
+    game.press();
+    stepFor(game, 1);
+    const types = game.takeEvents().map((e) => e.type);
+    expect(types).toContain('release');
+    expect(types).toContain('grab');
+    expect(game.takeEvents()).toEqual([]);
+    // 40 unread hops: a release and a grab each.
+    for (let hop = 0; hop < 40; hop++) {
+      stepFor(game, FORWARD_RELEASE_STEP * SIM_DT);
+      game.press();
+      while (game.world.monkey.state === MonkeyState.AIRBORNE) game.step(SIM_DT);
+    }
+    expect(game.events.length).toBe(64);
+  });
 });
