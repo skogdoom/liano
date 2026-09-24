@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { lianaIndexRange } from '../src/sim/generator.js';
-import { LIANA_SPACING, SCREEN_WIDTH, SCREEN_HEIGHT, MONKEY_RADIUS, WORLD_MARGIN, SIM_DT } from '../src/config.js';
+import { LIANA_SPACING, SCREEN_WIDTH, SCREEN_HEIGHT, MONKEY_RADIUS, WORLD_MARGIN, SIM_DT, SWING_PERIOD } from '../src/config.js';
 import {
   FORWARD_RELEASE_STEP,
   BACKWARD_RELEASE_STEP,
@@ -127,5 +127,32 @@ describe('fall', () => {
     stepN(world, 5);
     expect(world.monkey.state).toBe(MonkeyState.DEAD);
     expect(world.takeEvents()).toEqual([]);
+  });
+});
+
+describe('swish events', () => {
+  it('fires each time the held liana passes the bottom, not at the grab', () => {
+    const world = emptyWorld();
+    const period = Math.round(SWING_PERIOD / SIM_DT);
+    const swishSteps = [];
+    for (let i = 1; i <= 2 * period; i++) {
+      world.step(SIM_DT);
+      const n = world.takeEvents().filter((e) => e.type === 'swish').length;
+      expect(n).toBeLessThanOrEqual(1);
+      if (n) swishSteps.push(i);
+    }
+    // Twice per period, half a period apart, starting half a period after the grab.
+    expect(swishSteps).toHaveLength(4);
+    expect(swishSteps[0]).toBeCloseTo(period / 2, -1);
+    for (let k = 1; k < swishSteps.length; k++) expect(swishSteps[k] - swishSteps[k - 1]).toBeCloseTo(period / 2, -1);
+  });
+
+  it('does not fire while airborne or dead', () => {
+    const world = emptyWorld();
+    releaseAfter(world, FALL_RELEASE_STEP);
+    for (let i = 0; i < 600; i++) {
+      world.step(SIM_DT);
+      expect(world.takeEvents().some((e) => e.type === 'swish')).toBe(false);
+    }
   });
 });

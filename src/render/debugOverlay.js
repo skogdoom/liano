@@ -25,7 +25,7 @@ export class DebugOverlay {
       text: '',
       style: { fontFamily: 'monospace', fontSize: 16, fill: 0xffffff, lineHeight: 20 },
     });
-    this.text.position.set(16, 52);
+    this.text.position.set(16, 96); // below the mute button
     this.screenView.addChild(this.text);
     this.visible = false;
     this.#applyVisibility();

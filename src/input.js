@@ -1,6 +1,6 @@
 // Game input: Space, or a tap/click on the game. Presses are queued and consumed by
 // the fixed-step loop, so they are applied at a sim step boundary. Key auto-repeat is
-// ignored. D toggles the debug overlay.
+// ignored. D toggles the debug overlay and M mutes.
 
 export function isFreshSpacePress(event) {
   return event.code === 'Space' && !event.repeat;
@@ -10,14 +10,20 @@ export function isFreshSpacePress(event) {
 // pointerdown. `initialType` is the input type assumed before any input: 'keyboard',
 // 'mouse' or 'touch'. `accepts()` is asked when a press happens; a press it rejects
 // (e.g. while paused) is dropped then, not when the loop gets round to it.
-export function createInput(keyTarget, pointerTarget = null, { initialType = 'keyboard', accepts = () => true } = {}) {
+// `intercept(event)` sees each pointerdown first; returning true swallows it (used by
+// on-screen buttons).
+export function createInput(
+  keyTarget,
+  pointerTarget = null,
+  { initialType = 'keyboard', accepts = () => true, intercept = () => false } = {},
+) {
   let pending = false;
-  let debugToggles = 0;
+  const toggles = { KeyD: 0, KeyM: 0 };
   let lastType = initialType;
 
   const onKeyDown = (event) => {
-    if (event.code === 'KeyD') {
-      if (!event.repeat) debugToggles++;
+    if (event.code in toggles) {
+      if (!event.repeat) toggles[event.code]++;
       return;
     }
     if (event.code !== 'Space') return;
@@ -33,7 +39,14 @@ export function createInput(keyTarget, pointerTarget = null, { initialType = 'ke
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     event.preventDefault(); // no text selection, focus changes or emulated mouse events
     lastType = event.pointerType === 'mouse' ? 'mouse' : 'touch';
+    if (intercept(event)) return;
     if (accepts()) pending = true;
+  };
+
+  const consumeToggle = (code) => {
+    const toggled = toggles[code] % 2 === 1;
+    toggles[code] = 0;
+    return toggled;
   };
 
   keyTarget.addEventListener('keydown', onKeyDown);
@@ -47,9 +60,11 @@ export function createInput(keyTarget, pointerTarget = null, { initialType = 'ke
     },
     // True if D was pressed an odd number of times since the last call.
     consumeDebugToggle() {
-      const toggled = debugToggles % 2 === 1;
-      debugToggles = 0;
-      return toggled;
+      return consumeToggle('KeyD');
+    },
+    // True if M was pressed an odd number of times since the last call.
+    consumeMuteToggle() {
+      return consumeToggle('KeyM');
     },
     // The input type used last, for prompts ("Tap" or "Press Space").
     get lastType() {

@@ -66,7 +66,7 @@ describe('scoring', () => {
     }
     // The swing stays short of the next obstacle.
     expect(maxX).toBeLessThan(2.5 * LIANA_SPACING - 36);
-    expect(world.takeEvents()).toEqual([]);
+    expect(world.takeEvents().filter((e) => e.type !== 'swish')).toEqual([]);
     expect(world.score).toBe(1);
   });
 

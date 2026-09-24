@@ -21,6 +21,9 @@ import { Hud } from './render/hud.js';
 import { DebugOverlay } from './render/debugOverlay.js';
 import { Background } from './render/background.js';
 import { Shake } from './render/shake.js';
+import { MuteButton } from './render/muteButton.js';
+import { SoundPlayer } from './audio/player.js';
+import { soundActions } from './audio/sounds.js';
 
 const app = new Application();
 await app.init({
@@ -94,7 +97,8 @@ scene.addChild(debugWorldLayer);
 root.addChild(debugOverlay.screenView);
 
 const hud = new Hud();
-root.addChild(hud.view);
+const muteButton = new MuteButton();
+root.addChild(hud.view, muteButton.view);
 
 const overlays = new Overlays();
 root.addChild(overlays.view);
@@ -103,15 +107,42 @@ const game = new Game();
 const pause = createPause(window, document, {
   portrait: window.matchMedia('(orientation: portrait) and (pointer: coarse)'),
 });
-// Presses count only while running, and not just after resuming (see pause.js).
+// Sound starts at the first user gesture (browsers block audio before one); later
+// gestures resume it if the browser suspended it.
+const sound = new SoundPlayer();
+for (const type of ['keydown', 'pointerdown', 'pointerup', 'touchend']) {
+  window.addEventListener(type, () => sound.unlock(), { capture: true });
+}
+function toggleMute() {
+  sound.setMuted(!sound.muted);
+  muteButton.update(sound.muted);
+}
+
+// Position of a pointer event in the 1280×720 logical space.
+function logicalPoint(event) {
+  const rect = app.canvas.getBoundingClientRect();
+  return {
+    x: (event.clientX - rect.left - root.x) / root.scale.x,
+    y: (event.clientY - rect.top - root.y) / root.scale.y,
+  };
+}
+
+// Presses count only while running, and not just after resuming (see pause.js). A
+// tap on the mute button toggles sound instead.
 const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const input = createInput(window, app.canvas, {
   initialType: coarsePointer ? 'touch' : 'keyboard',
   accepts: () => pause.acceptsInput(),
+  intercept: (event) => {
+    const p = logicalPoint(event);
+    if (!muteButton.contains(p.x, p.y)) return false;
+    toggleMute();
+    return true;
+  },
 });
 const shake = new Shake();
 let lastState = game.state;
-if (import.meta.env.DEV) window.__liano = { app, pause, input, get game() { return game; } };
+if (import.meta.env.DEV) window.__liano = { app, pause, input, sound, get game() { return game; } };
 const camera = new Camera(game.world.monkey.x);
 let cameraWorld = game.world;
 
@@ -132,6 +163,7 @@ const loop = createFixedStepLoop({
 
 app.ticker.add((ticker) => {
   if (input.consumeDebugToggle()) debugOverlay.toggle();
+  if (input.consumeMuteToggle()) toggleMute();
   // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
   const paused = pause.paused;
   if (paused) input.consumePress(); // a press made just before pausing must not act on resume
@@ -141,6 +173,11 @@ app.ticker.add((ticker) => {
     shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
   }
   lastState = game.state;
+  sound.setPaused(paused);
+  for (const action of soundActions(game.takeEvents())) {
+    if (action.play) sound.play(action.play);
+    else sound.stop(action.stop);
+  }
   shake.update(frameDt);
   scene.position.set(shake.x, shake.y);
   worldLayer.x = -camera.x;

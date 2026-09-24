@@ -66,7 +66,7 @@ describe('obstacle collision', () => {
       world.step(SIM_DT);
       events.push(...world.takeEvents());
     }
-    expect(events).toEqual([{ type: 'death', cause: 'obstacle' }]);
+    expect(events).toEqual([{ type: 'death', cause: 'obstacle', obstacle: 'rock' }]);
     expect(world.monkey.state).toBe(MonkeyState.DEAD);
   });
 
@@ -108,7 +108,7 @@ describe('obstacle collision', () => {
     }
     expect(world.alive).toBe(false);
     expect(stateBeforeDeath).toBe(MonkeyState.HANGING);
-    expect(world.takeEvents()).toEqual([{ type: 'death', cause: 'obstacle' }]);
+    expect(world.takeEvents().filter((e) => e.type !== 'swish')).toEqual([{ type: 'death', cause: 'obstacle', obstacle: 'rock' }]);
     expect(world.monkey.liana).toBeNull();
     expect(liana.state).toBe(LianaState.SETTLING);
   });
@@ -118,7 +118,7 @@ describe('obstacle collision', () => {
     throwMonkey(world, { x: LIANA_SPACING - 10, y: 200, vx: 0, vy: 0 });
     world.step(SIM_DT);
     expect(world.monkey.state).toBe(MonkeyState.DEAD);
-    expect(world.takeEvents()).toEqual([{ type: 'death', cause: 'obstacle' }]);
+    expect(world.takeEvents()).toEqual([{ type: 'death', cause: 'obstacle', obstacle: 'rock' }]);
   });
 
   it('stops checking after death', () => {

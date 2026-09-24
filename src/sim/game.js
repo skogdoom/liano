@@ -1,6 +1,8 @@
 import { GAMEOVER_INPUT_LOCK_MS } from '../config.js';
 import { World } from './world.js';
 
+const MAX_PENDING_EVENTS = 64;
+
 export const GameState = Object.freeze({
   READY: 'READY',
   PLAYING: 'PLAYING',
@@ -21,6 +23,8 @@ export class Game {
     this.best = 0;
     // Whether the run that just ended beat the previous best.
     this.newBest = false;
+    // World events since the last takeEvents(), for sound and other per-frame consumers.
+    this.events = [];
   }
 
   step(dt) {
@@ -28,11 +32,21 @@ export class Game {
     this.world.step(dt);
     // Drain events every step so they do not pile up in any state.
     const events = this.world.takeEvents();
+    this.events.push(...events);
+    // Keep only the latest if nobody is reading them.
+    if (this.events.length > MAX_PENDING_EVENTS) this.events.splice(0, this.events.length - MAX_PENDING_EVENTS);
     if (this.state !== GameState.PLAYING) return;
     for (const event of events) {
       if (event.type === 'score') this.score = event.score;
       else if (event.type === 'death') this.end();
     }
+  }
+
+  // Returns and clears the world events collected since the last call.
+  takeEvents() {
+    const events = this.events;
+    this.events = [];
+    return events;
   }
 
   // Handles a Space press. Returns true if the press changed the game state.

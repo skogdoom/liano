@@ -139,3 +139,34 @@ describe('pointer input', () => {
     expect(input.consumePress()).toBe(false);
   });
 });
+
+describe('mute toggle and on-screen buttons', () => {
+  it('toggles mute on M, ignoring repeats, separately from D', () => {
+    const win = new EventTarget();
+    const input = createInput(win);
+    keydown(win, { code: 'KeyM' });
+    keydown(win, { code: 'KeyM', repeat: true });
+    keydown(win, { code: 'KeyD' });
+    expect(input.consumeMuteToggle()).toBe(true);
+    expect(input.consumeMuteToggle()).toBe(false);
+    expect(input.consumeDebugToggle()).toBe(true);
+    expect(input.consumePress()).toBe(false);
+  });
+
+  it('lets intercept() swallow a tap, e.g. on the mute button', () => {
+    const canvas = new EventTarget();
+    const seen = [];
+    const input = createInput(new EventTarget(), canvas, {
+      intercept: (event) => {
+        seen.push(event.clientX);
+        return event.clientX < 50;
+      },
+    });
+    const onButton = pointerdown(canvas, { pointerType: 'touch', clientX: 10 });
+    expect(onButton.defaultPrevented).toBe(true);
+    expect(input.consumePress()).toBe(false);
+    pointerdown(canvas, { pointerType: 'touch', clientX: 400 });
+    expect(input.consumePress()).toBe(true);
+    expect(seen).toEqual([10, 400]);
+  });
+});

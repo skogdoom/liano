@@ -169,7 +169,7 @@ Four additions: synthesized sound effects, phone and iPad support (tap instead o
 10. **Any pointer press counts as Space.** A tap, or a mouse click on desktop, is one press, handled by the same code as Space. One `pointerdown` is one press; extra fingers are extra presses, `pointercancel` is ignored.
 11. **Landscape only.** The game stays 16:9. On a portrait screen a "rotate your device" overlay pauses the game instead of shrinking it into a letterbox.
 12. **Sound is on by default**, starting at the first press (browsers block audio before a user gesture). `M` or an on-screen speaker button toggles mute. The mute setting lives in memory only, consistent with no persistence.
-13. **"Swish" plays once per pass through the bottom of the swing**, louder with speed, rather than as a continuous wind sound.
+13. **"Swish" plays once per pass through the bottom of the swing**, rather than as a continuous wind sound. Every swing passes the bottom at the same speed, so it has a fixed level.
 14. **Reduced motion is respected:** with `prefers-reduced-motion` the death shake is off.
 
 ### Sound design
@@ -179,7 +179,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | Event | Sim trigger | Synthesis |
 |---|---|---|
 | "Wheee" | `release` event | A sawtooth voice through two band-pass formant filters shaped like an "ee" vowel (about 300 Hz and 2300 Hz). Pitch glides up and back down over about 0.7 s with a little vibrato. |
-| "Swish" | the held liana's angle crosses zero | A burst of white noise through a band-pass filter sweeping upward, about 0.25 s, with volume scaled by swing speed. |
+| "Swish" | the held liana's angle crosses zero | A burst of white noise through a band-pass filter sweeping upward, about 0.3 s, a little quieter than the other sounds. |
 | "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock low, branch mid, bush higher. |
 | "Crash" | `death` with cause `fall` | A low-passed noise burst plus a falling low sine thud, about 0.8 s. |
 
@@ -234,9 +234,9 @@ Order: 9 → 10 → 11 → 8 → 12 (numbers kept from the original plan).
 - [x] The press that resumes from pause is not also used as a press (unit tested)
 
 **10. Sound.** Recipes, player, mute toggle and button, and the swing zero-crossing event.
-- [ ] Each sound fires on its event and at most once per event (unit tested against sim events)
-- [ ] No audio before the first press; audio suspends while paused
-- [ ] Mute toggles with `M` and the on-screen button
+- [x] Each sound fires on its event and at most once per event (unit tested against sim events)
+- [x] No audio before the first press; audio suspends while paused
+- [x] Mute toggles with `M` and the on-screen button (top-left speaker)
 
 **11. Performance and hardening.** Precomputed window table, liana redraw on change, renderer and GPU-context handling, error overlay, soak test, input edge cases.
 - [ ] No sim step spends time in the solver during play (table lookup only; unit tested)
