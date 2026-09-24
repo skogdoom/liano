@@ -295,7 +295,7 @@ Play with the phone or iPad held upright, instead of being asked to rotate it. A
 26. **Ships as v1.2.0** (after milestone 13's v1.1.0).
 27. **Landscape frame flexes instead of letterboxing.** Nothing but falling happens in the bottom of the world band: the lowest grab and the lowest obstacle are around y 410, and the fall line is at 720. So on a screen wider than 16:9, the view first crops up to 150 px off the bottom, keeping y 570 and above visible and scaling the game up to fit the height. If the screen is still wider than that, it shows more world to the side, up to 1,600 px wide. Black bars remain only beyond that.
     - Example: a phone showing 844 × 340 CSS px of page. Today the game is drawn at 0.47× with 120 px bars on each side. With the flexible frame, it is drawn at 0.60× (27 % larger), showing 1,416 px of world, with no bars.
-    - Cost: a falling monkey leaves the view about 0.2 s before the crash sounds. The undergrowth is drawn at the bottom edge, so it drops into the leaves rather than off a cut edge.
+    - Cost: a falling monkey leaves the view up to about 0.3 s before the crash sounds. The undergrowth is drawn at the bottom edge, so it drops into the leaves rather than off a cut edge.
     - Taller-than-16:9 landscape screens (4:3 iPads) show extra canopy above and undergrowth below, like portrait, instead of bars at the top and bottom.
     - The simulation doesn't change.
 
