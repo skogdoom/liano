@@ -211,7 +211,12 @@ describe('Game state machine', () => {
     expect(types).toContain('release');
     expect(types).toContain('grab');
     expect(game.takeEvents()).toEqual([]);
-    stepFor(game, 120); // ~90 unread swishes
-    expect(game.events.length).toBeLessThanOrEqual(64);
+    // 40 unread hops: a release and a grab each.
+    for (let hop = 0; hop < 40; hop++) {
+      stepFor(game, FORWARD_RELEASE_STEP * SIM_DT);
+      game.press();
+      while (game.world.monkey.state === MonkeyState.AIRBORNE) game.step(SIM_DT);
+    }
+    expect(game.events.length).toBe(64);
   });
 });

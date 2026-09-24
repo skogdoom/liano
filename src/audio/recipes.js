@@ -15,8 +15,12 @@ const SILENT = 0.0001;
 // Vowel formants for a small, high voice: centre frequencies in Hz and levels. The
 // "ee" is bright: strong upper formants, including a fourth that is almost absent
 // from the round, dark "oo".
+// The two upper "ee" formants sit on the 3rd and 4th harmonics of the steady "eee"
+// pitch, which is what makes it ring bright. The second stays just off the 2nd
+// harmonic, which would otherwise dominate.
+const EE_PITCH = 1180; // Hz, steady through the "eee"
 const OO = { f1: 330, f2: 800, f3: 2400, f4: 3500, g3: 0.3, g4: 0.05 };
-const EE = { f1: 290, f2: 2500, f3: 3300, f4: 4300, g3: 0.9, g4: 0.6 };
+const EE = { f1: 290, f2: 2500, f3: 3 * EE_PITCH, f4: 4 * EE_PITCH, g3: 1.5, g4: 1.3 };
 const OO_END = 0.18; // the "oo" holds until here...
 const EE_START = 0.36; // ...then glides through "w" into the "ee"
 
@@ -30,7 +34,7 @@ function glide(from, to) {
 }
 
 // "Ooweeee": a voice starting low on "oo", sliding up through "w" into a long "eee"
-// that slowly falls back. (Named "wheee" in the code.)
+// held on one pitch. (Named "wheee" in the code.)
 export function wheee() {
   return {
     name: 'wheee',
@@ -40,11 +44,11 @@ export function wheee() {
         source: {
           kind: 'osc',
           wave: 'sawtooth',
+          // Rises with the glide and reaches the "ee" pitch as the vowel does, then holds.
           freq: [
             { t: 0, v: 500, ramp: 'set' },
             { t: OO_END, v: 560, ramp: 'linear' },
-            { t: 0.42, v: 1180, ramp: 'exp' },
-            { t: 0.95, v: 830, ramp: 'exp' },
+            { t: EE_START, v: EE_PITCH, ramp: 'exp' },
           ],
           vibrato: { rate: 6, depth: 18 },
         },
@@ -58,39 +62,10 @@ export function wheee() {
         // hearing is most sensitive.
         gain: [
           { t: 0, v: SILENT, ramp: 'set' },
-          { t: 0.06, v: 0.16, ramp: 'linear' },
-          { t: EE_START, v: 0.22, ramp: 'linear' },
-          { t: 0.72, v: 0.18, ramp: 'linear' },
+          { t: 0.06, v: 0.105, ramp: 'linear' },
+          { t: EE_START, v: 0.13, ramp: 'linear' },
+          { t: 0.72, v: 0.105, ramp: 'linear' },
           { t: 1, v: SILENT, ramp: 'exp' },
-        ],
-      },
-    ],
-  };
-}
-
-// "Swish": a short burst of air, band-passed and sweeping up.
-export function swish() {
-  return {
-    name: 'swish',
-    duration: 0.3,
-    voices: [
-      {
-        source: { kind: 'noise' },
-        filters: [
-          {
-            type: 'bandpass',
-            q: 1.4,
-            freq: [
-              { t: 0, v: 450, ramp: 'set' },
-              { t: 0.26, v: 2400, ramp: 'exp' },
-            ],
-          },
-        ],
-        gain: [
-          { t: 0, v: SILENT, ramp: 'set' },
-          // Band-passed noise is quiet; this lands it a little under the other sounds.
-          { t: 0.09, v: 0.7, ramp: 'linear' },
-          { t: 0.3, v: SILENT, ramp: 'exp' },
         ],
       },
     ],

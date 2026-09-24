@@ -108,7 +108,7 @@ describe('obstacle collision', () => {
     }
     expect(world.alive).toBe(false);
     expect(stateBeforeDeath).toBe(MonkeyState.HANGING);
-    expect(world.takeEvents().filter((e) => e.type !== 'swish')).toEqual([{ type: 'death', cause: 'obstacle', obstacle: 'rock' }]);
+    expect(world.takeEvents()).toEqual([{ type: 'death', cause: 'obstacle', obstacle: 'rock' }]);
     expect(world.monkey.liana).toBeNull();
     expect(liana.state).toBe(LianaState.SETTLING);
   });

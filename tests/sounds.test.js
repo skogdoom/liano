@@ -11,12 +11,11 @@ const played = (actions) => actions.filter((a) => a.play).map((a) => a.play.name
 describe('sound for events', () => {
   it('maps each event to its sound', () => {
     expect(played(soundActions([{ type: 'release', liana: 0 }]))).toEqual(['wheee']);
-    expect(played(soundActions([{ type: 'swish', liana: 0 }]))).toEqual(['swish']);
     expect(played(soundActions([{ type: 'death', cause: 'obstacle', obstacle: 'rock' }]))).toEqual(['bong']);
     expect(played(soundActions([{ type: 'death', cause: 'fall' }]))).toEqual(['crash']);
   });
 
-  it('is silent for other events', () => {
+  it('is silent for other events, including the swing', () => {
     expect(soundActions([{ type: 'grab', liana: 1 }, { type: 'score', gap: 1, score: 1 }])).toEqual([]);
   });
 
@@ -33,12 +32,12 @@ describe('sound for events', () => {
 
   it('plays one sound per event, in order', () => {
     const events = [
-      { type: 'swish', liana: 0 },
       { type: 'release', liana: 0 },
       { type: 'grab', liana: 1 },
-      { type: 'swish', liana: 1 },
+      { type: 'release', liana: 1 },
+      { type: 'death', cause: 'fall' },
     ];
-    expect(played(soundActions(events))).toEqual(['swish', 'wheee', 'swish']);
+    expect(played(soundActions(events))).toEqual(['wheee', 'wheee', 'crash']);
   });
 });
 
@@ -51,7 +50,7 @@ describe('sound in a real run', () => {
     }
   }
 
-  it('plays one wheee per release and one swish per pass through the bottom', () => {
+  it('plays one wheee per release and nothing while swinging', () => {
     const game = new Game({ createWorld: lowRockWorld });
     const actions = [];
     game.press();
@@ -60,11 +59,11 @@ describe('sound in a real run', () => {
       game.press();
       while (game.world.monkey.state === MonkeyState.AIRBORNE) run(game, 1, actions);
     }
-    run(game, 400, actions); // hang on for a while
+    const hopsOnly = played(actions).length;
+    run(game, 400, actions); // hang on for more than a full swing
     const names = played(actions);
     expect(names.filter((n) => n === 'wheee')).toHaveLength(4);
-    // 400 steps of swinging after the last grab: 2 passes per 312-step period.
-    expect(names.filter((n) => n === 'swish').length).toBeGreaterThanOrEqual(2);
+    expect(names).toHaveLength(hopsOnly);
     expect(names).not.toContain('bong');
     expect(names).not.toContain('crash');
   });

@@ -50,11 +50,7 @@ export class World {
       updateLianas(this.lianas, monkey.x, monkey.liana);
       updateObstacles(this.obstacles, monkey.x, this.makeObstacle);
     }
-    const held = monkey.liana;
-    const heldAngle = held?.angle;
     for (const liana of this.lianas.values()) liana.step(dt);
-    // The held liana passing the bottom of its swing (for the swish sound).
-    if (held && heldAngle * held.angle < 0) this.events.push({ type: 'swish', liana: held.index });
 
     monkey.step(dt);
     if (!this.alive) return;

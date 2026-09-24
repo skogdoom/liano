@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SoundPlayer, schedule } from '../src/audio/player.js';
-import { wheee, swish, bong, crash } from '../src/audio/recipes.js';
+import { wheee, bong, crash } from '../src/audio/recipes.js';
 import { FakeAudioContext } from './fakeAudio.js';
 
 function setup() {
@@ -40,7 +40,7 @@ describe('sound player', () => {
     player.unlock();
     const ctx = contexts[0];
     ctx.currentTime = 3;
-    for (const recipe of [wheee(), swish(), bong('branch'), crash()]) {
+    for (const recipe of [wheee(), bong('branch'), crash()]) {
       const before = ctx.sources().length;
       expect(player.play(recipe)).toBe(true);
       const added = ctx.sources().slice(before);
@@ -85,10 +85,10 @@ describe('sound player', () => {
     const ctx = contexts[0];
     player.setPaused(true);
     expect(ctx.state).toBe('suspended');
-    expect(player.play(swish())).toBe(false);
+    expect(player.play(crash())).toBe(false);
     player.setPaused(false);
     expect(ctx.state).toBe('running');
-    expect(player.play(swish())).toBe(true);
+    expect(player.play(crash())).toBe(true);
   });
 
   it('mutes: silences the output, stops playing sounds and suspends', () => {
@@ -100,7 +100,7 @@ describe('sound player', () => {
     expect(player.master.gain.value).toBe(0);
     expect(ctx.state).toBe('suspended');
     expect(ctx.sources().every((s) => s.stops.length === 2)).toBe(true);
-    expect(player.play(swish())).toBe(false);
+    expect(player.play(crash())).toBe(false);
     player.setMuted(false);
     expect(player.master.gain.value).toBeGreaterThan(0);
     expect(ctx.state).toBe('running');
@@ -138,12 +138,12 @@ describe('sound player', () => {
     ctx.currentTime = 1;
     player.play(wheee());
     const wheeeSources = ctx.sources().slice();
-    player.play(swish());
-    const swishSources = ctx.sources().slice(wheeeSources.length);
+    player.play(bong('rock'));
+    const bongSources = ctx.sources().slice(wheeeSources.length);
     ctx.currentTime = 1.2;
     player.stop('wheee');
     for (const s of wheeeSources) expect(s.stops.at(-1)).toBeCloseTo(1.25);
-    for (const s of swishSources) expect(s.stops).toHaveLength(1);
+    for (const s of bongSources) expect(s.stops).toHaveLength(1);
   });
 
   it('survives a browser that throws on a second stop()', () => {

@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { wheee, swish, bong, crash, BONG_PITCH } from '../src/audio/recipes.js';
+import { wheee, bong, crash, BONG_PITCH } from '../src/audio/recipes.js';
 
 const recipes = {
   wheee: wheee(),
-  swish: swish(),
   'bong (rock)': bong('rock'),
   'bong (branch)': bong('branch'),
   'bong (thornBush)': bong('thornBush'),
@@ -89,10 +88,15 @@ describe('sound recipes', () => {
     expect(glideEnd).toBeLessThan(wheee().duration / 2);
   });
 
-  it('pitches the wheee up and back down', () => {
-    const f = wheee().voices[0].source.freq.map((p) => p.v);
-    expect(Math.max(...f)).toBeGreaterThan(f[0]);
-    expect(f[f.length - 1]).toBeLessThan(Math.max(...f));
+  it('rises into the "eee", then holds one pitch to the end', () => {
+    const recipe = wheee();
+    const freq = recipe.voices[0].source.freq;
+    const eeStart = recipe.voices[0].formants[1].freq.at(-1).t; // where the vowel glide ends
+    const top = freq.at(-1).v;
+    expect(top).toBeGreaterThan(2 * freq[0].v);
+    // The pitch arrives by the time the "eee" starts and nothing changes it after.
+    expect(freq.at(-1).t).toBeLessThanOrEqual(eeStart);
+    for (const p of freq) expect(p.v).toBeLessThanOrEqual(top);
   });
 
   it('pitches the bong by obstacle type, rock lowest', () => {

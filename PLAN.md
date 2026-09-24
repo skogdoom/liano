@@ -169,7 +169,7 @@ Four additions: synthesized sound effects, phone and iPad support (tap instead o
 10. **Any pointer press counts as Space.** A tap, or a mouse click on desktop, is one press, handled by the same code as Space. One `pointerdown` is one press; extra fingers are extra presses, `pointercancel` is ignored.
 11. **Landscape only.** The game stays 16:9. On a portrait screen a "rotate your device" overlay pauses the game instead of shrinking it into a letterbox.
 12. **Sound is on by default**, starting at the first press (browsers block audio before a user gesture). `M` or an on-screen speaker button toggles mute. The mute setting lives in memory only, consistent with no persistence.
-13. **"Swish" plays once per pass through the bottom of the swing**, rather than as a continuous wind sound. Every swing passes the bottom at the same speed, so it has a fixed level.
+13. **No swing sound.** A "swish" on each pass through the bottom of the swing was built and then removed at the user's request.
 14. **Reduced motion is respected:** with `prefers-reduced-motion` the death shake is off.
 
 ### Sound design
@@ -178,13 +178,12 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 
 | Event | Sim trigger | Synthesis |
 |---|---|---|
-| "Ooweeee" | `release` event | A sawtooth voice through four band-pass formant filters that glide from a dark "oo" vowel (second formant about 800 Hz) through "w" into a long, bright "ee" (about 2500 Hz, with strong upper formants up to about 4300 Hz). Pitch starts around 500 Hz, rises to about 1180 Hz into the "ee" and slowly falls, over about 1 s with a little vibrato. Played a little quieter than the other sounds. |
-| "Swish" | the held liana's angle crosses zero | A burst of white noise through a band-pass filter sweeping upward, about 0.3 s, a little quieter than the other sounds. |
+| "Ooweeee" | `release` event | A sawtooth voice through four band-pass formant filters that glide from a dark "oo" vowel (second formant about 800 Hz) through "w" into a long, bright "ee" (second formant about 2500 Hz; the upper two on the 3rd and 4th harmonics of the pitch). Pitch starts around 500 Hz and rises to 1180 Hz as the "ee" begins, then holds there, over about 1 s with a little vibrato. Played a little quieter than the other sounds. |
 | "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock low, branch mid, bush higher. |
 | "Crash" | `death` with cause `fall` | A low-passed noise burst plus a falling low sine thud, about 0.8 s. |
 
 - **Structure:** each sound is a pure "recipe" function that returns oscillators, filters and envelopes as data. These are unit-tested in Node. A thin player turns recipes into Web Audio nodes. It is the only code that touches `AudioContext`.
-- **Game events for sound:** `Game` keeps the world events it drains each step and passes them on to a per-frame consumer. The swing's zero crossing becomes a new sim event, so sounds are driven by the sim and stay testable.
+- **Game events for sound:** `Game` keeps the world events it drains each step and passes them on to a per-frame consumer, so sounds are driven by the sim and stay testable.
 - **Pause:** the `AudioContext` is suspended with the game (window blur, hidden tab, portrait prompt) and resumed after.
 - **iOS:** Web Audio follows the ring/silent switch, so sound is muted when the phone is on silent. This is platform behaviour, noted in the README rather than worked around.
 
@@ -233,7 +232,7 @@ Order: 9 → 10 → 11 → 8 → 12 (numbers kept from the original plan).
 - [ ] No zoom, scroll or text selection from taps; the portrait overlay pauses the game — emulation passes; real devices still to check
 - [x] The press that resumes from pause is not also used as a press (unit tested)
 
-**10. Sound.** Recipes, player, mute toggle and button, and the swing zero-crossing event.
+**10. Sound.** Recipes, player, mute toggle and button.
 - [x] Each sound fires on its event and at most once per event (unit tested against sim events)
 - [x] No audio before the first press; audio suspends while paused
 - [x] Mute toggles with `M` and the on-screen button (top-left speaker)
