@@ -246,7 +246,7 @@ Order: 9 → 10 → 11 → 8 → 12 (numbers kept from the original plan).
 - [x] Losing the GPU context pauses and recovers (simulated with `WEBGL_lose_context`); if it is not restored within 5 s, the reload message appears
 
 **8. Deploy pipeline.** CI on PRs and pushes, Pages deploy on `master`, `base` path. (`.github/workflows/ci.yml`; `base: '/liano/'` for build and preview in `vite.config.js`; the production build checked under `/liano/` with `vite preview`.)
-- [ ] PRs show a passing test and build check
+- [x] PRs show a passing test and build check (first run on skogdoom/liano#3: tests and build pass in about 20 s; the deploy job is skipped on PRs)
 - [ ] The game loads and plays at `https://skogdoom.github.io/liano/` (after the owner enables Pages)
 
 **12. Release v1.0.0.** README, favicon and meta, version on the title screen, tag and GitHub release.
