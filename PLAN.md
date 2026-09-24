@@ -247,10 +247,10 @@ Order: 9 → 10 → 11 → 8 → 12 (numbers kept from the original plan).
 
 **8. Deploy pipeline.** CI on PRs and pushes, Pages deploy on `master`, `base` path. (`.github/workflows/ci.yml`; `base: '/liano/'` for build and preview in `vite.config.js`; the production build checked under `/liano/` with `vite preview`.)
 - [x] PRs show a passing test and build check (first run on skogdoom/liano#3: tests and build pass in about 20 s; the deploy job is skipped on PRs)
-- [ ] The game loads and plays at `https://skogdoom.github.io/liano/` (after the owner enables Pages)
+- [x] The game loads and plays at `https://skogdoom.github.io/liano/` (first deploy from the master run for skogdoom/liano#4; checked by the owner)
 
 **12. Release v1.0.0.** README, favicon and meta, version on the title screen, tag and GitHub release.
-- [ ] v1.0.0 is live on Pages and tagged, with release notes
+- [x] v1.0.0 is live on Pages and tagged, with release notes (tag `v1.0.0` on the #4 merge commit; release at https://github.com/skogdoom/liano/releases/tag/v1.0.0)
 
 ## Out of scope
 
