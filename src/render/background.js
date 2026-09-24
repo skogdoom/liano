@@ -20,7 +20,10 @@ const SKY_BOTTOM = 0x4a8060;
 class ParallaxLayer {
   constructor(context, factor) {
     this.factor = factor;
-    this.view = new Container();
+    // A render group keeps the static geometry on the GPU: moving the layer only
+    // changes its transform, instead of re-packing every vertex each frame. Its
+    // coordinates stay within a few tiles, so float precision is not a concern.
+    this.view = new Container({ isRenderGroup: true });
     for (let i = 0; i < 2; i++) {
       const copy = new Graphics(context);
       copy.x = i * TILE;
@@ -175,7 +178,9 @@ export class Background {
     this.near = nearLayer();
     this.canopy = canopyLayer();
     this.floor = floorLayer();
-    this.back.addChild(sky(), this.far.view, this.mid.view, this.near.view);
+    const skyGroup = new Container({ isRenderGroup: true });
+    skyGroup.addChild(sky());
+    this.back.addChild(skyGroup, this.far.view, this.mid.view, this.near.view);
     this.front.addChild(this.canopy.view, this.floor.view);
   }
 

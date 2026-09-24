@@ -12,10 +12,12 @@ import {
   SWING_AMPLITUDE,
   SWING_PERIOD,
   MIN_RELEASE_WINDOW_MS,
+  OBSTACLE_Y_RANGE,
+  OBSTACLE_HITBOXES,
 } from '../config.js';
 import { Liana } from './liana.js';
 import { Monkey } from './monkey.js';
-import { Obstacle } from './obstacle.js';
+import { Obstacle, OBSTACLE_TYPES } from './obstacle.js';
 import { ballisticStep, circleIntersectsSegment } from './physics.js';
 
 // Release-window solver. A gap is passable going forward when its obstacle stays
@@ -27,6 +29,10 @@ import { ballisticStep, circleIntersectsSegment } from './physics.js';
 // the grab. Forward releases happen in the first quarter period, while the swing
 // still moves forward; later the monkey swings back towards the previous gap.
 export const RELEASE_STEPS = Math.round(SWING_PERIOD / SIM_DT / 4);
+
+// How often the solver was asked (queries, cached or not) and actually ran (runs),
+// so tests can check that play only uses the precomputed table.
+export const solverStats = { queries: 0, runs: 0 };
 export const MIN_WINDOW_STEPS = Math.ceil(MIN_RELEASE_WINDOW_MS / (SIM_DT * 1000) - 1e-9);
 
 // The first steps after a grab depend on where the liana was caught (grip slide);
@@ -74,6 +80,7 @@ export function validReleaseSteps(obstacle, contactRadius, lianaX = 0, dir = 1, 
   const monkey = new Monkey();
   monkey.vx = dir;
   monkey.grab(liana, contactRadius);
+  solverStats.runs++;
 
   const valid = [];
   const positions = [];
@@ -106,6 +113,7 @@ const windows = new Map();
 // Release steps valid for every arrival radius, for an obstacle of `type` at height
 // `y` (null type: empty gap). Memoized: a gap is fully described by (type, y).
 export function releaseWindow(type, y) {
+  solverStats.queries++;
   const key = `${type}:${y}`;
   let result = windows.get(key);
   if (!result) {
@@ -125,8 +133,48 @@ export function releaseWindow(type, y) {
 // An obstacle of `type` at height `y` may be generated: clear of the lianas and
 // passable with a window of at least MIN_RELEASE_WINDOW_MS.
 export function isFeasible(type, y) {
+  solverStats.queries++;
   return (
     isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y), 0) &&
     releaseWindow(type, y).length >= MIN_WINDOW_STEPS
   );
+}
+
+// Everything the windows depend on. The precomputed table (windowTable.json) is only
+// trusted while these match the values it was built from.
+export function windowInputs() {
+  return {
+    SIM_DT,
+    GRAVITY,
+    ANCHOR_Y,
+    GRIP_RADIUS,
+    GRIP_SLIDE_TIME,
+    LIANA_LENGTH,
+    LIANA_SPACING,
+    LIANA_CLEARANCE,
+    MONKEY_RADIUS,
+    SCREEN_HEIGHT,
+    SWING_AMPLITUDE,
+    SWING_PERIOD,
+    MIN_RELEASE_WINDOW_MS,
+    OBSTACLE_Y_RANGE,
+    OBSTACLE_HITBOXES,
+    ARRIVAL_CONTACT_RADII,
+  };
+}
+
+// Window length in steps for every type and whole-pixel height in OBSTACLE_Y_RANGE,
+// 0 where the obstacle would not be clear of the lianas. Built by
+// scripts/build-windows.mjs into windowTable.json.
+export function computeWindowTable() {
+  const [minY, maxY] = OBSTACLE_Y_RANGE;
+  const windows = {};
+  for (const type of OBSTACLE_TYPES) {
+    windows[type] = [];
+    for (let y = minY; y <= maxY; y++) {
+      const clear = isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y), 0);
+      windows[type].push(clear ? releaseWindow(type, y).length : 0);
+    }
+  }
+  return { inputs: windowInputs(), minY, maxY, windows };
 }

@@ -1,4 +1,4 @@
-import { Graphics } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import { SCREEN_WIDTH } from '../config.js';
 import { LianaState, SWING_OMEGA } from '../sim/liana.js';
 import { mixSeed, mulberry32 } from '../sim/rng.js';
@@ -47,42 +47,62 @@ function ropePoints(liana, bow) {
   return points;
 }
 
+// What a liana looks like right now; it is only redrawn when this changes. Resting
+// lianas never change, so only the held one and any settling ones redraw each frame.
+function drawnState(liana) {
+  return liana.state === LianaState.IDLE ? 'idle' : `${liana.state}:${liana.angle}:${liana.angularVelocity}`;
+}
+
+function drawLiana(g, liana, layout) {
+  const points = ropePoints(liana, layout.bow);
+  const path = (width, color) => {
+    g.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) g.lineTo(points[i].x, points[i].y);
+    g.stroke({ width, color, cap: 'round', join: 'round' });
+  };
+  path(7, ROPE_DARK);
+  path(4, ROPE);
+  for (const leaf of layout.leaves) {
+    const p = points[Math.round(leaf.s * SEGMENTS)];
+    // Rope direction as a screen angle (0 = +x), rotated out to the leaf's side.
+    const down = Math.PI / 2 - p.angle;
+    const a = down - leaf.side * leaf.spread;
+    g.poly(leafPoints(p.x, p.y, a, leaf.length, leaf.length * 0.5)).fill(leaf.dark ? LEAF_DARK : LEAF);
+  }
+}
+
+// One Graphics per liana, kept while the liana exists and hidden when off-screen.
 export class LianaView {
   constructor() {
-    this.view = new Graphics();
-    this.layouts = new Map();
+    this.view = new Container();
+    this.entries = new Map(); // liana -> { g, layout, drawn }
+    this.redraws = 0; // for tests and profiling
   }
 
   update(lianas, cameraX) {
-    const g = this.view.clear();
     const margin = 500;
     const seen = new Set();
     for (const liana of lianas) {
-      if (liana.x < cameraX - margin || liana.x > cameraX + SCREEN_WIDTH + margin) continue;
-      seen.add(liana.index);
-      let layout = this.layouts.get(liana.index);
-      if (!layout) {
-        layout = leafLayout(liana.index);
-        this.layouts.set(liana.index, layout);
+      seen.add(liana);
+      let entry = this.entries.get(liana);
+      if (!entry) {
+        entry = { g: new Graphics(), layout: leafLayout(liana.index), drawn: null };
+        this.entries.set(liana, entry);
+        this.view.addChild(entry.g);
       }
-      const points = ropePoints(liana, layout.bow);
-
-      const path = (width, color) => {
-        g.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) g.lineTo(points[i].x, points[i].y);
-        g.stroke({ width, color, cap: 'round', join: 'round' });
-      };
-      path(7, ROPE_DARK);
-      path(4, ROPE);
-
-      for (const leaf of layout.leaves) {
-        const p = points[Math.round(leaf.s * SEGMENTS)];
-        // Rope direction as a screen angle (0 = +x), rotated out to the leaf's side.
-        const down = Math.PI / 2 - p.angle;
-        const a = down - leaf.side * leaf.spread;
-        g.poly(leafPoints(p.x, p.y, a, leaf.length, leaf.length * 0.5)).fill(leaf.dark ? LEAF_DARK : LEAF);
-      }
+      const visible = liana.x >= cameraX - margin && liana.x <= cameraX + SCREEN_WIDTH + margin;
+      entry.g.visible = visible;
+      if (!visible) continue;
+      const state = drawnState(liana);
+      if (state === entry.drawn) continue;
+      drawLiana(entry.g.clear(), liana, entry.layout);
+      entry.drawn = state;
+      this.redraws++;
     }
-    for (const index of this.layouts.keys()) if (!seen.has(index)) this.layouts.delete(index);
+    for (const [liana, entry] of this.entries) {
+      if (seen.has(liana)) continue;
+      entry.g.destroy();
+      this.entries.delete(liana);
+    }
   }
 }

@@ -24,33 +24,56 @@ import { Shake } from './render/shake.js';
 import { MuteButton } from './render/muteButton.js';
 import { SoundPlayer } from './audio/player.js';
 import { soundsFor } from './audio/sounds.js';
+import { createFatalOverlay, createNotice, isOwnError } from './fatal.js';
+
+// Anything that breaks from here on, startup included, shows a reload message
+// instead of a frozen canvas.
+const fatal = createFatalOverlay(document);
+window.addEventListener('error', (event) => {
+  if (isOwnError(event, location.origin)) fatal.show(event.error ?? event.message);
+});
+window.addEventListener('unhandledrejection', (event) => fatal.show(event.reason));
+
+const pixelRatio = () => Math.min(window.devicePixelRatio || 1, MAX_RESOLUTION);
 
 const app = new Application();
 await app.init({
+  // WebGPU support is still uneven on mobile browsers.
+  preference: 'webgl',
   background: 0x000000,
   antialias: true,
   autoDensity: true,
-  resolution: Math.min(window.devicePixelRatio || 1, MAX_RESOLUTION),
+  resolution: pixelRatio(),
   width: window.innerWidth,
   height: window.innerHeight,
 });
 document.body.appendChild(app.canvas);
 
 // Everything is drawn in 1280x720 logical space inside `root`, which is scaled
-// to fit the window and centered; the uncovered area is the letterbox.
+// to fit the window and centered. Black bars on top cover whatever is drawn outside
+// it (cheaper than a mask, which costs a stencil pass and breaks batching).
 const root = new Container();
-const clip = new Graphics().rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT).fill(0xffffff);
-root.addChild(clip);
-root.mask = clip;
-app.stage.addChild(root);
+const letterbox = new Graphics();
+app.stage.addChild(root, letterbox);
 
 function layout() {
   const w = window.innerWidth;
   const h = window.innerHeight;
-  app.renderer.resize(w, h);
+  app.renderer.resize(w, h, pixelRatio());
   const scale = Math.min(w / SCREEN_WIDTH, h / SCREEN_HEIGHT);
+  const x = (w - SCREEN_WIDTH * scale) / 2;
+  const y = (h - SCREEN_HEIGHT * scale) / 2;
   root.scale.set(scale);
-  root.position.set((w - SCREEN_WIDTH * scale) / 2, (h - SCREEN_HEIGHT * scale) / 2);
+  root.position.set(x, y);
+  const right = x + SCREEN_WIDTH * scale;
+  const bottom = y + SCREEN_HEIGHT * scale;
+  letterbox
+    .clear()
+    .rect(0, 0, w, y)
+    .rect(0, bottom, w, h - bottom)
+    .rect(0, y, x, bottom - y)
+    .rect(right, y, w - right, bottom - y)
+    .fill(0x000000);
 }
 // Re-layout on window resizes, rotation, and the iOS address bar showing or hiding,
 // at most once per frame.
@@ -66,6 +89,13 @@ function queueLayout() {
 window.addEventListener('resize', queueLayout);
 window.addEventListener('orientationchange', queueLayout);
 window.visualViewport?.addEventListener('resize', queueLayout);
+// The pixel ratio can change without a resize (a window moved to another screen).
+function watchPixelRatio() {
+  window
+    .matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
+    .addEventListener('change', () => (queueLayout(), watchPixelRatio()), { once: true });
+}
+watchPixelRatio();
 layout();
 
 // Block browser gestures on the game: double-tap zoom, iOS pinch, and the
@@ -107,6 +137,25 @@ const game = new Game();
 const pause = createPause(window, document, {
   portrait: window.matchMedia('(orientation: portrait) and (pointer: coarse)'),
 });
+// A lost graphics context (common when a phone backgrounds the page) pauses the game
+// until Pixi restores it; if it does not come back, offer a reload.
+const CONTEXT_RESTORE_TIMEOUT_MS = 5000;
+const notice = createNotice(document);
+let restoreTimer = null;
+app.canvas.addEventListener('webglcontextlost', () => {
+  pause.hold('graphics', true);
+  notice.show('Restoring graphics…');
+  restoreTimer = setTimeout(() => fatal.show(new Error('The graphics context was not restored')), CONTEXT_RESTORE_TIMEOUT_MS);
+});
+app.canvas.addEventListener('webglcontextrestored', () => {
+  clearTimeout(restoreTimer);
+  notice.hide();
+  pause.hold('graphics', false);
+});
+
+// Screen shake is off for players who ask for reduced motion.
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
 // Sound starts at the first user gesture (browsers block audio before one); later
 // gestures resume it if the browser suspended it.
 const sound = new SoundPlayer();
@@ -142,7 +191,6 @@ const input = createInput(window, app.canvas, {
 });
 const shake = new Shake();
 let lastState = game.state;
-if (import.meta.env.DEV) window.__liano = { app, pause, input, sound, get game() { return game; } };
 const camera = new Camera(game.world.monkey.x);
 let cameraWorld = game.world;
 
@@ -161,7 +209,7 @@ const loop = createFixedStepLoop({
   },
 });
 
-app.ticker.add((ticker) => {
+function frame(ticker) {
   if (input.consumeDebugToggle()) debugOverlay.toggle();
   if (input.consumeMuteToggle()) toggleMute();
   // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
@@ -169,7 +217,7 @@ app.ticker.add((ticker) => {
   if (paused) input.consumePress(); // a press made just before pausing must not act on resume
   const frameDt = paused ? 0 : Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
   loop.advance(frameDt);
-  if (lastState === GameState.PLAYING && game.state === GameState.GAME_OVER) {
+  if (lastState === GameState.PLAYING && game.state === GameState.GAME_OVER && !reducedMotion.matches) {
     shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
   }
   lastState = game.state;
@@ -186,4 +234,21 @@ app.ticker.add((ticker) => {
   hud.update(game);
   overlays.update(game, camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
   debugOverlay.update(game);
+}
+
+// Stop at the first error rather than failing every frame.
+app.ticker.add((ticker) => {
+  try {
+    frame(ticker);
+  } catch (error) {
+    app.ticker.stop();
+    sound.setPaused(true);
+    fatal.show(error);
+  }
 });
+
+// Hooks for inspecting and driving the game from the browser console and tests.
+if (import.meta.env.DEV) {
+  const views = { lianaView, obstacleViews, monkeyView, background, overlays, hud, debugOverlay, loop };
+  window.__liano = { app, pause, input, sound, lianaView, fatal, views, get game() { return game; } };
+}

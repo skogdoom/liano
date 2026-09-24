@@ -170,3 +170,56 @@ describe('mute toggle and on-screen buttons', () => {
     expect(seen).toEqual([10, 400]);
   });
 });
+
+describe('input edge cases', () => {
+  it('holding Space through a death does not restart the game', async () => {
+    const { Game, GameState } = await import('../src/sim/game.js');
+    const { emptyWorld, FALL_RELEASE_STEP } = await import('./helpers.js');
+    const { SIM_DT, GAMEOVER_INPUT_LOCK_MS } = await import('../src/config.js');
+    const win = new EventTarget();
+    const input = createInput(win);
+    const game = new Game({ createWorld: emptyWorld });
+    const frame = (steps = 1) => {
+      for (let i = 0; i < steps; i++) {
+        if (input.consumePress()) game.press();
+        game.step(SIM_DT);
+      }
+    };
+    keydown(win, { code: 'Space' }); // start
+    frame(FALL_RELEASE_STEP);
+    keydown(win, { code: 'Space' }); // release into a fall, then keep holding
+    for (let i = 0; i < 600 && game.state === GameState.PLAYING; i++) {
+      keydown(win, { code: 'Space', repeat: true });
+      frame();
+    }
+    expect(game.state).toBe(GameState.GAME_OVER);
+    for (let i = 0; i < (2 * GAMEOVER_INPUT_LOCK_MS) / 1000 / SIM_DT; i++) {
+      keydown(win, { code: 'Space', repeat: true });
+      frame();
+    }
+    expect(game.state).toBe(GameState.GAME_OVER);
+    keydown(win, { code: 'Space' }); // a fresh press restarts
+    frame();
+    expect(game.state).toBe(GameState.PLAYING);
+  });
+
+  it('counts two fingers landing in the same step as one press', () => {
+    const canvas = new EventTarget();
+    const input = createInput(new EventTarget(), canvas);
+    pointerdown(canvas, { pointerType: 'touch' });
+    pointerdown(canvas, { pointerType: 'touch' });
+    expect(input.consumePress()).toBe(true);
+    expect(input.consumePress()).toBe(false);
+  });
+
+  it('a key held while the window loses and regains focus does not press', () => {
+    const win = new EventTarget();
+    const input = createInput(win);
+    keydown(win, { code: 'Space' });
+    input.consumePress();
+    win.dispatchEvent(new Event('blur'));
+    win.dispatchEvent(new Event('focus'));
+    keydown(win, { code: 'Space', repeat: true }); // the browser keeps repeating the held key
+    expect(input.consumePress()).toBe(false);
+  });
+});

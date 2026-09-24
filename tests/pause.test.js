@@ -95,6 +95,25 @@ describe('pause', () => {
     expect(pause.paused).toBe(false);
   });
 
+  it('can be held for other reasons, with the same resume grace', () => {
+    const win = new EventTarget();
+    const c = clock();
+    const pause = createPause(win, fakeDocument(), { now: c.now });
+    pause.hold('graphics', true);
+    expect(pause.paused).toBe(true);
+    expect(pause.reason).toBe('graphics');
+    win.dispatchEvent(new Event('blur'));
+    pause.hold('graphics', false);
+    expect(pause.reason).toBe('unfocused');
+    win.dispatchEvent(new Event('focus'));
+    expect(pause.paused).toBe(false);
+    expect(pause.acceptsInput()).toBe(false);
+    c.advance(RESUME_GRACE_MS);
+    expect(pause.acceptsInput()).toBe(true);
+    pause.hold('graphics', false); // releasing twice is harmless
+    expect(pause.paused).toBe(false);
+  });
+
   it('stops listening after destroy', () => {
     const win = new EventTarget();
     const portrait = fakeQuery();

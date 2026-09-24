@@ -7,6 +7,8 @@
     "dev": "vite",
     "dev:host": "vite --host",
     "icons": "node scripts/make-icons.mjs",
+    "windows": "node scripts/build-windows.mjs",
+    "prebuild": "node scripts/build-windows.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

@@ -37,8 +37,11 @@
         display: block;
         touch-action: none;
       }
-      /* Shown on touch devices held upright; the game pauses meanwhile (src/pause.js). */
-      #rotate {
+      /* Full-screen messages over the canvas: turn the device (touch devices held
+         upright), a passing notice (e.g. restoring graphics), and a fatal error. */
+      #rotate,
+      #notice,
+      #fatal {
         display: none;
         position: fixed;
         inset: 0;
@@ -52,6 +55,26 @@
         font: bold 24px sans-serif;
         text-align: center;
         padding: 24px;
+      }
+      #notice,
+      #fatal {
+        z-index: 2;
+      }
+      #notice {
+        background: rgba(11, 26, 16, 0.85);
+      }
+      #notice.shown,
+      #fatal.shown {
+        display: flex;
+      }
+      #fatal button {
+        font: bold 22px sans-serif;
+        color: #0b1a10;
+        background: #f4e7c5;
+        border: 0;
+        border-radius: 12px;
+        padding: 14px 28px;
+        cursor: pointer;
       }
       #rotate svg {
         width: 96px;
@@ -72,6 +95,11 @@
         <path d="M58 76l-4 9 9 1" />
       </svg>
       Turn your device sideways to play
+    </div>
+    <div id="notice" role="status"></div>
+    <div id="fatal" role="alert">
+      Something went wrong.
+      <button type="button">Tap to reload</button>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
