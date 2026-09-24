@@ -2,6 +2,8 @@
 
 A one-button browser game. A monkey swings on lianas through the jungle; let go to fly to the next one.
 
+Play it at **https://skogdoom.github.io/liano/**.
+
 ## How it plays
 
 - The monkey swings on a liana. Press **Space**, or tap/click, to let go.
@@ -27,7 +29,10 @@ npm run dev        # play at the printed local address
 npm run dev:host   # same, reachable from a phone on your network
 npm test           # run the tests
 npm run build      # production build in dist/
+npm run preview    # serve that build at /liano/, as on GitHub Pages
 ```
+
+Every pull request is tested and built by GitHub Actions, and every push to `master` is published to GitHub Pages.
 
 After changing a tunable in `src/config.js`, run `npm run windows` to rebuild the table of release windows (the build does this too).
 
