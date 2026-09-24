@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { wheee, bong, crash, BONG_PITCH } from '../src/audio/recipes.js';
+import { wheee, bong, crash, BONG_PITCH, END_VOWELS } from '../src/audio/recipes.js';
 
 const recipes = {
-  wheee: wheee(),
+  'wheee (ee)': wheee('ee'),
+  'wheee (ih)': wheee('ih'),
   'bong (rock)': bong('rock'),
   'bong (branch)': bong('branch'),
   'bong (thornBush)': bong('thornBush'),
@@ -69,23 +70,29 @@ describe('sound recipes', () => {
     });
   }
 
-  it('moves the wheee from an "oo" vowel to an "ee"', () => {
-    const [f1, f2, f3] = wheee().voices[0].formants.map((f) => f.freq);
-    expect(wheee().voices[0].formants).toHaveLength(4);
-    const first = (env) => env[0].v;
-    const last = (env) => env[env.length - 1].v;
-    // The second formant carries the vowel: low for "oo", high for "ee".
-    expect(first(f2)).toBeLessThan(1000);
-    expect(last(f2)).toBeGreaterThan(2000);
-    expect(last(f3)).toBeGreaterThan(first(f3));
-    expect(Math.abs(last(f1) - first(f1))).toBeLessThan(100);
-    // The "ee" is brighter: its upper formants are louder than in the "oo".
-    const [, , g3, g4] = wheee().voices[0].formants.map((f) => f.gain);
-    expect(last(g3)).toBeGreaterThan(first(g3));
-    expect(last(g4)).toBeGreaterThan(5 * first(g4));
-    // The "eee" gets most of the sound.
-    const glideEnd = f2[f2.length - 1].t;
-    expect(glideEnd).toBeLessThan(wheee().duration / 2);
+  for (const vowel of Object.keys(END_VOWELS)) {
+    it(`moves the wheee from an "oo" vowel to "${vowel}"`, () => {
+      const voice = wheee(vowel).voices[0];
+      const [f1, f2, f3] = voice.formants.map((f) => f.freq);
+      const first = (env) => env[0].v;
+      const last = (env) => env[env.length - 1].v;
+      // The second formant carries the vowel: low for "oo", high for "ee"/"ih".
+      expect(first(f2)).toBeLessThan(1000);
+      expect(last(f2)).toBeGreaterThan(1800);
+      expect(last(f3)).toBeGreaterThan(first(f3));
+      expect(last(f1)).toBeLessThan(500);
+      // The end vowel gets most of the sound.
+      expect(f2.at(-1).t).toBeLessThan(wheee(vowel).duration / 2);
+    });
+  }
+
+  it('keeps the buzz of the upper harmonics out (soft, not harsh)', () => {
+    for (const vowel of Object.keys(END_VOWELS)) {
+      const voice = wheee(vowel).voices[0];
+      const lowpass = voice.filters.find((f) => f.type === 'lowpass');
+      expect(lowpass.freq.every((p) => p.v <= 5000)).toBe(true);
+      expect(voice.formants.every((f) => f.freq.every((p) => p.v <= 3200))).toBe(true);
+    }
   });
 
   it('rises into the "eee", then holds one pitch to the end', () => {

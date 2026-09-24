@@ -12,19 +12,24 @@
 
 const SILENT = 0.0001;
 
-// Vowel formants for a small, high voice: centre frequencies in Hz and levels. The
-// "ee" is bright: strong upper formants, including a fourth that is almost absent
-// from the round, dark "oo".
-// The two upper "ee" formants sit on the 3rd and 4th harmonics of the steady "eee"
-// pitch, which is what makes it ring bright. The second stays just off the 2nd
-// harmonic, which would otherwise dominate.
-const EE_PITCH = 1180; // Hz, steady through the "eee"
-const OO = { f1: 330, f2: 800, f3: 2400, f4: 3500, g3: 0.3, g4: 0.05 };
-const EE = { f1: 290, f2: 2500, f3: 3 * EE_PITCH, f4: 4 * EE_PITCH, g3: 1.5, g4: 1.3 };
+// Vowel formants for a small, high voice: centre frequencies (Hz) and the level of
+// the third. The "oo" is round and dark; the end vowel is either "ee" (as in "see")
+// or the rounder, warmer "ih" (as in "hit"). A low-pass on the source keeps the
+// buzz of the upper harmonics out, so the voice sounds happy rather than harsh.
+const OO = { f1: 330, f2: 800, f3: 2400, g3: 0.25 };
+// `level` evens out loudness: the "ih" formants fall between the few harmonics of so
+// high a voice, so it needs more gain to sound as loud.
+export const END_VOWELS = {
+  ee: { f1: 290, f2: 2300, f3: 3000, g3: 0.5, level: 1 },
+  ih: { f1: 430, f2: 2000, f3: 2600, g3: 0.45, level: 2.3 },
+};
+export const WHEEE_VOWEL = 'ee';
+const EE_PITCH = 1180; // Hz, steady through the end vowel
+const SOFTEN_ABOVE = 4000; // Hz, low-pass on the source
 const OO_END = 0.18; // the "oo" holds until here...
-const EE_START = 0.36; // ...then glides through "w" into the "ee"
+const EE_START = 0.36; // ...then glides through "w" into the end vowel
 
-// A formant frequency or level held on the "oo", then gliding to the "ee".
+// A formant frequency or level held on the "oo", then gliding to the end vowel.
 function glide(from, to) {
   return [
     { t: 0, v: from, ramp: 'set' },
@@ -34,8 +39,9 @@ function glide(from, to) {
 }
 
 // "Ooweeee": a voice starting low on "oo", sliding up through "w" into a long "eee"
-// held on one pitch. (Named "wheee" in the code.)
-export function wheee() {
+// (or "iii") held on one pitch. (Named "wheee" in the code.)
+export function wheee(vowel = WHEEE_VOWEL) {
+  const end = END_VOWELS[vowel];
   return {
     name: 'wheee',
     duration: 1,
@@ -44,7 +50,7 @@ export function wheee() {
         source: {
           kind: 'osc',
           wave: 'sawtooth',
-          // Rises with the glide and reaches the "ee" pitch as the vowel does, then holds.
+          // Rises with the glide and reaches the end pitch as the vowel does, then holds.
           freq: [
             { t: 0, v: 500, ramp: 'set' },
             { t: OO_END, v: 560, ramp: 'linear' },
@@ -52,19 +58,17 @@ export function wheee() {
           ],
           vibrato: { rate: 6, depth: 18 },
         },
+        filters: [{ type: 'lowpass', q: 0.7, freq: [{ t: 0, v: SOFTEN_ABOVE, ramp: 'set' }] }],
         formants: [
-          { freq: glide(OO.f1, EE.f1), q: 4, gain: glide(0.6, 0.6) },
-          { freq: glide(OO.f2, EE.f2), q: 8, gain: glide(1, 1) },
-          { freq: glide(OO.f3, EE.f3), q: 10, gain: glide(OO.g3, EE.g3) },
-          { freq: glide(OO.f4, EE.f4), q: 12, gain: glide(OO.g4, EE.g4) },
+          { freq: glide(OO.f1, end.f1), q: 4, gain: glide(0.6, 0.6) },
+          { freq: glide(OO.f2, end.f2), q: 7, gain: glide(1, 1) },
+          { freq: glide(OO.f3, end.f3), q: 9, gain: glide(OO.g3, end.g3) },
         ],
-        // Quieter than the level suggests is needed: the bright "ee" sits where
-        // hearing is most sensitive.
         gain: [
           { t: 0, v: SILENT, ramp: 'set' },
-          { t: 0.06, v: 0.105, ramp: 'linear' },
-          { t: EE_START, v: 0.13, ramp: 'linear' },
-          { t: 0.72, v: 0.105, ramp: 'linear' },
+          { t: 0.06, v: 0.16, ramp: 'linear' },
+          { t: EE_START, v: 0.2 * end.level, ramp: 'linear' },
+          { t: 0.72, v: 0.16 * end.level, ramp: 'linear' },
           { t: 1, v: SILENT, ramp: 'exp' },
         ],
       },
