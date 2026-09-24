@@ -13,7 +13,7 @@ Play it at **https://skogdoom.github.io/liano/**.
 - Reaching the liana past an obstacle scores a point. Your best score lasts until you reload.
 - Every gap can be passed: each one leaves a release window of at least 90 ms.
 
-**M** mutes the sound, **D** shows hitboxes and the predicted flight. On phones and iPads, play in landscape.
+**M** mutes the sound, **F** (or the button next to the speaker) toggles full screen, **D** shows hitboxes and the predicted flight. On phones and iPads, play in landscape. iPhone Safari has no full screen for web pages: add the game to the Home Screen to play it without the browser bars.
 
 ## Technology
 
