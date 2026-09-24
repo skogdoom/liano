@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SoundPlayer, schedule } from '../src/audio/player.js';
-import { wheee, bong, crash } from '../src/audio/recipes.js';
+import { bong, crash } from '../src/audio/recipes.js';
 import { FakeAudioContext } from './fakeAudio.js';
 
 function setup() {
@@ -18,7 +18,7 @@ function setup() {
 describe('sound player', () => {
   it('creates no audio context and plays nothing before the first gesture', () => {
     const { player, contexts } = setup();
-    expect(player.play(wheee())).toBe(false);
+    expect(player.play(crash())).toBe(false);
     player.setPaused(true);
     player.setPaused(false);
     player.setMuted(true);
@@ -40,11 +40,11 @@ describe('sound player', () => {
     player.unlock();
     const ctx = contexts[0];
     ctx.currentTime = 3;
-    for (const recipe of [wheee(), bong('branch'), crash()]) {
+    for (const recipe of [bong('rock'), bong('branch'), bong('thornBush'), crash()]) {
       const before = ctx.sources().length;
       expect(player.play(recipe)).toBe(true);
       const added = ctx.sources().slice(before);
-      expect(added.length).toBeGreaterThanOrEqual(recipe.voices.length);
+      expect(added).toHaveLength(recipe.voices.length);
       for (const s of added) {
         expect(s.started).toBe(3);
         expect(s.stops).toEqual([3 + recipe.duration]);
@@ -55,7 +55,7 @@ describe('sound player', () => {
   it('connects every voice to the output', () => {
     const { player, contexts } = setup();
     player.unlock();
-    player.play(wheee());
+    player.play(crash());
     const ctx = contexts[0];
     // Follow connections from each source; all must reach the destination.
     const reaches = (node, seen = new Set()) => {
@@ -64,8 +64,8 @@ describe('sound player', () => {
       seen.add(node);
       return node.outputs.some((next) => reaches(next, seen));
     };
-    const osc = ctx.sources().find((s) => s.kind === 'oscillator' && s.outputs.some((o) => o.kind === 'biquad'));
-    expect(reaches(osc)).toBe(true);
+    expect(ctx.sources().length).toBeGreaterThan(0);
+    for (const source of ctx.sources()) expect(reaches(source)).toBe(true);
   });
 
   it('disconnects a sound when its sources end', () => {
@@ -95,7 +95,7 @@ describe('sound player', () => {
     const { player, contexts } = setup();
     player.unlock();
     const ctx = contexts[0];
-    player.play(wheee());
+    player.play(crash());
     player.setMuted(true);
     expect(player.master.gain.value).toBe(0);
     expect(ctx.state).toBe('suspended');
@@ -131,31 +131,27 @@ describe('sound player', () => {
     expect(contexts[0].state).toBe('running');
   });
 
-  it('stops only the named sound, fading it out', () => {
+  it('fades out playing sounds when muted', () => {
     const { player, contexts } = setup();
     player.unlock();
     const ctx = contexts[0];
     ctx.currentTime = 1;
-    player.play(wheee());
-    const wheeeSources = ctx.sources().slice();
     player.play(bong('rock'));
-    const bongSources = ctx.sources().slice(wheeeSources.length);
     ctx.currentTime = 1.2;
-    player.stop('wheee');
-    for (const s of wheeeSources) expect(s.stops.at(-1)).toBeCloseTo(1.25);
-    for (const s of bongSources) expect(s.stops).toHaveLength(1);
+    player.setMuted(true);
+    for (const s of ctx.sources()) expect(s.stops.at(-1)).toBeCloseTo(1.25);
   });
 
   it('survives a browser that throws on a second stop()', () => {
     const { player, contexts } = setup();
     player.unlock();
-    player.play(wheee());
+    player.play(crash());
     for (const s of contexts[0].sources()) {
       s.stop = () => {
         throw new Error('InvalidStateError');
       };
     }
-    expect(() => player.stop('wheee')).not.toThrow();
+    expect(() => player.setMuted(true)).not.toThrow();
   });
 });
 

@@ -1,10 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { wheee, bong, crash, BONG_PITCH, WHEEE_VARIANTS } from '../src/audio/recipes.js';
+import { bong, crash, BONG_PITCH } from '../src/audio/recipes.js';
 
 const recipes = {
-  'wheee (ih)': wheee('ih'),
-  'wheee (ee)': wheee('ee'),
-  'wheee (ooaa)': wheee('ooaa'),
   'bong (rock)': bong('rock'),
   'bong (branch)': bong('branch'),
   'bong (thornBush)': bong('thornBush'),
@@ -15,7 +12,6 @@ function envelopes(voice) {
   const list = [['gain', voice.gain]];
   if (voice.source.freq) list.push(['source freq', voice.source.freq]);
   for (const f of voice.filters ?? []) list.push(['filter freq', f.freq]);
-  for (const f of voice.formants ?? []) list.push(['formant freq', f.freq], ['formant gain', f.gain]);
   return list;
 }
 
@@ -60,7 +56,7 @@ describe('sound recipes', () => {
       it('stays in the audible range', () => {
         for (const voice of recipe.voices) {
           for (const [name, env] of envelopes(voice)) {
-            if (name.endsWith('gain')) continue;
+            if (name === 'gain') continue;
             for (const p of env) {
               expect(p.v).toBeGreaterThanOrEqual(20);
               expect(p.v).toBeLessThanOrEqual(12000);
@@ -70,52 +66,6 @@ describe('sound recipes', () => {
       });
     });
   }
-
-  for (const vowel of ['ih', 'ee']) {
-    it(`sings one steady "${vowel}" vowel on one pitch`, () => {
-      const voice = wheee(vowel).voices[0];
-      expect(voice.source.freq).toHaveLength(1);
-      for (const f of voice.formants) {
-        expect(f.freq).toHaveLength(1);
-        expect(f.gain).toHaveLength(1);
-      }
-      // A body band on the pitch, then front-vowel formants: low first, high second.
-      const [body, f1, f2] = voice.formants.map((f) => f.freq[0].v);
-      expect(body).toBe(voice.source.freq[0].v);
-      expect(f1).toBeLessThan(500);
-      expect(f2).toBeGreaterThan(2000);
-    });
-  }
-
-  it('makes "ee" (teach) higher and tighter than "ih" (hit)', () => {
-    const [, ih1, ih2] = wheee('ih').voices[0].formants.map((f) => f.freq[0].v);
-    const [, ee1, ee2] = wheee('ee').voices[0].formants.map((f) => f.freq[0].v);
-    expect(ee1).toBeLessThan(ih1);
-    expect(ee2).toBeGreaterThan(ih2);
-  });
-
-  it('sings "ooaaooaa": the vowel opens and closes twice on one pitch', () => {
-    const voice = wheee('ooaa').voices[0];
-    expect(voice.source.freq).toHaveLength(1);
-    // First formant low for "oo", high for "aa": at the middle of each vowel's share.
-    const f1 = voice.formants[1].freq;
-    const at = (t) => {
-      let v = f1[0].v;
-      for (const p of f1) if (p.t <= t) v = p.v;
-      return v;
-    };
-    const share = wheee('ooaa').duration / 4;
-    const pattern = [0, 1, 2, 3].map((i) => (at(i * share + share / 2) > 600 ? 'aa' : 'oo'));
-    expect(pattern).toEqual(['oo', 'aa', 'oo', 'aa']);
-  });
-
-  it('keeps the buzz of the upper harmonics out (soft, not harsh)', () => {
-    for (const vowel of Object.keys(WHEEE_VARIANTS)) {
-      const voice = wheee(vowel).voices[0];
-      const lowpass = voice.filters.find((f) => f.type === 'lowpass');
-      expect(lowpass.freq.every((p) => p.v <= 5000)).toBe(true);
-    }
-  });
 
   it('pitches the bong by obstacle type, rock lowest', () => {
     const base = (type) => bong(type).voices[0].source.freq[0].v;

@@ -23,7 +23,7 @@ import { Background } from './render/background.js';
 import { Shake } from './render/shake.js';
 import { MuteButton } from './render/muteButton.js';
 import { SoundPlayer } from './audio/player.js';
-import { soundActions } from './audio/sounds.js';
+import { soundsFor } from './audio/sounds.js';
 
 const app = new Application();
 await app.init({
@@ -174,10 +174,7 @@ app.ticker.add((ticker) => {
   }
   lastState = game.state;
   sound.setPaused(paused);
-  for (const action of soundActions(game.takeEvents())) {
-    if (action.play) sound.play(action.play);
-    else sound.stop(action.stop);
-  }
+  for (const recipe of soundsFor(game.takeEvents())) sound.play(recipe);
   shake.update(frameDt);
   scene.position.set(shake.x, shake.y);
   worldLayer.x = -camera.x;

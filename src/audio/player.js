@@ -64,45 +64,26 @@ export class SoundPlayer {
       schedule(out.gain, voice.gain, t0);
       out.connect(this.master);
 
-      const { source, extras } = this.#source(voice.source, t0, recipe.duration);
+      const source = this.#source(voice.source, t0);
       let node = source;
       for (const f of voice.filters ?? []) {
         const filter = biquad(ctx, f.type, f.q, f.freq, t0);
         node.connect(filter);
         node = filter;
       }
-      if (voice.formants) {
-        for (const f of voice.formants) {
-          const filter = biquad(ctx, 'bandpass', f.q, f.freq, t0);
-          const level = ctx.createGain();
-          level.gain.value = 0;
-          schedule(level.gain, f.gain, t0);
-          node.connect(filter);
-          filter.connect(level);
-          level.connect(out);
-        }
-      } else {
-        node.connect(out);
-      }
+      node.connect(out);
 
-      for (const s of [source, ...extras]) {
-        s.start(t0);
-        s.stop(t0 + recipe.duration);
-      }
+      source.start(t0);
+      source.stop(t0 + recipe.duration);
       source.onended = () => {
         out.disconnect();
         if (--running === 0) this.active.delete(sound);
       };
       sound.outputs.push(out);
-      sound.sources.push(source, ...extras);
+      sound.sources.push(source);
     }
     this.active.add(sound);
     return true;
-  }
-
-  // Fades out and stops every playing sound called `name`.
-  stop(name) {
-    for (const sound of this.active) if (sound.name === name) this.#fadeOut(sound);
   }
 
   stopAll() {
@@ -119,26 +100,19 @@ export class SoundPlayer {
     for (const s of sound.sources) stopSafely(s, now + STOP_FADE);
   }
 
-  // Oscillator (with optional vibrato LFO) or looping noise.
+  // Oscillator or looping noise.
   #source(spec, t0) {
     const { ctx } = this;
     if (spec.kind === 'noise') {
       const noise = ctx.createBufferSource();
       noise.buffer = this.noise;
       noise.loop = true;
-      return { source: noise, extras: [] };
+      return noise;
     }
     const osc = ctx.createOscillator();
     osc.type = spec.wave;
     schedule(osc.frequency, spec.freq, t0);
-    if (!spec.vibrato) return { source: osc, extras: [] };
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = spec.vibrato.rate;
-    const depth = ctx.createGain();
-    depth.gain.value = spec.vibrato.depth;
-    lfo.connect(depth);
-    depth.connect(osc.frequency);
-    return { source: osc, extras: [lfo] };
+    return osc;
   }
 
   // Runs the context only while unmuted and unpaused.
