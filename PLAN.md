@@ -252,6 +252,35 @@ Order: 9 → 10 → 11 → 8 → 12 (numbers kept from the original plan).
 **12. Release v1.0.0.** README, favicon and meta, version on the title screen, tag and GitHub release.
 - [x] v1.0.0 is live on Pages and tagged, with release notes (tag `v1.0.0` on the #4 merge commit; release at https://github.com/skogdoom/liano/releases/tag/v1.0.0)
 
+## Phase 3: fullscreen
+
+A button and a key that put the game in full screen, on browsers that allow it.
+
+### Decisions (not specified by the user — confirm or change)
+
+15. **Controls:** a fullscreen button top-left next to the speaker, and `F` on the keyboard. Both toggle. Neither counts as a press, the same as the mute button.
+16. **The whole page goes full screen** (`document.documentElement`), not the canvas. The rotate, notice and error overlays are page elements and stay visible.
+17. **Hidden where it can't work.** iPhone Safari has no Fullscreen API for pages, so the button is hidden there, and the home-screen app stays the way to get full screen. The button is also hidden when already running as the home-screen app (`display-mode: fullscreen` or `standalone`).
+18. **Landscape lock where allowed.** After entering full screen, try `screen.orientation.lock('landscape')` (Android Chrome supports it, other browsers refuse). If the lock fails, the rotate overlay still covers portrait.
+19. **Leaving full screen** (Esc, a system gesture or the button) doesn't pause the game. The layout already follows resizes.
+20. **Ships as v1.1.0.**
+
+### Design
+
+- **Module:** `src/fullscreen.js` wraps the API (with the `webkit`-prefixed fallback for older Safari) behind `supported`, `active`, `toggle()` and a change callback. It takes `document` as a parameter so it can be unit-tested with a fake.
+- **State:** the button icon (expand or collapse arrows) follows `fullscreenchange`, so it stays right when full screen ends outside the game. A rejected request is ignored and the button keeps working.
+- **Input:** the button goes through the same `intercept()` path as the mute button. `F` is read like `M` and `D`.
+- **Docs:** README controls, and the title panel's control line if it fits.
+
+### Milestone
+
+**13. Fullscreen.** Button, `F` key, state sync, landscape lock, hidden where unsupported.
+- [ ] The button and `F` enter and leave full screen in desktop Chrome, Firefox and Safari, in Android Chrome and on iPad. The icon follows the state, including after Esc
+- [ ] Neither the button nor `F` releases the monkey or starts a run (unit tested)
+- [ ] The button is hidden on iPhone Safari and in the home-screen app
+- [ ] The game fills the screen after entering and leaving full screen, and after rotating while in full screen. On Android, full screen locks to landscape
+- [ ] v1.1.0 is live on Pages and tagged, with release notes
+
 ## Out of scope
 
 Persistent high scores, difficulty ramp, moving obstacles, power-ups, menus beyond title/game over, music.
