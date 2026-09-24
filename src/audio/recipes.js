@@ -12,17 +12,18 @@
 
 const SILENT = 0.0001;
 
-// A single sung vowel for a small, high voice: formant centre frequencies (Hz) and
-// the level of the third. "ih" as in "hit", or "ee" as in "teach". A low-pass on the
-// source keeps the buzz of the upper harmonics out, so it sounds soft, not harsh.
-// `level` evens out loudness between the vowels.
+// A single sung vowel: formant centre frequencies (Hz) and the levels of the second
+// and third. "ih" as in "hit", or "ee" as in "teach". A wide "body" band on the pitch
+// itself gives the voice warmth, the vowel formants sit lower than it, and a
+// low-pass keeps the buzz of the upper harmonics out. `level` evens out loudness
+// between the vowels.
 export const WHEEE_VOWELS = {
-  ih: { f1: 430, f2: 2400, f3: 3000, g3: 0.45, level: 0.85 },
-  ee: { f1: 310, f2: 2700, f3: 3300, g3: 0.5, level: 1.36 },
+  ih: { f1: 430, f2: 2400, f3: 3000, g2: 0.5, g3: 0.15, level: 0.56 },
+  ee: { f1: 310, f2: 2700, f3: 3300, g2: 0.5, g3: 0.15, level: 0.59 },
 };
 export const WHEEE_VOWEL = 'ih';
-const WHEEE_PITCH = 1180; // Hz, steady throughout
-const SOFTEN_ABOVE = 4000; // Hz, low-pass on the source
+const WHEEE_PITCH = 800; // Hz, steady throughout
+const SOFTEN_ABOVE = 3000; // Hz, low-pass on the source
 
 const constant = (v) => [{ t: 0, v, ramp: 'set' }];
 
@@ -34,11 +35,13 @@ export function wheee(vowel = WHEEE_VOWEL) {
     duration: 0.9,
     voices: [
       {
-        source: { kind: 'osc', wave: 'sawtooth', freq: constant(WHEEE_PITCH), vibrato: { rate: 6, depth: 18 } },
+        // A slow vibrato, about ±1.5% of the pitch.
+        source: { kind: 'osc', wave: 'sawtooth', freq: constant(WHEEE_PITCH), vibrato: { rate: 4, depth: 12 } },
         filters: [{ type: 'lowpass', q: 0.7, freq: constant(SOFTEN_ABOVE) }],
         formants: [
+          { freq: constant(WHEEE_PITCH), q: 1, gain: constant(1) }, // body
           { freq: constant(v.f1), q: 4, gain: constant(0.6) },
-          { freq: constant(v.f2), q: 7, gain: constant(1) },
+          { freq: constant(v.f2), q: 7, gain: constant(v.g2) },
           { freq: constant(v.f3), q: 9, gain: constant(v.g3) },
         ],
         gain: [

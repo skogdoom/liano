@@ -78,16 +78,17 @@ describe('sound recipes', () => {
         expect(f.freq).toHaveLength(1);
         expect(f.gain).toHaveLength(1);
       }
-      // Front vowels: low first formant, high second.
-      const [f1, f2] = voice.formants.map((f) => f.freq[0].v);
+      // A body band on the pitch, then front-vowel formants: low first, high second.
+      const [body, f1, f2] = voice.formants.map((f) => f.freq[0].v);
+      expect(body).toBe(voice.source.freq[0].v);
       expect(f1).toBeLessThan(500);
       expect(f2).toBeGreaterThan(2000);
     });
   }
 
   it('makes "ee" (teach) higher and tighter than "ih" (hit)', () => {
-    const [ih1, ih2] = wheee('ih').voices[0].formants.map((f) => f.freq[0].v);
-    const [ee1, ee2] = wheee('ee').voices[0].formants.map((f) => f.freq[0].v);
+    const [, ih1, ih2] = wheee('ih').voices[0].formants.map((f) => f.freq[0].v);
+    const [, ee1, ee2] = wheee('ee').voices[0].formants.map((f) => f.freq[0].v);
     expect(ee1).toBeLessThan(ih1);
     expect(ee2).toBeGreaterThan(ih2);
   });
