@@ -165,7 +165,7 @@ Four additions: synthesized sound effects, phone and iPad support (tap instead o
 
 ### Decisions (not specified by the user — confirm or change)
 
-9. **Deploy early, release last.** The GitHub Pages pipeline comes first, so every later milestone can be tried on a real phone or iPad at a public URL. The versioned release (v1.0.0) is the last milestone.
+9. **Test locally first, deploy after hardening.** Until the Pages pipeline exists, phones and iPads test against the dev server on the local network (`npm run dev:host`, then open the printed network address on the device). The pipeline follows performance and hardening, and the versioned release (v1.0.0) is last.
 10. **Any pointer press counts as Space.** A tap, or a mouse click on desktop, is one press, handled by the same code as Space. One `pointerdown` is one press; extra fingers are extra presses, `pointercancel` is ignored.
 11. **Landscape only.** The game stays 16:9. On a portrait screen a "rotate your device" overlay pauses the game instead of shrinking it into a letterbox.
 12. **Sound is on by default**, starting at the first press (browsers block audio before a user gesture). `M` or an on-screen speaker button toggles mute. The mute setting lives in memory only, consistent with no persistence.
@@ -206,7 +206,7 @@ Performance:
 - **Precomputed windows:** compute the release-window table (3 types × each whole-pixel height) at build time and ship it as a small JSON module. Generation becomes a table lookup. A unit test checks the shipped table against the live solver, so a changed tunable fails CI until the table is rebuilt.
 - **Lianas:** redraw a liana's `Graphics` only when its angle changes. Idle lianas are static.
 - **Background:** try `cacheAsTexture` on the static background layers if the GPU is fill-limited on phones. It is kept only if it measurably helps on a device.
-- **Budget:** at 4× CPU throttling, per-frame work under 6 ms at p95 and no frame over 16 ms during generation, restarts or deaths. Then check on real devices via the Pages URL.
+- **Budget:** at 4× CPU throttling, per-frame work under 6 ms at p95 and no frame over 16 ms during generation, restarts or deaths. Then check on real devices via the local dev server.
 
 Hardening:
 - **Renderer:** force WebGL (`preference: 'webgl'`). WebGPU support is still uneven on mobile browsers.
@@ -226,12 +226,10 @@ Hardening:
 
 ### Milestones
 
-**8. Deploy pipeline.** CI on PRs and pushes, Pages deploy on `master`, `base` path.
-- [ ] PRs show a passing test and build check
-- [ ] The game loads and plays at `https://skogdoom.github.io/liano/` (after the owner enables Pages)
+Order: 9 → 10 → 11 → 8 → 12 (numbers kept from the original plan).
 
 **9. Touch and mobile.** Pointer input, viewport and gesture handling, landscape-only overlay, input-dependent prompts, resolution cap, manifest and icon.
-- [ ] Tap starts, releases and restarts on phone and iPad (Playwright touch emulation, then real devices via the Pages URL)
+- [ ] Tap starts, releases and restarts on phone and iPad (Playwright touch emulation, then real devices via `npm run dev:host`)
 - [ ] No zoom, scroll or text selection from taps; the portrait overlay pauses the game
 - [ ] The press that resumes from pause is not also used as a press (unit tested)
 
@@ -245,6 +243,10 @@ Hardening:
 - [ ] At 4× CPU throttling: p95 frame work under 6 ms, no frame over 16 ms during generation
 - [ ] Soak test: 5,000 gaps with bounded entities and no heap growth across 20 restarts
 - [ ] Losing the GPU context pauses and recovers (simulated with `WEBGL_lose_context`)
+
+**8. Deploy pipeline.** CI on PRs and pushes, Pages deploy on `master`, `base` path.
+- [ ] PRs show a passing test and build check
+- [ ] The game loads and plays at `https://skogdoom.github.io/liano/` (after the owner enables Pages)
 
 **12. Release v1.0.0.** README, favicon and meta, version on the title screen, tag and GitHub release.
 - [ ] v1.0.0 is live on Pages and tagged, with release notes
