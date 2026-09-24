@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:host": "vite --host",
+    "icons": "node scripts/make-icons.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

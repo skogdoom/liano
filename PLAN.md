@@ -13,7 +13,7 @@ A one-button browser game. A monkey swings on lianas through a jungle; pressing 
 | Area | Rule |
 |---|---|
 | Progress | Camera follows the monkey horizontally. No auto-scroll. Distance comes only from release momentum. |
-| Input | Spacebar only, desktop only. Space while hanging = release. Space while airborne = ignored. Ignore key auto-repeat (`event.repeat`). |
+| Input | Space, or a tap/click on the game (one press per new finger or primary mouse button). Press while hanging = release. Press while airborne = ignored. Ignore key auto-repeat (`event.repeat`). Presses while paused, or within 250 ms of resuming, are ignored. |
 | Swing | Idle lianas hang still. When grabbed, the liana swings with a **fixed amplitude and period**, independent of how the monkey arrived. |
 | Grab | Automatic on contact anywhere along the liana, while airborne. The liana just released cannot be regrabbed until a different liana has been grabbed. |
 | Backward | Releasing on the backswing is allowed; the monkey may fly backward and grab the previous liana. |
@@ -229,9 +229,9 @@ Hardening:
 Order: 9 → 10 → 11 → 8 → 12 (numbers kept from the original plan).
 
 **9. Touch and mobile.** Pointer input, viewport and gesture handling, landscape-only overlay, input-dependent prompts, resolution cap, manifest and icon.
-- [ ] Tap starts, releases and restarts on phone and iPad (Playwright touch emulation, then real devices via `npm run dev:host`)
-- [ ] No zoom, scroll or text selection from taps; the portrait overlay pauses the game
-- [ ] The press that resumes from pause is not also used as a press (unit tested)
+- [ ] Tap starts, releases and restarts on phone and iPad (Playwright touch emulation, then real devices via `npm run dev:host`) — emulation passes; real devices still to check
+- [ ] No zoom, scroll or text selection from taps; the portrait overlay pauses the game — emulation passes; real devices still to check
+- [x] The press that resumes from pause is not also used as a press (unit tested)
 
 **10. Sound.** Recipes, player, mute toggle and button, and the swing zero-crossing event.
 - [ ] Each sound fires on its event and at most once per event (unit tested against sim events)

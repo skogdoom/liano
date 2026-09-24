@@ -71,3 +71,71 @@ describe('debug toggle', () => {
     expect(input.consumePress()).toBe(false);
   });
 });
+
+function pointerdown(target, props) {
+  const event = Object.assign(new Event('pointerdown', { cancelable: true }), { button: 0, ...props });
+  target.dispatchEvent(event);
+  return event;
+}
+
+describe('pointer input', () => {
+  it('counts a tap as a press and prevents the default action', () => {
+    const canvas = new EventTarget();
+    const input = createInput(new EventTarget(), canvas);
+    const event = pointerdown(canvas, { pointerType: 'touch' });
+    expect(event.defaultPrevented).toBe(true);
+    expect(input.consumePress()).toBe(true);
+    expect(input.consumePress()).toBe(false);
+  });
+
+  it('counts each new finger, and the primary mouse button, but not other buttons', () => {
+    const canvas = new EventTarget();
+    const input = createInput(new EventTarget(), canvas);
+    pointerdown(canvas, { pointerType: 'touch' });
+    input.consumePress();
+    pointerdown(canvas, { pointerType: 'touch' });
+    expect(input.consumePress()).toBe(true);
+    pointerdown(canvas, { pointerType: 'mouse', button: 2 });
+    expect(input.consumePress()).toBe(false);
+    pointerdown(canvas, { pointerType: 'mouse', button: 0 });
+    expect(input.consumePress()).toBe(true);
+  });
+
+  it('remembers the input type used last', () => {
+    const win = new EventTarget();
+    const canvas = new EventTarget();
+    const input = createInput(win, canvas, { initialType: 'touch' });
+    expect(input.lastType).toBe('touch');
+    keydown(win, { code: 'Space' });
+    expect(input.lastType).toBe('keyboard');
+    pointerdown(canvas, { pointerType: 'mouse' });
+    expect(input.lastType).toBe('mouse');
+    pointerdown(canvas, { pointerType: 'pen' });
+    expect(input.lastType).toBe('touch');
+    keydown(win, { code: 'KeyD' });
+    expect(input.lastType).toBe('touch');
+  });
+
+  it('drops presses that accepts() rejects, but still tracks the input type', () => {
+    const win = new EventTarget();
+    const canvas = new EventTarget();
+    let open = false;
+    const input = createInput(win, canvas, { accepts: () => open });
+    pointerdown(canvas, { pointerType: 'touch' });
+    keydown(win, { code: 'Space' });
+    expect(input.consumePress()).toBe(false);
+    expect(input.lastType).toBe('keyboard');
+    open = true;
+    pointerdown(canvas, { pointerType: 'touch' });
+    expect(input.consumePress()).toBe(true);
+  });
+
+  it('works without a pointer target and stops listening after destroy', () => {
+    expect(() => createInput(new EventTarget()).destroy()).not.toThrow();
+    const canvas = new EventTarget();
+    const input = createInput(new EventTarget(), canvas);
+    input.destroy();
+    pointerdown(canvas, { pointerType: 'touch' });
+    expect(input.consumePress()).toBe(false);
+  });
+});

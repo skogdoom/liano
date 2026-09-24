@@ -5,6 +5,9 @@ export const SCREEN_HEIGHT = 720;
 
 export const SIM_DT = 1 / 120;
 export const MAX_FRAME_DT = 0.1;
+// Canvas pixels per CSS pixel are capped here: 3× phone screens cost fill rate for
+// no visible gain.
+export const MAX_RESOLUTION = 2;
 
 export const ANCHOR_Y = -20;
 export const LIANA_LENGTH = 420;

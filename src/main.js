@@ -1,9 +1,17 @@
 import { Application, Container, Graphics } from 'pixi.js';
-import { SCREEN_WIDTH, SCREEN_HEIGHT, SIM_DT, MAX_FRAME_DT, DEATH_SHAKE_PX, DEATH_SHAKE_TIME } from './config.js';
+import {
+  SCREEN_WIDTH,
+  SCREEN_HEIGHT,
+  SIM_DT,
+  MAX_FRAME_DT,
+  MAX_RESOLUTION,
+  DEATH_SHAKE_PX,
+  DEATH_SHAKE_TIME,
+} from './config.js';
 import { createFixedStepLoop } from './loop.js';
 import { createInput } from './input.js';
 import { Game, GameState } from './sim/game.js';
-import { createFocusPause } from './pause.js';
+import { createPause } from './pause.js';
 import { Overlays } from './render/overlays.js';
 import { LianaView } from './render/lianaView.js';
 import { MonkeyView } from './render/monkeyView.js';
@@ -19,7 +27,7 @@ await app.init({
   background: 0x000000,
   antialias: true,
   autoDensity: true,
-  resolution: window.devicePixelRatio || 1,
+  resolution: Math.min(window.devicePixelRatio || 1, MAX_RESOLUTION),
   width: window.innerWidth,
   height: window.innerHeight,
 });
@@ -41,8 +49,27 @@ function layout() {
   root.scale.set(scale);
   root.position.set((w - SCREEN_WIDTH * scale) / 2, (h - SCREEN_HEIGHT * scale) / 2);
 }
-window.addEventListener('resize', layout);
+// Re-layout on window resizes, rotation, and the iOS address bar showing or hiding,
+// at most once per frame.
+let layoutQueued = false;
+function queueLayout() {
+  if (layoutQueued) return;
+  layoutQueued = true;
+  requestAnimationFrame(() => {
+    layoutQueued = false;
+    layout();
+  });
+}
+window.addEventListener('resize', queueLayout);
+window.addEventListener('orientationchange', queueLayout);
+window.visualViewport?.addEventListener('resize', queueLayout);
 layout();
+
+// Block browser gestures on the game: double-tap zoom, iOS pinch, and the
+// long-press menu.
+for (const type of ['dblclick', 'gesturestart', 'contextmenu']) {
+  app.canvas.addEventListener(type, (event) => event.preventDefault());
+}
 
 // Back to front: sky and parallax layers, the world (scrolled by the camera), the
 // canopy strip and floor band, then HUD and overlays.
@@ -73,11 +100,18 @@ const overlays = new Overlays();
 root.addChild(overlays.view);
 
 const game = new Game();
-const input = createInput(window);
-const pause = createFocusPause(window, document);
+const pause = createPause(window, document, {
+  portrait: window.matchMedia('(orientation: portrait) and (pointer: coarse)'),
+});
+// Presses count only while running, and not just after resuming (see pause.js).
+const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+const input = createInput(window, app.canvas, {
+  initialType: coarsePointer ? 'touch' : 'keyboard',
+  accepts: () => pause.acceptsInput(),
+});
 const shake = new Shake();
 let lastState = game.state;
-if (import.meta.env.DEV) window.__liano = { app, get game() { return game; } };
+if (import.meta.env.DEV) window.__liano = { app, pause, input, get game() { return game; } };
 const camera = new Camera(game.world.monkey.x);
 let cameraWorld = game.world;
 
@@ -100,6 +134,7 @@ app.ticker.add((ticker) => {
   if (input.consumeDebugToggle()) debugOverlay.toggle();
   // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
   const paused = pause.paused;
+  if (paused) input.consumePress(); // a press made just before pausing must not act on resume
   const frameDt = paused ? 0 : Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
   loop.advance(frameDt);
   if (lastState === GameState.PLAYING && game.state === GameState.GAME_OVER) {
@@ -115,6 +150,6 @@ app.ticker.add((ticker) => {
   monkeyView.update(game.world.monkey, frameDt);
   obstacleViews.update(game.world.obstacles.values());
   hud.update(game);
-  overlays.update(game, camera.x, { paused, dt: frameDt });
+  overlays.update(game, camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
   debugOverlay.update(game);
 });
