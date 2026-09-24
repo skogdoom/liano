@@ -4,20 +4,23 @@
 // A recipe is { name, duration, voices }. A voice has
 //   source:   { kind: 'osc', wave, freq, vibrato? } or { kind: 'noise' }
 //   filters:  serial filters { type, freq, q }, or
-//   formants: parallel band-pass filters { freq, q, gain } for vowels, freq an envelope
+//   formants: parallel band-pass filters { freq, q, gain } for vowels, freq and gain
+//             envelopes
 //   gain:     envelope
 // An envelope (or a frequency) is a list of points { t, v, ramp }, where ramp is
 // 'set', 'linear' or 'exp' (exponential ramps need values above zero).
 
 const SILENT = 0.0001;
 
-// Vowel formants (centre frequencies in Hz) for a small, high voice.
-const OO = { f1: 330, f2: 800, f3: 2400 };
-const EE = { f1: 290, f2: 2300, f3: 3000 };
+// Vowel formants for a small, high voice: centre frequencies in Hz and levels. The
+// "ee" is bright: strong upper formants, including a fourth that is almost absent
+// from the round, dark "oo".
+const OO = { f1: 330, f2: 800, f3: 2400, f4: 3500, g3: 0.3, g4: 0.05 };
+const EE = { f1: 290, f2: 2500, f3: 3300, f4: 4300, g3: 0.9, g4: 0.6 };
 const OO_END = 0.18; // the "oo" holds until here...
 const EE_START = 0.36; // ...then glides through "w" into the "ee"
 
-// A formant held on the "oo", then gliding to the "ee".
+// A formant frequency or level held on the "oo", then gliding to the "ee".
 function glide(from, to) {
   return [
     { t: 0, v: from, ramp: 'set' },
@@ -38,23 +41,26 @@ export function wheee() {
           kind: 'osc',
           wave: 'sawtooth',
           freq: [
-            { t: 0, v: 380, ramp: 'set' },
-            { t: OO_END, v: 430, ramp: 'linear' },
-            { t: 0.42, v: 900, ramp: 'exp' },
-            { t: 0.95, v: 640, ramp: 'exp' },
+            { t: 0, v: 500, ramp: 'set' },
+            { t: OO_END, v: 560, ramp: 'linear' },
+            { t: 0.42, v: 1180, ramp: 'exp' },
+            { t: 0.95, v: 830, ramp: 'exp' },
           ],
-          vibrato: { rate: 6, depth: 14 },
+          vibrato: { rate: 6, depth: 18 },
         },
         formants: [
-          { freq: glide(OO.f1, EE.f1), q: 4, gain: 0.6 },
-          { freq: glide(OO.f2, EE.f2), q: 8, gain: 1 },
-          { freq: glide(OO.f3, EE.f3), q: 10, gain: 0.4 },
+          { freq: glide(OO.f1, EE.f1), q: 4, gain: glide(0.6, 0.6) },
+          { freq: glide(OO.f2, EE.f2), q: 8, gain: glide(1, 1) },
+          { freq: glide(OO.f3, EE.f3), q: 10, gain: glide(OO.g3, EE.g3) },
+          { freq: glide(OO.f4, EE.f4), q: 12, gain: glide(OO.g4, EE.g4) },
         ],
+        // Quieter than the level suggests is needed: the bright "ee" sits where
+        // hearing is most sensitive.
         gain: [
           { t: 0, v: SILENT, ramp: 'set' },
-          { t: 0.06, v: 0.4, ramp: 'linear' },
-          { t: EE_START, v: 0.6, ramp: 'linear' },
-          { t: 0.72, v: 0.5, ramp: 'linear' },
+          { t: 0.06, v: 0.16, ramp: 'linear' },
+          { t: EE_START, v: 0.22, ramp: 'linear' },
+          { t: 0.72, v: 0.18, ramp: 'linear' },
           { t: 1, v: SILENT, ramp: 'exp' },
         ],
       },

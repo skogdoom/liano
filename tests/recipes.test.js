@@ -14,7 +14,7 @@ function envelopes(voice) {
   const list = [['gain', voice.gain]];
   if (voice.source.freq) list.push(['source freq', voice.source.freq]);
   for (const f of voice.filters ?? []) list.push(['filter freq', f.freq]);
-  for (const f of voice.formants ?? []) list.push(['formant freq', f.freq]);
+  for (const f of voice.formants ?? []) list.push(['formant freq', f.freq], ['formant gain', f.gain]);
   return list;
 }
 
@@ -59,7 +59,7 @@ describe('sound recipes', () => {
       it('stays in the audible range', () => {
         for (const voice of recipe.voices) {
           for (const [name, env] of envelopes(voice)) {
-            if (name === 'gain') continue;
+            if (name.endsWith('gain')) continue;
             for (const p of env) {
               expect(p.v).toBeGreaterThanOrEqual(20);
               expect(p.v).toBeLessThanOrEqual(12000);
@@ -72,6 +72,7 @@ describe('sound recipes', () => {
 
   it('moves the wheee from an "oo" vowel to an "ee"', () => {
     const [f1, f2, f3] = wheee().voices[0].formants.map((f) => f.freq);
+    expect(wheee().voices[0].formants).toHaveLength(4);
     const first = (env) => env[0].v;
     const last = (env) => env[env.length - 1].v;
     // The second formant carries the vowel: low for "oo", high for "ee".
@@ -79,6 +80,10 @@ describe('sound recipes', () => {
     expect(last(f2)).toBeGreaterThan(2000);
     expect(last(f3)).toBeGreaterThan(first(f3));
     expect(Math.abs(last(f1) - first(f1))).toBeLessThan(100);
+    // The "ee" is brighter: its upper formants are louder than in the "oo".
+    const [, , g3, g4] = wheee().voices[0].formants.map((f) => f.gain);
+    expect(last(g3)).toBeGreaterThan(first(g3));
+    expect(last(g4)).toBeGreaterThan(5 * first(g4));
     // The "eee" gets most of the sound.
     const glideEnd = f2[f2.length - 1].t;
     expect(glideEnd).toBeLessThan(wheee().duration / 2);

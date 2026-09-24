@@ -178,7 +178,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 
 | Event | Sim trigger | Synthesis |
 |---|---|---|
-| "Ooweeee" | `release` event | A sawtooth voice through three band-pass formant filters that glide from an "oo" vowel (second formant about 800 Hz) through "w" into a long "ee" (about 2300 Hz). Pitch starts low, rises into the "ee" and slowly falls, over about 1 s with a little vibrato. |
+| "Ooweeee" | `release` event | A sawtooth voice through four band-pass formant filters that glide from a dark "oo" vowel (second formant about 800 Hz) through "w" into a long, bright "ee" (about 2500 Hz, with strong upper formants up to about 4300 Hz). Pitch starts around 500 Hz, rises to about 1180 Hz into the "ee" and slowly falls, over about 1 s with a little vibrato. Played a little quieter than the other sounds. |
 | "Swish" | the held liana's angle crosses zero | A burst of white noise through a band-pass filter sweeping upward, about 0.3 s, a little quieter than the other sounds. |
 | "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock low, branch mid, bush higher. |
 | "Crash" | `death` with cause `fall` | A low-passed noise burst plus a falling low sine thud, about 0.8 s. |
