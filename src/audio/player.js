@@ -73,7 +73,7 @@ export class SoundPlayer {
       }
       if (voice.formants) {
         for (const f of voice.formants) {
-          const filter = biquad(ctx, 'bandpass', f.q, [{ t: 0, v: f.freq, ramp: 'set' }], t0);
+          const filter = biquad(ctx, 'bandpass', f.q, f.freq, t0);
           const level = ctx.createGain();
           level.gain.value = f.gain;
           node.connect(filter);

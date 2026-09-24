@@ -14,6 +14,7 @@ function envelopes(voice) {
   const list = [['gain', voice.gain]];
   if (voice.source.freq) list.push(['source freq', voice.source.freq]);
   for (const f of voice.filters ?? []) list.push(['filter freq', f.freq]);
+  for (const f of voice.formants ?? []) list.push(['formant freq', f.freq]);
   return list;
 }
 
@@ -64,11 +65,24 @@ describe('sound recipes', () => {
               expect(p.v).toBeLessThanOrEqual(12000);
             }
           }
-          for (const f of voice.formants ?? []) expect(f.freq).toBeGreaterThanOrEqual(20);
         }
       });
     });
   }
+
+  it('moves the wheee from an "oo" vowel to an "ee"', () => {
+    const [f1, f2, f3] = wheee().voices[0].formants.map((f) => f.freq);
+    const first = (env) => env[0].v;
+    const last = (env) => env[env.length - 1].v;
+    // The second formant carries the vowel: low for "oo", high for "ee".
+    expect(first(f2)).toBeLessThan(1000);
+    expect(last(f2)).toBeGreaterThan(2000);
+    expect(last(f3)).toBeGreaterThan(first(f3));
+    expect(Math.abs(last(f1) - first(f1))).toBeLessThan(100);
+    // The "eee" gets most of the sound.
+    const glideEnd = f2[f2.length - 1].t;
+    expect(glideEnd).toBeLessThan(wheee().duration / 2);
+  });
 
   it('pitches the wheee up and back down', () => {
     const f = wheee().voices[0].source.freq.map((p) => p.v);
