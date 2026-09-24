@@ -35,4 +35,11 @@ describe('web app manifest', () => {
     expect(existsSync(new URL(`public/${touchIcon}`, root))).toBe(true);
     expect(pngSize(read(`public/${touchIcon}`))).toEqual([180, 180]);
   });
+
+  it('links an SVG favicon that exists', () => {
+    const html = read('index.html').toString();
+    const favicon = html.match(/rel="icon" href="\/([^"]+)" type="image\/svg\+xml"/)?.[1];
+    expect(favicon).toBe('favicon.svg');
+    expect(read(`public/${favicon}`).toString()).toMatch(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+  });
 });

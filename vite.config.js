@@ -7,5 +7,7 @@ export default defineConfig(({ command, isPreview }) => ({
   test: {
     include: ['tests/**/*.test.js'],
     environment: 'node',
+    // The heaviest tests take 3–5 s here; CI runners are slower.
+    testTimeout: 30000,
   },
 }));

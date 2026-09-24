@@ -1,6 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { SCREEN_WIDTH, SCREEN_HEIGHT, MONKEY_RADIUS } from '../config.js';
 import { GameState } from '../sim/game.js';
+import { version } from '../../package.json';
 
 const CREAM = 0xf4e7c5;
 const GOLD = 0xffcf4a;
@@ -76,6 +77,10 @@ export class Overlays {
     place(this.title, text('Swing from vine to vine.\nLet go to fly to the next one.', 22), 10);
     this.titleControl = place(this.title, text('', 22, { color: GOLD, weight: 'bold' }), 70);
     this.titlePrompt = place(this.title, text('', 28), 125);
+    const versionText = place(this.title, text(`v${version}`, 13, { color: CREAM }), 150);
+    versionText.anchor.set(1, 0.5);
+    versionText.x = 204;
+    versionText.alpha = 0.55;
 
     this.gameOver = panel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 20, 520, 340);
     place(this.gameOver, text('GAME OVER', 72, { weight: 'bold' }), -105);

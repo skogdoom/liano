@@ -1,5 +1,6 @@
-// Renders the app icon (monkey on a vine) to PNGs in public/icons, with no
-// dependencies: shapes are sampled 4×4 per pixel and encoded with node:zlib.
+// Renders the app icon (monkey on a vine) to PNGs in public/icons and to
+// public/favicon.svg, with no dependencies: for the PNGs, shapes are sampled
+// 4×4 per pixel and encoded with node:zlib.
 // Run with `npm run icons` after changing the design.
 import { writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
@@ -10,46 +11,82 @@ const OUT = new URL('../public/icons/', import.meta.url);
 const hex = (c) => [(c >> 16) & 255, (c >> 8) & 255, c & 255];
 const lerp = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
 
-// Design space is 512 × 512. Later shapes are drawn on top.
-const circle = (cx, cy, r) => (x, y) => (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
-const ellipse = (cx, cy, rx, ry) => (x, y) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
-const capsule = (ax, ay, bx, by, r) => (x, y) => {
-  const dx = bx - ax;
-  const dy = by - ay;
-  const t = Math.min(Math.max(((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy), 0), 1);
-  return (x - ax - t * dx) ** 2 + (y - ay - t * dy) ** 2 <= r * r;
-};
-const smile = (x, y) => {
-  const d = Math.hypot(x - 270, y - 335);
-  return d >= 30 && d <= 38 && y > 350;
-};
-
-const FUR = hex(0x6e4322);
-const SKIN = hex(0xe0ad74);
-const MUZZLE = hex(0xf0c894);
-const EYE = hex(0x1c1008);
+// Design space is 512 × 512. Later shapes are drawn on top. Each shape is data, so
+// the same design renders to the PNGs and to the SVG favicon.
+const FUR = 0x6e4322;
+const SKIN = 0xe0ad74;
+const MUZZLE = 0xf0c894;
+const EYE = 0x1c1008;
+const TOP = 0x10261a;
+const BOTTOM = 0x3a7050;
+const SMILE = { cx: 270, cy: 335, r: 34, width: 8, above: 350 };
 const shapes = [
-  [capsule(120, -20, 262, 210, 22), hex(0x2c5219)],
-  [capsule(120, -20, 262, 210, 13), hex(0x6da539)],
-  [circle(150, 236, 50), FUR],
-  [circle(390, 236, 50), FUR],
-  [circle(150, 236, 27), SKIN],
-  [circle(390, 236, 27), SKIN],
-  [circle(270, 300, 122), FUR],
-  [ellipse(270, 326, 90, 80), SKIN],
-  [ellipse(270, 352, 46, 30), MUZZLE],
-  [circle(236, 298, 14), EYE],
-  [circle(304, 298, 14), EYE],
-  [circle(240, 293, 4), hex(0xffffff)],
-  [circle(308, 293, 4), hex(0xffffff)],
-  [smile, EYE],
+  { kind: 'capsule', ax: 120, ay: -20, bx: 262, by: 210, r: 22, color: 0x2c5219 },
+  { kind: 'capsule', ax: 120, ay: -20, bx: 262, by: 210, r: 13, color: 0x6da539 },
+  { kind: 'circle', cx: 150, cy: 236, r: 50, color: FUR },
+  { kind: 'circle', cx: 390, cy: 236, r: 50, color: FUR },
+  { kind: 'circle', cx: 150, cy: 236, r: 27, color: SKIN },
+  { kind: 'circle', cx: 390, cy: 236, r: 27, color: SKIN },
+  { kind: 'circle', cx: 270, cy: 300, r: 122, color: FUR },
+  { kind: 'ellipse', cx: 270, cy: 326, rx: 90, ry: 80, color: SKIN },
+  { kind: 'ellipse', cx: 270, cy: 352, rx: 46, ry: 30, color: MUZZLE },
+  { kind: 'circle', cx: 236, cy: 298, r: 14, color: EYE },
+  { kind: 'circle', cx: 304, cy: 298, r: 14, color: EYE },
+  { kind: 'circle', cx: 240, cy: 293, r: 4, color: 0xffffff },
+  { kind: 'circle', cx: 308, cy: 293, r: 4, color: 0xffffff },
+  { kind: 'smile', ...SMILE, color: EYE },
 ];
-const TOP = hex(0x10261a);
-const BOTTOM = hex(0x3a7050);
+
+function inside(s, x, y) {
+  switch (s.kind) {
+    case 'circle':
+      return (x - s.cx) ** 2 + (y - s.cy) ** 2 <= s.r * s.r;
+    case 'ellipse':
+      return ((x - s.cx) / s.rx) ** 2 + ((y - s.cy) / s.ry) ** 2 <= 1;
+    case 'capsule': {
+      const dx = s.bx - s.ax;
+      const dy = s.by - s.ay;
+      const t = Math.min(Math.max(((x - s.ax) * dx + (y - s.ay) * dy) / (dx * dx + dy * dy), 0), 1);
+      return (x - s.ax - t * dx) ** 2 + (y - s.ay - t * dy) ** 2 <= s.r * s.r;
+    }
+    case 'smile': {
+      const d = Math.hypot(x - s.cx, y - s.cy);
+      return Math.abs(d - s.r) <= s.width / 2 && y > s.above;
+    }
+  }
+}
+
+const css = (c) => `#${c.toString(16).padStart(6, '0')}`;
+function svgShape(s) {
+  const fill = css(s.color);
+  switch (s.kind) {
+    case 'circle':
+      return `<circle cx="${s.cx}" cy="${s.cy}" r="${s.r}" fill="${fill}"/>`;
+    case 'ellipse':
+      return `<ellipse cx="${s.cx}" cy="${s.cy}" rx="${s.rx}" ry="${s.ry}" fill="${fill}"/>`;
+    case 'capsule':
+      return `<line x1="${s.ax}" y1="${s.ay}" x2="${s.bx}" y2="${s.by}" stroke="${fill}" stroke-width="${2 * s.r}" stroke-linecap="round"/>`;
+    case 'smile': {
+      const dx = +Math.sqrt(s.r ** 2 - (s.above - s.cy) ** 2).toFixed(1);
+      return `<path d="M${s.cx - dx} ${s.above}A${s.r} ${s.r} 0 0 0 ${s.cx + dx} ${s.above}" fill="none" stroke="${fill}" stroke-width="${s.width}"/>`;
+    }
+  }
+}
+
+function svg() {
+  return [
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">',
+    `<defs><linearGradient id="bg" x2="0" y2="1"><stop offset="0" stop-color="${css(TOP)}"/><stop offset="1" stop-color="${css(BOTTOM)}"/></linearGradient></defs>`,
+    '<rect width="512" height="512" rx="96" fill="url(#bg)"/>',
+    ...shapes.map(svgShape),
+    '</svg>',
+    '',
+  ].join('\n');
+}
 
 function colorAt(x, y) {
-  for (let i = shapes.length - 1; i >= 0; i--) if (shapes[i][0](x, y)) return shapes[i][1];
-  return lerp(TOP, BOTTOM, y / 512);
+  for (let i = shapes.length - 1; i >= 0; i--) if (inside(shapes[i], x, y)) return hex(shapes[i].color);
+  return lerp(hex(TOP), hex(BOTTOM), y / 512);
 }
 
 function render(size) {
@@ -111,3 +148,5 @@ for (const size of SIZES) {
   writeFileSync(new URL(`icon-${size}.png`, OUT), png(size, render(size)));
   console.log(`icon-${size}.png`);
 }
+writeFileSync(new URL('../public/favicon.svg', import.meta.url), svg());
+console.log('favicon.svg');
