@@ -202,8 +202,8 @@ Measured at the start of this phase in headless Chromium:
 
 Performance:
 - **Precomputed windows:** compute the release-window table (3 types × each whole-pixel height) at build time and ship it as a small JSON module. Generation becomes a table lookup. A unit test checks the shipped table against the live solver, so a changed tunable fails CI until the table is rebuilt.
-- **Lianas:** redraw a liana's `Graphics` only when its angle changes. Idle lianas are static.
-- **Background:** try `cacheAsTexture` on the static background layers if the GPU is fill-limited on phones. It is kept only if it measurably helps on a device.
+- **Lianas:** redraw a liana's `Graphics` only when its angle changes. Idle lianas are static. (Done: about 1.5 redraws per frame during play.)
+- **Background:** the parallax layers are render groups, so moving them only changes a transform instead of re-packing every vertex each frame. The 16:9 clip is black letterbox bars instead of a mask (no stencil pass). Draw calls went from about 28 to 24 per frame. `cacheAsTexture` was not used: tile-sized textures at 2× would cost hundreds of MB.
 - **Budget:** at 4× CPU throttling, per-frame work under 6 ms at p95 and no frame over 16 ms during generation, restarts or deaths. Then check on real devices via the local dev server.
 
 Hardening:
@@ -213,7 +213,8 @@ Hardening:
 - **Long sessions:**
   - A soak test plays 5,000 gaps with the fairness bot. Entity counts and the event queue must stay bounded, and the heap must stay flat across restarts.
   - Rendering must stay precise at large world x (millions of pixels): check for jitter and, if it appears, shift the world origin.
-- **Input edge cases:** Space held across a restart; taps during the game-over lock; multi-touch; a key or pointer held while the window loses focus.
+- **Input edge cases:** Space held across a restart; taps during the game-over lock; multi-touch; a key or pointer held while the window loses focus. (Unit tested.)
+- **Also done:** screen shake off with `prefers-reduced-motion`; the canvas follows pixel-ratio changes (a window moved to another screen).
 
 ### Release
 
@@ -237,10 +238,12 @@ Order: 9 → 10 → 11 → 8 → 12 (numbers kept from the original plan).
 - [x] Mute toggles with `M` and the on-screen button (top-left speaker)
 
 **11. Performance and hardening.** Precomputed window table, liana redraw on change, renderer and GPU-context handling, error overlay, soak test, input edge cases.
-- [ ] No sim step spends time in the solver during play (table lookup only; unit tested)
-- [ ] At 4× CPU throttling: p95 frame work under 6 ms, no frame over 16 ms during generation
-- [ ] Soak test: 5,000 gaps with bounded entities and no heap growth across 20 restarts
-- [ ] Losing the GPU context pauses and recovers (simulated with `WEBGL_lose_context`)
+- [x] No sim step spends time in the solver during play (table lookup only; unit tested)
+- [x] No frame over 16 ms during generation: a sim step that generates new gaps now takes at most 0.6 ms (1 ms at 4× throttling), down from 12.4 ms
+- [ ] At 4× CPU throttling: p95 frame work under 6 ms — our update is 1.3 ms median and 4 ms at p95; rendering in headless Chromium (software WebGL, fill-bound) is 3.1 ms median and 6.6 ms at p95 with rare frames over 16 ms. Still to check on a real device
+- [x] Soak test: 5,000 gaps with bounded entities and events (unit tested)
+- [ ] No heap growth across 20 restarts — heap after garbage collection is 14.33 MB after 5 restarts, 14.72 MB after 25, 14.90 MB after 45: small and slowing (warm-up rather than a leak), but not flat
+- [x] Losing the GPU context pauses and recovers (simulated with `WEBGL_lose_context`); if it is not restored within 5 s, the reload message appears
 
 **8. Deploy pipeline.** CI on PRs and pushes, Pages deploy on `master`, `base` path.
 - [ ] PRs show a passing test and build check
