@@ -281,18 +281,23 @@ A button and a key that put the game in full screen, on browsers that allow it.
 - [ ] The game fills the screen after entering and leaving full screen, and after rotating while in full screen
 - [ ] v1.1.0 is live on Pages and tagged, with release notes
 
-## Phase 4: portrait mode
+## Phase 4: portrait mode and a flexible frame
 
-Play with the phone or iPad held upright, instead of being asked to rotate it.
+Play with the phone or iPad held upright, instead of being asked to rotate it. Also, in landscape, a short screen (a phone with the browser's address and tab bars showing) fills the screen with a larger game instead of shrinking the 16:9 frame between black bars.
 
 ### Decisions (not specified by the user — confirm or change)
 
 21. **Same game, taller frame.** The simulation, tunables and fairness guarantees stay as they are, so scores in both orientations are comparable. Portrait shows a narrower slice of the same world, and fills the extra height with canopy above and undergrowth below. Portrait-specific tunables (for example shorter gaps) would be a different game, with its own window table; they are out of scope.
 22. **Portrait shows about 1,100 px of world width** (landscape shows 1,280). While the monkey hangs, the camera holds the liana's anchor at 30 % from the left, instead of following the monkey. In flight, it eases back to following the monkey. The whole swing (the monkey reaches 290 px either side of the anchor) and the next liana 700 px ahead then stay on screen, and the view doesn't pan back and forth with each swing. Both values are tunables.
 23. **Size trade-off.** On a phone the world is drawn about two-thirds as large as in landscape on the same phone: the monkey is roughly 16 CSS px across instead of 24. On an iPad the difference is small. If real phones show it's too small to play, stop and reconsider; don't scale the monkey's art away from its hitbox.
-24. **Layout follows the aspect ratio, not the device.** Any screen taller than wide gets the portrait layout, including a narrow desktop window. Wider than tall stays 16:9 with letterbox bars as now.
+24. **Layout follows the aspect ratio, not the device.** Any screen taller than wide gets the portrait layout, including a narrow desktop window. Wider than tall gets the landscape layout (decision 27).
 25. **Rotating mid-run doesn't pause.** The layout switches in place and the run continues, the same as a desktop window resize. The rotate overlay and the `portrait` pause reason are removed. The manifest's `orientation` becomes `any`.
 26. **Ships as v1.2.0** (after milestone 13's v1.1.0).
+27. **Landscape frame flexes instead of letterboxing.** Nothing but falling happens in the bottom of the world band: the lowest grab and the lowest obstacle are around y 410, and the fall line is at 720. So on a screen wider than 16:9, the view first crops up to 150 px off the bottom, keeping y 570 and above visible and scaling the game up to fit the height. If the screen is still wider than that, it shows more world to the side, up to 1,600 px wide. Black bars remain only beyond that.
+    - Example: a phone showing 844 × 340 CSS px of page. Today the game is drawn at 0.47× with 120 px bars on each side. With the flexible frame, it is drawn at 0.60× (27 % larger), showing 1,416 px of world, with no bars.
+    - Cost: a falling monkey leaves the view about 0.2 s before the crash sounds. The undergrowth is drawn at the bottom edge, so it drops into the leaves rather than off a cut edge.
+    - Taller-than-16:9 landscape screens (4:3 iPads) show extra canopy above and undergrowth below, like portrait, instead of bars at the top and bottom.
+    - The simulation doesn't change.
 
 ### Design
 
@@ -304,11 +309,12 @@ Play with the phone or iPad held upright, instead of being asked to rotate it.
 
 ### Milestone
 
-**14. Portrait mode.** World/screen split, layout module, anchor-following portrait camera, extended background, HUD and panel layouts, rotate overlay removed.
+**14. Portrait mode and a flexible frame.** World/screen split, layout module (portrait and flexible landscape), anchor-following portrait camera, extended background, HUD and panel layouts, rotate overlay removed.
 - [ ] Held upright, a phone and an iPad play a full run: start, release, die, restart (Playwright emulation, then real devices)
 - [ ] The whole swing and the next liana are on screen while the monkey hangs, in portrait on the narrowest supported phone (unit tested against the layout and camera)
 - [ ] Rotating mid-run switches layout without pausing, losing the run or dropping a press
-- [ ] Landscape looks and plays as before (screenshots compared)
+- [ ] Landscape at exactly 16:9 looks and plays as before (screenshots compared)
+- [ ] A landscape phone with the browser bars showing fills the screen with no black bars, with the game drawn larger than a 16:9 letterbox would allow (unit tested against the layout, then on a real phone)
 - [ ] The monkey is readable on a real phone in portrait (see decision 23)
 - [ ] v1.2.0 is live on Pages and tagged, with release notes
 
