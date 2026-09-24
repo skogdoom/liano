@@ -12,27 +12,54 @@
 
 const SILENT = 0.0001;
 
-// A single sung vowel: formant centre frequencies (Hz) and the levels of the second
-// and third. "ih" as in "hit", or "ee" as in "teach". A wide "body" band on the pitch
-// itself gives the voice warmth, the vowel formants sit lower than it, and a
-// low-pass keeps the buzz of the upper harmonics out. `level` evens out loudness
-// between the vowels.
-export const WHEEE_VOWELS = {
-  ih: { f1: 430, f2: 2400, f3: 3000, g2: 0.5, g3: 0.15, level: 0.56 },
-  ee: { f1: 310, f2: 2700, f3: 3300, g2: 0.5, g3: 0.15, level: 0.59 },
+// Sung vowels: formant centre frequencies (Hz) and the levels of the second and
+// third formants. "ih" as in "hit", "ee" as in "teach", "oo" as in "food" and "aa"
+// as in "father". A wide "body" band on the pitch itself gives the voice warmth,
+// and a low-pass keeps the buzz of the upper harmonics out.
+const VOWELS = {
+  ih: { f1: 430, f2: 2400, f3: 3000, g2: 0.5, g3: 0.15 },
+  ee: { f1: 310, f2: 2700, f3: 3300, g2: 0.5, g3: 0.15 },
+  oo: { f1: 330, f2: 800, f3: 2400, g2: 0.5, g3: 0.05 },
+  // At an 800 Hz pitch there are few harmonics to shape, so, as high singers do, the
+  // "aa" formants sit on the 2nd and 3rd harmonics (1600, 2400 Hz) instead of their
+  // speaking values (about 1220 and 2800 Hz). That is what tells it apart from "oo".
+  aa: { f1: 850, f2: 1600, f3: 2400, g2: 2.4, g3: 0.8 },
+};
+
+// The wheee variants: the vowels sung in turn, each held and then gliding into the
+// next, and a level that evens out loudness between the variants.
+export const WHEEE_VARIANTS = {
+  ih: { vowels: ['ih'], level: 0.56 },
+  ee: { vowels: ['ee'], level: 0.59 },
+  ooaa: { vowels: ['oo', 'aa', 'oo', 'aa'], level: 0.35 },
 };
 export const WHEEE_VOWEL = 'ih';
 const WHEEE_PITCH = 800; // Hz, steady throughout
+const WHEEE_DURATION = 0.9;
+const VOWEL_GLIDE = 0.1; // s, from one vowel into the next
 const SOFTEN_ABOVE = 3000; // Hz, low-pass on the source
 
 const constant = (v) => [{ t: 0, v, ramp: 'set' }];
 
-// "Wheee": one long vowel on a steady pitch, with a little vibrato.
-export function wheee(vowel = WHEEE_VOWEL) {
-  const v = WHEEE_VOWELS[vowel];
+// One formant property over a vowel sequence: each vowel gets an equal share of
+// the duration, holding and then gliding into the next one.
+function vowelEnvelope(vowels, key) {
+  const share = WHEEE_DURATION / vowels.length;
+  const env = constant(VOWELS[vowels[0]][key]);
+  for (let i = 1; i < vowels.length; i++) {
+    env.push({ t: i * share - VOWEL_GLIDE, v: VOWELS[vowels[i - 1]][key], ramp: 'linear' });
+    env.push({ t: i * share, v: VOWELS[vowels[i]][key], ramp: 'exp' });
+  }
+  return env;
+}
+
+// "Wheee": sung vowels on a steady pitch, with a slow vibrato.
+export function wheee(variant = WHEEE_VOWEL) {
+  const { vowels, level } = WHEEE_VARIANTS[variant];
+  const formant = (key) => vowelEnvelope(vowels, key);
   return {
     name: 'wheee',
-    duration: 0.9,
+    duration: WHEEE_DURATION,
     voices: [
       {
         // A slow vibrato, about ±1.5% of the pitch.
@@ -40,15 +67,15 @@ export function wheee(vowel = WHEEE_VOWEL) {
         filters: [{ type: 'lowpass', q: 0.7, freq: constant(SOFTEN_ABOVE) }],
         formants: [
           { freq: constant(WHEEE_PITCH), q: 1, gain: constant(1) }, // body
-          { freq: constant(v.f1), q: 4, gain: constant(0.6) },
-          { freq: constant(v.f2), q: 7, gain: constant(v.g2) },
-          { freq: constant(v.f3), q: 9, gain: constant(v.g3) },
+          { freq: formant('f1'), q: 4, gain: constant(0.6) },
+          { freq: formant('f2'), q: 7, gain: formant('g2') },
+          { freq: formant('f3'), q: 9, gain: formant('g3') },
         ],
         gain: [
           { t: 0, v: SILENT, ramp: 'set' },
-          { t: 0.05, v: 0.2 * v.level, ramp: 'linear' },
-          { t: 0.62, v: 0.17 * v.level, ramp: 'linear' },
-          { t: 0.9, v: SILENT, ramp: 'exp' },
+          { t: 0.05, v: 0.2 * level, ramp: 'linear' },
+          { t: 0.62, v: 0.17 * level, ramp: 'linear' },
+          { t: WHEEE_DURATION, v: SILENT, ramp: 'exp' },
         ],
       },
     ],
