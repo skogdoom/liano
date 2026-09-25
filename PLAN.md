@@ -390,7 +390,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
 - [x] Neither the button nor `F` releases the monkey or starts a run (unit tested; also checked in Chromium)
 - [ ] The button is hidden on iPhone Safari and in the home-screen app — passes with the API removed and with `display-mode: standalone` faked in Chromium; real devices still to check
 - [ ] The game fills the screen after entering and leaving full screen, and after rotating while in full screen
-- [ ] v1.1.0 is live on Pages and tagged, with release notes — live on Pages; the tag and release are still to be created
+- [x] v1.1.0 is live on Pages and tagged, with release notes (tag `v1.1.0` on the #7 merge commit; release at https://github.com/skogdoom/liano/releases/tag/v1.1.0)
 
 **14. Portrait mode and a flexible frame.** World/screen split, layout module (portrait and flexible landscape), anchor-following portrait camera, extended background, HUD and panel layouts, rotate overlay removed. (skogdoom/liano#8.)
 - [ ] Held upright, a phone and an iPad play a full run: start, release, die, restart (Playwright emulation, then real devices) — passes in iPhone 13 and iPad emulation; real devices still to check
@@ -399,7 +399,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
 - [x] Landscape at exactly 16:9 looks and plays as before (screenshots compared at 1280 × 720 and 1920 × 1080; the layout gives the old frame, camera and panel spots, unit tested)
 - [ ] A landscape phone with the browser bars showing fills the screen with no black bars, with the game drawn larger than a 16:9 letterbox would allow (unit tested against the layout, then on a real phone) — unit tested and checked at 844 × 340 in emulation (drawn at 0.60× instead of 0.47×); a real phone still to check
 - [ ] The monkey is readable on a real phone in portrait (see decision 11)
-- [ ] v1.2.0 is live on Pages and tagged, with release notes
+- [x] v1.2.0 is live on Pages and tagged, with release notes (tag `v1.2.0` on master after #8 and #9; release at https://github.com/skogdoom/liano/releases/tag/v1.2.0)
 
 ### v2 (milestones 15–22)
 
