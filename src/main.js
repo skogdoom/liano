@@ -123,6 +123,12 @@ watchPixelRatio();
 for (const type of ['dblclick', 'gesturestart', 'contextmenu']) {
   app.canvas.addEventListener(type, (event) => event.preventDefault());
 }
+// iOS Safari still acts on quick taps (in landscape it briefly shifts the page under
+// the tab bar) unless the touch events themselves are cancelled; pointer events,
+// which the game reads, arrive before them and are unaffected.
+for (const type of ['touchstart', 'touchmove', 'touchend']) {
+  app.canvas.addEventListener(type, (event) => event.preventDefault(), { passive: false });
+}
 
 // Back to front: sky and parallax layers, the world (scrolled by the camera), the
 // canopy strip and floor band, then HUD and overlays.

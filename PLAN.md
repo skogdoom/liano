@@ -361,8 +361,8 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
 - [x] Full loop: title → play → die → restart with no reload
 
 **9. Touch and mobile.** Pointer input, viewport and gesture handling, landscape-only overlay (later removed by 14), input-dependent prompts, resolution cap, manifest and icon.
-- [ ] Tap starts, releases and restarts on phone and iPad (Playwright touch emulation, then real devices via `npm run dev:host`) — emulation passes; real devices still to check
-- [ ] No zoom, scroll or text selection from taps; the portrait overlay pauses the game — emulation passes; real devices still to check
+- [ ] Tap starts, releases and restarts on phone and iPad (Playwright touch emulation, then real devices via `npm run dev:host`) — emulation passes; works on an iPhone 13 mini in landscape and portrait (owner); an iPad still to check
+- [ ] No zoom, scroll or text selection from taps; the portrait overlay pauses the game (overlay later removed by 14) — on an iPhone 13 mini in landscape, a double tap or a tap in flight briefly shifted the page up under the tab bar; v1.2.1 cancels the canvas's touch events to stop it, to be rechecked on the phone
 - [x] The press that resumes from pause is not also used as a press (unit tested)
 
 **10. Sound.** Recipes, player, mute toggle and button.
