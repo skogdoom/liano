@@ -79,7 +79,7 @@ export class LianaView {
     this.redraws = 0; // for tests and profiling
   }
 
-  update(lianas, cameraX) {
+  update(lianas, cameraX, viewWidth = SCREEN_WIDTH) {
     const margin = 500;
     const seen = new Set();
     for (const liana of lianas) {
@@ -90,7 +90,7 @@ export class LianaView {
         this.entries.set(liana, entry);
         this.view.addChild(entry.g);
       }
-      const visible = liana.x >= cameraX - margin && liana.x <= cameraX + SCREEN_WIDTH + margin;
+      const visible = liana.x >= cameraX - margin && liana.x <= cameraX + viewWidth + margin;
       entry.g.visible = visible;
       if (!visible) continue;
       const state = drawnState(liana);

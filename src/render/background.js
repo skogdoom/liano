@@ -1,5 +1,5 @@
 import { Container, Graphics, GraphicsContext } from 'pixi.js';
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../config.js';
+import { WORLD_HEIGHT } from '../config.js';
 import { mulberry32 } from '../sim/rng.js';
 import { leafPoints, mixColor } from './shapes.js';
 
@@ -11,8 +11,13 @@ import { leafPoints, mixColor } from './shapes.js';
 // again one tile to each side, and overlapping copies must look identical.
 
 const TILE = 2048;
-export const FLOOR_Y = SCREEN_HEIGHT - 60;
+export const FLOOR_Y = WORLD_HEIGHT - 60;
 const CANOPY_BOTTOM = 34;
+
+// Taller views (portrait, 4:3) show this much forest above the world band and
+// undergrowth below it.
+const EXTEND_UP = 1000;
+const EXTEND_DOWN = 1600;
 
 const SKY_TOP = 0x10261a;
 const SKY_BOTTOM = 0x4a8060;
@@ -47,17 +52,21 @@ function wrapped(x, draw) {
 // Extends past the screen edges so the death shake never uncovers the letterbox.
 const SKY_MARGIN = 24;
 
-function sky() {
-  const g = new Graphics();
+// The sky gradient, from the top of the view (`top`, a world y) to the floor, then
+// flat down to the bottom of the view; `width` is the view width.
+function drawSky(g, top, width, bottom) {
+  g.clear();
   const bands = 32;
-  const h = FLOOR_Y / bands;
+  const start = Math.min(top, 0);
+  const h = (FLOOR_Y - start) / bands;
   const x = -SKY_MARGIN;
-  const w = SCREEN_WIDTH + 2 * SKY_MARGIN;
+  const w = width + 2 * SKY_MARGIN;
   for (let i = 0; i < bands; i++) {
-    const top = i === 0 ? -SKY_MARGIN : i * h;
-    g.rect(x, top, w, (i + 1) * h - top + 1).fill(mixColor(SKY_TOP, SKY_BOTTOM, i / (bands - 1)));
+    const y = start + i * h;
+    const from = i === 0 ? y - SKY_MARGIN : y;
+    g.rect(x, from, w, y + h - from + 1).fill(mixColor(SKY_TOP, SKY_BOTTOM, i / (bands - 1)));
   }
-  return g.rect(x, FLOOR_Y, w, SCREEN_HEIGHT - FLOOR_Y + SKY_MARGIN).fill(SKY_BOTTOM);
+  return g.rect(x, FLOOR_Y, w, Math.max(bottom, WORLD_HEIGHT) - FLOOR_Y + SKY_MARGIN).fill(SKY_BOTTOM);
 }
 
 // Far: hazy tree silhouettes and canopy masses.
@@ -77,6 +86,19 @@ function farLayer() {
     const r = 60 + rand() * 70;
     wrapped(x, (px) => ctx.circle(px, y, r).fill(crown));
   }
+  // Above the band, for taller views: trunk tops and more crowns.
+  const upper = mulberry32(111);
+  for (let i = 0; i < 16; i++) {
+    const x = upper() * TILE;
+    const w = 14 + upper() * 22;
+    wrapped(x, (px) => ctx.rect(px - w / 2, -EXTEND_UP, w, EXTEND_UP).fill(trunk));
+  }
+  for (let i = 0; i < 90; i++) {
+    const x = upper() * TILE;
+    const y = -EXTEND_UP + upper() * EXTEND_UP;
+    const r = 60 + upper() * 70;
+    wrapped(x, (px) => ctx.circle(px, y, r).fill(crown));
+  }
   return new ParallaxLayer(ctx, 0.15);
 }
 
@@ -90,6 +112,7 @@ function midLayer() {
     const w = 34 + rand() * 30;
     const stubs = Array.from({ length: 2 }, () => ({ y: 180 + rand() * 300, side: rand() < 0.5 ? -1 : 1, len: 30 + rand() * 50 }));
     wrapped(x, (px) => {
+      ctx.rect(px - w / 2, -EXTEND_UP, w, EXTEND_UP).fill(trunk); // above the band
       ctx.poly([px - w / 2, 0, px + w / 2, 0, px + w / 2 + 6, FLOOR_Y + 10, px - w / 2 - 6, FLOOR_Y + 10]).fill(trunk);
       for (const s of stubs) {
         const x0 = px + (s.side * w) / 2;
@@ -147,16 +170,24 @@ function canopyLayer() {
     const a = rand() * Math.PI * 2;
     wrapped(x, (px) => ctx.poly(leafPoints(px, y, a, 16, 7)).fill(light));
   }
+  // A leafy top edge, seen only in taller views. The bumps overlap the strip's top
+  // (y −24) and stay above y −10, out of sight in 16:9 even during the death shake.
+  const top = mulberry32(414);
+  for (let x = 0; x < TILE; x += 18 + top() * 18) {
+    const r = 10 + top() * 10;
+    wrapped(x, (px) => ctx.circle(px, -SKY_MARGIN - 0.3 * r, r).fill(dark));
+  }
   return new ParallaxLayer(ctx, 1);
 }
 
 // Front, moving with the world: the dark jungle floor. Falling in here ends the run.
+// It reaches EXTEND_DOWN below the band, for taller views.
 function floorLayer() {
   const ctx = new GraphicsContext();
   const rand = mulberry32(505);
   const floor = 0x0a140d;
   const growth = 0x0f1e14;
-  ctx.rect(-TILE, FLOOR_Y, 3 * TILE, SCREEN_HEIGHT - FLOOR_Y + SKY_MARGIN).fill(floor);
+  ctx.rect(-TILE, FLOOR_Y, 3 * TILE, WORLD_HEIGHT - FLOOR_Y + EXTEND_DOWN).fill(floor);
   for (let x = 0; x < TILE; x += 10 + rand() * 16) {
     const h = 10 + rand() * 22;
     const lean = (rand() - 0.5) * 12;
@@ -178,10 +209,19 @@ export class Background {
     this.near = nearLayer();
     this.canopy = canopyLayer();
     this.floor = floorLayer();
+    this.sky = new Graphics();
     const skyGroup = new Container({ isRenderGroup: true });
-    skyGroup.addChild(sky());
+    skyGroup.addChild(this.sky);
     this.back.addChild(skyGroup, this.far.view, this.mid.view, this.near.view);
     this.front.addChild(this.canopy.view, this.floor.view);
+  }
+
+  // Fits the sky to the view, and lifts the floor to the bottom edge when the band is
+  // cropped (see layout.js).
+  resize(layout) {
+    const top = -layout.bandTop;
+    drawSky(this.sky, top, layout.view.width, top + layout.view.height);
+    this.floor.view.y = layout.floorShift;
   }
 
   update(cameraX) {

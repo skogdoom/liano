@@ -8,7 +8,7 @@ import {
   LIANA_SPACING,
   LIANA_CLEARANCE,
   MONKEY_RADIUS,
-  SCREEN_HEIGHT,
+  WORLD_HEIGHT,
   SWING_AMPLITUDE,
   SWING_PERIOD,
   MIN_RELEASE_WINDOW_MS,
@@ -65,7 +65,7 @@ export function simulateFlight(body, obstacle, target) {
     if (circleIntersectsSegment(b.x, b.y, MONKEY_RADIUS, target.x, target.anchorY, target.x, target.tipY)) {
       return 'grab';
     }
-    if (b.y > SCREEN_HEIGHT + MONKEY_RADIUS) return 'fall';
+    if (b.y > WORLD_HEIGHT + MONKEY_RADIUS) return 'fall';
   }
   return 'timeout';
 }
@@ -153,7 +153,7 @@ export function windowInputs() {
     LIANA_SPACING,
     LIANA_CLEARANCE,
     MONKEY_RADIUS,
-    SCREEN_HEIGHT,
+    WORLD_HEIGHT,
     SWING_AMPLITUDE,
     SWING_PERIOD,
     MIN_RELEASE_WINDOW_MS,

@@ -392,7 +392,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
 - [ ] The game fills the screen after entering and leaving full screen, and after rotating while in full screen
 - [ ] v1.1.0 is live on Pages and tagged, with release notes — live on Pages; the tag and release are still to be created
 
-**14. Portrait mode and a flexible frame.** World/screen split, layout module (portrait and flexible landscape), anchor-following portrait camera, extended background, HUD and panel layouts, rotate overlay removed. (Code in skogdoom/liano#8, not merged yet.)
+**14. Portrait mode and a flexible frame.** World/screen split, layout module (portrait and flexible landscape), anchor-following portrait camera, extended background, HUD and panel layouts, rotate overlay removed. (skogdoom/liano#8.)
 - [ ] Held upright, a phone and an iPad play a full run: start, release, die, restart (Playwright emulation, then real devices) — passes in iPhone 13 and iPad emulation; real devices still to check
 - [x] The whole swing and the next liana are on screen while the monkey hangs, in portrait on the narrowest supported phone (unit tested against the layout and camera, 320 × 568 up to iPads)
 - [x] Rotating mid-run switches layout without pausing, losing the run or dropping a press (checked in iPhone emulation by resizing the viewport mid-run; the first tap after it releases the monkey)
@@ -484,7 +484,7 @@ The v2 draft differed from what's built in these places. This plan keeps the bui
 | Solver step | 1/240 s | The sim step, 1/120 s | So the solver agrees exactly with the real world (tested). |
 | Solver location | Web Worker | Build-time table for static gaps, worker for moving ones | Keeps generation a lookup for static gaps; the worker only where the table can't cover it. |
 | Pause | On window blur | On blur, a hidden page, or a lost graphics context, with a 250 ms resume grace | Built in v1 (milestones 9 and 11). |
-| Screen | 1280 × 720, letterboxed | Flexible frame and portrait (1P); 16:9 for 2P | Milestone 14. |
+| Screen | 1280 × 720, letterboxed | Flexible frame and portrait (1P); 16:9 for 2P | Built in milestone 14. |
 | Out of scope | Mobile/touch input, sound | Both stay in scope | Built in v1 (milestones 9 and 10). |
 
 v2 changes these v1 rules on purpose: a fixed grip slide becomes slip with forced release; constant difficulty becomes stages; moving obstacles, power-ups (bananas) and modes are now in scope.

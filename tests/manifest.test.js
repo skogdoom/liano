@@ -13,9 +13,9 @@ function pngSize(buffer) {
 describe('web app manifest', () => {
   const manifest = JSON.parse(read('public/manifest.webmanifest'));
 
-  it('is a landscape full-screen app with relative URLs', () => {
+  it('is a full-screen app for either orientation, with relative URLs', () => {
     expect(manifest.display).toBe('fullscreen');
-    expect(manifest.orientation).toBe('landscape');
+    expect(manifest.orientation).toBe('any');
     expect(manifest.start_url).toBe('./');
     for (const icon of manifest.icons) expect(icon.src.startsWith('/')).toBe(false);
   });
