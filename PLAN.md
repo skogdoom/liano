@@ -270,14 +270,15 @@ A button and a key that put the game in full screen, on browsers that allow it.
 - **Module:** `src/fullscreen.js` wraps the API (with the `webkit`-prefixed fallback for older Safari) behind `supported`, `active`, `toggle()` and a change callback. It takes `document` as a parameter so it can be unit-tested with a fake.
 - **State:** the button icon (expand or collapse arrows) follows `fullscreenchange`, so it stays right when full screen ends outside the game. A rejected request is ignored and the button keeps working.
 - **Input:** the button goes through the same `intercept()` path as the mute button. `F` is read like `M` and `D`.
-- **Docs:** README controls, and the title panel's control line if it fits.
+- **Docs:** README controls. The title panel's control line stays as it is, since the button is visible next to the speaker.
+- **Touch:** browsers only allow entering full screen from a gesture. A touch `pointerdown` doesn't count as one, but `pointerup` does, so the button swallows the `pointerdown` (it is never a game press) and toggles on the matching `pointerup`. `F` toggles in its own keydown handler, not later in the frame loop.
 
 ### Milestone
 
 **13. Fullscreen.** Button, `F` key, state sync, hidden where unsupported.
-- [ ] The button and `F` enter and leave full screen in desktop Chrome, Firefox and Safari, in Android Chrome and on iPad. The icon follows the state, including after Esc
-- [ ] Neither the button nor `F` releases the monkey or starts a run (unit tested)
-- [ ] The button is hidden on iPhone Safari and in the home-screen app
+- [ ] The button and `F` enter and leave full screen in desktop Chrome, Firefox and Safari, in Android Chrome and on iPad. The icon follows the state, including after Esc — passes in Chromium (mouse, `F`, and a touch tap in Android emulation; the icon follows an exit made outside the game); the other browsers and real devices still to check
+- [x] Neither the button nor `F` releases the monkey or starts a run (unit tested; also checked in Chromium)
+- [ ] The button is hidden on iPhone Safari and in the home-screen app — passes with the API removed and with `display-mode: standalone` faked in Chromium; real devices still to check
 - [ ] The game fills the screen after entering and leaving full screen, and after rotating while in full screen
 - [ ] v1.1.0 is live on Pages and tagged, with release notes
 

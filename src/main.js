@@ -12,6 +12,7 @@ import { createFixedStepLoop } from './loop.js';
 import { createInput } from './input.js';
 import { Game, GameState } from './sim/game.js';
 import { createPause } from './pause.js';
+import { createFullscreen, bindFullscreenControls } from './fullscreen.js';
 import { Overlays } from './render/overlays.js';
 import { LianaView } from './render/lianaView.js';
 import { MonkeyView } from './render/monkeyView.js';
@@ -22,6 +23,7 @@ import { DebugOverlay } from './render/debugOverlay.js';
 import { Background } from './render/background.js';
 import { Shake } from './render/shake.js';
 import { MuteButton } from './render/muteButton.js';
+import { FullscreenButton } from './render/fullscreenButton.js';
 import { SoundPlayer } from './audio/player.js';
 import { soundsFor } from './audio/sounds.js';
 import { createFatalOverlay, createNotice, isOwnError } from './fatal.js';
@@ -128,7 +130,8 @@ root.addChild(debugOverlay.screenView);
 
 const hud = new Hud();
 const muteButton = new MuteButton();
-root.addChild(hud.view, muteButton.view);
+const fullscreenButton = new FullscreenButton();
+root.addChild(hud.view, muteButton.view, fullscreenButton.view);
 
 const overlays = new Overlays();
 root.addChild(overlays.view);
@@ -176,13 +179,35 @@ function logicalPoint(event) {
   };
 }
 
+// Full screen via the button or F, where the browser allows it for pages. The
+// home-screen app is already full screen, so it gets neither.
+const homeScreenApp =
+  window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches ||
+  navigator.standalone === true;
+const fullscreen = createFullscreen(document, {
+  onChange: (active) => {
+    fullscreenButton.update(active);
+    queueLayout();
+  },
+});
+fullscreenButton.view.visible = fullscreen.supported && !homeScreenApp;
+const onFullscreenButton = (event) => {
+  const p = logicalPoint(event);
+  return fullscreenButton.contains(p.x, p.y);
+};
+if (fullscreenButton.view.visible) {
+  bindFullscreenControls(window, app.canvas, fullscreen, { hit: onFullscreenButton });
+}
+
 // Presses count only while running, and not just after resuming (see pause.js). A
-// tap on the mute button toggles sound instead.
+// tap on the mute button toggles sound instead, and one on the fullscreen button is
+// handled by its own controls.
 const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const input = createInput(window, app.canvas, {
   initialType: coarsePointer ? 'touch' : 'keyboard',
   accepts: () => pause.acceptsInput(),
   intercept: (event) => {
+    if (onFullscreenButton(event)) return true;
     const p = logicalPoint(event);
     if (!muteButton.contains(p.x, p.y)) return false;
     toggleMute();
@@ -250,5 +275,5 @@ app.ticker.add((ticker) => {
 // Hooks for inspecting and driving the game from the browser console and tests.
 if (import.meta.env.DEV) {
   const views = { lianaView, obstacleViews, monkeyView, background, overlays, hud, debugOverlay, loop };
-  window.__liano = { app, pause, input, sound, lianaView, fatal, views, get game() { return game; } };
+  window.__liano = { app, pause, input, sound, fullscreen, fullscreenButton, lianaView, fatal, views, get game() { return game; } };
 }
