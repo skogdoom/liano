@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { lianaIndexRange } from '../src/sim/generator.js';
-import { LIANA_SPACING, SCREEN_WIDTH, SCREEN_HEIGHT, MONKEY_RADIUS, WORLD_MARGIN, SIM_DT } from '../src/config.js';
+import { LIANA_SPACING, SCREEN_WIDTH, WORLD_HEIGHT, MONKEY_RADIUS, WORLD_MARGIN, SIM_DT } from '../src/config.js';
 import {
   FORWARD_RELEASE_STEP,
   BACKWARD_RELEASE_STEP,
@@ -85,12 +85,12 @@ describe('fall', () => {
     expect(flyUntilGrab(world)).toBeNull();
     expect(world.alive).toBe(false);
     expect(world.monkey.state).toBe(MonkeyState.DEAD);
-    expect(world.monkey.y).toBeGreaterThan(SCREEN_HEIGHT + MONKEY_RADIUS);
+    expect(world.monkey.y).toBeGreaterThan(WORLD_HEIGHT + MONKEY_RADIUS);
   });
 
-  it('dies exactly when the centre passes SCREEN_HEIGHT + MONKEY_RADIUS', () => {
+  it('dies exactly when the centre passes WORLD_HEIGHT + MONKEY_RADIUS', () => {
     const world = emptyWorld();
-    throwMonkey(world, { x: LIANA_SPACING / 2, y: SCREEN_HEIGHT + MONKEY_RADIUS - 1, vx: 0, vy: 0 });
+    throwMonkey(world, { x: LIANA_SPACING / 2, y: WORLD_HEIGHT + MONKEY_RADIUS - 1, vx: 0, vy: 0 });
     world.step(SIM_DT);
     expect(world.alive).toBe(true);
     world.monkey.vy = 200;
@@ -103,7 +103,7 @@ describe('fall', () => {
 
   it('keeps the velocity on a fall death (no bounce)', () => {
     const world = emptyWorld();
-    throwMonkey(world, { x: LIANA_SPACING / 2, y: SCREEN_HEIGHT + MONKEY_RADIUS - 1, vx: 120, vy: 200 });
+    throwMonkey(world, { x: LIANA_SPACING / 2, y: WORLD_HEIGHT + MONKEY_RADIUS - 1, vx: 120, vy: 200 });
     world.step(SIM_DT);
     expect(world.alive).toBe(false);
     expect(world.monkey.vx).toBe(120);

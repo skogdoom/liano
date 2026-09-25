@@ -10,7 +10,7 @@ import {
   SIM_DT,
   SWING_PERIOD,
   GRAVITY,
-  SCREEN_HEIGHT,
+  WORLD_HEIGHT,
   DEATH_BOUNCE,
   DEATH_POP,
 } from '../src/config.js';
@@ -83,7 +83,7 @@ describe('obstacle collision', () => {
     expect(world.monkey.vx).toBeCloseTo(-DEATH_BOUNCE * before.vx, 9);
     expect(world.monkey.vy).toBeCloseTo(Math.min(vyAfterGravity, 0) - DEATH_POP, 9);
     stepN(world, 600);
-    expect(world.monkey.y).toBeGreaterThan(SCREEN_HEIGHT + MONKEY_RADIUS);
+    expect(world.monkey.y).toBeGreaterThan(WORLD_HEIGHT + MONKEY_RADIUS);
   });
 
   it('does not hit the same obstacle when it is placed away from the path', () => {

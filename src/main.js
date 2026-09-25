@@ -1,7 +1,5 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import {
-  SCREEN_WIDTH,
-  SCREEN_HEIGHT,
   SIM_DT,
   MAX_FRAME_DT,
   MAX_RESOLUTION,
@@ -12,11 +10,12 @@ import { createFixedStepLoop } from './loop.js';
 import { createInput } from './input.js';
 import { Game, GameState } from './sim/game.js';
 import { createPause } from './pause.js';
+import { layoutFor } from './layout.js';
 import { createFullscreen, bindFullscreenControls } from './fullscreen.js';
 import { Overlays } from './render/overlays.js';
 import { LianaView } from './render/lianaView.js';
 import { MonkeyView } from './render/monkeyView.js';
-import { Camera } from './render/camera.js';
+import { Camera, cameraTarget } from './render/camera.js';
 import { ObstacleViews } from './render/obstacleViews.js';
 import { Hud } from './render/hud.js';
 import { DebugOverlay } from './render/debugOverlay.js';
@@ -51,24 +50,37 @@ await app.init({
 });
 document.body.appendChild(app.canvas);
 
-// Everything is drawn in 1280x720 logical space inside `root`, which is scaled
-// to fit the window and centered. Black bars on top cover whatever is drawn outside
-// it (cheaper than a mask, which costs a stencil pass and breaks batching).
+// Everything is drawn in the logical view inside `root`, which is scaled to fit the
+// window (see layout.js). Black bars on top cover whatever is drawn outside it, when
+// the window is too wide even for the widest view (cheaper than a mask, which costs a
+// stencil pass and breaks batching).
 const root = new Container();
 const letterbox = new Graphics();
 app.stage.addChild(root, letterbox);
 
+// Safe-area insets (notch, home indicator) in CSS pixels, read from a hidden probe.
+const safeAreaProbe = document.createElement('div');
+safeAreaProbe.style.cssText =
+  'position:fixed;visibility:hidden;pointer-events:none;' +
+  'padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+document.body.appendChild(safeAreaProbe);
+function safeAreaInsets() {
+  const style = getComputedStyle(safeAreaProbe);
+  const px = (value) => parseFloat(value) || 0;
+  return { top: px(style.paddingTop), right: px(style.paddingRight), bottom: px(style.paddingBottom), left: px(style.paddingLeft) };
+}
+
+let current = null; // the current layout
 function layout() {
   const w = window.innerWidth;
   const h = window.innerHeight;
   app.renderer.resize(w, h, pixelRatio());
-  const scale = Math.min(w / SCREEN_WIDTH, h / SCREEN_HEIGHT);
-  const x = (w - SCREEN_WIDTH * scale) / 2;
-  const y = (h - SCREEN_HEIGHT * scale) / 2;
+  current = layoutFor(w, h, safeAreaInsets());
+  const { x, y, scale } = current;
   root.scale.set(scale);
   root.position.set(x, y);
-  const right = x + SCREEN_WIDTH * scale;
-  const bottom = y + SCREEN_HEIGHT * scale;
+  const right = x + current.view.width * scale;
+  const bottom = y + current.view.height * scale;
   letterbox
     .clear()
     .rect(0, 0, w, y)
@@ -76,6 +88,13 @@ function layout() {
     .rect(0, y, x, bottom - y)
     .rect(right, y, w - right, bottom - y)
     .fill(0x000000);
+  background.resize(current);
+  hud.resize(current);
+  overlays.resize(current);
+  controls.position.set(current.insets.left, current.insets.top);
+  controls.scale.set(current.ui);
+  debugOverlay.screenView.position.set(current.insets.left, current.insets.top);
+  camera.screenX = current.camera.screenX;
 }
 // Re-layout on window resizes, rotation, and the iOS address bar showing or hiding,
 // at most once per frame.
@@ -98,7 +117,6 @@ function watchPixelRatio() {
     .addEventListener('change', () => (queueLayout(), watchPixelRatio()), { once: true });
 }
 watchPixelRatio();
-layout();
 
 // Block browser gestures on the game: double-tap zoom, iOS pinch, and the
 // long-press menu.
@@ -129,17 +147,18 @@ scene.addChild(debugWorldLayer);
 root.addChild(debugOverlay.screenView);
 
 const hud = new Hud();
+// The buttons, top-left inside the safe area; enlarged with the layout's `ui` scale.
+const controls = new Container();
 const muteButton = new MuteButton();
 const fullscreenButton = new FullscreenButton();
-root.addChild(hud.view, muteButton.view, fullscreenButton.view);
+controls.addChild(muteButton.view, fullscreenButton.view);
+root.addChild(hud.view, controls);
 
 const overlays = new Overlays();
 root.addChild(overlays.view);
 
 const game = new Game();
-const pause = createPause(window, document, {
-  portrait: window.matchMedia('(orientation: portrait) and (pointer: coarse)'),
-});
+const pause = createPause(window, document);
 // A lost graphics context (common when a phone backgrounds the page) pauses the game
 // until Pixi restores it; if it does not come back, offer a reload.
 const CONTEXT_RESTORE_TIMEOUT_MS = 5000;
@@ -170,13 +189,12 @@ function toggleMute() {
   muteButton.update(sound.muted);
 }
 
-// Position of a pointer event in the 1280×720 logical space.
-function logicalPoint(event) {
+// Position of a pointer event in the buttons' coordinates (see `controls`).
+function controlsPoint(event) {
   const rect = app.canvas.getBoundingClientRect();
-  return {
-    x: (event.clientX - rect.left - root.x) / root.scale.x,
-    y: (event.clientY - rect.top - root.y) / root.scale.y,
-  };
+  const x = (event.clientX - rect.left - root.x) / root.scale.x;
+  const y = (event.clientY - rect.top - root.y) / root.scale.y;
+  return { x: (x - controls.x) / controls.scale.x, y: (y - controls.y) / controls.scale.y };
 }
 
 // Full screen via the button or F, where the browser allows it for pages. The
@@ -192,7 +210,7 @@ const fullscreen = createFullscreen(document, {
 });
 fullscreenButton.view.visible = fullscreen.supported && !homeScreenApp;
 const onFullscreenButton = (event) => {
-  const p = logicalPoint(event);
+  const p = controlsPoint(event);
   return fullscreenButton.contains(p.x, p.y);
 };
 if (fullscreenButton.view.visible) {
@@ -208,7 +226,7 @@ const input = createInput(window, app.canvas, {
   accepts: () => pause.acceptsInput(),
   intercept: (event) => {
     if (onFullscreenButton(event)) return true;
-    const p = logicalPoint(event);
+    const p = controlsPoint(event);
     if (!muteButton.contains(p.x, p.y)) return false;
     toggleMute();
     return true;
@@ -218,6 +236,8 @@ const shake = new Shake();
 let lastState = game.state;
 const camera = new Camera(game.world.monkey.x);
 let cameraWorld = game.world;
+layout();
+camera.reset(cameraTarget(game.world.monkey, current.camera.follow));
 
 const loop = createFixedStepLoop({
   dt: SIM_DT,
@@ -227,10 +247,10 @@ const loop = createFixedStepLoop({
     game.step(dt);
     if (game.world !== cameraWorld) {
       cameraWorld = game.world;
-      camera.reset(game.world.monkey.x);
+      camera.reset(cameraTarget(game.world.monkey, current.camera.follow));
     }
     // Hold the camera still once the run is over.
-    if (game.world.alive) camera.update(game.world.monkey.x, dt);
+    if (game.world.alive) camera.update(cameraTarget(game.world.monkey, current.camera.follow), dt);
   },
 });
 
@@ -249,11 +269,11 @@ function frame(ticker) {
   sound.setPaused(paused);
   for (const recipe of soundsFor(game.takeEvents())) sound.play(recipe);
   shake.update(frameDt);
-  scene.position.set(shake.x, shake.y);
+  scene.position.set(shake.x, current.bandTop + shake.y);
   worldLayer.x = -camera.x;
   debugWorldLayer.x = -camera.x;
   background.update(camera.x);
-  lianaView.update(game.world.lianas.values(), camera.x);
+  lianaView.update(game.world.lianas.values(), camera.x, current.view.width);
   monkeyView.update(game.world.monkey, frameDt);
   obstacleViews.update(game.world.obstacles.values());
   hud.update(game);
@@ -275,5 +295,5 @@ app.ticker.add((ticker) => {
 // Hooks for inspecting and driving the game from the browser console and tests.
 if (import.meta.env.DEV) {
   const views = { lianaView, obstacleViews, monkeyView, background, overlays, hud, debugOverlay, loop };
-  window.__liano = { app, pause, input, sound, fullscreen, fullscreenButton, lianaView, fatal, views, get game() { return game; } };
+  window.__liano = { app, pause, input, sound, fullscreen, fullscreenButton, lianaView, fatal, views, camera, get layout() { return current; }, get game() { return game; } };
 }

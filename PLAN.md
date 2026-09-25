@@ -311,11 +311,11 @@ Play with the phone or iPad held upright, instead of being asked to rotate it. A
 ### Milestone
 
 **14. Portrait mode and a flexible frame.** World/screen split, layout module (portrait and flexible landscape), anchor-following portrait camera, extended background, HUD and panel layouts, rotate overlay removed.
-- [ ] Held upright, a phone and an iPad play a full run: start, release, die, restart (Playwright emulation, then real devices)
-- [ ] The whole swing and the next liana are on screen while the monkey hangs, in portrait on the narrowest supported phone (unit tested against the layout and camera)
-- [ ] Rotating mid-run switches layout without pausing, losing the run or dropping a press
-- [ ] Landscape at exactly 16:9 looks and plays as before (screenshots compared)
-- [ ] A landscape phone with the browser bars showing fills the screen with no black bars, with the game drawn larger than a 16:9 letterbox would allow (unit tested against the layout, then on a real phone)
+- [ ] Held upright, a phone and an iPad play a full run: start, release, die, restart (Playwright emulation, then real devices) — passes in iPhone 13 and iPad emulation; real devices still to check
+- [x] The whole swing and the next liana are on screen while the monkey hangs, in portrait on the narrowest supported phone (unit tested against the layout and camera, 320 × 568 up to iPads)
+- [x] Rotating mid-run switches layout without pausing, losing the run or dropping a press (checked in iPhone emulation by resizing the viewport mid-run; the first tap after it releases the monkey)
+- [x] Landscape at exactly 16:9 looks and plays as before (screenshots compared at 1280 × 720 and 1920 × 1080; the layout gives the old frame, camera and panel spots, unit tested)
+- [ ] A landscape phone with the browser bars showing fills the screen with no black bars, with the game drawn larger than a 16:9 letterbox would allow (unit tested against the layout, then on a real phone) — unit tested and checked at 844 × 340 in emulation (drawn at 0.60× instead of 0.47×); a real phone still to check
 - [ ] The monkey is readable on a real phone in portrait (see decision 23)
 - [ ] v1.2.0 is live on Pages and tagged, with release notes
 
