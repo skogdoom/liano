@@ -192,12 +192,12 @@ describe('input edge cases', () => {
       keydown(win, { code: 'Space', repeat: true });
       frame();
     }
-    expect(game.state).toBe(GameState.GAME_OVER);
+    expect(game.state).toBe(GameState.RESULTS);
     for (let i = 0; i < (2 * GAMEOVER_INPUT_LOCK_MS) / 1000 / SIM_DT; i++) {
       keydown(win, { code: 'Space', repeat: true });
       frame();
     }
-    expect(game.state).toBe(GameState.GAME_OVER);
+    expect(game.state).toBe(GameState.RESULTS);
     keydown(win, { code: 'Space' }); // a fresh press restarts
     frame();
     expect(game.state).toBe(GameState.PLAYING);
@@ -221,5 +221,51 @@ describe('input edge cases', () => {
     win.dispatchEvent(new Event('focus'));
     keydown(win, { code: 'Space', repeat: true }); // the browser keeps repeating the held key
     expect(input.consumePress()).toBe(false);
+  });
+});
+
+describe('input roles', () => {
+  it('maps the 2P keys and Enter to their roles, ignoring auto-repeat', () => {
+    const target = new EventTarget();
+    const input = createInput(target);
+    for (const [code, role] of [
+      ['KeyA', 'p1'],
+      ['KeyL', 'p2'],
+      ['Enter', 'start'],
+      ['NumpadEnter', 'start'],
+    ]) {
+      keydown(target, { code });
+      expect(input.consumePress(role), code).toBe(true);
+      expect(input.consumePress('primary'), code).toBe(false);
+      keydown(target, { code, repeat: true });
+      expect(input.consumePress(role), `${code} repeat`).toBe(false);
+    }
+  });
+
+  it('reports the latest mode pick once, ignoring repeats', () => {
+    const target = new EventTarget();
+    const input = createInput(target);
+    expect(input.consumeModePick()).toBeNull();
+    keydown(target, { code: 'Digit2' });
+    keydown(target, { code: 'Digit3' });
+    keydown(target, { code: 'Digit1', repeat: true });
+    expect(input.consumeModePick()).toBe(3);
+    expect(input.consumeModePick()).toBeNull();
+  });
+
+  it('drops presses and picks it does not accept, and clears queued ones', () => {
+    const target = new EventTarget();
+    let accepting = false;
+    const input = createInput(target, null, { accepts: () => accepting });
+    keydown(target, { code: 'KeyA' });
+    keydown(target, { code: 'Digit1' });
+    expect(input.consumePress('p1')).toBe(false);
+    expect(input.consumeModePick()).toBeNull();
+    accepting = true;
+    keydown(target, { code: 'KeyL' });
+    keydown(target, { code: 'Digit1' });
+    input.clear();
+    expect(input.consumePress('p2')).toBe(false);
+    expect(input.consumeModePick()).toBeNull();
   });
 });

@@ -65,23 +65,30 @@ export function gapIndexRange(x, extra = 0) {
 }
 
 // Fills `map` with create(i) for indices in `range` and drops entries outside
-// `bounds`, except `keep` when given.
+// `bounds`, except those in `keep` (one item or an array).
 function sync(map, range, bounds, create, keep = null) {
+  const kept = keep === null || keep === undefined ? [] : [].concat(keep);
   for (let i = range.first; i <= range.last; i++) {
     if (!map.has(i)) map.set(i, create(i));
   }
   for (const [i, item] of map) {
     const outside = i < bounds.first || i > bounds.last;
-    if (outside && (keep === null || item !== keep)) map.delete(i);
+    if (outside && !kept.includes(item)) map.delete(i);
   }
 }
 
-// Adds missing lianas around x and removes far-away ones, except `keep` (the held liana).
-export function updateLianas(lianas, x, keep) {
-  sync(lianas, lianaIndexRange(x), lianaIndexRange(x, LIANA_SPACING), createLiana, keep);
+// The range around monkeys spread from x = `behind` to x = `ahead`.
+function span(indexRange, behind, ahead, extra = 0) {
+  return { first: indexRange(behind, extra).first, last: indexRange(ahead, extra).last };
+}
+
+// Adds missing lianas around the monkeys (from the rearmost at `behind` to the
+// furthest at `ahead`) and removes far-away ones, except `keep` (the held lianas).
+export function updateLianas(lianas, ahead, keep, behind = ahead) {
+  sync(lianas, span(lianaIndexRange, behind, ahead), span(lianaIndexRange, behind, ahead, LIANA_SPACING), createLiana, keep);
 }
 
 // Same for obstacles, keyed by gap. Empty gaps are stored as null.
-export function updateObstacles(obstacles, x, makeObstacle) {
-  sync(obstacles, gapIndexRange(x), gapIndexRange(x, LIANA_SPACING), makeObstacle);
+export function updateObstacles(obstacles, ahead, makeObstacle, behind = ahead) {
+  sync(obstacles, span(gapIndexRange, behind, ahead), span(gapIndexRange, behind, ahead, LIANA_SPACING), makeObstacle);
 }

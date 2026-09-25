@@ -11,6 +11,7 @@ import { createInput } from './input.js';
 import { Game, GameState } from './sim/game.js';
 import { createPause } from './pause.js';
 import { layoutFor } from './layout.js';
+import { MODE_ORDER } from './sim/match.js';
 import { createFullscreen, bindFullscreenControls } from './fullscreen.js';
 import { Overlays } from './render/overlays.js';
 import { LianaView } from './render/lianaView.js';
@@ -245,11 +246,22 @@ let cameraWorld = game.world;
 layout();
 camera.reset(cameraTarget(game.world.monkey, current.camera.follow));
 
+// Action roles, in the order the loop applies them within a step (see KEYS).
+const ROLES = ['start', 'primary', 'p1', 'p2'];
+
 const loop = createFixedStepLoop({
   dt: SIM_DT,
   maxFrameDt: MAX_FRAME_DT,
   step(dt) {
-    if (input.consumePress()) game.press();
+    const pick = input.consumeModePick();
+    if (pick) game.selectMode(MODE_ORDER[pick - 1]);
+    for (const role of ROLES) {
+      // A press that changes the state (starts or restarts a run) is the step's last.
+      if (input.consumePress(role) && game.press(role)) {
+        input.clear();
+        break;
+      }
+    }
     game.step(dt);
     if (game.world !== cameraWorld) {
       cameraWorld = game.world;
@@ -265,10 +277,10 @@ function frame(ticker) {
   if (input.consumeMuteToggle()) toggleMute();
   // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
   const paused = pause.paused;
-  if (paused) input.consumePress(); // a press made just before pausing must not act on resume
+  if (paused) input.clear(); // a press made just before pausing must not act on resume
   const frameDt = paused ? 0 : Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
   loop.advance(frameDt);
-  if (lastState === GameState.PLAYING && game.state === GameState.GAME_OVER && !reducedMotion.matches) {
+  if (lastState === GameState.PLAYING && game.state === GameState.RESULTS && !reducedMotion.matches) {
     shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
   }
   lastState = game.state;

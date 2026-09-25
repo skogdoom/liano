@@ -1,23 +1,26 @@
 import { GAMEOVER_INPUT_LOCK_MS } from '../config.js';
 import { World } from './world.js';
+import { MODES, playerFor } from './match.js';
 
 const MAX_PENDING_EVENTS = 64;
 
 export const GameState = Object.freeze({
-  READY: 'READY',
+  TITLE: 'TITLE',
   PLAYING: 'PLAYING',
-  GAME_OVER: 'GAME_OVER',
+  RESULTS: 'RESULTS',
 });
 
-// Top-level flow: READY -> PLAYING -> GAME_OVER -> PLAYING ...
-// Owns the current world, the run score and the best score for this page session.
-// In READY the monkey already swings on the first liana; the first Space only starts the run.
+// Top-level flow: TITLE -> PLAYING -> RESULTS -> PLAYING ...
+// Owns the current world, the selected mode, the run score and the best score for this
+// page session. On the title screen the monkey already swings on the first liana; the
+// mode picker selects a mode and the first `primary` or `start` press starts it.
 export class Game {
-  // `createWorld` can be replaced in tests.
-  constructor({ createWorld = () => new World() } = {}) {
+  // `createWorld({ players })` can be replaced in tests.
+  constructor({ createWorld = (options) => new World(options) } = {}) {
     this.createWorld = createWorld;
-    this.world = createWorld();
-    this.state = GameState.READY;
+    this.mode = 'solo';
+    this.world = createWorld({ players: MODES[this.mode].players });
+    this.state = GameState.TITLE;
     this.stateTime = 0;
     this.score = 0;
     this.best = 0;
@@ -37,8 +40,8 @@ export class Game {
     if (this.events.length > MAX_PENDING_EVENTS) this.events.splice(0, this.events.length - MAX_PENDING_EVENTS);
     if (this.state !== GameState.PLAYING) return;
     for (const event of events) {
-      if (event.type === 'score') this.score = event.score;
-      else if (event.type === 'death') this.end();
+      if (event.type === 'score' && event.player === 0) this.score = event.score;
+      else if (event.type === 'death' && !this.world.alive) this.end();
     }
   }
 
@@ -49,18 +52,35 @@ export class Game {
     return events;
   }
 
-  // Handles a Space press. Returns true if the press changed the game state.
-  press() {
+  // Selects the mode on the title screen. Returns false for an unknown or not yet
+  // enabled mode, or outside the title screen.
+  selectMode(mode) {
+    if (this.state !== GameState.TITLE || !MODES[mode]?.enabled) return false;
+    if (mode !== this.mode) {
+      this.mode = mode;
+      this.world = this.createWorld({ players: MODES[mode].players });
+    }
+    return true;
+  }
+
+  // Handles a press of an input role (see KEYS): `primary` is Space or a tap, `start`
+  // is Enter, `p1`/`p2` the two-player keys. Returns true if the press changed the game
+  // state.
+  press(role = 'primary') {
+    const starts = role === 'primary' || role === 'start';
     switch (this.state) {
-      case GameState.READY:
+      case GameState.TITLE:
+        if (!starts) return false;
         this.#startRun();
         return true;
-      case GameState.PLAYING:
-        this.world.release();
+      case GameState.PLAYING: {
+        const player = playerFor(this.mode, role);
+        if (player >= 0) this.world.release(player);
         return false;
-      case GameState.GAME_OVER:
-        if (!this.canRestart()) return false;
-        this.world = this.createWorld();
+      }
+      case GameState.RESULTS:
+        if (!starts || !this.canRestart()) return false;
+        this.world = this.createWorld({ players: MODES[this.mode].players });
         this.#startRun();
         return true;
       default:
@@ -72,12 +92,12 @@ export class Game {
     if (this.state !== GameState.PLAYING) return;
     this.newBest = this.score > this.best;
     this.best = Math.max(this.best, this.score);
-    this.#enter(GameState.GAME_OVER);
+    this.#enter(GameState.RESULTS);
   }
 
   canRestart() {
     // Small tolerance so accumulated fixed steps (e.g. 48 × 1/120 s) count as reaching the lock time.
-    return this.state === GameState.GAME_OVER && this.stateTime * 1000 >= GAMEOVER_INPUT_LOCK_MS - 1e-6;
+    return this.state === GameState.RESULTS && this.stateTime * 1000 >= GAMEOVER_INPUT_LOCK_MS - 1e-6;
   }
 
   #startRun() {

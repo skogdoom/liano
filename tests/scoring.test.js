@@ -48,8 +48,8 @@ describe('scoring', () => {
         expect(events).toEqual([]);
       } else {
         expect(events).toEqual([
-          { type: 'grab', liana: 2 },
-          { type: 'score', gap: 1, score: 1 },
+          { type: 'grab', liana: 2, player: 0 },
+          { type: 'score', gap: 1, score: 1, player: 0 },
         ]);
       }
     }
@@ -77,7 +77,7 @@ describe('scoring', () => {
     releaseAs(world, FORWARD_RELEASE_STEP, { x: 1.5 * LIANA_SPACING - 10, y: 450, vx: 200, vy: 0 });
     for (let i = 0; i < 300 && world.alive; i++) world.step(SIM_DT);
     expect(world.monkey.x).toBeGreaterThan(1.5 * LIANA_SPACING + 36);
-    expect(world.takeEvents()).toEqual([{ type: 'death', cause: 'fall' }]);
+    expect(world.takeEvents()).toEqual([{ type: 'death', cause: 'fall', player: 0 }]);
     expect(world.score).toBe(0);
   });
 

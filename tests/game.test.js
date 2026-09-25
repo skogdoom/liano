@@ -10,18 +10,18 @@ function stepFor(game, seconds) {
 }
 
 describe('Game state machine', () => {
-  it('starts in READY', () => {
-    expect(new Game().state).toBe(GameState.READY);
+  it('starts in TITLE', () => {
+    expect(new Game().state).toBe(GameState.TITLE);
   });
 
-  it('swings the monkey on the first liana while READY', () => {
+  it('swings the monkey on the first liana on the title screen', () => {
     const game = new Game();
     stepFor(game, 0.3);
     expect(game.world.monkey.state).toBe(MonkeyState.HANGING);
     expect(game.world.monkey.liana.angle).not.toBe(0);
   });
 
-  it('Space moves READY to PLAYING without releasing', () => {
+  it('Space moves TITLE to PLAYING without releasing', () => {
     const game = new Game();
     expect(game.press()).toBe(true);
     expect(game.state).toBe(GameState.PLAYING);
@@ -48,13 +48,13 @@ describe('Game state machine', () => {
     expect(game.world.monkey.state).toBe(MonkeyState.HANGING);
   });
 
-  it('end() moves PLAYING to GAME_OVER and is ignored otherwise', () => {
+  it('end() moves PLAYING to RESULTS and is ignored otherwise', () => {
     const game = new Game();
     game.end();
-    expect(game.state).toBe(GameState.READY);
+    expect(game.state).toBe(GameState.TITLE);
     game.press();
     game.end();
-    expect(game.state).toBe(GameState.GAME_OVER);
+    expect(game.state).toBe(GameState.RESULTS);
   });
 
   it('locks restart input for GAMEOVER_INPUT_LOCK_MS after game over', () => {
@@ -65,7 +65,7 @@ describe('Game state machine', () => {
     stepFor(game, GAMEOVER_INPUT_LOCK_MS / 1000 - SIM_DT);
     expect(game.canRestart()).toBe(false);
     expect(game.press()).toBe(false);
-    expect(game.state).toBe(GameState.GAME_OVER);
+    expect(game.state).toBe(GameState.RESULTS);
 
     game.step(SIM_DT);
     expect(game.canRestart()).toBe(true);
@@ -95,7 +95,7 @@ describe('Game state machine', () => {
     game.press();
     let steps = 0;
     while (game.state === GameState.PLAYING && steps++ < 600) game.step(SIM_DT);
-    expect(game.state).toBe(GameState.GAME_OVER);
+    expect(game.state).toBe(GameState.RESULTS);
     expect(game.world.alive).toBe(false);
 
     // Presses during the lock are ignored.
@@ -137,7 +137,7 @@ describe('Game state machine', () => {
       stepFor(game, FALL_RELEASE_STEP * SIM_DT);
       game.press();
       playUntilOver(game);
-      expect(game.state).toBe(GameState.GAME_OVER);
+      expect(game.state).toBe(GameState.RESULTS);
     }
 
     it('tracks the world score during the run', () => {

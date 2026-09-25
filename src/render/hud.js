@@ -24,7 +24,7 @@ export class Hud {
   }
 
   update(game) {
-    this.view.visible = game.state !== GameState.READY;
+    this.view.visible = game.state !== GameState.TITLE;
     // game.best is only updated when a run ends; show a best that tracks the live score.
     const text = `${game.score}  BEST ${Math.max(game.best, game.score)}`;
     if (text !== this.shown) {

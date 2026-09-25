@@ -406,8 +406,8 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
 Implement in order. Each milestone must end in a runnable, tested state, with every v1 feature still working: touch, sound, full screen, portrait, the flexible frame and hardening. The v2 draft's milestones 1 (scaffold), 3 (world, camera, scoring), 4 (static obstacles) and 6 (base art) are already built in v1. The parts they add (modes, N monkeys, RESULTS) are folded into milestone 15.
 
 **15. Modes and N monkeys.** TITLE/PLAYING/RESULTS states, title mode picker (only 1P enabled for now), per-player keys in the input module, a world holding N monkeys (N = 1 for now), `match.js` for mode rules.
-- [ ] Held keys don't repeat for any action key; the mode picker works with keys and, for 1P, with a tap
-- [ ] 1P plays exactly as in v1 (existing tests pass unchanged)
+- [x] Held keys don't repeat for any action key; the mode picker works with keys and, for 1P, with a tap (unit tested; checked in Chromium, including touch, where the picker is hidden and a tap starts 1P)
+- [x] 1P plays exactly as in v1 (existing tests pass; the only edits are the renamed states TITLE and RESULTS and the new `player` field on events)
 
 **16. Slip and forced release.** Grip slip and forced release replace the fixed grip slide. Release velocity gains the radial part. The feasibility solver and the window table cover entry radii. The debug overlay shows the slip and the forced-release point.
 - [ ] Grab at the contact radius; slip reaches the tip and forces a release

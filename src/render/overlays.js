@@ -1,6 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { MONKEY_RADIUS } from '../config.js';
 import { GameState } from '../sim/game.js';
+import { MODES, MODE_ORDER } from '../sim/match.js';
 import { version } from '../../package.json';
 
 const CREAM = 0xf4e7c5;
@@ -53,6 +54,37 @@ class OffscreenIndicator {
   }
 }
 
+// The title screen's mode picker: "1 · 1P   2 · 2P shared   3 · 2P split", with the
+// selected mode highlighted and modes that aren't available yet dimmed.
+class ModePicker {
+  constructor() {
+    this.view = new Container();
+    this.items = MODE_ORDER.map((id, i) => {
+      const t = text(`${i + 1} · ${MODES[id].label}`, 17, { weight: 'bold' });
+      this.view.addChild(t);
+      return { id, t };
+    });
+    const gap = 26;
+    const total = this.items.reduce((sum, { t }) => sum + t.width, 0) + gap * (this.items.length - 1);
+    let x = -total / 2;
+    for (const { t } of this.items) {
+      t.x = x + t.width / 2;
+      x += t.width + gap;
+    }
+    this.shown = null;
+  }
+
+  update(mode) {
+    if (mode === this.shown) return;
+    for (const { id, t } of this.items) {
+      const selected = id === mode;
+      t.style.fill = selected ? GOLD : CREAM;
+      t.alpha = selected ? 1 : MODES[id].enabled ? 0.8 : 0.35;
+    }
+    this.shown = mode;
+  }
+}
+
 // Prompt wording for the input type the player used last.
 const PROMPTS = {
   touch: { start: 'Tap to start', control: 'TAP  ·  let go', again: 'Tap to play again', resume: 'Tap to resume' },
@@ -74,9 +106,11 @@ export class Overlays {
     // Right of the title-screen swing, so the monkey stays in view.
     this.title = panel(0, 0, 440, 330);
     place(this.title, text('LIANO', 104, { weight: 'bold' }), -90);
-    place(this.title, text('Swing from vine to vine.\nLet go to fly to the next one.', 22), 10);
+    this.tagline = place(this.title, text('Swing from vine to vine.\nLet go to fly to the next one.', 22), 10);
     this.titleControl = place(this.title, text('', 22, { color: GOLD, weight: 'bold' }), 70);
     this.titlePrompt = place(this.title, text('', 28), 125);
+    this.modePicker = new ModePicker();
+    place(this.title, this.modePicker.view, 92);
     const versionText = place(this.title, text(`v${version}`, 13, { color: CREAM }), 150);
     versionText.anchor.set(1, 0.5);
     versionText.x = 204;
@@ -120,10 +154,11 @@ export class Overlays {
 
     this.indicator.update(game.world.monkey, cameraX, this.layout);
 
-    this.title.visible = game.state === GameState.READY && !paused;
+    this.title.visible = game.state === GameState.TITLE && !paused;
     this.titlePrompt.alpha = pulse;
+    if (this.title.visible) this.#updateTitle(game.mode, inputType !== 'touch');
 
-    this.gameOver.visible = game.state === GameState.GAME_OVER && !paused;
+    this.gameOver.visible = game.state === GameState.RESULTS && !paused;
     if (this.gameOver.visible) {
       this.gameOver.alpha = Math.min(game.stateTime / FADE_IN, 1);
       const shown = `${game.score}:${game.best}:${game.newBest}`;
@@ -138,6 +173,16 @@ export class Overlays {
     }
 
     this.paused.visible = pauseReason === 'unfocused';
+  }
+
+  // The mode picker shows only with a keyboard (the two-player modes need one); the
+  // lines above it move up to make room.
+  #updateTitle(mode, showModes) {
+    this.modePicker.view.visible = showModes;
+    this.modePicker.update(mode);
+    this.tagline.y = showModes ? 0 : 10;
+    this.titleControl.y = showModes ? 58 : 70;
+    this.titlePrompt.y = showModes ? 128 : 125;
   }
 
   #setPrompts(kind) {

@@ -72,6 +72,21 @@ export const WORLD_MARGIN = 2 * SCREEN_WIDTH;
 
 export const GAMEOVER_INPUT_LOCK_MS = 400;
 
+// Keys by role (KeyboardEvent.code). `primary` is 1P's action key (a tap does the same),
+// `p1`/`p2` are the two-player action keys (not Shift: five presses open Windows' Sticky
+// Keys dialog), `mode` picks the mode on the title screen (1, 2, 3) and `start` starts it
+// (as does `primary`).
+export const KEYS = Object.freeze({
+  primary: ['Space'],
+  start: ['Enter', 'NumpadEnter'],
+  p1: ['KeyA'],
+  p2: ['KeyL'],
+  mode: ['Digit1', 'Digit2', 'Digit3'],
+  debug: ['KeyD'],
+  mute: ['KeyM'],
+});
+export const LIVES_2P = 3;
+
 // Death feedback. Hitting an obstacle bounces the monkey back (fraction of its
 // horizontal speed) and pops it up (px/s) so the tumble is visible.
 export const DEATH_BOUNCE = 0.4;

@@ -1,6 +1,9 @@
-// Game input: Space, or a tap/click on the game. Presses are queued and consumed by
-// the fixed-step loop, so they are applied at a sim step boundary. Key auto-repeat is
-// ignored. D toggles the debug overlay and M mutes.
+import { KEYS } from './config.js';
+
+// Game input: keys by role (see KEYS in config.js), and a tap/click on the game, which
+// counts as `primary`. Presses are queued and consumed by the fixed-step loop, so they
+// are applied at a sim step boundary. Key auto-repeat is ignored for every key. `debug`
+// (D) and `mute` (M) are toggles; `mode` (1, 2, 3) picks a mode on the title screen.
 
 export function isFreshSpacePress(event) {
   return event.code === 'Space' && !event.repeat;
@@ -11,27 +14,32 @@ export function isFreshSpacePress(event) {
 // 'mouse' or 'touch'. `accepts()` is asked when a press happens; a press it rejects
 // (e.g. while paused) is dropped then, not when the loop gets round to it.
 // `intercept(event)` sees each pointerdown first; returning true swallows it (used by
-// on-screen buttons).
+// on-screen buttons). `keys` maps roles to key codes.
 export function createInput(
   keyTarget,
   pointerTarget = null,
-  { initialType = 'keyboard', accepts = () => true, intercept = () => false } = {},
+  { initialType = 'keyboard', accepts = () => true, intercept = () => false, keys = KEYS } = {},
 ) {
-  let pending = false;
-  const toggles = { KeyD: 0, KeyM: 0 };
+  const roleOf = new Map();
+  for (const [role, codes] of Object.entries(keys)) for (const code of codes) roleOf.set(code, role);
+  const pending = new Set(); // action roles pressed since they were last consumed
+  const toggles = { debug: 0, mute: 0 };
+  let modePick = null;
   let lastType = initialType;
 
   const onKeyDown = (event) => {
-    if (event.code in toggles) {
-      if (!event.repeat) toggles[event.code]++;
+    const role = roleOf.get(event.code);
+    if (!role) return;
+    if (event.code === 'Space') event.preventDefault(); // keep the page from scrolling, repeats too
+    if (event.repeat) return;
+    if (role in toggles) {
+      toggles[role]++;
       return;
     }
-    if (event.code !== 'Space') return;
-    event.preventDefault(); // keep the page from scrolling
-    if (isFreshSpacePress(event)) {
-      lastType = 'keyboard';
-      if (accepts()) pending = true;
-    }
+    lastType = 'keyboard';
+    if (!accepts()) return;
+    if (role === 'mode') modePick = keys.mode.indexOf(event.code) + 1;
+    else pending.add(role);
   };
 
   // Every new finger, pen or primary mouse button is one press.
@@ -40,12 +48,12 @@ export function createInput(
     event.preventDefault(); // no text selection, focus changes or emulated mouse events
     lastType = event.pointerType === 'mouse' ? 'mouse' : 'touch';
     if (intercept(event)) return;
-    if (accepts()) pending = true;
+    if (accepts()) pending.add('primary');
   };
 
-  const consumeToggle = (code) => {
-    const toggled = toggles[code] % 2 === 1;
-    toggles[code] = 0;
+  const consumeToggle = (role) => {
+    const toggled = toggles[role] % 2 === 1;
+    toggles[role] = 0;
     return toggled;
   };
 
@@ -53,18 +61,28 @@ export function createInput(
   pointerTarget?.addEventListener('pointerdown', onPointerDown);
 
   return {
-    consumePress() {
-      const pressed = pending;
-      pending = false;
-      return pressed;
+    // True if `role` ('primary', 'start', 'p1' or 'p2') was pressed since the last call.
+    consumePress(role = 'primary') {
+      return pending.delete(role);
+    },
+    // The mode picked (1, 2 or 3) since the last call, or null.
+    consumeModePick() {
+      const pick = modePick;
+      modePick = null;
+      return pick;
+    },
+    // Drops every queued press and mode pick (e.g. ones made just before pausing).
+    clear() {
+      pending.clear();
+      modePick = null;
     },
     // True if D was pressed an odd number of times since the last call.
     consumeDebugToggle() {
-      return consumeToggle('KeyD');
+      return consumeToggle('debug');
     },
     // True if M was pressed an odd number of times since the last call.
     consumeMuteToggle() {
-      return consumeToggle('KeyM');
+      return consumeToggle('mute');
     },
     // The input type used last, for prompts ("Tap" or "Press Space").
     get lastType() {
