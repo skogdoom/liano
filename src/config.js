@@ -1,7 +1,11 @@
 // All gameplay tunables. Distances in logical pixels, times in seconds unless suffixed.
 
+// The landscape design frame. Layouts for other screen shapes derive from it (see
+// layout.js).
 export const SCREEN_WIDTH = 1280;
 export const SCREEN_HEIGHT = 720;
+// The world band: lianas hang from its top, and falling below it ends the run.
+export const WORLD_HEIGHT = 720;
 
 export const SIM_DT = 1 / 120;
 export const MAX_FRAME_DT = 0.1;
@@ -45,6 +49,22 @@ export const MIN_RELEASE_WINDOW_MS = 90;
 
 export const CAMERA_TARGET_X = 0.35 * SCREEN_WIDTH;
 export const CAMERA_LERP = 8;
+
+// Layout (see layout.js).
+// Landscape screens wider than 16:9 first crop the empty bottom of the world band,
+// down to this much visible height, then show more world to the side, up to this width.
+export const MIN_VISIBLE_WORLD_HEIGHT = 570;
+export const MAX_VIEW_WIDTH = 1600;
+// Portrait shows this much world width. While the monkey hangs, the camera holds the
+// liana's anchor at this fraction of the view from the left.
+export const PORTRAIT_VIEW_WIDTH = 1100;
+export const PORTRAIT_ANCHOR_X = 0.3;
+// Portrait: share of the spare height (beyond the world band) above the band.
+export const PORTRAIT_SPARE_ABOVE = 0.4;
+// Portrait text and buttons are enlarged so they draw at least this many CSS pixels per
+// logical pixel, up to MAX_UI_SCALE times their landscape size.
+export const MIN_UI_CSS_SCALE = 0.6;
+export const MAX_UI_SCALE = 1.8;
 
 // Entities are generated this far beyond the view on each side, and discarded
 // once they are further than this plus one liana spacing.

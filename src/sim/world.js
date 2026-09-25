@@ -2,7 +2,7 @@ import {
   GRIP_RADIUS,
   LIANA_SPACING,
   MONKEY_RADIUS,
-  SCREEN_HEIGHT,
+  WORLD_HEIGHT,
   SIM_DT,
   GRAVITY,
   DEATH_BOUNCE,
@@ -63,7 +63,7 @@ export class World {
     }
     if (monkey.state === MonkeyState.AIRBORNE) this.#tryGrab();
     // Only falling out of the bottom ends the run; flying above the top does not.
-    if (monkey.y > SCREEN_HEIGHT + MONKEY_RADIUS) this.#die('fall');
+    if (monkey.y > WORLD_HEIGHT + MONKEY_RADIUS) this.#die('fall');
   }
 
   // Returns and clears the events emitted since the last call.
@@ -98,7 +98,7 @@ export class World {
       path.push({ x: body.x, y: body.y });
       if (this.#hitsObstacle(body.x, body.y)) return { path, outcome: 'hit' };
       if (this.#grabCandidate(body.x, body.y, excluded)) return { path, outcome: 'grab' };
-      if (body.y > SCREEN_HEIGHT + MONKEY_RADIUS) return { path, outcome: 'fall' };
+      if (body.y > WORLD_HEIGHT + MONKEY_RADIUS) return { path, outcome: 'fall' };
     }
     return { path, outcome: 'none' };
   }

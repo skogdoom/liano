@@ -1,5 +1,4 @@
 import { Text } from 'pixi.js';
-import { SCREEN_WIDTH } from '../config.js';
 import { GameState } from '../sim/game.js';
 
 // Top-right: current score and the best score of this page session.
@@ -16,8 +15,12 @@ export class Hud {
       },
     });
     this.view.anchor.set(1, 0);
-    this.view.position.set(SCREEN_WIDTH - 24, 12);
     this.shown = null;
+  }
+
+  resize(layout) {
+    this.view.position.set(layout.view.width - layout.insets.right - 24, layout.insets.top + 12);
+    this.view.scale.set(layout.ui);
   }
 
   update(game) {

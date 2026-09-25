@@ -13,18 +13,6 @@ function setVisibility(doc, state) {
   doc.dispatchEvent(new Event('visibilitychange'));
 }
 
-// MediaQueryList stand-in for "(orientation: portrait) and (pointer: coarse)".
-function fakeQuery(matches = false) {
-  const query = new EventTarget();
-  query.matches = matches;
-  return query;
-}
-
-function setMatches(query, matches) {
-  query.matches = matches;
-  query.dispatchEvent(new Event('change'));
-}
-
 function clock() {
   let t = 1000;
   return { now: () => t, advance: (ms) => (t += ms) };
@@ -37,11 +25,8 @@ describe('pause', () => {
     expect(pause.reason).toBeNull();
   });
 
-  it('starts paused on a hidden page or an upright phone', () => {
+  it('starts paused on a hidden page', () => {
     expect(createPause(new EventTarget(), fakeDocument('hidden')).paused).toBe(true);
-    const upright = createPause(new EventTarget(), fakeDocument(), { portrait: fakeQuery(true) });
-    expect(upright.paused).toBe(true);
-    expect(upright.reason).toBe('portrait');
   });
 
   it('pauses on window blur and resumes on focus', () => {
@@ -61,26 +46,6 @@ describe('pause', () => {
     expect(pause.paused).toBe(true);
     setVisibility(doc, 'visible');
     expect(pause.paused).toBe(false);
-  });
-
-  it('pauses while a touch device is held upright', () => {
-    const portrait = fakeQuery();
-    const pause = createPause(new EventTarget(), fakeDocument(), { portrait });
-    setMatches(portrait, true);
-    expect(pause.reason).toBe('portrait');
-    setMatches(portrait, false);
-    expect(pause.paused).toBe(false);
-  });
-
-  it('reports portrait over unfocused when both apply', () => {
-    const win = new EventTarget();
-    const portrait = fakeQuery();
-    const pause = createPause(win, fakeDocument(), { portrait });
-    win.dispatchEvent(new Event('blur'));
-    setMatches(portrait, true);
-    expect(pause.reason).toBe('portrait');
-    setMatches(portrait, false);
-    expect(pause.reason).toBe('unfocused');
   });
 
   it('stays paused until every reason has cleared', () => {
@@ -116,11 +81,11 @@ describe('pause', () => {
 
   it('stops listening after destroy', () => {
     const win = new EventTarget();
-    const portrait = fakeQuery();
-    const pause = createPause(win, fakeDocument(), { portrait });
+    const doc = fakeDocument();
+    const pause = createPause(win, doc);
     pause.destroy();
     win.dispatchEvent(new Event('blur'));
-    setMatches(portrait, true);
+    setVisibility(doc, 'hidden');
     expect(pause.paused).toBe(false);
   });
 });

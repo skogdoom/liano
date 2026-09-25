@@ -1,5 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { SCREEN_WIDTH, SCREEN_HEIGHT, MONKEY_RADIUS } from '../config.js';
+import { MONKEY_RADIUS } from '../config.js';
 import { GameState } from '../sim/game.js';
 import { version } from '../../package.json';
 
@@ -37,7 +37,7 @@ function place(parent, child, y) {
   return child;
 }
 
-// Arrow at the top edge, at the monkey's x, while it is above the screen.
+// Arrow at the top edge, at the monkey's x, while it is above the view.
 class OffscreenIndicator {
   constructor() {
     this.view = new Graphics()
@@ -47,9 +47,9 @@ class OffscreenIndicator {
     this.view.y = 8;
   }
 
-  update(monkey, cameraX) {
-    this.view.visible = monkey.y < -MONKEY_RADIUS;
-    this.view.x = Math.min(Math.max(monkey.x - cameraX, 16), SCREEN_WIDTH - 16);
+  update(monkey, cameraX, layout) {
+    this.view.visible = monkey.y + layout.bandTop < -MONKEY_RADIUS;
+    this.view.x = Math.min(Math.max(monkey.x - cameraX, 16), layout.view.width - 16);
   }
 }
 
@@ -64,15 +64,15 @@ const PROMPTS = {
   },
 };
 
-// Title, game over and pause screens, and the off-screen indicator. (The "turn your
-// device" message for upright phones is an HTML overlay, see index.html.)
+// Title, game over and pause screens, and the off-screen indicator. Positions and
+// sizes come from the layout (see layout.js).
 export class Overlays {
   constructor() {
     this.view = new Container();
     this.time = 0;
 
     // Right of the title-screen swing, so the monkey stays in view.
-    this.title = panel(990, SCREEN_HEIGHT / 2 - 20, 440, 330);
+    this.title = panel(0, 0, 440, 330);
     place(this.title, text('LIANO', 104, { weight: 'bold' }), -90);
     place(this.title, text('Swing from vine to vine.\nLet go to fly to the next one.', 22), 10);
     this.titleControl = place(this.title, text('', 22, { color: GOLD, weight: 'bold' }), 70);
@@ -82,14 +82,14 @@ export class Overlays {
     versionText.x = 204;
     versionText.alpha = 0.55;
 
-    this.gameOver = panel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 20, 520, 340);
+    this.gameOver = panel(0, 0, 520, 340);
     place(this.gameOver, text('GAME OVER', 72, { weight: 'bold' }), -105);
     this.scoreText = place(this.gameOver, text('', 44, { weight: 'bold' }), -25);
     this.bestText = place(this.gameOver, text('', 26), 25);
     this.newBestText = place(this.gameOver, text('New best!', 28, { color: GOLD, weight: 'bold' }), 70);
     this.gameOverPrompt = place(this.gameOver, text('', 28), 125);
 
-    this.paused = panel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 420, 170);
+    this.paused = panel(0, 0, 420, 170);
     place(this.paused, text('Paused', 64, { weight: 'bold' }), -25);
     this.pausedPrompt = place(this.paused, text('', 22), 45);
 
@@ -99,14 +99,26 @@ export class Overlays {
     this.promptsFor = null;
   }
 
-  // `pauseReason` is null while running; 'portrait' is shown by the HTML overlay.
+  resize(layout) {
+    this.layout = layout;
+    for (const [name, view] of [
+      ['title', this.title],
+      ['gameOver', this.gameOver],
+      ['paused', this.paused],
+    ]) {
+      view.position.set(layout.panels[name].x, layout.panels[name].y);
+      view.scale.set(layout.ui);
+    }
+  }
+
+  // `pauseReason` is null while running.
   update(game, cameraX, { pauseReason, inputType, dt }) {
     const paused = pauseReason !== null;
     this.time += dt;
     this.#setPrompts(inputType === 'touch' ? 'touch' : 'other');
     const pulse = 0.65 + 0.35 * Math.sin(this.time * 4);
 
-    this.indicator.update(game.world.monkey, cameraX);
+    this.indicator.update(game.world.monkey, cameraX, this.layout);
 
     this.title.visible = game.state === GameState.READY && !paused;
     this.titlePrompt.alpha = pulse;
