@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { layoutFor } from '../src/layout.js';
+import { layoutFor, paneLayouts } from '../src/layout.js';
 import { Camera, cameraTarget } from '../src/render/camera.js';
 import { World } from '../src/sim/world.js';
 import { lianaIndexRange } from '../src/sim/generator.js';
@@ -186,5 +186,32 @@ describe('camera target', () => {
     camera.screenX = 448;
     for (let i = 0; i < 600; i++) camera.update(1000, SIM_DT);
     expect(1000 - camera.x).toBeCloseTo(448, 3);
+  });
+});
+
+describe('two-player layout', () => {
+  it('always uses the 1280 × 720 frame, with bars', () => {
+    for (const [w, h] of [[1280, 720], [2400, 1080], [1024, 768], [390, 844]]) {
+      const l = layoutFor(w, h, undefined, { fixed: true });
+      expect(l.view).toEqual({ width: 1280, height: 720 });
+      expect(l.bandTop).toBe(0);
+      expect(l.orientation).toBe('landscape');
+      expect(l.scale).toBeCloseTo(Math.min(w / 1280, h / 720), 9);
+    }
+  });
+
+  it('stacks split screen panes, each showing the world band at half scale', () => {
+    const l = layoutFor(1280, 720, undefined, { fixed: true });
+    const panes = paneLayouts(l, 2);
+    expect(panes.map((p) => [p.x, p.y, p.width, p.height, p.scale, p.clip])).toEqual([
+      [0, 0, 1280, 360, 0.5, true],
+      [0, 360, 1280, 360, 0.5, true],
+    ]);
+    // Twice the width of world in view, with the monkey at the same fraction of it.
+    expect(panes[0].view).toEqual({ width: 2560, height: 720 });
+    expect(panes[0].camera.screenX / 2560).toBeCloseTo(CAMERA_TARGET_X / 1280, 9);
+    // A single pane is the whole view.
+    const [single] = paneLayouts(layoutFor(1280, 720), 1);
+    expect([single.width, single.height, single.scale, single.clip]).toEqual([1280, 720, 1, false]);
   });
 });

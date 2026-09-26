@@ -43,18 +43,26 @@ export class ObstaclePrefetch {
     this.pending.clear();
   }
 
-  // Asks the worker for the gaps after the furthest one in `obstacles` (the world's map).
+  // Asks the worker for the gaps after the furthest one in `obstacles` (a world's map,
+  // or one per world when split screen's worlds share the seed).
   update(obstacles) {
     if (!this.worker || this.seed === null) return;
-    let last = -Infinity;
-    for (const gap of obstacles.keys()) last = Math.max(last, gap);
-    if (last === -Infinity) return;
-    for (let gap = last + 1; gap <= last + PREFETCH_AHEAD; gap++) {
-      if (this.ready.has(gap) || this.pending.has(gap)) continue;
-      this.pending.add(gap);
-      this.worker.postMessage({ seed: this.seed, gap });
+    const lasts = [];
+    for (const map of [].concat(obstacles)) {
+      let last = -Infinity;
+      for (const gap of map.keys()) last = Math.max(last, gap);
+      if (last !== -Infinity) lasts.push(last);
     }
-    for (const gap of this.ready.keys()) if (gap < last - KEEP_BEHIND) this.ready.delete(gap);
+    if (lasts.length === 0) return;
+    for (const last of lasts) {
+      for (let gap = last + 1; gap <= last + PREFETCH_AHEAD; gap++) {
+        if (this.ready.has(gap) || this.pending.has(gap)) continue;
+        this.pending.add(gap);
+        this.worker.postMessage({ seed: this.seed, gap });
+      }
+    }
+    const keepFrom = Math.min(...lasts) - KEEP_BEHIND;
+    for (const gap of this.ready.keys()) if (gap < keepFrom) this.ready.delete(gap);
   }
 
   // The obstacle for (seed, gap): the worker's if it is ready, else generated now.

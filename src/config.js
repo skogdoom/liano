@@ -161,6 +161,10 @@ export const KEYS = Object.freeze({
   mute: ['KeyM'],
 });
 export const LIVES_2P = 3;
+// After losing a life, a monkey tumbles for RESPAWN_DELAY_MS, then hangs again on a
+// liana at RESPAWN_GRIP, invulnerable to obstacles for RESPAWN_INVULN_MS.
+export const RESPAWN_DELAY_MS = 1000;
+export const RESPAWN_INVULN_MS = 1500;
 
 // Death feedback. Hitting an obstacle bounces the monkey back (fraction of its
 // horizontal speed) and pops it up (px/s) so the tumble is visible.

@@ -6,9 +6,12 @@ import { SWING_OMEGA } from '../sim/liana.js';
 // and tail reach outside it. Local +y is down, and the monkey faces +x (mirrored when
 // travelling left).
 
-const FUR = 0x6e4322;
-const FUR_DARK = 0x4a2c14;
-const SKIN = 0xe0ad74;
+// Fur per player: player 1 brown, player 2 ginger.
+export const PALETTES = [
+  { fur: 0x6e4322, furDark: 0x4a2c14, skin: 0xe0ad74 },
+  { fur: 0xb8672a, furDark: 0x7f3f14, skin: 0xf0c890 },
+];
+const INVULNERABLE_BLINK = 10; // Hz
 const EYE = 0x1c1008;
 
 // Where the gripping hand holds the liana, above the head along the rope.
@@ -45,7 +48,7 @@ const POSES = {
 };
 
 export class MonkeyView {
-  constructor() {
+  constructor({ fur: FUR, furDark: FUR_DARK, skin: SKIN } = PALETTES[0]) {
     this.view = new Container();
     this.body = new Container();
     this.view.addChild(this.body);
@@ -102,7 +105,10 @@ export class MonkeyView {
     this.monkey = null;
   }
 
-  update(monkey, dt) {
+  // `blinking` while the monkey is invulnerable after a respawn.
+  update(monkey, dt, blinking = false) {
+    this.blinkTime = blinking ? (this.blinkTime ?? 0) + dt : 0;
+    this.view.alpha = blinking && Math.floor(this.blinkTime * INVULNERABLE_BLINK * 2) % 2 ? 0.3 : 1;
     if (monkey !== this.monkey) {
       // New run: snap instead of easing from the previous monkey.
       this.monkey = monkey;

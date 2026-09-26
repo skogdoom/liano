@@ -116,7 +116,7 @@ describe('banana pickup and boost', () => {
       game.step(SIM_DT);
       events.push(...game.takeEvents());
     }
-    expect(events.filter((e) => e.type === 'banana')).toEqual([{ type: 'banana', gap: 0, score: BANANA_POINTS, player: 0 }]);
+    expect(events.filter((e) => e.type === 'banana')).toEqual([{ type: 'banana', gap: 0, score: BANANA_POINTS, player: 0, pane: 0 }]);
     expect(game.score).toBe(BANANA_POINTS);
     // This grab is the first boosted one.
     expect(world.monkey.liana.period).toBe(BOOST_PERIOD);

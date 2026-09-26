@@ -2,6 +2,7 @@ import { Container, Graphics, Text } from 'pixi.js';
 import { MONKEY_RADIUS } from '../config.js';
 import { GameState } from '../sim/game.js';
 import { MODES, MODE_ORDER } from '../sim/match.js';
+import { paneLayouts } from '../layout.js';
 import { version } from '../../package.json';
 
 const CREAM = 0xf4e7c5;
@@ -64,15 +65,17 @@ class StageBanner {
     this.view.visible = false;
   }
 
-  update(game, dt) {
+  // Shows the stage `world` has reached (the furthest of its monkeys).
+  update(game, world, dt) {
+    const stage = Math.max(...world.stages);
     // A new world starts over at stage 1 without a banner.
-    if (game.world !== this.world) {
-      this.world = game.world;
-      this.stage = game.stage;
+    if (world !== this.world) {
+      this.world = world;
+      this.stage = stage;
       this.time = Infinity;
     }
-    if (game.stage > this.stage) {
-      this.stage = game.stage;
+    if (stage > this.stage) {
+      this.stage = stage;
       this.title.text = `Stage ${this.stage}`;
       this.subtitle.text = STAGE_NAMES[this.stage - 1] ?? '';
       this.time = 0;
@@ -163,7 +166,7 @@ export class Overlays {
     versionText.alpha = 0.55;
 
     this.gameOver = panel(0, 0, 520, 340);
-    place(this.gameOver, text('GAME OVER', 72, { weight: 'bold' }), -105);
+    this.gameOverTitle = place(this.gameOver, text('GAME OVER', 72, { weight: 'bold' }), -105);
     this.scoreText = place(this.gameOver, text('', 44, { weight: 'bold' }), -25);
     this.bestText = place(this.gameOver, text('', 26), 25);
     this.newBestText = place(this.gameOver, text('New best!', 28, { color: GOLD, weight: 'bold' }), 70);
@@ -174,8 +177,11 @@ export class Overlays {
     this.pausedPrompt = place(this.paused, text('', 22), 45);
 
     this.indicator = new OffscreenIndicator();
-    this.banner = new StageBanner();
-    this.view.addChild(this.indicator.view, this.banner.view, this.title, this.gameOver, this.paused);
+    // A stage banner and an "out" note per pane.
+    this.banners = [];
+    this.outNotes = [];
+    this.paneLayer = new Container();
+    this.view.addChild(this.indicator.view, this.paneLayer, this.title, this.gameOver, this.paused);
     this.shown = null;
     this.promptsFor = null;
   }
@@ -186,7 +192,6 @@ export class Overlays {
       ['title', this.title],
       ['gameOver', this.gameOver],
       ['paused', this.paused],
-      ['banner', this.banner.view],
     ]) {
       view.position.set(layout.panels[name].x, layout.panels[name].y);
       view.scale.set(layout.ui);
@@ -200,8 +205,10 @@ export class Overlays {
     this.#setPrompts(inputType === 'touch' ? 'touch' : 'other');
     const pulse = 0.65 + 0.35 * Math.sin(this.time * 4);
 
-    this.indicator.update(game.world.monkey, cameraX, this.layout);
-    this.banner.update(game, dt);
+    // The arrow over a monkey above the view is for the single, full-size pane.
+    this.indicator.view.visible = game.worlds.length === 1;
+    if (this.indicator.view.visible) this.indicator.update(game.world.monkey, cameraX, this.layout);
+    this.#updatePanes(game, dt);
 
     this.title.visible = game.state === GameState.TITLE && !paused;
     this.titlePrompt.alpha = pulse;
@@ -210,18 +217,64 @@ export class Overlays {
     this.gameOver.visible = game.state === GameState.RESULTS && !paused;
     if (this.gameOver.visible) {
       this.gameOver.alpha = Math.min(game.stateTime / FADE_IN, 1);
-      const shown = `${game.score}:${game.best}:${game.newBest}`;
+      const solo = game.players === 1;
+      const shown = solo ? `${game.score}:${game.best}:${game.newBest}` : `${game.mode}:${game.playerScore(0)}:${game.playerScore(1)}`;
       if (shown !== this.shown) {
-        this.scoreText.text = `Score ${game.score}`;
-        this.bestText.text = `Best ${game.best}`;
+        if (solo) {
+          this.gameOverTitle.text = 'GAME OVER';
+          this.scoreText.text = `Score ${game.score}`;
+          this.bestText.text = `Best ${game.best}`;
+        } else {
+          // Totals over all lives decide.
+          const winners = game.winners;
+          this.gameOverTitle.text = winners.length > 1 ? 'DRAW' : `P${winners[0] + 1} WINS`;
+          this.scoreText.text = `P1 ${game.playerScore(0)}  ·  P2 ${game.playerScore(1)}`;
+          this.bestText.text = '';
+        }
         this.shown = shown;
       }
-      this.newBestText.visible = game.newBest;
+      this.newBestText.visible = game.newBest && solo;
       this.gameOverPrompt.visible = game.canRestart();
       this.gameOverPrompt.alpha = pulse;
     }
 
     this.paused.visible = pauseReason === 'unfocused';
+  }
+
+  // Split screen's panes, or the single one: where each world is drawn in the view.
+  #updatePanes(game, dt) {
+    const count = game.worlds.length;
+    while (this.banners.length < count) {
+      const banner = new StageBanner();
+      const note = text('', 40, { weight: 'bold' });
+      this.banners.push(banner);
+      this.outNotes.push(note);
+      this.paneLayer.addChild(banner.view, note);
+    }
+    const panes = paneLayouts(this.layout, count);
+    this.banners.forEach((banner, i) => {
+      const note = this.outNotes[i];
+      if (i >= count) {
+        banner.view.visible = false;
+        note.visible = false;
+        return;
+      }
+      banner.update(game, game.worlds[i], dt);
+      if (count === 1) {
+        banner.view.position.set(this.layout.panels.banner.x, this.layout.panels.banner.y);
+        banner.view.scale.set(this.layout.ui);
+      } else {
+        // Low in the pane, like the single pane's.
+        banner.view.position.set(panes[i].width / 2, panes[i].y + panes[i].height * 0.72);
+        banner.view.scale.set(0.6);
+      }
+      // A player out of lives, while the other plays on.
+      note.visible = count > 1 && game.state === GameState.PLAYING && game.playerOut(i);
+      if (note.visible) {
+        note.text = `P${i + 1} is out`;
+        note.position.set(panes[i].width / 2, panes[i].y + panes[i].height / 2);
+      }
+    });
   }
 
   // The mode picker shows only with a keyboard (the two-player modes need one); the

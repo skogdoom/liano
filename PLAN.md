@@ -247,6 +247,7 @@ Values from v1 are the tuned, current ones. New v2 values are starting points.
 | LIVES_2P | 3 | New |
 | RESPAWN_GRIP | 0.7 × L | New |
 | RESPAWN_INVULN_MS | 1500 | New |
+| RESPAWN_DELAY_MS | 1000 | New; the dead monkey tumbles this long before respawning |
 | CAMERA_TARGET_X | 0.35 × width | Landscape |
 | CAMERA_LERP | 8 /s | |
 | GAMEOVER_INPUT_LOCK_MS | 400 | |
@@ -450,7 +451,11 @@ Implement in order. Each milestone must end in a runnable, tested state, with ev
 - Notes: whether a gap has a banana depends only on (seed, gap) (a candidate with BANANA_CHANCE 0.25, dropped if either of the two gaps before is a candidate: about 14 % of gaps, at least 3 apart), so an obstacle knows whether to pass the boosted check without generating bananas. A banana sits on a flight one or two release steps inside either end of a clearing release window. The boosted period is rounded to 250 steps (factor 1.248) for the slip timing. Bananas are generated in the worker with the obstacles. No pickup sound (decision 25); a "+3" rises where one was taken.
 
 **20. 2P split screen.** Two worlds with one seed, two viewports, lives, respawn with invulnerability, per-pane HUD, results screen.
-- [ ] A player with no lives left stops; the other continues; the winner is decided by totals
+- [x] A player with no lives left stops; the other continues; the winner is decided by totals
+- [x] Two worlds with one seed in stacked 1280×360 panes at 0.5 scale (each clipped, with its own camera, background, tint and stage banner); P2's monkey is ginger
+- [x] Lives: a lost life tumbles for RESPAWN_DELAY_MS, then respawns on the last liana grabbed at RESPAWN_GRIP, blinking and invulnerable to obstacles for RESPAWN_INVULN_MS; boosts are lost
+- [x] Per-pane HUD (score and hearts, OUT), "P1 is out" in the pane, results panel with the winner or a draw; the session best is for 1P only
+- Notes: the off-screen arrow is for the single pane only; the title's key hints for 2P come with milestone 22.
 
 **21. 2P shared screen.** Leader camera, left-edge elimination, respawn on the leftmost fully visible liana, shared lianas.
 - [ ] Two monkeys can hang on the same liana, each at its own grip radius, in the same swing phase

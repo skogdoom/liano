@@ -32,15 +32,19 @@ const PANEL_HALF_HEIGHT = 175;
 // - Portrait: PORTRAIT_VIEW_WIDTH of world, with the spare height split above and
 //   below the band; the panels go below it.
 //
-// `insets` are the safe-area insets (notch, home indicator) in CSS pixels.
-export function layoutFor(width, height, insets = { top: 0, right: 0, bottom: 0, left: 0 }) {
+// `insets` are the safe-area insets (notch, home indicator) in CSS pixels. With `fixed`
+// (the two-player modes) the view is always the 1280 × 720 frame, with bars as needed.
+export function layoutFor(width, height, insets = { top: 0, right: 0, bottom: 0, left: 0 }, { fixed = false } = {}) {
   const aspect = width / height;
-  const portrait = aspect < 1;
+  const portrait = aspect < 1 && !fixed;
   let viewWidth;
   let viewHeight;
   let bandTop = 0;
 
-  if (portrait) {
+  if (fixed) {
+    viewWidth = SCREEN_WIDTH;
+    viewHeight = SCREEN_HEIGHT;
+  } else if (portrait) {
     viewWidth = PORTRAIT_VIEW_WIDTH;
     viewHeight = viewWidth / aspect;
     bandTop = (viewHeight - WORLD_HEIGHT) * PORTRAIT_SPARE_ABOVE;
@@ -97,4 +101,31 @@ export function layoutFor(width, height, insets = { top: 0, right: 0, bottom: 0,
       banner: { x: viewWidth / 2, y: portrait ? panelY : bandTop + 520 },
     },
   };
+}
+
+// The panes the world is drawn in: the whole view, or (split screen) `count` strips
+// stacked top to bottom, each showing the world band scaled to fit its height. Each
+// pane has a rect in the view, the `scale` its world is drawn at, and a layout of its
+// own for the background and camera (in world pixels).
+export function paneLayouts(layout, count = 1) {
+  if (count === 1) {
+    const { view, bandTop, floorShift, camera } = layout;
+    return [{ x: 0, y: 0, width: view.width, height: view.height, scale: 1, clip: false, view, bandTop, floorShift, camera }];
+  }
+  const height = layout.view.height / count;
+  const scale = height / WORLD_HEIGHT;
+  const width = layout.view.width;
+  return Array.from({ length: count }, (_, i) => ({
+    x: 0,
+    y: i * height,
+    width,
+    height,
+    scale,
+    clip: true,
+    view: { width: width / scale, height: WORLD_HEIGHT },
+    bandTop: 0,
+    floorShift: 0,
+    // The monkey at the same fraction of the pane's width as in single player.
+    camera: { follow: 'monkey', screenX: (CAMERA_TARGET_X / SCREEN_WIDTH) * (width / scale) },
+  }));
 }
