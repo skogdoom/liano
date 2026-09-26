@@ -58,6 +58,9 @@ v1 (milestones 1–14) is built and released as v1.x. It has touch and phone sup
 - Release velocity combines the tangential and radial components: v = r·θ'·(cos θ, −sin θ) + r'·(sin θ, cos θ).
 - A forced release at r = L uses the same formula.
 - Time on a liana is bounded: at most (L − r₀) / SLIP_SPEED. This bound is what keeps moving obstacles fair (see Feasibility).
+- A catch below MAX_ENTRY_RADIUS grips at MAX_ENTRY_RADIUS, so catching the very tip still leaves a forward swing before the forced release.
+- On the title screen the monkey hangs at START_GRIP without slipping; the slip starts with the run.
+- Consequence of the v1 swing (spacing 700): a release reaches the next liana only from about 310 px down the rope. A high catch therefore waits: from 0.35 L the first forward window opens after about 5.3 s. Backward windows exist only for grips up to about 340 px before the forced release.
 - This replaces v1's grip slide to a fixed 90 % radius.
 - Visual: the monkey's hand visibly slides down the vine. Near the tip, the vine end flashes as a warning.
 
@@ -217,8 +220,11 @@ Values from v1 are the tuned, current ones. New v2 values are starting points.
 | SWING_AMPLITUDE | 50° | |
 | SWING_PERIOD | 2.6 s | Slower swing, tuned in v1 (v2 draft: 1.8 s) |
 | GRAVITY | 600 px/s² | Tuned in v1; 400 felt too floaty (v2 draft: 1800) |
-| SLIP_SPEED | 60 px/s | New; retune against the v1 swing |
+| SLIP_SPEED | 40 px/s | New. At most (L − 310) / P ≈ 42 px/s, so every grip passes a forward swing low enough on the rope before it is forced off (v2 draft: 60) |
 | ENTRY_RADII | [0.35, 0.5, 0.65, 0.8, 0.95] × L | New |
+| MAX_ENTRY_RADIUS | 0.95 × L | New; lower catches grip here |
+| START_GRIP | 0.7 × L | New; the grip at the start of a run |
+| TIP_WARNING | 40 px (1 s of slip) | New; the vine end blinks within this distance of the tip |
 | MONKEY_RADIUS | 22 | |
 | OBSTACLE_Y_RANGE | [140, 375] | Heights ~[195, 315] are rejected by swing clearance (v2 draft: [140, 620]) |
 | LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a swept area, beyond MONKEY_RADIUS |
@@ -410,10 +416,10 @@ Implement in order. Each milestone must end in a runnable, tested state, with ev
 - [x] 1P plays exactly as in v1 (existing tests pass; the only edits are the renamed states TITLE and RESULTS and the new `player` field on events)
 
 **16. Slip and forced release.** Grip slip and forced release replace the fixed grip slide. Release velocity gains the radial part. The feasibility solver and the window table cover entry radii. The debug overlay shows the slip and the forced-release point.
-- [ ] Grab at the contact radius; slip reaches the tip and forces a release
-- [ ] Release velocity includes the radial component (unit tested)
-- [ ] The just-released liana cannot be regrabbed; backward flight can land on the previous liana
-- [ ] 1,000 seeded gaps: all feasible for every entry radius
+- [x] Grab at the contact radius; slip reaches the tip and forces a release
+- [x] Release velocity includes the radial component (unit tested)
+- [x] The just-released liana cannot be regrabbed; backward flight can land on the previous liana
+- [x] 1,000 seeded gaps: all feasible for every entry radius
 
 **17. Moving obstacles.** Spider, snake, bird with periodic motion; the solver gains the phase dimension and runs in a worker; art for all three; a "bong" pitch for each.
 - [ ] 1,000 seeded gaps from stage 2+: all feasible for every entry radius × phase

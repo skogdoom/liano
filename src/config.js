@@ -15,8 +15,25 @@ export const MAX_RESOLUTION = 2;
 
 export const ANCHOR_Y = -20;
 export const LIANA_LENGTH = 420;
-export const GRIP_RADIUS = 0.9 * LIANA_LENGTH;
-export const GRIP_SLIDE_TIME = 0.15; // slide from contact point to GRIP_RADIUS
+// The grip slips from where the liana was caught towards the tip at this speed; at the
+// tip the monkey is forced off with its current velocity. A release reaches the next
+// liana only from about 310 px down the rope and on the forward swing, so slipping the
+// last 110 px must take at least one swing period (≤ 42 px/s): then every grip, however
+// high, passes a forward swing low enough on the rope before it is forced off.
+export const SLIP_SPEED = 40; // px/s
+// A catch lower on the rope than this grips here instead, so a monkey that catches the
+// very tip still gets a swing before it is forced off.
+export const MAX_ENTRY_RADIUS = 0.95 * LIANA_LENGTH;
+// Where the monkey hangs at the start of a run (and, in 2P, after a respawn). It does
+// not slip on the title screen.
+export const START_GRIP = 0.7 * LIANA_LENGTH;
+export const RESPAWN_GRIP = 0.7 * LIANA_LENGTH;
+// The vine end flashes once the grip is this close to it (px, 1 s of slip), faster
+// the closer it gets.
+export const TIP_WARNING = SLIP_SPEED;
+// Entry radii the fairness solver samples: every gap must be passable after grabbing
+// the liana at each of them.
+export const ENTRY_RADII = [0.35, 0.5, 0.65, 0.8].map((f) => f * LIANA_LENGTH).concat(MAX_ENTRY_RADIUS);
 // Wide enough that neighbouring swings (reach LIANA_LENGTH · sin(SWING_AMPLITUDE) ≈ 322)
 // leave the middle of each gap free for obstacles.
 export const LIANA_SPACING = 700;

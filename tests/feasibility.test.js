@@ -6,7 +6,7 @@ import {
   validReleaseSteps,
   longestRun,
   MIN_WINDOW_STEPS,
-  RELEASE_STEPS,
+  forcedReleaseStep,
 } from '../src/sim/feasibility.js';
 import { createObstacle, pickHeight, fallbackHeight } from '../src/sim/generator.js';
 import { Obstacle, OBSTACLE_TYPES } from '../src/sim/obstacle.js';
@@ -15,8 +15,11 @@ import { MonkeyState } from '../src/sim/monkey.js';
 import { mulberry32 } from '../src/sim/rng.js';
 import {
   ANCHOR_Y,
-  GRIP_RADIUS,
+  ENTRY_RADII,
   LIANA_LENGTH,
+  MAX_ENTRY_RADIUS,
+  SLIP_SPEED,
+  START_GRIP,
   LIANA_SPACING,
   MIN_RELEASE_WINDOW_MS,
   MONKEY_RADIUS,
@@ -24,7 +27,7 @@ import {
   SIM_DT,
   SWING_AMPLITUDE,
 } from '../src/config.js';
-import { FORWARD_RELEASE_STEP, FALL_RELEASE_STEP, worldWith, stepN, flyUntilGrab } from './helpers.js';
+import { FORWARD_RELEASE_STEP, FALL_RELEASE_STEP, worldWith, stepN, flyUntilGrab, windowForGrab } from './helpers.js';
 
 const windowMs = (steps) => steps * SIM_DT * 1000;
 
@@ -41,10 +44,22 @@ describe('release window solver', () => {
     expect(longestRun([false, false])).toEqual({ start: 0, length: 0 });
   });
 
-  it('gives an empty gap a wide window', () => {
+  it('gives an empty gap a wide window for every entry radius', () => {
     const w = releaseWindow(null, 0);
-    expect(w.length).toBeGreaterThan(3 * MIN_WINDOW_STEPS);
-    expect(w.valid).toHaveLength(RELEASE_STEPS + 1);
+    expect(w.byRadius.map((r) => r.radius)).toEqual(ENTRY_RADII);
+    expect(w.length).toBeGreaterThan(2 * MIN_WINDOW_STEPS);
+    for (const r of w.byRadius) expect(r.start + r.length - 1).toBeLessThanOrEqual(forcedReleaseStep(r.radius));
+  });
+
+  it('checks each entry radius up to its forced release at the tip', () => {
+    expect(forcedReleaseStep(LIANA_LENGTH - SLIP_SPEED)).toBe(120);
+    // Entries below MAX_ENTRY_RADIUS count as MAX_ENTRY_RADIUS.
+    expect(forcedReleaseStep(LIANA_LENGTH)).toBe(forcedReleaseStep(MAX_ENTRY_RADIUS));
+    for (const r of ENTRY_RADII) {
+      const { valid, forcedStep } = validReleaseSteps(null, r);
+      expect(forcedStep).toBe(forcedReleaseStep(r));
+      expect(valid).toHaveLength(forcedStep + 1);
+    }
   });
 
   it('rejects obstacles in the middle heights, where the swings reach', () => {
@@ -63,11 +78,13 @@ describe('release window solver', () => {
       ['rock', 190], ['rock', 325],
     ];
     for (const [type, y] of cases) {
-      for (const c of [0, 150, 300, 378, 420]) {
+      for (const c of [...ENTRY_RADII, 250]) {
         const obstacle = new Obstacle(0, type, LIANA_SPACING / 2, y);
         const { valid } = validReleaseSteps(obstacle, c);
-        for (let k = 0; k <= RELEASE_STEPS; k++) {
+        // Every step up to the forced release; k = 0 and the forced step itself included.
+        for (let k = 0; k < valid.length; k += k < 40 || valid.length - k < 40 ? 1 : 7) {
           const world = worldWith({ 0: obstacle });
+          world.start();
           world.monkey.grab(world.lianas.get(0), c); // restart the swing, grabbed at c
           stepN(world, k);
           let reached = false;
@@ -82,8 +99,26 @@ describe('release window solver', () => {
   });
 });
 
+describe('the start liana', () => {
+  it('agrees with the real world when the run starts partway through the title swing', () => {
+    for (const phase of [0, 100, 250]) {
+      const { valid } = validReleaseSteps(null, START_GRIP, 0, 1, phase);
+      expect(valid.some(Boolean)).toBe(true);
+      for (let k = 0; k < valid.length; k += 3) {
+        const world = worldWith({});
+        stepN(world, phase);
+        world.start();
+        stepN(world, k);
+        world.release();
+        const reached = flyUntilGrab(world) === 1;
+        expect({ phase, k, reached }).toEqual({ phase, k, reached: valid[k] });
+      }
+    }
+  });
+});
+
 describe('fair generation', () => {
-  it(`gives every one of 1,000 seeded gaps a window of at least ${MIN_RELEASE_WINDOW_MS} ms`, () => {
+  it(`gives every one of 1,000 seeded gaps a window of at least ${MIN_RELEASE_WINDOW_MS} ms for every entry radius`, () => {
     let checked = 0;
     for (const seed of [1, 99, 2024, 31337]) {
       for (let gap = 1; gap <= 250; gap++) {
@@ -149,11 +184,12 @@ describe('fairness in play', () => {
   // The window must hold whatever point on the liana the monkey actually caught.
   function playForward(seed, hops, pick) {
     const world = new World({ seed });
+    world.start();
     const rand = mulberry32(seed);
     for (let hop = 0; hop < hops; hop++) {
       const index = world.monkey.liana.index;
-      const o = world.obstacles.get(index);
-      const w = o ? releaseWindow(o.type, o.y) : releaseWindow(null, 0);
+      const w = windowForGrab(world);
+      expect({ seed, hop, length: w.length >= MIN_WINDOW_STEPS }).toEqual({ seed, hop, length: true });
       stepN(world, pick(w, rand));
       world.release();
       const grabbed = flyUntilGrab(world);

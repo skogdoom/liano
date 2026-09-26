@@ -2,8 +2,9 @@ import {
   SIM_DT,
   GRAVITY,
   ANCHOR_Y,
-  GRIP_RADIUS,
-  GRIP_SLIDE_TIME,
+  SLIP_SPEED,
+  MAX_ENTRY_RADIUS,
+  ENTRY_RADII,
   LIANA_LENGTH,
   LIANA_SPACING,
   LIANA_CLEARANCE,
@@ -21,26 +22,24 @@ import { Obstacle, OBSTACLE_TYPES } from './obstacle.js';
 import { ballisticStep, circleIntersectsSegment } from './physics.js';
 
 // Release-window solver. A gap is passable going forward when its obstacle stays
-// clear of both lianas' swept areas and, after grabbing liana i moving forward,
-// there is a long enough run of release steps that miss the obstacle and grab
-// liana i + 1.
+// clear of both lianas' swept areas and, for every entry radius in ENTRY_RADII, after
+// grabbing liana i there moving forward, there is a long enough run of release steps
+// that miss the obstacle and grab liana i + 1, before the grip slips to the tip and
+// forces a release.
 //
-// Releases are only possible at sim steps, so windows are counted in steps since
-// the grab. Forward releases happen in the first quarter period, while the swing
-// still moves forward; later the monkey swings back towards the previous gap.
-export const RELEASE_STEPS = Math.round(SWING_PERIOD / SIM_DT / 4);
+// Releases are only possible at sim steps, so windows are counted in steps since the
+// grab. The grip slips as the monkey swings, so each entry radius gives a different
+// swing, and windows can come in any forward swing before the forced release.
 
 // How often the solver was asked (queries, cached or not) and actually ran (runs),
 // so tests can check that play only uses the precomputed table.
 export const solverStats = { queries: 0, runs: 0 };
 export const MIN_WINDOW_STEPS = Math.ceil(MIN_RELEASE_WINDOW_MS / (SIM_DT * 1000) - 1e-9);
 
-// The first steps after a grab depend on where the liana was caught (grip slide);
-// every window must hold for any point along the liana. After the slide the swing
-// is the same whatever the contact point was.
-export const ARRIVAL_CONTACT_RADII = [];
-for (let c = 0; c <= LIANA_LENGTH; c += 10) ARRIVAL_CONTACT_RADII.push(c);
-const SLIDE_STEPS = Math.ceil(GRIP_SLIDE_TIME / SIM_DT);
+// Steps from grabbing at `entryRadius` until the forced release at the tip.
+export function forcedReleaseStep(entryRadius) {
+  return Math.ceil((LIANA_LENGTH - Math.min(entryRadius, MAX_ENTRY_RADIUS)) / SLIP_SPEED / SIM_DT - 1e-9);
+}
 
 // True if the obstacle keeps LIANA_CLEARANCE away from everything the lianas on both
 // sides of its gap can sweep: the rope over the full swing and the monkey hanging
@@ -70,18 +69,23 @@ export function simulateFlight(body, obstacle, target) {
   return 'timeout';
 }
 
-// For each release step k in [0, lastStep] after grabbing the liana at `lianaX` at
-// `contactRadius` while moving in `dir`: whether releasing then reaches the next
-// liana in that direction. Also returns the hanging position at each step and
-// whether the monkey was still alive at `lastStep`.
-export function validReleaseSteps(obstacle, contactRadius, lianaX = 0, dir = 1, lastStep = RELEASE_STEPS) {
+// For each release step k after grabbing the liana at `lianaX` at `entryRadius` while
+// moving in `dir`, up to and including the forced release at the tip: whether
+// releasing then reaches the next liana in that direction. Also returns the hanging
+// position at each step. A release moving away from the target is invalid without
+// flying it. `phaseSteps` starts the slip that many steps into the swing (the start
+// liana swings on the title screen before the run starts the slip); grabs start at 0.
+export function validReleaseSteps(obstacle, entryRadius, lianaX = 0, dir = 1, phaseSteps = 0) {
   const liana = new Liana(0, lianaX);
   const target = { x: lianaX + dir * LIANA_SPACING, anchorY: liana.anchorY, tipY: liana.tipY };
   const monkey = new Monkey();
   monkey.vx = dir;
-  monkey.grab(liana, contactRadius);
+  monkey.grab(liana, entryRadius);
+  for (let i = 0; i < phaseSteps; i++) liana.step(SIM_DT);
+  monkey.step(0);
   solverStats.runs++;
 
+  const lastStep = forcedReleaseStep(entryRadius);
   const valid = [];
   const positions = [];
   let alive = true;
@@ -92,9 +96,9 @@ export function validReleaseSteps(obstacle, contactRadius, lianaX = 0, dir = 1, 
       alive = !(obstacle && obstacle.hitsCircle(monkey.x, monkey.y, MONKEY_RADIUS));
     }
     positions.push({ x: monkey.x, y: monkey.y });
-    valid.push(alive && simulateFlight(monkey, obstacle, target) === 'grab');
+    valid.push(alive && monkey.vx * dir > 0 && simulateFlight(monkey, obstacle, target) === 'grab');
   }
-  return { valid, positions, alive };
+  return { valid, positions, alive, forcedStep: lastStep };
 }
 
 export function longestRun(valid) {
@@ -110,21 +114,17 @@ export function longestRun(valid) {
 
 const windows = new Map();
 
-// Release steps valid for every arrival radius, for an obstacle of `type` at height
-// `y` (null type: empty gap). Memoized: a gap is fully described by (type, y).
+// The longest window for each entry radius, for an obstacle of `type` at height `y`
+// (null type: empty gap); `length` is the shortest of them, the one that counts.
+// Memoized: a gap is fully described by (type, y).
 export function releaseWindow(type, y) {
   solverStats.queries++;
   const key = `${type}:${y}`;
   let result = windows.get(key);
   if (!result) {
     const obstacle = type ? new Obstacle(0, type, LIANA_SPACING / 2, y) : null;
-    const valid = validReleaseSteps(obstacle, GRIP_RADIUS).valid;
-    for (const c of ARRIVAL_CONTACT_RADII) {
-      const slide = validReleaseSteps(obstacle, c, 0, 1, SLIDE_STEPS);
-      for (let k = 0; k <= SLIDE_STEPS; k++) valid[k] &&= slide.valid[k];
-      if (!slide.alive) valid.fill(false, SLIDE_STEPS + 1);
-    }
-    result = { valid, ...longestRun(valid) };
+    const byRadius = ENTRY_RADII.map((r) => ({ radius: r, ...longestRun(validReleaseSteps(obstacle, r).valid) }));
+    result = { byRadius, length: Math.min(...byRadius.map((w) => w.length)) };
     windows.set(key, result);
   }
   return result;
@@ -147,8 +147,8 @@ export function windowInputs() {
     SIM_DT,
     GRAVITY,
     ANCHOR_Y,
-    GRIP_RADIUS,
-    GRIP_SLIDE_TIME,
+    SLIP_SPEED,
+    MAX_ENTRY_RADIUS,
     LIANA_LENGTH,
     LIANA_SPACING,
     LIANA_CLEARANCE,
@@ -159,7 +159,7 @@ export function windowInputs() {
     MIN_RELEASE_WINDOW_MS,
     OBSTACLE_Y_RANGE,
     OBSTACLE_HITBOXES,
-    ARRIVAL_CONTACT_RADII,
+    ENTRY_RADII,
   };
 }
 

@@ -1,13 +1,15 @@
 import { expect } from 'vitest';
+import { longestRun, validReleaseSteps } from '../src/sim/feasibility.js';
 import { SIM_DT, SWING_PERIOD } from '../src/config.js';
 import { World } from '../src/sim/world.js';
 import { Obstacle } from '../src/sim/obstacle.js';
 import { LIANA_SPACING } from '../src/config.js';
 
 export const PERIOD_STEPS = Math.round(SWING_PERIOD / SIM_DT);
-// Release steps (sim steps after grabbing) inside the forward and backward windows.
-// Forward continues in the direction of arrival; backward reverses it.
-export const FORWARD_RELEASE_STEP = 20;
+// Release steps (sim steps after grabbing) inside the forward and backward windows
+// from the start grip, slipping or not. Forward continues in the direction of arrival;
+// backward reverses it. Later grabs use windowForGrab: the window depends on the entry.
+export const FORWARD_RELEASE_STEP = 29;
 export const BACKWARD_RELEASE_STEP = FORWARD_RELEASE_STEP + PERIOD_STEPS / 2;
 // Release step at which the monkey misses the next liana and falls.
 export const FALL_RELEASE_STEP = 60;
@@ -56,4 +58,21 @@ export function throwMonkey(world, { x, y, vx, vy }) {
   world.release();
   world.takeEvents();
   Object.assign(world.monkey, { x, y, vx, vy });
+}
+
+// The longest release window (steps since the grab) for where the monkey of `player`
+// hangs now, having just grabbed: solved for its actual entry radius and liana.
+export function windowForGrab(world, player = 0) {
+  const monkey = world.monkeys[player];
+  const { liana } = monkey;
+  const dir = monkey.vx < 0 ? -1 : 1;
+  const gap = dir > 0 ? liana.index : liana.index - 1;
+  const obstacle = world.obstacles.get(gap) ?? null;
+  return longestRun(validReleaseSteps(obstacle, monkey.gripFrom, liana.x, dir).valid);
+}
+
+// A release step in the middle of windowForGrab.
+export function releaseStepForGrab(world, player = 0) {
+  const w = windowForGrab(world, player);
+  return w.start + Math.floor(w.length / 2);
 }

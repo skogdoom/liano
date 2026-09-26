@@ -2,19 +2,18 @@ import { describe, it, expect } from 'vitest';
 import { Game, GameState } from '../src/sim/game.js';
 import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
-import { releaseWindow } from '../src/sim/feasibility.js';
+import { windowForGrab } from './helpers.js';
 import { mulberry32 } from '../src/sim/rng.js';
 import { SIM_DT, SCREEN_WIDTH, LIANA_SPACING, WORLD_MARGIN, GAMEOVER_INPUT_LOCK_MS } from '../src/config.js';
 
 // Lianas in the generation range, one extra on each side for hysteresis, plus the held one.
 const MAX_LIANAS = Math.floor((SCREEN_WIDTH + 2 * WORLD_MARGIN) / LIANA_SPACING) + 1 + 2 + 1;
 
-// Plays forward, releasing somewhere inside each gap's generated window, the way
+// Plays forward, releasing somewhere inside the window for each actual grab, the way
 // the frame loop drives the game (taking events every step).
 function hop(game, rand) {
   const { world } = game;
-  const o = world.obstacles.get(world.monkey.liana.index);
-  const w = o ? releaseWindow(o.type, o.y) : releaseWindow(null, 0);
+  const w = windowForGrab(world);
   const steps = w.start + Math.floor(rand() * w.length);
   for (let i = 0; i < steps; i++) step(game);
   game.press();

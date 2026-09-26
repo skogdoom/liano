@@ -101,6 +101,7 @@ export class Game {
   }
 
   #startRun() {
+    this.world.start();
     this.score = 0;
     this.newBest = false;
     this.#enter(GameState.PLAYING);

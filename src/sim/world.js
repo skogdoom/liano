@@ -1,5 +1,5 @@
 import {
-  GRIP_RADIUS,
+  START_GRIP,
   LIANA_SPACING,
   MONKEY_RADIUS,
   WORLD_HEIGHT,
@@ -26,7 +26,11 @@ export class World {
     this.monkeys = Array.from({ length: players }, () => new Monkey());
     updateLianas(this.lianas, 0, null);
     updateObstacles(this.obstacles, 0, this.makeObstacle);
-    for (const monkey of this.monkeys) monkey.grab(this.lianas.get(0), GRIP_RADIUS);
+    // The monkeys hang still (no slip) until the run starts.
+    for (const monkey of this.monkeys) {
+      monkey.slipping = false;
+      monkey.grab(this.lianas.get(0), START_GRIP);
+    }
     this.scores = this.monkeys.map(() => 0);
     // Gaps each monkey has scored. Kept outside the obstacles so culling cannot reset them.
     this.scoredGapsBy = this.monkeys.map(() => new Set());
@@ -53,6 +57,11 @@ export class World {
 
   isAlive(player) {
     return this.monkeys[player].state !== MonkeyState.DEAD;
+  }
+
+  // Starts the run: from now on grips slip towards the tips.
+  start() {
+    for (const monkey of this.monkeys) if (monkey.liana) monkey.startSlipping();
   }
 
   // The action key while hanging. Returns false (and does nothing) while airborne.
@@ -86,6 +95,11 @@ export class World {
       if (hit) {
         this.#die(player, 'obstacle', hit.type);
         return;
+      }
+      // At the tip the grip gives: a forced release, flying on with the current velocity.
+      if (monkey.atTip) {
+        const liana = monkey.release();
+        this.events.push({ type: 'release', liana: liana.index, player, forced: true });
       }
       if (monkey.state === MonkeyState.AIRBORNE) this.#tryGrab(player);
       // Only falling out of the bottom ends the run; flying above the top does not.

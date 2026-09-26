@@ -291,7 +291,7 @@ function frame(ticker) {
   worldLayer.x = -camera.x;
   debugWorldLayer.x = -camera.x;
   background.update(camera.x);
-  lianaView.update(game.world.lianas.values(), camera.x, current.view.width);
+  lianaView.update(game.world.lianas.values(), camera.x, current.view.width, game.world.monkeys);
   monkeyView.update(game.world.monkey, frameDt);
   obstacleViews.update(game.world.obstacles.values());
   hud.update(game);
