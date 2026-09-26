@@ -45,6 +45,11 @@ export class Game {
     }
   }
 
+  // The furthest stage any monkey has reached this run.
+  get stage() {
+    return Math.max(...this.world.stages);
+  }
+
   // Returns and clears the world events collected since the last call.
   takeEvents() {
     const events = this.events;

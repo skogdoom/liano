@@ -13,7 +13,7 @@ import {
   MIN_WINDOW_STEPS,
   forcedReleaseStep,
 } from '../src/sim/feasibility.js';
-import { createObstacle, pickHeight, fallbackHeight, movingCandidate } from '../src/sim/generator.js';
+import { createObstacle, pickHeight, fallbackHeight, movingCandidate, rulesFor } from '../src/sim/generator.js';
 import { Obstacle, STATIC_TYPES, MOVING_TYPES } from '../src/sim/obstacle.js';
 import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
@@ -27,6 +27,7 @@ import {
   START_GRIP,
   LIANA_SPACING,
   MIN_RELEASE_WINDOW_MS,
+  STAGES,
   MONKEY_RADIUS,
   OBSTACLE_Y_RANGE,
   SIM_DT,
@@ -182,13 +183,17 @@ describe('fair generation', () => {
     for (const seed of [1, 99, 2024, 31337]) {
       for (let gap = 1; gap <= 250; gap++) {
         const o = createObstacle(seed, gap);
+        // Each stage has its own obstacle scale and shortest window.
+        const { scale, minSteps } = rulesFor(gap);
+        expect(o.scale).toBe(scale);
         if (o.moving) {
-          expect(windowMs(movingWindow(o.inGap(0), MIN_WINDOW_STEPS))).toBeGreaterThanOrEqual(MIN_RELEASE_WINDOW_MS);
+          expect(movingWindow(o.inGap(0), minSteps)).toBeGreaterThanOrEqual(minSteps);
           checked++;
           continue;
         }
-        const w = releaseWindow(o.type, o.y);
-        expect(windowMs(w.length)).toBeGreaterThanOrEqual(MIN_RELEASE_WINDOW_MS);
+        const w = releaseWindow(o.type, o.y, o.scale);
+        expect(w.length).toBeGreaterThanOrEqual(minSteps);
+        if (gap < STAGES[1].first) expect(windowMs(w.length)).toBeGreaterThanOrEqual(MIN_RELEASE_WINDOW_MS);
         expect(Number.isInteger(o.y)).toBe(true);
         expect(o.y).toBeGreaterThanOrEqual(OBSTACLE_Y_RANGE[0]);
         expect(o.y).toBeLessThanOrEqual(OBSTACLE_Y_RANGE[1]);
@@ -203,8 +208,9 @@ describe('fair generation', () => {
     for (const seed of [5, 808, 4242, 90210]) {
       for (let gap = 6; gap < 256; gap++) {
         const o = createObstacle(seed, gap);
-        const length = o.moving ? movingWindow(o.inGap(0), MIN_WINDOW_STEPS) : releaseWindow(o.type, o.y).length;
-        expect({ seed, gap, ms: windowMs(length) >= MIN_RELEASE_WINDOW_MS }).toEqual({ seed, gap, ms: true });
+        const { minSteps } = rulesFor(gap);
+        const length = o.moving ? movingWindow(o.inGap(0), minSteps) : releaseWindow(o.type, o.y, o.scale).length;
+        expect({ seed, gap, ok: length >= minSteps }).toEqual({ seed, gap, ok: true });
         if (o.moving) moving++;
       }
     }

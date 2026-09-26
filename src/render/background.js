@@ -200,6 +200,17 @@ function floorLayer() {
   return new ParallaxLayer(ctx, 1);
 }
 
+// Multiplied over the whole background per stage: day, late afternoon, dusk, night.
+export const STAGE_TINTS = [0xffffff, 0xffc27a, 0xc88cb4, 0x6474b4];
+// Seconds to shift to the next stage's tint.
+const TINT_TIME = 2.5;
+
+// The background tint `t` (0..1) of the way from colour `from` to `to`, eased.
+export function tintBetween(from, to, t) {
+  const u = Math.min(Math.max(t, 0), 1);
+  return mixColor(from, to, u * u * (3 - 2 * u));
+}
+
 export class Background {
   constructor() {
     this.back = new Container();
@@ -214,6 +225,19 @@ export class Background {
     skyGroup.addChild(this.sky);
     this.back.addChild(skyGroup, this.far.view, this.mid.view, this.near.view);
     this.front.addChild(this.canopy.view, this.floor.view);
+    this.tint = { world: null, from: STAGE_TINTS[0], to: STAGE_TINTS[0], t: 1 };
+  }
+
+  // Shifts the tint towards the stage's; a new world starts at once from the first.
+  setStage(stage, world, dt) {
+    const target = STAGE_TINTS[Math.min(stage, STAGE_TINTS.length) - 1];
+    const tint = this.tint;
+    if (world !== tint.world) Object.assign(tint, { world, from: target, to: target, t: 1 });
+    else if (target !== tint.to) Object.assign(tint, { from: tintBetween(tint.from, tint.to, tint.t), to: target, t: 0 });
+    tint.t = Math.min(tint.t + dt / TINT_TIME, 1);
+    const color = tintBetween(tint.from, tint.to, tint.t);
+    this.back.tint = color;
+    this.front.tint = color;
   }
 
   // Fits the sky to the view, and lifts the floor to the bottom edge when the band is

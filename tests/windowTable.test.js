@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import table from '../src/sim/windowTable.json';
 import { isPassable, tableIsFresh } from '../src/sim/windowTable.js';
-import { computeWindowTable, isFeasible, solverStats } from '../src/sim/feasibility.js';
+import { computeWindowTable, isFeasible, solverStats, windowSteps, STAGE_SCALES } from '../src/sim/feasibility.js';
 import { createObstacle } from '../src/sim/generator.js';
 import { World } from '../src/sim/world.js';
 import { STATIC_TYPES } from '../src/sim/obstacle.js';
-import { OBSTACLE_Y_RANGE, SIM_DT } from '../src/config.js';
+import { OBSTACLE_Y_RANGE, SIM_DT, STAGES } from '../src/config.js';
 
 describe('precomputed window table', () => {
   it('was built from the current tunables', () => {
@@ -14,6 +14,19 @@ describe('precomputed window table', () => {
 
   it('matches the solver exactly (run `npm run windows` if this fails)', () => {
     expect(table).toEqual(computeWindowTable());
+  });
+
+  it('answers the same as the solver at every stage’s scale and shortest window', () => {
+    const [minY, maxY] = OBSTACLE_Y_RANGE;
+    for (const stage of STAGES.slice(1)) {
+      const steps = windowSteps(stage.minWindowMs);
+      for (const type of STATIC_TYPES) {
+        for (let y = minY; y <= maxY; y += 3) {
+          expect(isPassable(type, y, stage.scale, steps)).toBe(isFeasible(type, y, stage.scale, steps));
+        }
+      }
+    }
+    expect(Object.keys(table.windows).map(Number)).toEqual(STAGE_SCALES);
   });
 
   it('answers the same as the solver for every type and height', () => {

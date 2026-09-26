@@ -16,6 +16,7 @@ import {
   MIN_RELEASE_WINDOW_MS,
   OBSTACLE_Y_RANGE,
   OBSTACLE_HITBOXES,
+  STAGES,
 } from '../config.js';
 import { Liana } from './liana.js';
 import { Monkey, slipSteps } from './monkey.js';
@@ -35,7 +36,13 @@ import { ballisticStep, circleIntersectsSegment } from './physics.js';
 // How often the solver was asked (queries, cached or not) and actually ran (runs),
 // so tests can check that play only uses the precomputed table.
 export const solverStats = { queries: 0, runs: 0, movingRuns: 0 };
-export const MIN_WINDOW_STEPS = Math.ceil(MIN_RELEASE_WINDOW_MS / (SIM_DT * 1000) - 1e-9);
+// Whole steps a window of `ms` needs.
+export function windowSteps(ms) {
+  return Math.ceil(ms / (SIM_DT * 1000) - 1e-9);
+}
+export const MIN_WINDOW_STEPS = windowSteps(MIN_RELEASE_WINDOW_MS);
+// The obstacle scales the stages use (the window table has a section per scale).
+export const STAGE_SCALES = [...new Set(STAGES.map((s) => s.scale))];
 
 // Steps from grabbing at `entryRadius` (or starting the slip `phaseSteps` into the
 // swing) until the forced release at the tip.
@@ -223,15 +230,15 @@ export function movingWindow(obstacle, enough = Infinity) {
 export function isPathClearOfLianas(obstacle, leftLianaX) {
   return obstacle
     .pathPoints()
-    .every((p) => isClearOfLianas(new Obstacle(0, obstacle.type, p.x, p.y), leftLianaX));
+    .every((p) => isClearOfLianas(new Obstacle(0, obstacle.type, p.x, p.y, null, obstacle.scale), leftLianaX));
 }
 
 // A moving obstacle may be generated: its path is clear of the lianas and every entry
-// radius and sampled arrival leaves a window of at least MIN_RELEASE_WINDOW_MS.
+// radius and sampled arrival leaves a window of at least `minSteps` (the stage's).
 // `obstacle` is in gap 0.
-export function isMovingFeasible(obstacle) {
+export function isMovingFeasible(obstacle, minSteps = MIN_WINDOW_STEPS) {
   solverStats.movingRuns++;
-  return isPathClearOfLianas(obstacle, 0) && movingWindow(obstacle, MIN_WINDOW_STEPS) >= MIN_WINDOW_STEPS;
+  return isPathClearOfLianas(obstacle, 0) && movingWindow(obstacle, minSteps) >= minSteps;
 }
 
 export function longestRun(valid) {
@@ -248,14 +255,14 @@ export function longestRun(valid) {
 const windows = new Map();
 
 // The longest window for each entry radius, for an obstacle of `type` at height `y`
-// (null type: empty gap); `length` is the shortest of them, the one that counts.
-// Memoized: a gap is fully described by (type, y).
-export function releaseWindow(type, y) {
+// and `scale` (null type: empty gap); `length` is the shortest of them, the one that
+// counts. Memoized: a static gap is fully described by (type, y, scale).
+export function releaseWindow(type, y, scale = 1) {
   solverStats.queries++;
-  const key = `${type}:${y}`;
+  const key = `${type}:${y}:${scale}`;
   let result = windows.get(key);
   if (!result) {
-    const obstacle = type ? new Obstacle(0, type, LIANA_SPACING / 2, y) : null;
+    const obstacle = type ? new Obstacle(0, type, LIANA_SPACING / 2, y, null, scale) : null;
     const byRadius = ENTRY_RADII.map((r) => ({ radius: r, ...longestRun(validReleaseSteps(obstacle, r).valid) }));
     result = { byRadius, length: Math.min(...byRadius.map((w) => w.length)) };
     windows.set(key, result);
@@ -263,13 +270,13 @@ export function releaseWindow(type, y) {
   return result;
 }
 
-// An obstacle of `type` at height `y` may be generated: clear of the lianas and
-// passable with a window of at least MIN_RELEASE_WINDOW_MS.
-export function isFeasible(type, y) {
+// An obstacle of `type` at height `y` and `scale` may be generated: clear of the
+// lianas and passable with a window of at least `minSteps` (the stage's).
+export function isFeasible(type, y, scale = 1, minSteps = MIN_WINDOW_STEPS) {
   solverStats.queries++;
   return (
-    isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y), 0) &&
-    releaseWindow(type, y).length >= MIN_WINDOW_STEPS
+    isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y, null, scale), 0) &&
+    releaseWindow(type, y, scale).length >= minSteps
   );
 }
 
@@ -294,20 +301,25 @@ export function windowInputs() {
     OBSTACLE_Y_RANGE,
     OBSTACLE_HITBOXES,
     ENTRY_RADII,
+    STAGE_SCALES,
   };
 }
 
-// Window length in steps for every type and whole-pixel height in OBSTACLE_Y_RANGE,
-// 0 where the obstacle would not be clear of the lianas. Built by
-// scripts/build-windows.mjs into windowTable.json.
+// Window length in steps for every stage scale, static type and whole-pixel height in
+// OBSTACLE_Y_RANGE, 0 where the obstacle would not be clear of the lianas. Built by
+// scripts/build-windows.mjs into windowTable.json. The stage's minimum window is
+// applied when looking it up.
 export function computeWindowTable() {
   const [minY, maxY] = OBSTACLE_Y_RANGE;
   const windows = {};
-  for (const type of STATIC_TYPES) {
-    windows[type] = [];
-    for (let y = minY; y <= maxY; y++) {
-      const clear = isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y), 0);
-      windows[type].push(clear ? releaseWindow(type, y).length : 0);
+  for (const scale of STAGE_SCALES) {
+    windows[scale] = {};
+    for (const type of STATIC_TYPES) {
+      windows[scale][type] = [];
+      for (let y = minY; y <= maxY; y++) {
+        const clear = isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y, null, scale), 0);
+        windows[scale][type].push(clear ? releaseWindow(type, y, scale).length : 0);
+      }
     }
   }
   return { inputs: windowInputs(), minY, maxY, windows };

@@ -49,7 +49,12 @@ describe('layout', () => {
       expect([l.x, l.y, l.bandTop, l.floorShift, l.ui]).toEqual([0, 0, 0, 0, 1]);
       expect(l.camera).toEqual({ follow: 'monkey', screenX: CAMERA_TARGET_X });
       // The panel spots from before the layout existed.
-      expect(l.panels).toEqual({ title: { x: 990, y: 340 }, gameOver: { x: 640, y: 340 }, paused: { x: 640, y: 360 } });
+      expect(l.panels).toEqual({
+        title: { x: 990, y: 340 },
+        gameOver: { x: 640, y: 340 },
+        paused: { x: 640, y: 360 },
+        banner: { x: 640, y: 520 },
+      });
     }
   });
 

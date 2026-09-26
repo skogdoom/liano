@@ -4,7 +4,8 @@ import { mixSeed, mulberry32 } from '../sim/rng.js';
 import { FLOOR_Y } from './background.js';
 import { leafPoints } from './shapes.js';
 
-// Obstacle art, built once per obstacle from its hitbox shapes so the two match.
+// Obstacle art, built once per obstacle from its (unscaled) hitbox shapes so the two
+// match, then scaled like the hitbox.
 // Obstacles above this height hang from the canopy on vines; lower ones stand on a
 // trunk or pole from the floor. Supports are scenery: the gameplay hitbox is only
 // the obstacle itself. (Generated heights avoid the band around this line.)
@@ -34,7 +35,7 @@ function vine(g, x, fromY, toY, sway) {
 
 // From topY down past the floor line; y in the obstacle's local coordinates.
 function trunk(g, o, x, topY, width) {
-  const bottom = FLOOR_Y + 20 - o.y;
+  const bottom = (FLOOR_Y + 20 - o.y) / o.scale;
   g.poly([x - width / 2, topY, x + width / 2, topY, x + width / 2 + 5, bottom, x - width / 2 - 5, bottom]).fill(SUPPORT_TRUNK);
 }
 
@@ -47,8 +48,8 @@ function drawBranch(g, o, rand, hangs) {
   const top = box.dy;
   const bottom = box.dy + box.h;
   if (hangs) {
-    vine(g, left + 30, CANOPY_Y - o.y, top + 2, 8);
-    vine(g, right - 45, CANOPY_Y - o.y, top + 4, -8);
+    vine(g, left + 30, (CANOPY_Y - o.y) / o.scale, top + 2, 8);
+    vine(g, right - 45, (CANOPY_Y - o.y) / o.scale, top + 4, -8);
   } else {
     trunk(g, o, left + 14, 0, 26);
   }
@@ -69,9 +70,9 @@ function drawBranch(g, o, rand, hangs) {
 // Hitbox: three circles. A dark blob with a few highlights and thorns on its outline.
 function drawThornBush(g, o, rand, hangs) {
   const circles = OBSTACLE_HITBOXES.thornBush;
-  if (hangs) vine(g, 0, CANOPY_Y - o.y, -40, 10);
+  if (hangs) vine(g, 0, (CANOPY_Y - o.y) / o.scale, -40, 10);
   else {
-    g.poly([-5, 20, 5, 20, 8, FLOOR_Y + 20 - o.y, -8, FLOOR_Y + 20 - o.y]).fill(SUPPORT_TRUNK);
+    g.poly([-5, 20, 5, 20, 8, (FLOOR_Y + 20 - o.y) / o.scale, -8, (FLOOR_Y + 20 - o.y) / o.scale]).fill(SUPPORT_TRUNK);
     g.ellipse(0, 36, 30, 6).fill(SUPPORT_TRUNK);
   }
   const inOther = (x, y, self) =>
@@ -97,10 +98,10 @@ function drawThornBush(g, o, rand, hangs) {
 function drawRock(g, o, rand, hangs) {
   const [{ r }] = OBSTACLE_HITBOXES.rock;
   if (hangs) {
-    vine(g, 0, CANOPY_Y - o.y, -r + 4, 9);
+    vine(g, 0, (CANOPY_Y - o.y) / o.scale, -r + 4, 9);
     g.moveTo(-r + 3, -8).quadraticCurveTo(0, 2, r - 3, -8).stroke({ width: 3, color: VINE });
   } else {
-    g.poly([-5, r - 4, 5, r - 4, 8, FLOOR_Y + 20 - o.y, -8, FLOOR_Y + 20 - o.y]).fill(SUPPORT_TRUNK);
+    g.poly([-5, r - 4, 5, r - 4, 8, (FLOOR_Y + 20 - o.y) / o.scale, -8, (FLOOR_Y + 20 - o.y) / o.scale]).fill(SUPPORT_TRUNK);
     g.roundRect(-r - 4, r - 6, 2 * r + 8, 10, 4).fill(BARK_DARK);
   }
   const n = 9;
@@ -153,7 +154,7 @@ function buildSpider(o) {
   for (const [x, y] of [[-3, -12], [3, -12], [-5, -8], [5, -8]]) g.circle(x, y, 1.6).fill(EYE);
   body.addChild(legs, g);
   const animate = (t) => {
-    thread.clear().moveTo(o.x, CANOPY_Y - 40).lineTo(o.x, o.y - 14).stroke({ width: 1.5, color: THREAD, alpha: 0.8 });
+    thread.clear().moveTo(o.x, CANOPY_Y - 40).lineTo(o.x, o.y - 14 * o.scale).stroke({ width: 1.5, color: THREAD, alpha: 0.8 });
     legs.clear();
     for (const side of [-1, 1]) {
       for (let i = 0; i < 4; i++) {
@@ -213,7 +214,7 @@ function buildBird(o) {
   const wing = new Graphics();
   body.addChild(g, wing);
   const animate = (t) => {
-    body.scale.x = o.vxAt(t) >= 0 ? 1 : -1;
+    body.scale.set(o.vxAt(t) >= 0 ? o.scale : -o.scale, o.scale);
     const lift = Math.sin(t * 16);
     wing.clear().poly([-8, -3, 4, -3, -2 - 6 * lift, -3 - 14 * lift]).fill(BIRD_DARK);
   };
@@ -228,6 +229,7 @@ function buildObstacle(o) {
     const { parts, body, animate } = BUILD_MOVING[o.type](o);
     const view = new Container();
     view.addChild(...parts);
+    body.scale.set(o.scale);
     const update = () => {
       body.position.set(o.x, o.y);
       animate(o.time);
@@ -238,6 +240,9 @@ function buildObstacle(o) {
   const g = new Graphics();
   DRAW[o.type](g, o, mulberry32(mixSeed(0x0b57, o.gap)), o.y < HANGS_ABOVE_Y);
   g.position.set(o.x, o.y);
+  // The art is drawn at scale 1 (supports reaching the canopy or floor are divided by
+  // the scale), then scaled with the hitbox.
+  g.scale.set(o.scale);
   return { view: g, update: null };
 }
 

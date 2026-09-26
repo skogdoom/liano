@@ -89,17 +89,19 @@ export const SNAKE_TRAVEL_RANGE = [90, 160];
 export const BIRD_Y_RANGE = [330, 390];
 export const BIRD_BOB = 8;
 
-// Difficulty stages, keyed by obstacle index (the gap: obstacle #1 is in gap 1).
-// So far only the moving share is used.
+// The shortest release window a gap may have in stage 1 (later stages: STAGES).
+export const MIN_RELEASE_WINDOW_MS = 90;
+// Difficulty stages, keyed by obstacle index (the gap: obstacle #1 is in gap 1), never
+// by score. Each has its shortest release window, share of moving obstacles and
+// obstacle scale.
 export const STAGES = [
-  { first: 1, minWindowMs: 90, movingShare: 0.15, scale: 1.0 },
+  { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.15, scale: 1.0 },
   { first: 16, minWindowMs: 80, movingShare: 0.25, scale: 1.1 },
   { first: 31, minWindowMs: 70, movingShare: 0.5, scale: 1.2 },
   { first: 51, minWindowMs: 60, movingShare: 0.7, scale: 1.3 },
 ];
 // The first obstacles are always static: moving ones start at this obstacle index.
 export const MOVING_FROM = 6;
-export const MIN_RELEASE_WINDOW_MS = 90;
 
 export const CAMERA_TARGET_X = 0.35 * SCREEN_WIDTH;
 export const CAMERA_LERP = 8;

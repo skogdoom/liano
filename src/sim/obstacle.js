@@ -16,7 +16,25 @@ export const ObstacleType = Object.freeze({
 export const STATIC_TYPES = [ObstacleType.BRANCH, ObstacleType.THORN_BUSH, ObstacleType.ROCK];
 export const MOVING_TYPES = [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BIRD];
 
-// An obstacle in gap `gap` (between lianas gap and gap + 1), centred at (x, y).
+const scaledHitboxes = new Map();
+
+// OBSTACLE_HITBOXES[type] scaled about the obstacle centre (shared, do not modify).
+export function scaledHitbox(type, scale) {
+  const key = `${type}:${scale}`;
+  let shapes = scaledHitboxes.get(key);
+  if (!shapes) {
+    shapes = OBSTACLE_HITBOXES[type].map((s) =>
+      s.kind === 'rect'
+        ? { ...s, dx: s.dx * scale, dy: s.dy * scale, w: s.w * scale, h: s.h * scale }
+        : { ...s, dx: s.dx * scale, dy: s.dy * scale, r: s.r * scale },
+    );
+    scaledHitboxes.set(key, shapes);
+  }
+  return shapes;
+}
+
+// An obstacle in gap `gap` (between lianas gap and gap + 1), centred at (x, y), its
+// hitbox (and art) scaled by `scale` (the stage's obstacle scale).
 //
 // A moving one has a `motion` { period (s), phase (rad), ax, ay, bob }: at world time t,
 // with u = 2π·t / period + phase, it is at
@@ -24,7 +42,7 @@ export const MOVING_TYPES = [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleTy
 // Spiders and snakes move vertically (ax = 0), birds patrol horizontally with a bob.
 // The world sets the time every step (setTime); the solver asks positionAt(t).
 export class Obstacle {
-  constructor(gap, type, x, y, motion = null) {
+  constructor(gap, type, x, y, motion = null, scale = 1) {
     this.gap = gap;
     this.type = type;
     this.baseX = x;
@@ -33,22 +51,23 @@ export class Obstacle {
     this.y = y;
     this.motion = motion;
     this.time = 0;
-    this.hitbox = OBSTACLE_HITBOXES[type];
+    this.scale = scale;
+    this.hitbox = scaledHitbox(type, scale);
     if (motion) this.setTime(0);
   }
 
   // Plain data for passing between threads; fromData rebuilds the obstacle.
   toData() {
-    return { gap: this.gap, type: this.type, x: this.baseX, y: this.baseY, motion: this.motion };
+    return { gap: this.gap, type: this.type, x: this.baseX, y: this.baseY, motion: this.motion, scale: this.scale };
   }
 
   static fromData(d) {
-    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion);
+    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale);
   }
 
   // The same obstacle moved to gap `gap` (the solver works in gap 0).
   inGap(gap) {
-    return new Obstacle(gap, this.type, this.baseX + (gap - this.gap) * LIANA_SPACING, this.baseY, this.motion);
+    return new Obstacle(gap, this.type, this.baseX + (gap - this.gap) * LIANA_SPACING, this.baseY, this.motion, this.scale);
   }
 
   get moving() {

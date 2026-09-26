@@ -38,6 +38,52 @@ function place(parent, child, y) {
   return child;
 }
 
+// Names for the stages, by time of day (the background tint follows them).
+export const STAGE_NAMES = ['Day', 'Late afternoon', 'Dusk', 'Night'];
+const BANNER_IN = 0.3; // s
+const BANNER_HOLD = 1.6;
+const BANNER_OUT = 0.6;
+
+// Opacity of the stage banner `t` s after it appeared: fades in, holds, fades out.
+export function bannerAlpha(t) {
+  if (t < 0 || t >= BANNER_IN + BANNER_HOLD + BANNER_OUT) return 0;
+  if (t < BANNER_IN) return t / BANNER_IN;
+  if (t < BANNER_IN + BANNER_HOLD) return 1;
+  return 1 - (t - BANNER_IN - BANNER_HOLD) / BANNER_OUT;
+}
+
+// "Stage 2" with the time of day, shown on entering each stage after the first.
+class StageBanner {
+  constructor() {
+    this.view = new Container();
+    this.title = place(this.view, text('', 56, { weight: 'bold' }), -18);
+    this.subtitle = place(this.view, text('', 24, { color: GOLD }), 30);
+    this.stage = 1;
+    this.world = null;
+    this.time = Infinity;
+    this.view.visible = false;
+  }
+
+  update(game, dt) {
+    // A new world starts over at stage 1 without a banner.
+    if (game.world !== this.world) {
+      this.world = game.world;
+      this.stage = game.stage;
+      this.time = Infinity;
+    }
+    if (game.stage > this.stage) {
+      this.stage = game.stage;
+      this.title.text = `Stage ${this.stage}`;
+      this.subtitle.text = STAGE_NAMES[this.stage - 1] ?? '';
+      this.time = 0;
+    }
+    this.time += dt;
+    const alpha = game.state === GameState.PLAYING ? bannerAlpha(this.time) : 0;
+    this.view.visible = alpha > 0;
+    this.view.alpha = alpha;
+  }
+}
+
 // Arrow at the top edge, at the monkey's x, while it is above the view.
 class OffscreenIndicator {
   constructor() {
@@ -128,7 +174,8 @@ export class Overlays {
     this.pausedPrompt = place(this.paused, text('', 22), 45);
 
     this.indicator = new OffscreenIndicator();
-    this.view.addChild(this.indicator.view, this.title, this.gameOver, this.paused);
+    this.banner = new StageBanner();
+    this.view.addChild(this.indicator.view, this.banner.view, this.title, this.gameOver, this.paused);
     this.shown = null;
     this.promptsFor = null;
   }
@@ -139,6 +186,7 @@ export class Overlays {
       ['title', this.title],
       ['gameOver', this.gameOver],
       ['paused', this.paused],
+      ['banner', this.banner.view],
     ]) {
       view.position.set(layout.panels[name].x, layout.panels[name].y);
       view.scale.set(layout.ui);
@@ -153,6 +201,7 @@ export class Overlays {
     const pulse = 0.65 + 0.35 * Math.sin(this.time * 4);
 
     this.indicator.update(game.world.monkey, cameraX, this.layout);
+    this.banner.update(game, dt);
 
     this.title.visible = game.state === GameState.TITLE && !paused;
     this.titlePrompt.alpha = pulse;

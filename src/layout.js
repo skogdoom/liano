@@ -92,6 +92,9 @@ export function layoutFor(width, height, insets = { top: 0, right: 0, bottom: 0,
       title: { x: portrait ? viewWidth / 2 : viewWidth - (SCREEN_WIDTH - 990), y: panelY },
       gameOver: { x: viewWidth / 2, y: panelY },
       paused: { x: viewWidth / 2, y: viewHeight / 2 },
+      // The stage banner: low in the band in landscape, below the lianas' tips where the
+      // monkey rarely is; below the band in portrait.
+      banner: { x: viewWidth / 2, y: portrait ? panelY : bandTop + 520 },
     },
   };
 }

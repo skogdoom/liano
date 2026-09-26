@@ -68,7 +68,7 @@ export class DebugOverlay {
 
     g.circle(monkey.x, monkey.y, MONKEY_RADIUS).stroke({ width: 2, color: COLORS.monkeyHitbox });
 
-    const lines = [`${game.state}  score ${game.score}  lianas ${world.lianas.size}  obstacles ${world.obstacles.size}`];
+    const lines = [`${game.state}  stage ${game.stage}  score ${game.score}  lianas ${world.lianas.size}  obstacles ${world.obstacles.size}`];
 
     if (monkey.state === MonkeyState.HANGING && !monkey.slipping) {
       lines.push(`liana #${monkey.liana.index}  grip ${Math.round(monkey.gripRadius)}  no slip until the run starts`);

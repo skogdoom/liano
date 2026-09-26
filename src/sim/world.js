@@ -12,6 +12,7 @@ import { ballisticStep, closestPointOnSegment } from './physics.js';
 import { createObstacle, updateLianas, updateObstacles } from './generator.js';
 import { Monkey, MonkeyState } from './monkey.js';
 import { randomSeed } from './rng.js';
+import { stageFor } from './stages.js';
 
 // Lianas (keyed by index) and obstacles (keyed by gap, null for empty gaps) are
 // generated lazily around the monkeys. There are `players` monkeys, all starting on the
@@ -34,6 +35,9 @@ export class World {
       monkey.grab(this.lianas.get(0), START_GRIP);
     }
     this.scores = this.monkeys.map(() => 0);
+    // The stage each monkey has reached: that of the obstacle ahead of the furthest
+    // liana it grabbed. Keyed on obstacle index, so points never change it.
+    this.stages = this.monkeys.map(() => 1);
     // Gaps each monkey has scored. Kept outside the obstacles so culling cannot reset them.
     this.scoredGapsBy = this.monkeys.map(() => new Set());
     this.events = [];
@@ -205,6 +209,12 @@ export class World {
       m.grab(best.liana, best.contactRadius);
       this.events.push({ type: 'grab', liana: best.liana.index, player });
       this.#score(player, from, best.liana.index);
+      // The obstacle ahead of liana i is obstacle #i (in gap i).
+      const stage = stageFor(best.liana.index).number;
+      if (stage > this.stages[player]) {
+        this.stages[player] = stage;
+        this.events.push({ type: 'stage', stage, player });
+      }
     }
   }
 }

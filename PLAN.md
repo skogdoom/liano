@@ -96,7 +96,7 @@ Stages are keyed on **obstacle index**, not score. This way banana points don't 
 | 3 | 31–50 | 70 ms | 50% | 1.20 |
 | 4 | 51+ | 60 ms | 70% | 1.30 |
 
-All of these values are starting points for tuning. Scaled obstacles must still pass the swing-clearance rule; heights that fail are rerolled.
+All of these values are starting points for tuning. Scaled obstacles must still pass the swing-clearance rule; heights that fail are rerolled. The tint multiplies the background only (sky, parallax, canopy and floor), so lianas, obstacles and the monkey stay readable at night.
 
 ## Two-player rules
 
@@ -437,7 +437,10 @@ Implement in order. Each milestone must end in a runnable, tested state, with ev
 - Note: the stage table (STAGES) was added here for the moving share; M18 wires up the rest of it.
 
 **18. Difficulty stages.** Stage table, stage banner, background tint, obstacle scaling.
-- [ ] Stage is derived from obstacle index; banana points don't affect it (unit tested)
+- [x] Stage is derived from obstacle index; banana points don't affect it (unit tested)
+- [x] Each stage's obstacles use its scale and shortest release window; 1,000 seeded gaps across all stages pass their stage's window (the window table has a section per scale)
+- [x] Banner ("Stage 2 · Late afternoon") low in the band, clear of the swings; the background tint eases over 2.5 s and starts over at day on a new run
+- Notes: a stage starts on grabbing the liana before its first obstacle (obstacle #i is in gap i). At scale 1.3 a branch fits only at y 371–375, so stage-4 branches almost always sit at the bottom.
 
 **19. Bananas.** Placement, pickup, boost counter, bonus points, HUD indicator; the solver gains the boosted variant.
 - [ ] Gaps within BOOST_GRABS after a banana pass both normal and boosted checks

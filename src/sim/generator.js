@@ -14,9 +14,9 @@ import {
 } from '../config.js';
 import { Liana } from './liana.js';
 import { Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from './obstacle.js';
-import { isClearOfLianas, isMovingFeasible, isPathClearOfLianas } from './feasibility.js';
+import { isClearOfLianas, isMovingFeasible, isPathClearOfLianas, windowSteps } from './feasibility.js';
 import { mixSeed, mulberry32 } from './rng.js';
-import { movingShareFor } from './stages.js';
+import { movingShareFor, stageFor } from './stages.js';
 import { isPassable } from './windowTable.js';
 
 // Gaps on both sides of the start liana stay empty: the first forward gap lets the
@@ -31,44 +31,55 @@ export function createLiana(index) {
 const HEIGHT_TRIES = 20;
 const fallbackHeights = new Map();
 
-// Lowest-risk passable height for `type`: the first feasible one scanning up from the
-// bottom of the range.
-export function fallbackHeight(type) {
-  if (!fallbackHeights.has(type)) {
-    const [minY, maxY] = OBSTACLE_Y_RANGE;
-    let found = null;
-    for (let y = maxY; y >= minY && found === null; y--) if (isPassable(type, y)) found = y;
-    if (found === null) throw new Error(`No passable height for ${type} in OBSTACLE_Y_RANGE`);
-    fallbackHeights.set(type, found);
-  }
-  return fallbackHeights.get(type);
+// What the stage of the obstacle in `gap` asks of it: its scale and the whole steps of
+// its shortest release window.
+export function rulesFor(gap) {
+  const stage = stageFor(gap);
+  return { scale: stage.scale, minSteps: windowSteps(stage.minWindowMs) };
 }
 
-// Random whole-pixel height with a release window of at least MIN_RELEASE_WINDOW_MS,
-// rerolled up to HEIGHT_TRIES times before falling back to a known-passable height.
-export function pickHeight(type, rand) {
+const STAGE_ONE = rulesFor(1);
+
+// Lowest-risk passable height for `type` under `rules`: the first feasible one
+// scanning up from the bottom of the range.
+export function fallbackHeight(type, rules = STAGE_ONE) {
+  const key = `${type}:${rules.scale}:${rules.minSteps}`;
+  if (!fallbackHeights.has(key)) {
+    const [minY, maxY] = OBSTACLE_Y_RANGE;
+    let found = null;
+    for (let y = maxY; y >= minY && found === null; y--) if (isPassable(type, y, rules.scale, rules.minSteps)) found = y;
+    if (found === null) throw new Error(`No passable height for ${type} at scale ${rules.scale} in OBSTACLE_Y_RANGE`);
+    fallbackHeights.set(key, found);
+  }
+  return fallbackHeights.get(key);
+}
+
+// Random whole-pixel height with a long enough release window under `rules`, rerolled
+// up to HEIGHT_TRIES times before falling back to a known-passable height.
+export function pickHeight(type, rand, rules = STAGE_ONE) {
   const [minY, maxY] = OBSTACLE_Y_RANGE;
   for (let i = 0; i < HEIGHT_TRIES; i++) {
     const y = Math.round(minY + rand() * (maxY - minY));
-    if (isPassable(type, y)) return y;
+    if (isPassable(type, y, rules.scale, rules.minSteps)) return y;
   }
-  return fallbackHeight(type);
+  return fallbackHeight(type, rules);
 }
 
 const MOVING_TRIES = 20;
-// Separate random streams for the moving choice, so static obstacles are the same in
-// every stage.
+// Separate random streams for the moving choice, so a gap that stays static gets the
+// same type (and random heights) with or without moving obstacles.
 const MOVING_SALT = 0x6d0e;
 
 const lerp = ([a, b], t) => a + (b - a) * t;
 const pick = (list, rand) => list[Math.floor(rand() * list.length)];
 
 // Bird patrol bounds (gap-0 x) at height y: the widest range around the gap centre
-// where the bird, anywhere in its bob, stays clear of both swings.
-export function birdPatrolBounds(y) {
+// where the bird (at `scale`), anywhere in its bob, stays clear of both swings. Null if
+// there is no room at all.
+export function birdPatrolBounds(y, scale = 1) {
   const clear = (x) => {
     for (let dy = -BIRD_BOB; dy <= BIRD_BOB; dy += 1) {
-      if (!isClearOfLianas(new Obstacle(0, ObstacleType.BIRD, x, y + dy), 0)) return false;
+      if (!isClearOfLianas(new Obstacle(0, ObstacleType.BIRD, x, y + dy, null, scale), 0)) return false;
     }
     return true;
   };
@@ -81,16 +92,19 @@ export function birdPatrolBounds(y) {
   return [lo + 1, hi - 1];
 }
 
-// A random moving obstacle of `type` for gap `gap`.
-export function movingCandidate(type, gap, rand) {
+// A random moving obstacle of `type` and `scale` for gap `gap`, or null if a bird has
+// no room at the height drawn.
+export function movingCandidate(type, gap, rand, scale = 1) {
   const offset = gap * LIANA_SPACING;
   const motion = { period: lerp(MOVING_PERIOD_RANGE, rand()), phase: rand() * 2 * Math.PI, ax: 0, ay: 0, bob: 0 };
   if (type === ObstacleType.BIRD) {
     const y = Math.round(lerp(BIRD_Y_RANGE, rand()));
-    const [lo, hi] = birdPatrolBounds(y);
+    const bounds = birdPatrolBounds(y, scale);
+    if (!bounds) return null;
+    const [lo, hi] = bounds;
     motion.ax = (hi - lo) / 2;
     motion.bob = BIRD_BOB;
-    const bird = new Obstacle(gap, type, offset + (lo + hi) / 2, y, motion);
+    const bird = new Obstacle(gap, type, offset + (lo + hi) / 2, y, motion, scale);
     // The patrol must never reach into a swing.
     if (!isPathClearOfLianas(bird, offset)) throw new Error(`Bird patrol in gap ${gap} reaches a swing`);
     return bird;
@@ -103,30 +117,32 @@ export function movingCandidate(type, gap, rand) {
     type === ObstacleType.SPIDER
       ? lerp(SPIDER_LOW_RANGE, rand()) - motion.ay
       : lerp(SNAKE_HIGH_RANGE, rand()) + motion.ay;
-  return new Obstacle(gap, type, offset + LIANA_SPACING / 2, y, motion);
+  return new Obstacle(gap, type, offset + LIANA_SPACING / 2, y, motion, scale);
 }
 
 // Obstacle for gap i (between lianas i and i + 1), or null. Deterministic in (seed, gap),
-// so a culled gap regenerates identically. From MOVING_FROM a share of the gaps get a moving
-// obstacle, rerolled up to MOVING_TRIES times until the solver accepts it, else a static
-// one at its lowest-risk passable height.
+// so a culled gap regenerates identically. Its stage sets its scale and shortest
+// release window. From MOVING_FROM a share of the gaps get a moving obstacle, rerolled
+// up to MOVING_TRIES times until the solver accepts it, else a static one at its
+// lowest-risk passable height.
 export function createObstacle(seed, gap) {
   if (EMPTY_GAPS.has(gap)) return null;
+  const rules = rulesFor(gap);
   const movingShare = movingShareFor(gap);
   if (movingShare > 0) {
     const rand = mulberry32(mixSeed(seed ^ MOVING_SALT, gap));
     if (rand() < movingShare) {
       for (let i = 0; i < MOVING_TRIES; i++) {
-        const o = movingCandidate(pick(MOVING_TYPES, rand), gap, rand);
-        if (isMovingFeasible(o.inGap(0))) return o;
+        const o = movingCandidate(pick(MOVING_TYPES, rand), gap, rand, rules.scale);
+        if (o && isMovingFeasible(o.inGap(0), rules.minSteps)) return o;
       }
       const type = pick(STATIC_TYPES, rand);
-      return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, fallbackHeight(type));
+      return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, fallbackHeight(type, rules), null, rules.scale);
     }
   }
   const rand = mulberry32(mixSeed(seed, gap));
   const type = STATIC_TYPES[Math.floor(rand() * STATIC_TYPES.length)];
-  return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, pickHeight(type, rand));
+  return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, pickHeight(type, rand, rules), null, rules.scale);
 }
 
 // Liana indices to keep around a monkey at x. The camera keeps the monkey near
