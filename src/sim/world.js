@@ -1,4 +1,6 @@
 import {
+  BANANA_POINTS,
+  BOOST_GRABS,
   START_GRIP,
   LIANA_SPACING,
   MONKEY_RADIUS,
@@ -9,26 +11,36 @@ import {
   DEATH_POP,
 } from '../config.js';
 import { ballisticStep, closestPointOnSegment } from './physics.js';
-import { createObstacle, updateLianas, updateObstacles } from './generator.js';
+import { createBanana, createObstacle, updateBananas, updateLianas, updateObstacles } from './generator.js';
 import { Monkey, MonkeyState } from './monkey.js';
 import { randomSeed } from './rng.js';
 import { stageFor } from './stages.js';
 
-// Lianas (keyed by index) and obstacles (keyed by gap, null for empty gaps) are
+// Lianas (keyed by index), obstacles and bananas (keyed by gap, null for none) are
 // generated lazily around the monkeys. There are `players` monkeys, all starting on the
 // first liana; each has its own score and scored gaps, and events carry its `player`
-// index. `makeObstacle(seed, gap)` can be replaced in tests.
+// index. `makeObstacle(seed, gap)` and `makeBanana(seed, gap, obstacle)` can be
+// replaced in tests.
 export class World {
-  constructor({ seed = randomSeed(), makeObstacle = createObstacle, players = 1 } = {}) {
+  constructor({ seed = randomSeed(), makeObstacle = createObstacle, makeBanana = createBanana, players = 1 } = {}) {
     this.seed = seed;
     this.makeObstacle = (gap) => makeObstacle(seed, gap);
+    this.makeBanana = (gap) => {
+      const obstacle = this.obstacles.has(gap) ? this.obstacles.get(gap) : this.makeObstacle(gap);
+      return makeBanana(seed, gap, obstacle);
+    };
     this.lianas = new Map();
     this.obstacles = new Map();
+    this.bananas = new Map();
+    // Gaps whose banana was taken. Kept outside the bananas so culling cannot bring
+    // one back.
+    this.takenBananas = new Set();
     // Whole steps since the world was created; moving obstacles follow `time`.
     this.stepCount = 0;
     this.monkeys = Array.from({ length: players }, () => new Monkey());
     updateLianas(this.lianas, 0, null);
     updateObstacles(this.obstacles, 0, this.makeObstacle);
+    updateBananas(this.bananas, 0, this.makeBanana);
     // The monkeys hang still (no slip) until the run starts.
     for (const monkey of this.monkeys) {
       monkey.slipping = false;
@@ -95,6 +107,7 @@ export class World {
       const held = living.map((m) => m.liana).filter(Boolean);
       updateLianas(this.lianas, ahead, held, behind);
       updateObstacles(this.obstacles, ahead, this.makeObstacle, behind);
+      updateBananas(this.bananas, ahead, this.makeBanana, behind);
     }
     for (const obstacle of this.obstacles.values()) if (obstacle?.moving) obstacle.setTime(this.time);
     for (const liana of this.lianas.values()) liana.step(dt);
@@ -109,6 +122,7 @@ export class World {
         this.#die(player, 'obstacle', hit.type);
         return;
       }
+      this.#takeBanana(player);
       // At the tip the grip gives: a forced release, flying on with the current velocity.
       if (monkey.atTip) {
         const liana = monkey.release();
@@ -118,6 +132,25 @@ export class World {
       // Only falling out of the bottom ends the run; flying above the top does not.
       if (monkey.y > WORLD_HEIGHT + MONKEY_RADIUS) this.#die(player, 'fall');
     });
+  }
+
+  // A banana the monkey touches (hanging or flying) is taken: points, and the next
+  // BOOST_GRABS grabs are boosted (a second banana starts the count again).
+  #takeBanana(player) {
+    const m = this.monkeys[player];
+    for (const banana of this.bananas.values()) {
+      if (!banana || this.takenBananas.has(banana.gap) || !banana.touches(m.x, m.y, MONKEY_RADIUS)) continue;
+      this.takenBananas.add(banana.gap);
+      m.boostGrabs = BOOST_GRABS;
+      this.scores[player] += BANANA_POINTS;
+      this.events.push({ type: 'banana', gap: banana.gap, score: this.scores[player], player });
+    }
+  }
+
+  // The banana in `gap` if it is there to take.
+  bananaAt(gap) {
+    const banana = this.bananas.get(gap);
+    return banana && !this.takenBananas.has(gap) ? banana : null;
   }
 
   // Returns and clears the events emitted since the last call.

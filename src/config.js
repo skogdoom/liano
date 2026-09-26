@@ -45,6 +45,18 @@ export const LIANA_SPACING = 700;
 
 export const SWING_AMPLITUDE = (50 * Math.PI) / 180;
 export const SWING_PERIOD = 2.6;
+// Bananas: collected on touch (hanging or flying) for BANANA_POINTS, and the next
+// BOOST_GRABS grabs swing BOOST_FACTOR times faster. The boosted period is rounded to
+// an even number of sim steps (232, a factor of 1.345), which the slip timing needs.
+export const BANANA_RADIUS = 14;
+export const BANANA_POINTS = 3;
+export const BOOST_GRABS = 3;
+export const BOOST_FACTOR = 1.35;
+export const BOOST_PERIOD = 2 * Math.round(SWING_PERIOD / BOOST_FACTOR / SIM_DT / 2) * SIM_DT;
+// Each gap from obstacle 1 is a banana candidate with this chance; a candidate becomes
+// a banana unless one of the two gaps before it is a candidate too, so bananas are at
+// least 3 gaps apart and come in about 14 % of the gaps.
+export const BANANA_CHANCE = 0.25;
 export const LIANA_SETTLE_DAMPING = 0.35; // damping ratio of the cosmetic sway after release
 
 export const GRAVITY = 600; // low, for long flights across the wide gaps (400 felt too floaty)

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ObstaclePrefetch, PREFETCH_AHEAD } from '../src/obstaclePrefetch.js';
-import { createObstacle } from '../src/sim/generator.js';
+import { createBanana, createObstacle } from '../src/sim/generator.js';
 import { solverStats } from '../src/sim/feasibility.js';
 import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
@@ -21,7 +21,8 @@ class FakeWorker {
   flush() {
     for (const { seed, gap } of this.inbox.splice(0)) {
       const obstacle = createObstacle(seed, gap);
-      this.onmessage({ data: { seed, gap, obstacle: obstacle && obstacle.toData() } });
+      const banana = createBanana(seed, gap, obstacle);
+      this.onmessage({ data: { seed, gap, obstacle: obstacle && obstacle.toData(), banana: banana && banana.toData() } });
     }
   }
 }
@@ -32,7 +33,7 @@ function prefetchedWorld() {
   const worker = new FakeWorker();
   const prefetch = new ObstaclePrefetch(worker);
   prefetch.reset(SEED);
-  const world = new World({ seed: SEED, makeObstacle: prefetch.makeObstacle });
+  const world = new World({ seed: SEED, makeObstacle: prefetch.makeObstacle, makeBanana: prefetch.makeBanana });
   return { worker, prefetch, world };
 }
 
@@ -52,8 +53,10 @@ describe('obstacle prefetch', () => {
     worker.flush();
     const o = prefetch.take(SEED, 40);
     expect(o.toData()).toEqual(createObstacle(SEED, 40).toData());
+    const banana = prefetch.makeBanana(SEED, 40, o);
+    expect(banana?.toData() ?? null).toEqual(createBanana(SEED, 40, o)?.toData() ?? null);
     prefetch.reset(SEED + 1);
-    worker.onmessage({ data: { seed: SEED, gap: 41, obstacle: null } });
+    worker.onmessage({ data: { seed: SEED, gap: 41, obstacle: null, banana: null } });
     expect(prefetch.ready.size).toBe(0);
   });
 

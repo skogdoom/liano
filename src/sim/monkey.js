@@ -1,19 +1,27 @@
-import { GRAVITY, LIANA_LENGTH, MAX_ENTRY_RADIUS, MAX_SLIP_SPEED, SIM_DT, SLIP_OFF_PHASE, SWING_PERIOD } from '../config.js';
+import {
+  BOOST_PERIOD,
+  GRAVITY,
+  LIANA_LENGTH,
+  MAX_ENTRY_RADIUS,
+  MAX_SLIP_SPEED,
+  SIM_DT,
+  SLIP_OFF_PHASE,
+  SWING_PERIOD,
+} from '../config.js';
 import { ballisticStep, pendulumPosition, hangingVelocity } from './physics.js';
 
-const PERIOD_STEPS = Math.round(SWING_PERIOD / SIM_DT);
-// Swing steps after the bottom at which the forced release comes, per swing direction:
-// θ = dir · A · sin(ωt) is on the upswing to the right at SLIP_OFF_PHASE for dir 1, and
-// half a period later for dir −1.
-const SLIP_OFF_STEP = Math.round(SLIP_OFF_PHASE * PERIOD_STEPS);
+// Whole steps in a swing period (both periods are an even number of steps).
+export const periodSteps = (period) => Math.round(period / SIM_DT);
 
 // Steps from the start of a slip from `gripFrom` until the grip reaches the tip, when
-// the liana swings in `dir` and is `swingSteps` steps into its swing: the first step at
-// SLIP_OFF_PHASE that does not need more than MAX_SLIP_SPEED.
-export function slipSteps(gripFrom, swingSteps = 0, dir = 1) {
+// the liana swings in `dir` with `period` and is `swingSteps` steps into its swing: the
+// first step at SLIP_OFF_PHASE that does not need more than MAX_SLIP_SPEED. There,
+// θ = dir · A · sin(ωt) is on the upswing to the right (for dir −1, half a period later).
+export function slipSteps(gripFrom, swingSteps = 0, dir = 1, period = SWING_PERIOD) {
+  const steps = periodSteps(period);
   const minSteps = Math.ceil((LIANA_LENGTH - gripFrom) / MAX_SLIP_SPEED / SIM_DT - 1e-9);
-  const offStep = SLIP_OFF_STEP + (dir > 0 ? 0 : PERIOD_STEPS / 2);
-  const first = offStep - swingSteps + PERIOD_STEPS * Math.ceil((swingSteps + minSteps - offStep) / PERIOD_STEPS);
+  const offStep = Math.round(SLIP_OFF_PHASE * steps) + (dir > 0 ? 0 : steps / 2);
+  const first = offStep - swingSteps + steps * Math.ceil((swingSteps + minSteps - offStep) / steps);
   return Math.max(first, 1);
 }
 
@@ -40,18 +48,23 @@ export class Monkey {
     this.slipTime = 0;
     // The liana just released; it cannot be regrabbed until another one is grabbed.
     this.excludedLiana = null;
+    // Boosted grabs left (from a banana): each new grab while above zero swings with
+    // BOOST_PERIOD and uses one up.
+    this.boostGrabs = 0;
   }
 
   // Grabs `liana` at `contactRadius` from its anchor (at most MAX_ENTRY_RADIUS); the
   // grip then slips towards the tip (see slipSteps). The swing starts in the direction
-  // the monkey was moving horizontally.
+  // the monkey was moving horizontally, boosted if the monkey has boosted grabs left.
   grab(liana, contactRadius) {
     const dir = this.vx < 0 ? -1 : 1;
     this.state = MonkeyState.HANGING;
     this.liana = liana;
     this.gripFrom = Math.min(contactRadius, MAX_ENTRY_RADIUS);
     this.excludedLiana = null;
-    liana.grab(dir);
+    const boosted = this.boostGrabs > 0;
+    if (boosted) this.boostGrabs--;
+    liana.grab(dir, boosted ? BOOST_PERIOD : SWING_PERIOD);
     this.#planSlip();
     this.#updateHanging();
   }
@@ -68,8 +81,10 @@ export class Monkey {
     return liana;
   }
 
-  // Ends the run. The monkey keeps its velocity and falls ballistically.
+  // Ends the run (or the life). The monkey keeps its velocity and falls ballistically;
+  // any boost is lost.
   kill() {
+    this.boostGrabs = 0;
     if (this.liana) {
       this.liana.release();
       this.liana = null;
@@ -86,7 +101,7 @@ export class Monkey {
 
   #planSlip() {
     const { liana } = this;
-    const steps = slipSteps(this.gripFrom, Math.round(liana.swingTime / SIM_DT), liana.swingDir);
+    const steps = slipSteps(this.gripFrom, Math.round(liana.swingTime / SIM_DT), liana.swingDir, liana.period);
     this.gripTime = 0;
     this.slipTime = steps * SIM_DT;
     this.slipSpeed = (LIANA_LENGTH - this.gripFrom) / this.slipTime;

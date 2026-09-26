@@ -1,4 +1,5 @@
-import { createObstacle } from './sim/generator.js';
+import { createBanana, createObstacle } from './sim/generator.js';
+import { Banana } from './sim/banana.js';
 import { Obstacle } from './sim/obstacle.js';
 import { movingShareFor } from './sim/stages.js';
 
@@ -7,16 +8,16 @@ export const PREFETCH_AHEAD = 5;
 // Ready gaps this far behind the furthest generated one are dropped.
 const KEEP_BEHIND = 20;
 
-// Generates obstacles ahead of the world in a worker, so the moving-obstacle solver does
-// not run on the main thread. createObstacle is deterministic in (seed, gap), so the
-// world gets the same level with or without the worker: a gap that is not ready yet
-// (or any gap when there is no worker) is generated on the spot.
+// Generates obstacles and bananas ahead of the world in a worker, so the solver does
+// not run on the main thread. Generation is deterministic in (seed, gap), so the world
+// gets the same level with or without the worker: a gap that is not ready yet (or any
+// gap when there is no worker) is generated on the spot.
 export class ObstaclePrefetch {
   // `worker` is a Worker running obstacleWorker.js, or null.
   constructor(worker = null) {
     this.worker = worker;
     this.seed = null;
-    this.ready = new Map(); // gap -> obstacle data (null for an empty gap)
+    this.ready = new Map(); // gap -> { obstacle, banana } data (null for none)
     this.pending = new Set();
     // Gaps that may hold a moving obstacle, generated on the spot although the worker
     // was running (the first gaps of a world are static and generated at once).
@@ -27,8 +28,12 @@ export class ObstaclePrefetch {
         this.worker = null;
       };
     }
-    // For World({ makeObstacle }).
+    // For World({ makeObstacle, makeBanana }).
     this.makeObstacle = (seed, gap) => this.take(seed, gap);
+    this.makeBanana = (seed, gap, obstacle) =>
+      seed === this.seed && this.ready.has(gap)
+        ? Banana.fromData(this.ready.get(gap).banana)
+        : createBanana(seed, gap, obstacle);
   }
 
   // Starts over for a new world.
@@ -54,14 +59,14 @@ export class ObstaclePrefetch {
 
   // The obstacle for (seed, gap): the worker's if it is ready, else generated now.
   take(seed, gap) {
-    if (seed === this.seed && this.ready.has(gap)) return Obstacle.fromData(this.ready.get(gap));
+    if (seed === this.seed && this.ready.has(gap)) return Obstacle.fromData(this.ready.get(gap).obstacle);
     if (this.worker && seed === this.seed && movingShareFor(gap) > 0) this.misses++;
     return createObstacle(seed, gap);
   }
 
-  #receive({ seed, gap, obstacle }) {
+  #receive({ seed, gap, obstacle, banana }) {
     if (seed !== this.seed) return;
     this.pending.delete(gap);
-    this.ready.set(gap, obstacle);
+    this.ready.set(gap, { obstacle, banana });
   }
 }

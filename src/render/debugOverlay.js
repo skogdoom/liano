@@ -1,9 +1,8 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { MONKEY_RADIUS, SIM_DT, SWING_PERIOD } from '../config.js';
+import { BANANA_RADIUS, MONKEY_RADIUS, SIM_DT, SWING_PERIOD } from '../config.js';
 import { MonkeyState } from '../sim/monkey.js';
 import { validReleaseSteps, longestRun, movingValidSteps } from '../sim/feasibility.js';
 
-const PERIOD_STEPS = Math.round(SWING_PERIOD / SIM_DT);
 
 const COLORS = {
   lianaHitbox: 0xffe14d,
@@ -14,6 +13,7 @@ const COLORS = {
   pathGrab: 0x5cff5c,
   pathMiss: 0xff8c42,
   forced: 0xffffff,
+  banana: 0xffd23f,
 };
 
 // Toggled with D. Draws hitboxes, the flight the monkey would take if released now,
@@ -57,6 +57,10 @@ export class DebugOverlay {
       }
     }
     g.stroke({ width: 2, color: COLORS.obstacleHitbox });
+    for (const banana of world.bananas.values()) {
+      if (banana && world.bananaAt(banana.gap)) g.circle(banana.x, banana.y, BANANA_RADIUS);
+    }
+    g.stroke({ width: 2, color: COLORS.banana });
     // Moving obstacles: where they go over a period.
     for (const o of world.obstacles.values()) {
       if (!o?.moving) continue;
@@ -87,7 +91,7 @@ export class DebugOverlay {
       const ms = (steps) => Math.round(steps * SIM_DT * 1000);
       const forcedIn = ((w.valid.length - 1 - step) * SIM_DT).toFixed(2);
       lines.push(
-        `liana #${monkey.liana.index}  dir ${monkey.liana.swingDir > 0 ? '+' : '-'}  entry ${Math.round(monkey.gripFrom)}  grip ${Math.round(monkey.gripRadius)}  step ${step}`,
+        `liana #${monkey.liana.index}  dir ${monkey.liana.swingDir > 0 ? '+' : '-'}  entry ${Math.round(monkey.gripFrom)}  grip ${Math.round(monkey.gripRadius)}  step ${step}  boost ${monkey.boostGrabs}${monkey.liana.period !== SWING_PERIOD ? ' (boosted swing)' : ''}`,
         `window ${w.run.length} steps (${ms(w.run.length)} ms) at ${w.run.start}-${w.run.start + w.run.length - 1}  now: ${w.valid[step] ? 'VALID' : 'invalid'}`,
         `forced release in ${forcedIn} s (step ${w.valid.length - 1})`,
       );
@@ -110,14 +114,16 @@ export class DebugOverlay {
   #releaseWindow(world, gripFrom, phase, grabTime) {
     const { liana } = world.monkey;
     const dir = liana.swingDir;
-    const phaseSteps = ((phase % PERIOD_STEPS) + PERIOD_STEPS) % PERIOD_STEPS;
-    const key = `${liana.index}:${gripFrom}:${dir}:${phaseSteps}`;
+    const steps = Math.round(liana.period / SIM_DT);
+    const phaseSteps = ((phase % steps) + steps) % steps;
+    const key = `${liana.index}:${gripFrom}:${dir}:${phaseSteps}:${liana.period}`;
     if (this.cacheKey !== key || this.cacheWorld !== world) {
       const gap = dir > 0 ? liana.index : liana.index - 1;
       const obstacle = world.obstacles.get(gap) ?? null;
-      let { valid, positions } = validReleaseSteps(obstacle?.moving ? null : obstacle, gripFrom, liana.x, dir, phaseSteps);
+      const staticObstacle = obstacle?.moving ? null : obstacle;
+      let { valid, positions } = validReleaseSteps(staticObstacle, gripFrom, liana.x, dir, phaseSteps, liana.period);
       if (obstacle?.moving && dir > 0 && phaseSteps === 0) {
-        valid = movingValidSteps(obstacle.inGap(0), gripFrom, Math.round(grabTime / SIM_DT) * SIM_DT);
+        valid = movingValidSteps(obstacle.inGap(0), gripFrom, Math.round(grabTime / SIM_DT) * SIM_DT, liana.period);
       }
       this.window = { valid, positions, run: longestRun(valid) };
       this.cacheKey = key;

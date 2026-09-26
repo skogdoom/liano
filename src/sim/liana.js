@@ -26,16 +26,20 @@ export class Liana {
     this.angularVelocity = 0;
     this.swingTime = 0;
     this.swingDir = 1;
+    this.period = SWING_PERIOD;
   }
 
   get tipY() {
     return this.anchorY + this.length;
   }
 
-  grab(dir) {
+  // Starts swinging in `dir` with `period` (SWING_PERIOD, or BOOST_PERIOD when the
+  // monkey is boosted).
+  grab(dir, period = SWING_PERIOD) {
     this.state = LianaState.SWINGING;
     this.swingDir = dir;
     this.swingTime = 0;
+    this.period = period;
     this.#updateSwing();
   }
 
@@ -61,7 +65,8 @@ export class Liana {
   }
 
   #updateSwing() {
-    this.angle = pendulumAngle(this.swingTime, this.swingDir, SWING_AMPLITUDE, SWING_OMEGA);
-    this.angularVelocity = pendulumAngularVelocity(this.swingTime, this.swingDir, SWING_AMPLITUDE, SWING_OMEGA);
+    const omega = (2 * Math.PI) / this.period;
+    this.angle = pendulumAngle(this.swingTime, this.swingDir, SWING_AMPLITUDE, omega);
+    this.angularVelocity = pendulumAngularVelocity(this.swingTime, this.swingDir, SWING_AMPLITUDE, omega);
   }
 }

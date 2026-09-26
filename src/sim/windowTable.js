@@ -9,11 +9,14 @@ if (!fresh) console.warn('windowTable.json is out of date; run `npm run windows`
 
 export const tableIsFresh = fresh;
 
-// Same answer as isFeasible(type, y, scale, minSteps), from the table when possible.
-export function isPassable(type, y, scale = 1, minSteps = MIN_WINDOW_STEPS) {
-  const windows = table.windows[scale]?.[type];
-  if (fresh && windows && Number.isInteger(y) && y >= table.minY && y <= table.maxY) {
-    return windows[y - table.minY] >= minSteps;
+// Same answer as isFeasible(type, y, scale, minSteps, boosted), from the table when
+// possible.
+export function isPassable(type, y, scale = 1, minSteps = MIN_WINDOW_STEPS, boosted = false) {
+  const normal = table.windows.normal?.[scale]?.[type];
+  const fast = table.windows.boosted?.[scale]?.[type];
+  if (fresh && normal && fast && Number.isInteger(y) && y >= table.minY && y <= table.maxY) {
+    const i = y - table.minY;
+    return normal[i] >= minSteps && (!boosted || fast[i] >= minSteps);
   }
-  return isFeasible(type, y, scale, minSteps);
+  return isFeasible(type, y, scale, minSteps, boosted);
 }

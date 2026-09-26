@@ -6,13 +6,18 @@ import { computeWindowTable } from '../src/sim/feasibility.js';
 
 const start = Date.now();
 const table = computeWindowTable();
-// One line per scale and type keeps the file small and diffs readable.
-const lines = Object.entries(table.windows).map(
-  ([scale, types]) =>
-    `    ${JSON.stringify(scale)}: {\n${Object.entries(types)
-      .map(([type, w]) => `      ${JSON.stringify(type)}: ${JSON.stringify(w)}`)
-      .join(',\n')}\n    }`,
-);
+// One line per variant, scale and type keeps the file small and diffs readable.
+const block = (indent, entries, inner) =>
+  entries.map(([key, value]) => `${indent}${JSON.stringify(key)}: ${inner(value, indent)}`).join(',\n');
+const lines = [
+  block('    ', Object.entries(table.windows), (scales, indent) => {
+    const rows = block(`${indent}  `, Object.entries(scales), (types, i2) => {
+      const typeRows = block(`${i2}  `, Object.entries(types), (w) => JSON.stringify(w));
+      return `{\n${typeRows}\n${i2}}`;
+    });
+    return `{\n${rows}\n${indent}}`;
+  }),
+];
 const json = `{
   "inputs": ${JSON.stringify(table.inputs)},
   "minY": ${table.minY},

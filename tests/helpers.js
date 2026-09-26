@@ -16,7 +16,7 @@ export const FALL_RELEASE_STEP = 60;
 
 // A world with no obstacles, for testing swing, grab and generation mechanics.
 export function emptyWorld() {
-  return new World({ makeObstacle: () => null });
+  return new World({ makeObstacle: () => null, makeBanana: () => null });
 }
 
 // A rock low in every gap from 1 on: out of the way of the forward/backward swings used in
@@ -24,12 +24,13 @@ export function emptyWorld() {
 export function lowRockWorld() {
   return new World({
     makeObstacle: (seed, gap) => (gap >= 1 ? new Obstacle(gap, 'rock', (gap + 0.5) * LIANA_SPACING, 620) : null),
+    makeBanana: () => null,
   });
 }
 
 // A world whose only obstacle is `obstacle(gap)` for the given gaps.
 export function worldWith(obstacles) {
-  return new World({ makeObstacle: (seed, gap) => obstacles[gap] ?? null });
+  return new World({ makeObstacle: (seed, gap) => obstacles[gap] ?? null, makeBanana: () => null });
 }
 
 export function stepN(world, n) {
@@ -69,10 +70,11 @@ export function windowForGrab(world, player = 0) {
   const gap = dir > 0 ? liana.index : liana.index - 1;
   const obstacle = world.obstacles.get(gap) ?? null;
   // Moving obstacles: forward only, solved in gap 0 for the obstacle time at the grab.
+  // The swing may be boosted by a banana.
   if (obstacle?.moving && dir > 0) {
-    return longestRun(movingValidSteps(obstacle.inGap(0), monkey.gripFrom, world.time));
+    return longestRun(movingValidSteps(obstacle.inGap(0), monkey.gripFrom, world.time, liana.period));
   }
-  return longestRun(validReleaseSteps(obstacle, monkey.gripFrom, liana.x, dir).valid);
+  return longestRun(validReleaseSteps(obstacle, monkey.gripFrom, liana.x, dir, 0, liana.period).valid);
 }
 
 // A release step in the middle of windowForGrab.

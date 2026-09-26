@@ -11,10 +11,22 @@ import {
   SNAKE_TRAVEL_RANGE,
   BIRD_Y_RANGE,
   BIRD_BOB,
+  BANANA_CHANCE,
+  BOOST_GRABS,
+  ENTRY_RADII,
+  SWING_PERIOD,
 } from '../config.js';
+import { Banana } from './banana.js';
 import { Liana } from './liana.js';
 import { Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from './obstacle.js';
-import { isClearOfLianas, isMovingFeasible, isPathClearOfLianas, windowSteps } from './feasibility.js';
+import {
+  emptyGapFlights,
+  flightHits,
+  isClearOfLianas,
+  isMovingFeasible,
+  isPathClearOfLianas,
+  windowSteps,
+} from './feasibility.js';
 import { mixSeed, mulberry32 } from './rng.js';
 import { movingShareFor, stageFor } from './stages.js';
 import { isPassable } from './windowTable.js';
@@ -31,11 +43,33 @@ export function createLiana(index) {
 const HEIGHT_TRIES = 20;
 const fallbackHeights = new Map();
 
+// Bananas. Whether a gap has one depends only on (seed, gap): a gap is a candidate with
+// BANANA_CHANCE, and has a banana if it is a candidate and neither of the two gaps
+// before it is. So an obstacle can know, without generating them, whether a banana
+// may boost the swings over its gap.
+const BANANA_SALT = 0xba7a;
+const BANANA_FROM = 1;
+
+function bananaCandidate(seed, gap) {
+  return gap >= BANANA_FROM && mulberry32(mixSeed(seed ^ BANANA_SALT, gap))() < BANANA_CHANCE;
+}
+
+export function hasBanana(seed, gap) {
+  return bananaCandidate(seed, gap) && !bananaCandidate(seed, gap - 1) && !bananaCandidate(seed, gap - 2);
+}
+
+// Whether the swing over `gap` may be boosted: a banana in one of the BOOST_GRABS gaps
+// before it boosts the grabs of the lianas after it.
+export function mayBeBoosted(seed, gap) {
+  for (let i = 1; i <= BOOST_GRABS; i++) if (hasBanana(seed, gap - i)) return true;
+  return false;
+}
+
 // What the stage of the obstacle in `gap` asks of it: its scale and the whole steps of
-// its shortest release window.
-export function rulesFor(gap) {
+// its shortest release window; and whether it must pass the boosted swing too.
+export function rulesFor(gap, boosted = false) {
   const stage = stageFor(gap);
-  return { scale: stage.scale, minSteps: windowSteps(stage.minWindowMs) };
+  return { scale: stage.scale, minSteps: windowSteps(stage.minWindowMs), boosted };
 }
 
 const STAGE_ONE = rulesFor(1);
@@ -43,11 +77,13 @@ const STAGE_ONE = rulesFor(1);
 // Lowest-risk passable height for `type` under `rules`: the first feasible one
 // scanning up from the bottom of the range.
 export function fallbackHeight(type, rules = STAGE_ONE) {
-  const key = `${type}:${rules.scale}:${rules.minSteps}`;
+  const key = `${type}:${rules.scale}:${rules.minSteps}:${rules.boosted}`;
   if (!fallbackHeights.has(key)) {
     const [minY, maxY] = OBSTACLE_Y_RANGE;
     let found = null;
-    for (let y = maxY; y >= minY && found === null; y--) if (isPassable(type, y, rules.scale, rules.minSteps)) found = y;
+    for (let y = maxY; y >= minY && found === null; y--) {
+      if (isPassable(type, y, rules.scale, rules.minSteps, rules.boosted)) found = y;
+    }
     if (found === null) throw new Error(`No passable height for ${type} at scale ${rules.scale} in OBSTACLE_Y_RANGE`);
     fallbackHeights.set(key, found);
   }
@@ -60,7 +96,7 @@ export function pickHeight(type, rand, rules = STAGE_ONE) {
   const [minY, maxY] = OBSTACLE_Y_RANGE;
   for (let i = 0; i < HEIGHT_TRIES; i++) {
     const y = Math.round(minY + rand() * (maxY - minY));
-    if (isPassable(type, y, rules.scale, rules.minSteps)) return y;
+    if (isPassable(type, y, rules.scale, rules.minSteps, rules.boosted)) return y;
   }
   return fallbackHeight(type, rules);
 }
@@ -122,19 +158,20 @@ export function movingCandidate(type, gap, rand, scale = 1) {
 
 // Obstacle for gap i (between lianas i and i + 1), or null. Deterministic in (seed, gap),
 // so a culled gap regenerates identically. Its stage sets its scale and shortest
-// release window. From MOVING_FROM a share of the gaps get a moving obstacle, rerolled
-// up to MOVING_TRIES times until the solver accepts it, else a static one at its
-// lowest-risk passable height.
+// release window, and a banana shortly before it the boosted swing check. From
+// MOVING_FROM a share of the gaps get a moving obstacle, rerolled up to MOVING_TRIES
+// times until the solver accepts it, else a static one at its lowest-risk passable
+// height.
 export function createObstacle(seed, gap) {
   if (EMPTY_GAPS.has(gap)) return null;
-  const rules = rulesFor(gap);
+  const rules = rulesFor(gap, mayBeBoosted(seed, gap));
   const movingShare = movingShareFor(gap);
   if (movingShare > 0) {
     const rand = mulberry32(mixSeed(seed ^ MOVING_SALT, gap));
     if (rand() < movingShare) {
       for (let i = 0; i < MOVING_TRIES; i++) {
         const o = movingCandidate(pick(MOVING_TYPES, rand), gap, rand, rules.scale);
-        if (o && isMovingFeasible(o.inGap(0), rules.minSteps)) return o;
+        if (o && isMovingFeasible(o.inGap(0), rules.minSteps, rules.boosted)) return o;
       }
       const type = pick(STATIC_TYPES, rand);
       return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, fallbackHeight(type, rules), null, rules.scale);
@@ -143,6 +180,34 @@ export function createObstacle(seed, gap) {
   const rand = mulberry32(mixSeed(seed, gap));
   const type = STATIC_TYPES[Math.floor(rand() * STATIC_TYPES.length)];
   return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, pickHeight(type, rand, rules), null, rules.scale);
+}
+
+// The banana for gap `gap` (with `obstacle`, as generated), or null. It lies on a flight
+// that clears the obstacle but is not the safest one: a release one or two steps inside
+// either end of a release window, rather than its middle. Deterministic in (seed, gap).
+export function createBanana(seed, gap, obstacle) {
+  if (!obstacle || !hasBanana(seed, gap)) return null;
+  const rand = mulberry32(mixSeed(seed ^ BANANA_SALT ^ 0x5eed, gap));
+  const inGap = obstacle.inGap(0);
+  // Moving obstacles: a flight that clears it for one sampled arrival.
+  const arrival = obstacle.moving ? rand() * obstacle.motion.period : 0;
+  const radius = pick(ENTRY_RADII, rand);
+  const { flights } = emptyGapFlights(radius, SWING_PERIOD);
+  // Runs of consecutive release steps whose flights clear the obstacle.
+  const runs = [];
+  for (const flight of flights) {
+    if (flightHits(inGap, flight, arrival)) continue;
+    const run = runs[runs.length - 1];
+    if (run && run[run.length - 1].k === flight.k - 1) run.push(flight);
+    else runs.push([flight]);
+  }
+  const run = runs.reduce((a, b) => (b.length > a.length ? b : a), []);
+  if (run.length === 0) return null;
+  const edge = Math.min(1 + Math.floor(rand() * 2), run.length - 1);
+  const flight = rand() < 0.5 ? run[edge] : run[run.length - 1 - edge];
+  // Somewhere in the middle of the flight, over the gap.
+  const p = flight.path[Math.floor(flight.path.length * (0.35 + rand() * 0.3))];
+  return new Banana(gap, p.x + gap * LIANA_SPACING, p.y);
 }
 
 // Liana indices to keep around a monkey at x. The camera keeps the monkey near
@@ -188,3 +253,6 @@ export function updateLianas(lianas, ahead, keep, behind = ahead) {
 export function updateObstacles(obstacles, ahead, makeObstacle, behind = ahead) {
   sync(obstacles, span(gapIndexRange, behind, ahead), span(gapIndexRange, behind, ahead, LIANA_SPACING), makeObstacle);
 }
+
+// Same for bananas (null for gaps without one).
+export const updateBananas = updateObstacles;

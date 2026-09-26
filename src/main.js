@@ -21,6 +21,7 @@ import { LianaView } from './render/lianaView.js';
 import { MonkeyView } from './render/monkeyView.js';
 import { Camera, cameraTarget } from './render/camera.js';
 import { ObstacleViews } from './render/obstacleViews.js';
+import { BananaViews, BoostBadge } from './render/bananaView.js';
 import { Hud } from './render/hud.js';
 import { DebugOverlay } from './render/debugOverlay.js';
 import { Background } from './render/background.js';
@@ -147,7 +148,9 @@ const lianaView = new LianaView();
 const monkeyView = new MonkeyView();
 const obstacleViews = new ObstacleViews();
 const debugOverlay = new DebugOverlay();
-worldLayer.addChild(obstacleViews.view, lianaView.view, monkeyView.view);
+const bananaViews = new BananaViews();
+const boostBadge = new BoostBadge();
+worldLayer.addChild(obstacleViews.view, lianaView.view, bananaViews.view, monkeyView.view, boostBadge.view);
 scene.addChild(worldLayer, background.front);
 
 // The debug overlay goes over everything in the world, including the floor band.
@@ -180,7 +183,7 @@ const game = new Game({
   createWorld: (options) => {
     const seed = randomSeed();
     prefetch.reset(seed);
-    return new World({ ...options, seed, makeObstacle: prefetch.makeObstacle });
+    return new World({ ...options, seed, makeObstacle: prefetch.makeObstacle, makeBanana: prefetch.makeBanana });
   },
 });
 const pause = createPause(window, document);
@@ -304,7 +307,8 @@ function frame(ticker) {
   }
   lastState = game.state;
   sound.setPaused(paused);
-  for (const recipe of soundsFor(game.takeEvents())) sound.play(recipe);
+  const events = game.takeEvents();
+  for (const recipe of soundsFor(events)) sound.play(recipe);
   shake.update(frameDt);
   scene.position.set(shake.x, current.bandTop + shake.y);
   worldLayer.x = -camera.x;
@@ -314,6 +318,8 @@ function frame(ticker) {
   lianaView.update(game.world.lianas.values(), camera.x, current.view.width, game.world.monkeys);
   monkeyView.update(game.world.monkey, frameDt);
   obstacleViews.update(game.world.obstacles.values());
+  bananaViews.update(game.world, events, frameDt);
+  boostBadge.update(game.world.monkey);
   hud.update(game);
   overlays.update(game, camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
   debugOverlay.update(game);

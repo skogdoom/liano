@@ -238,10 +238,11 @@ Values from v1 are the tuned, current ones. New v2 values are starting points.
 | SPIDER_LOW_RANGE, SPIDER_TRAVEL_RANGE | 175–212, 80–150 px | New; lowest point and climb |
 | SNAKE_HIGH_RANGE, SNAKE_TRAVEL_RANGE | 290–320, 90–160 px | New; highest point and slide |
 | BIRD_Y_RANGE, BIRD_BOB | 330–390, 8 px | New; patrol bounds are derived from the swings |
-| BANANA_CHANCE | 0.15 per gap | New; not within 2 gaps of the previous banana |
+| BANANA_CHANCE | 0.25 per gap as a candidate | New; a candidate is dropped if either of the two gaps before it is one: about 14 % of gaps, at least 3 apart (v2 draft: 0.15 per gap) |
+| BANANA_RADIUS | 14 | New; drawn at 1.4× |
 | BANANA_POINTS | 3 | New |
 | BOOST_GRABS | 3 | New |
-| BOOST_FACTOR | 1.35 | New |
+| BOOST_FACTOR | 1.35 | New; BOOST_PERIOD rounds to 232 steps (1.933 s), an even step count as the slip timing needs |
 | LIVES_2P | 3 | New |
 | RESPAWN_GRIP | 0.7 × L | New |
 | RESPAWN_INVULN_MS | 1500 | New |
@@ -443,8 +444,9 @@ Implement in order. Each milestone must end in a runnable, tested state, with ev
 - Notes: a stage starts on grabbing the liana before its first obstacle (obstacle #i is in gap i). At scale 1.3 a branch fits only at y 371–375, so stage-4 branches almost always sit at the bottom.
 
 **19. Bananas.** Placement, pickup, boost counter, bonus points, HUD indicator; the solver gains the boosted variant.
-- [ ] Gaps within BOOST_GRABS after a banana pass both normal and boosted checks
-- [ ] Boost resets to BOOST_GRABS on repeat pickup and clears on death
+- [x] Gaps within BOOST_GRABS after a banana pass both normal and boosted checks
+- [x] Boost resets to BOOST_GRABS on repeat pickup and clears on death
+- Notes: whether a gap has a banana depends only on (seed, gap) (a candidate with BANANA_CHANCE 0.25, dropped if either of the two gaps before is a candidate: about 14 % of gaps, at least 3 apart), so an obstacle knows whether to pass the boosted check without generating bananas. A banana sits on a flight one or two release steps inside either end of a clearing release window. The boosted period is rounded to 232 steps (factor 1.345) for the slip timing. Bananas are generated in the worker with the obstacles. No pickup sound (decision 25); a "+3" rises where one was taken.
 
 **20. 2P split screen.** Two worlds with one seed, two viewports, lives, respawn with invulnerability, per-pane HUD, results screen.
 - [ ] A player with no lives left stops; the other continues; the winner is decided by totals

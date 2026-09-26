@@ -28,6 +28,7 @@ import {
   LIANA_SPACING,
   MIN_RELEASE_WINDOW_MS,
   STAGES,
+  BANANA_POINTS,
   MONKEY_RADIUS,
   OBSTACLE_Y_RANGE,
   SIM_DT,
@@ -322,7 +323,8 @@ describe('fairness in play', () => {
       for (const seed of [3, 17, 256, 4096]) {
         const world = playForward(seed, 60, pick);
         expect(world.alive).toBe(true);
-        expect(world.score).toBe(59); // gap 0 is empty
+        // Gap 0 is empty; bananas add their points.
+        expect(world.score).toBe(59 + BANANA_POINTS * world.takenBananas.size);
       }
     });
   }

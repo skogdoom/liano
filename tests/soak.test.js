@@ -4,7 +4,7 @@ import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { windowForGrab } from './helpers.js';
 import { mulberry32 } from '../src/sim/rng.js';
-import { SIM_DT, SCREEN_WIDTH, LIANA_SPACING, WORLD_MARGIN, GAMEOVER_INPUT_LOCK_MS } from '../src/config.js';
+import { SIM_DT, SCREEN_WIDTH, LIANA_SPACING, WORLD_MARGIN, GAMEOVER_INPUT_LOCK_MS, BANANA_POINTS } from '../src/config.js';
 
 // Lianas in the generation range, one extra on each side for hysteresis, plus the held one.
 const MAX_LIANAS = Math.floor((SCREEN_WIDTH + 2 * WORLD_MARGIN) / LIANA_SPACING) + 1 + 2 + 1;
@@ -37,7 +37,9 @@ describe('soak', () => {
     for (let gap = 0; gap < 5000; gap++) hop(game, rand);
     expect(game.state).toBe(GameState.PLAYING);
     expect(game.world.monkey.liana.index).toBe(5000);
-    expect(game.score).toBe(4999); // gap 0 is empty
+    // Gap 0 is empty; bananas add their points (and boost the swings after them).
+    expect(game.world.takenBananas.size).toBeGreaterThan(100);
+    expect(game.score).toBe(4999 + BANANA_POINTS * game.world.takenBananas.size);
     expect(limits.lianas).toBeLessThanOrEqual(MAX_LIANAS);
     expect(limits.obstacles).toBeLessThanOrEqual(MAX_LIANAS);
     expect(limits.events).toBeLessThanOrEqual(3);
@@ -48,8 +50,12 @@ describe('soak', () => {
     const game = new Game();
     const rand = mulberry32(8);
     game.press();
+    let best = 0;
     for (let run = 0; run < 20; run++) {
       for (let h = 0; h < 5; h++) hop(game, rand);
+      // Each run reaches liana 5, past gaps 1-4 (gap 0 is empty), plus its bananas.
+      expect(game.score).toBe(4 + BANANA_POINTS * game.world.takenBananas.size);
+      best = Math.max(best, game.score);
       // Let go and drop straight out of the screen.
       game.world.release();
       Object.assign(game.world.monkey, { y: 800 });
@@ -59,6 +65,6 @@ describe('soak', () => {
       expect(game.score).toBe(0);
       expect(game.world.lianas.size).toBeLessThanOrEqual(MAX_LIANAS);
     }
-    expect(game.best).toBe(4); // each run reaches liana 5, past gaps 1-4 (gap 0 is empty)
+    expect(game.best).toBe(best);
   });
 });

@@ -1,7 +1,8 @@
-// Generates obstacles for ObstaclePrefetch off the main thread.
-import { createObstacle } from './sim/generator.js';
+// Generates obstacles and bananas for ObstaclePrefetch off the main thread.
+import { createBanana, createObstacle } from './sim/generator.js';
 
 self.onmessage = ({ data: { seed, gap } }) => {
   const obstacle = createObstacle(seed, gap);
-  self.postMessage({ seed, gap, obstacle: obstacle && obstacle.toData() });
+  const banana = createBanana(seed, gap, obstacle);
+  self.postMessage({ seed, gap, obstacle: obstacle && obstacle.toData(), banana: banana && banana.toData() });
 };

@@ -40,7 +40,7 @@ export class Game {
     if (this.events.length > MAX_PENDING_EVENTS) this.events.splice(0, this.events.length - MAX_PENDING_EVENTS);
     if (this.state !== GameState.PLAYING) return;
     for (const event of events) {
-      if (event.type === 'score' && event.player === 0) this.score = event.score;
+      if ((event.type === 'score' || event.type === 'banana') && event.player === 0) this.score = event.score;
       else if (event.type === 'death' && !this.world.alive) this.end();
     }
   }

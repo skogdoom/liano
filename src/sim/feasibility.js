@@ -17,6 +17,7 @@ import {
   OBSTACLE_Y_RANGE,
   OBSTACLE_HITBOXES,
   STAGES,
+  BOOST_PERIOD,
 } from '../config.js';
 import { Liana } from './liana.js';
 import { Monkey, slipSteps } from './monkey.js';
@@ -44,10 +45,15 @@ export const MIN_WINDOW_STEPS = windowSteps(MIN_RELEASE_WINDOW_MS);
 // The obstacle scales the stages use (the window table has a section per scale).
 export const STAGE_SCALES = [...new Set(STAGES.map((s) => s.scale))];
 
+// The swing variants: normal, and boosted by a banana. A gap within BOOST_GRABS gaps
+// after a banana must pass both (the player may or may not have taken it).
+export const PERIODS = { normal: SWING_PERIOD, boosted: BOOST_PERIOD };
+const variantsFor = (boosted) => (boosted ? [SWING_PERIOD, BOOST_PERIOD] : [SWING_PERIOD]);
+
 // Steps from grabbing at `entryRadius` (or starting the slip `phaseSteps` into the
-// swing) until the forced release at the tip.
-export function forcedReleaseStep(entryRadius, dir = 1, phaseSteps = 0) {
-  return slipSteps(Math.min(entryRadius, MAX_ENTRY_RADIUS), phaseSteps, dir);
+// swing) until the forced release at the tip, swinging with `period`.
+export function forcedReleaseStep(entryRadius, dir = 1, phaseSteps = 0, period = SWING_PERIOD) {
+  return slipSteps(Math.min(entryRadius, MAX_ENTRY_RADIUS), phaseSteps, dir, period);
 }
 
 // True if the obstacle keeps LIANA_CLEARANCE away from everything the lianas on both
@@ -84,11 +90,13 @@ export function simulateFlight(body, obstacle, target) {
 // position at each step. A release moving away from the target is invalid without
 // flying it. `phaseSteps` starts the slip that many steps into the swing (the start
 // liana swings on the title screen before the run starts the slip); grabs start at 0.
-export function validReleaseSteps(obstacle, entryRadius, lianaX = 0, dir = 1, phaseSteps = 0) {
+// The swing has `period` (SWING_PERIOD, or BOOST_PERIOD when boosted).
+export function validReleaseSteps(obstacle, entryRadius, lianaX = 0, dir = 1, phaseSteps = 0, period = SWING_PERIOD) {
   const liana = new Liana(0, lianaX);
   const target = { x: lianaX + dir * LIANA_SPACING, anchorY: liana.anchorY, tipY: liana.tipY };
   const monkey = new Monkey();
   monkey.vx = dir;
+  monkey.boostGrabs = period === SWING_PERIOD ? 0 : 1;
   monkey.grab(liana, entryRadius);
   if (phaseSteps > 0) {
     for (let i = 0; i < phaseSteps; i++) liana.step(SIM_DT);
@@ -97,7 +105,7 @@ export function validReleaseSteps(obstacle, entryRadius, lianaX = 0, dir = 1, ph
   }
   solverStats.runs++;
 
-  const lastStep = forcedReleaseStep(entryRadius, dir, phaseSteps);
+  const lastStep = forcedReleaseStep(entryRadius, dir, phaseSteps, period);
   const valid = [];
   const positions = [];
   let alive = true;
@@ -137,17 +145,20 @@ export const ARRIVAL_PHASES = 12;
 
 const flightCache = new Map();
 
-// For grabbing liana 0 at `entryRadius` moving forward: the forced-release step and
-// every release step k that reaches liana 1 over an empty gap, with its flight.
-function emptyGapFlights(entryRadius) {
-  let result = flightCache.get(entryRadius);
+// For grabbing liana 0 at `entryRadius` moving forward, swinging with `period`: the
+// forced-release step and every release step k that reaches liana 1 over an empty gap,
+// with its flight.
+export function emptyGapFlights(entryRadius, period = SWING_PERIOD) {
+  const key = `${entryRadius}:${period}`;
+  let result = flightCache.get(key);
   if (result) return result;
   const liana = new Liana(0, 0);
   const target = { x: LIANA_SPACING, anchorY: liana.anchorY, tipY: liana.tipY };
   const monkey = new Monkey();
   monkey.vx = 1;
+  monkey.boostGrabs = period === SWING_PERIOD ? 0 : 1;
   monkey.grab(liana, entryRadius);
-  const lastStep = forcedReleaseStep(entryRadius);
+  const lastStep = forcedReleaseStep(entryRadius, 1, 0, period);
   const flights = [];
   for (let k = 0; k <= lastStep; k++) {
     if (k > 0) {
@@ -159,13 +170,13 @@ function emptyGapFlights(entryRadius) {
     if (path) flights.push({ k, path });
   }
   result = { lastStep, flights };
-  flightCache.set(entryRadius, result);
+  flightCache.set(key, result);
   return result;
 }
 
 // Whether the flight released at step k after a grab at world time `arrival` touches
 // the obstacle. Flight point j comes k + 1 + j steps after the grab.
-function flightHits(obstacle, flight, arrival, box) {
+export function flightHits(obstacle, flight, arrival, box = obstacle.bounds) {
   const reach = MONKEY_RADIUS;
   for (let j = 0; j < flight.path.length; j++) {
     const p = flight.path[j];
@@ -176,9 +187,10 @@ function flightHits(obstacle, flight, arrival, box) {
 }
 
 // For a moving obstacle in gap 0, grabbing liana 0 at `entryRadius` at world time
-// `arrival`: whether each release step up to the forced release reaches liana 1.
-export function movingValidSteps(obstacle, entryRadius, arrival) {
-  const { lastStep, flights } = emptyGapFlights(entryRadius);
+// `arrival` and swinging with `period`: whether each release step up to the forced
+// release reaches liana 1.
+export function movingValidSteps(obstacle, entryRadius, arrival, period = SWING_PERIOD) {
+  const { lastStep, flights } = emptyGapFlights(entryRadius, period);
   const box = obstacle.bounds;
   const valid = new Array(lastStep + 1).fill(false);
   for (const flight of flights) valid[flight.k] = !flightHits(obstacle, flight, arrival, box);
@@ -187,8 +199,8 @@ export function movingValidSteps(obstacle, entryRadius, arrival) {
 
 // The longest run of valid release steps for that arrival, but stops looking once a
 // run reaches `enough` steps.
-function movingRun(obstacle, entryRadius, arrival, enough) {
-  const { flights } = emptyGapFlights(entryRadius);
+function movingRun(obstacle, entryRadius, arrival, enough, period) {
+  const { flights } = emptyGapFlights(entryRadius, period);
   const box = obstacle.bounds;
   let best = 0;
   let run = 0;
@@ -213,12 +225,13 @@ export function arrivalTimes(obstacle) {
 }
 
 // The shortest, over every entry radius and sampled arrival, of the longest release
-// window (in steps), counting at most `enough` steps. `obstacle` is in gap 0.
-export function movingWindow(obstacle, enough = Infinity) {
+// window (in steps), counting at most `enough` steps, swinging with `period`.
+// `obstacle` is in gap 0.
+export function movingWindow(obstacle, enough = Infinity, period = SWING_PERIOD) {
   let shortest = Infinity;
   for (const radius of ENTRY_RADII) {
     for (const arrival of arrivalTimes(obstacle)) {
-      shortest = Math.min(shortest, movingRun(obstacle, radius, arrival, enough));
+      shortest = Math.min(shortest, movingRun(obstacle, radius, arrival, enough, period));
       if (shortest < enough && enough !== Infinity) return shortest;
     }
   }
@@ -234,11 +247,14 @@ export function isPathClearOfLianas(obstacle, leftLianaX) {
 }
 
 // A moving obstacle may be generated: its path is clear of the lianas and every entry
-// radius and sampled arrival leaves a window of at least `minSteps` (the stage's).
-// `obstacle` is in gap 0.
-export function isMovingFeasible(obstacle, minSteps = MIN_WINDOW_STEPS) {
+// radius and sampled arrival leaves a window of at least `minSteps` (the stage's), in
+// the boosted swing too if `boosted`. `obstacle` is in gap 0.
+export function isMovingFeasible(obstacle, minSteps = MIN_WINDOW_STEPS, boosted = false) {
   solverStats.movingRuns++;
-  return isPathClearOfLianas(obstacle, 0) && movingWindow(obstacle, minSteps) >= minSteps;
+  return (
+    isPathClearOfLianas(obstacle, 0) &&
+    variantsFor(boosted).every((period) => movingWindow(obstacle, minSteps, period) >= minSteps)
+  );
 }
 
 export function longestRun(valid) {
@@ -255,15 +271,19 @@ export function longestRun(valid) {
 const windows = new Map();
 
 // The longest window for each entry radius, for an obstacle of `type` at height `y`
-// and `scale` (null type: empty gap); `length` is the shortest of them, the one that
-// counts. Memoized: a static gap is fully described by (type, y, scale).
-export function releaseWindow(type, y, scale = 1) {
+// and `scale` (null type: empty gap), swinging with `period`; `length` is the shortest
+// of them, the one that counts. Memoized: a static gap is fully described by
+// (type, y, scale) and the swing by its period.
+export function releaseWindow(type, y, scale = 1, period = SWING_PERIOD) {
   solverStats.queries++;
-  const key = `${type}:${y}:${scale}`;
+  const key = `${type}:${y}:${scale}:${period}`;
   let result = windows.get(key);
   if (!result) {
     const obstacle = type ? new Obstacle(0, type, LIANA_SPACING / 2, y, null, scale) : null;
-    const byRadius = ENTRY_RADII.map((r) => ({ radius: r, ...longestRun(validReleaseSteps(obstacle, r).valid) }));
+    const byRadius = ENTRY_RADII.map((r) => ({
+      radius: r,
+      ...longestRun(validReleaseSteps(obstacle, r, 0, 1, 0, period).valid),
+    }));
     result = { byRadius, length: Math.min(...byRadius.map((w) => w.length)) };
     windows.set(key, result);
   }
@@ -271,12 +291,13 @@ export function releaseWindow(type, y, scale = 1) {
 }
 
 // An obstacle of `type` at height `y` and `scale` may be generated: clear of the
-// lianas and passable with a window of at least `minSteps` (the stage's).
-export function isFeasible(type, y, scale = 1, minSteps = MIN_WINDOW_STEPS) {
+// lianas and passable with a window of at least `minSteps` (the stage's), in the
+// boosted swing too if `boosted`.
+export function isFeasible(type, y, scale = 1, minSteps = MIN_WINDOW_STEPS, boosted = false) {
   solverStats.queries++;
   return (
     isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y, null, scale), 0) &&
-    releaseWindow(type, y, scale).length >= minSteps
+    variantsFor(boosted).every((period) => releaseWindow(type, y, scale, period).length >= minSteps)
   );
 }
 
@@ -302,23 +323,27 @@ export function windowInputs() {
     OBSTACLE_HITBOXES,
     ENTRY_RADII,
     STAGE_SCALES,
+    BOOST_PERIOD,
   };
 }
 
-// Window length in steps for every stage scale, static type and whole-pixel height in
-// OBSTACLE_Y_RANGE, 0 where the obstacle would not be clear of the lianas. Built by
-// scripts/build-windows.mjs into windowTable.json. The stage's minimum window is
-// applied when looking it up.
+// Window length in steps for each swing variant (normal, boosted), stage scale, static
+// type and whole-pixel height in OBSTACLE_Y_RANGE, 0 where the obstacle would not be
+// clear of the lianas. Built by scripts/build-windows.mjs into windowTable.json. The
+// stage's minimum window is applied when looking it up.
 export function computeWindowTable() {
   const [minY, maxY] = OBSTACLE_Y_RANGE;
   const windows = {};
-  for (const scale of STAGE_SCALES) {
-    windows[scale] = {};
-    for (const type of STATIC_TYPES) {
-      windows[scale][type] = [];
-      for (let y = minY; y <= maxY; y++) {
-        const clear = isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y, null, scale), 0);
-        windows[scale][type].push(clear ? releaseWindow(type, y, scale).length : 0);
+  for (const [variant, period] of Object.entries(PERIODS)) {
+    windows[variant] = {};
+    for (const scale of STAGE_SCALES) {
+      windows[variant][scale] = {};
+      for (const type of STATIC_TYPES) {
+        const row = (windows[variant][scale][type] = []);
+        for (let y = minY; y <= maxY; y++) {
+          const clear = isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y, null, scale), 0);
+          row.push(clear ? releaseWindow(type, y, scale, period).length : 0);
+        }
       }
     }
   }

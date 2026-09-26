@@ -80,7 +80,7 @@ describe('game modes and roles', () => {
 
 describe('a world with two monkeys', () => {
   function twoMonkeys(makeObstacle = () => null) {
-    return new World({ players: 2, makeObstacle });
+    return new World({ players: 2, makeObstacle, makeBanana: () => null });
   }
 
   it('starts both monkeys hanging on the first liana', () => {
@@ -106,7 +106,7 @@ describe('a world with two monkeys', () => {
 
   it('keeps separate scores, and is alive until every monkey is dead', () => {
     const base = lowRockWorld();
-    const world = new World({ players: 2, makeObstacle: (seed, gap) => base.makeObstacle(gap) });
+    const world = new World({ players: 2, makeObstacle: (seed, gap) => base.makeObstacle(gap), makeBanana: () => null });
     // Player 1 hops twice (scoring gap 1); player 2 stays on the first liana.
     for (let hop = 0; hop < 2; hop++) {
       stepN(world, FORWARD_RELEASE_STEP);
@@ -128,7 +128,7 @@ describe('a world with two monkeys', () => {
 
   it('keeps the world generated around the rearmost monkey', () => {
     const base = lowRockWorld();
-    const world = new World({ players: 2, makeObstacle: (seed, gap) => base.makeObstacle(gap) });
+    const world = new World({ players: 2, makeObstacle: (seed, gap) => base.makeObstacle(gap), makeBanana: () => null });
     for (let hop = 0; hop < 6; hop++) {
       stepN(world, FORWARD_RELEASE_STEP);
       world.release(0);

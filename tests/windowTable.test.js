@@ -14,7 +14,7 @@ describe('precomputed window table', () => {
 
   it('matches the solver exactly (run `npm run windows` if this fails)', () => {
     expect(table).toEqual(computeWindowTable());
-  });
+  }, 120000);
 
   it('answers the same as the solver at every stage’s scale and shortest window', () => {
     const [minY, maxY] = OBSTACLE_Y_RANGE;
@@ -26,7 +26,8 @@ describe('precomputed window table', () => {
         }
       }
     }
-    expect(Object.keys(table.windows).map(Number)).toEqual(STAGE_SCALES);
+    expect(Object.keys(table.windows)).toEqual(['normal', 'boosted']);
+    expect(Object.keys(table.windows.boosted).map(Number)).toEqual(STAGE_SCALES);
   });
 
   it('answers the same as the solver for every type and height', () => {
