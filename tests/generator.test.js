@@ -2,13 +2,15 @@ import { describe, it, expect } from 'vitest';
 import {
   createLiana,
   createObstacle,
+  birdPatrolBounds,
   gapIndexRange,
   lianaIndexRange,
   updateLianas,
   updateObstacles,
 } from '../src/sim/generator.js';
 import { mulberry32, mixSeed } from '../src/sim/rng.js';
-import { OBSTACLE_TYPES } from '../src/sim/obstacle.js';
+import { Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from '../src/sim/obstacle.js';
+import { isPathClearOfLianas } from '../src/sim/feasibility.js';
 import { World } from '../src/sim/world.js';
 import {
   LIANA_SPACING,
@@ -16,6 +18,9 @@ import {
   CAMERA_TARGET_X,
   WORLD_MARGIN,
   OBSTACLE_Y_RANGE,
+  STAGES,
+  BIRD_Y_RANGE,
+  BIRD_BOB,
 } from '../src/config.js';
 
 describe('liana generation', () => {
@@ -110,6 +115,9 @@ describe('obstacle generation', () => {
       if (gap === -1 || gap === 0) continue;
       const o = createObstacle(SEED, gap);
       expect(o.gap).toBe(gap);
+      // Moving obstacles move around the gap centre (birds within half a pixel of it).
+      expect(Math.abs(o.baseX - (gap + 0.5) * LIANA_SPACING)).toBeLessThanOrEqual(0.5);
+      if (o.moving) continue;
       expect(o.x).toBe((gap + 0.5) * LIANA_SPACING);
       expect(o.y).toBeGreaterThanOrEqual(OBSTACLE_Y_RANGE[0]);
       expect(o.y).toBeLessThanOrEqual(OBSTACLE_Y_RANGE[1]);
@@ -117,14 +125,58 @@ describe('obstacle generation', () => {
   });
 
   it('uses all types, roughly evenly', () => {
-    const counts = Object.fromEntries(OBSTACLE_TYPES.map((t) => [t, 0]));
+    const counts = Object.fromEntries([...STATIC_TYPES, ...MOVING_TYPES].map((t) => [t, 0]));
     for (let gap = 1; gap <= 3000; gap++) counts[createObstacle(SEED, gap).type]++;
-    for (const t of OBSTACLE_TYPES) expect(counts[t]).toBeGreaterThan(800);
+    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(200);
+    for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(550);
+  });
+
+  it('adds moving obstacles from obstacle 16, in each stage’s share', () => {
+    const share = (from, to) => {
+      let moving = 0;
+      let total = 0;
+      for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+        for (let gap = from; gap <= to; gap++, total++) if (createObstacle(seed, gap).moving) moving++;
+      }
+      return moving / total;
+    };
+    expect(share(1, 15)).toBe(0);
+    for (const stage of STAGES.slice(1)) {
+      const s = share(stage.first, stage.first + 14);
+      expect(s).toBeGreaterThan(stage.movingShare - 0.12);
+      expect(s).toBeLessThan(stage.movingShare + 0.12);
+    }
+    // Obstacles behind the start stay static.
+    for (let gap = -200; gap < 0; gap++) if (gap !== -1) expect(createObstacle(SEED, gap).moving).toBe(false);
+  });
+
+  it('keeps the static obstacles of every stage as they were', () => {
+    // Moving choices use their own random stream: a gap that stays static gets the
+    // obstacle it would have had without moving obstacles.
+    for (let gap = 16; gap < 200; gap++) {
+      const o = createObstacle(SEED, gap);
+      if (o.moving) continue;
+      const rand = mulberry32(mixSeed(SEED, gap));
+      expect(o.type).toBe(STATIC_TYPES[Math.floor(rand() * STATIC_TYPES.length)]);
+    }
+  });
+
+  it('sets bird patrols to the widest range clear of the swings', () => {
+    for (const y of [BIRD_Y_RANGE[0], 360, BIRD_Y_RANGE[1]]) {
+      const [lo, hi] = birdPatrolBounds(y);
+      expect(lo + hi).toBeCloseTo(LIANA_SPACING, 0);
+      const bird = (x) => new Obstacle(0, ObstacleType.BIRD, x, y, { period: 2, phase: 0, ax: 0, ay: 0, bob: BIRD_BOB });
+      expect(isPathClearOfLianas(bird(lo), 0) && isPathClearOfLianas(bird(hi), 0)).toBe(true);
+      expect(isPathClearOfLianas(bird(lo - 3), 0) || isPathClearOfLianas(bird(hi + 3), 0)).toBe(false);
+    }
+    // Lower patrols are wider.
+    const width = (y) => birdPatrolBounds(y)[1] - birdPatrolBounds(y)[0];
+    expect(width(BIRD_Y_RANGE[1])).toBeGreaterThan(width(BIRD_Y_RANGE[0]));
   });
 
   it('is deterministic per seed and gap, and differs between seeds', () => {
-    const same = (a, b) => a.type === b.type && a.y === b.y;
-    for (let gap = 1; gap < 50; gap++) expect(same(createObstacle(SEED, gap), createObstacle(SEED, gap))).toBe(true);
+    const same = (a, b) => a.type === b.type && a.y === b.y && JSON.stringify(a.motion) === JSON.stringify(b.motion);
+    for (let gap = 1; gap < 80; gap++) expect(same(createObstacle(SEED, gap), createObstacle(SEED, gap))).toBe(true);
     let differing = 0;
     for (let gap = 1; gap < 50; gap++) if (!same(createObstacle(SEED, gap), createObstacle(SEED + 1, gap))) differing++;
     expect(differing).toBeGreaterThan(40);

@@ -123,11 +123,122 @@ function drawRock(g, o, rand, hangs) {
 
 const DRAW = { branch: drawBranch, thornBush: drawThornBush, rock: drawRock };
 
+// Moving obstacles: a body that follows the obstacle, with parts animated from its
+// time, plus scenery that stays put (the snake's vine) or stretches (the spider's
+// thread). Each body fits its hitbox circle.
+const SPIDER = 0x2a1f2e;
+const SPIDER_LEG = 0x1a1320;
+const SPIDER_MARK = 0xc0392b;
+const THREAD = 0xd9e4dc;
+const SNAKE = 0x6f9b2e;
+const SNAKE_DARK = 0x46701c;
+const SNAKE_BELLY = 0xd8c35a;
+const TONGUE = 0xd2323c;
+const STALK = 0x3f6b24;
+const BIRD = 0xd64541;
+const BIRD_DARK = 0xa3322f;
+const BIRD_BELLY = 0xf2c14e;
+const BEAK = 0xf39c12;
+const EYE = 0xffffff;
+const PUPIL = 0x111111;
+
+// Hitbox: circle r 18. Abdomen and head; the legs are redrawn as they wriggle.
+function buildSpider(o) {
+  const thread = new Graphics();
+  const body = new Container();
+  const legs = new Graphics();
+  const g = new Graphics();
+  g.circle(0, 5, 13).fill(SPIDER).circle(0, -9, 8).fill(SPIDER);
+  g.poly([0, -2, 4, 5, 0, 12, -4, 5]).fill(SPIDER_MARK);
+  for (const [x, y] of [[-3, -12], [3, -12], [-5, -8], [5, -8]]) g.circle(x, y, 1.6).fill(EYE);
+  body.addChild(legs, g);
+  const animate = (t) => {
+    thread.clear().moveTo(o.x, CANOPY_Y - 40).lineTo(o.x, o.y - 14).stroke({ width: 1.5, color: THREAD, alpha: 0.8 });
+    legs.clear();
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < 4; i++) {
+        const a = -0.9 + i * 0.55 + 0.12 * Math.sin(t * 9 + i * 1.7 + side);
+        const kx = side * (9 + 9 * Math.cos(a));
+        const ky = -4 + 12 * Math.sin(a) - 6;
+        legs.moveTo(side * 5, -3 + i * 3).lineTo(kx, ky).lineTo(kx + side * 6, ky + 12);
+      }
+    }
+    legs.stroke({ width: 2.5, color: SPIDER_LEG, cap: 'round', join: 'round' });
+  };
+  return { parts: [thread, body], body, animate };
+}
+
+// Hitbox: circle r 18. Coils around a stalk standing from the floor; the head points
+// the way it is climbing.
+function buildSnake(o) {
+  const top = o.baseY - o.motion.ay - 40;
+  const stalk = new Graphics();
+  const bottom = FLOOR_Y + 20;
+  stalk.moveTo(o.baseX, bottom).bezierCurveTo(o.baseX - 6, bottom - 120, o.baseX + 6, top + 80, o.baseX, top).stroke({ width: 7, color: STALK, cap: 'round' });
+  for (let y = top + 30; y < bottom - 20; y += 46) {
+    const side = Math.round(y / 46) % 2 ? 1 : -1;
+    stalk.poly(leafPoints(o.baseX, y, side > 0 ? -0.5 : Math.PI + 0.5, 16, 8)).fill(side > 0 ? LEAF : LEAF_DARK);
+  }
+  const body = new Container();
+  const coil = new Graphics();
+  for (let i = 0; i < 3; i++) {
+    const y = -8 + i * 9;
+    coil.moveTo(-15, y).quadraticCurveTo(0, y + 7, 15, y + 2).stroke({ width: 9, color: i % 2 ? SNAKE_DARK : SNAKE, cap: 'round' });
+  }
+  coil.moveTo(-13, 17).quadraticCurveTo(0, 22, 12, 16).stroke({ width: 3, color: SNAKE_BELLY, cap: 'round' });
+  const head = new Graphics();
+  head.moveTo(-15, -8).quadraticCurveTo(-8, -18, 0, -18).stroke({ width: 8, color: SNAKE, cap: 'round' });
+  head.ellipse(4, -19, 9, 6.5).fill(SNAKE);
+  head.circle(7, -21, 1.8).fill(PUPIL);
+  head.moveTo(12, -19).lineTo(18, -19).lineTo(21, -22).moveTo(18, -19).lineTo(21, -16).stroke({ width: 1.2, color: TONGUE });
+  body.addChild(coil, head);
+  const animate = (t) => {
+    const u = (2 * Math.PI * t) / o.motion.period + o.motion.phase;
+    // y = baseY + ay·cos u: climbing while sin u > 0.
+    head.scale.y = Math.sin(u) >= 0 ? 1 : -1;
+  };
+  return { parts: [stalk, body], body, animate };
+}
+
+// Hitbox: circle r 16. Flaps as it flies and faces the way it patrols.
+function buildBird(o) {
+  const body = new Container();
+  const g = new Graphics();
+  g.poly([-12, -2, -22, -8, -21, 2, -12, 4]).fill(BIRD_DARK);
+  g.ellipse(-1, 0, 13, 10).fill(BIRD);
+  g.ellipse(1, 4, 9, 5).fill(BIRD_BELLY);
+  g.circle(9, -5, 7).fill(BIRD);
+  g.poly([14, -7, 22, -4, 14, -2]).fill(BEAK);
+  g.circle(10, -7, 2.4).fill(EYE).circle(10.8, -7, 1.2).fill(PUPIL);
+  const wing = new Graphics();
+  body.addChild(g, wing);
+  const animate = (t) => {
+    body.scale.x = o.vxAt(t) >= 0 ? 1 : -1;
+    const lift = Math.sin(t * 16);
+    wing.clear().poly([-8, -3, 4, -3, -2 - 6 * lift, -3 - 14 * lift]).fill(BIRD_DARK);
+  };
+  return { parts: [body], body, animate };
+}
+
+const BUILD_MOVING = { spider: buildSpider, snake: buildSnake, bird: buildBird };
+
+// A view: `view` to add to the layer, and `update()` each frame.
 function buildObstacle(o) {
+  if (o.moving) {
+    const { parts, body, animate } = BUILD_MOVING[o.type](o);
+    const view = new Container();
+    view.addChild(...parts);
+    const update = () => {
+      body.position.set(o.x, o.y);
+      animate(o.time);
+    };
+    update();
+    return { view, update };
+  }
   const g = new Graphics();
   DRAW[o.type](g, o, mulberry32(mixSeed(0x0b57, o.gap)), o.y < HANGS_ABOVE_Y);
   g.position.set(o.x, o.y);
-  return g;
+  return { view: g, update: null };
 }
 
 export class ObstacleViews {
@@ -141,15 +252,17 @@ export class ObstacleViews {
     for (const o of obstacles) {
       if (!o) continue;
       seen.add(o);
-      if (!this.views.has(o)) {
-        const view = buildObstacle(o);
-        this.views.set(o, view);
-        this.view.addChild(view);
+      let entry = this.views.get(o);
+      if (!entry) {
+        entry = buildObstacle(o);
+        this.views.set(o, entry);
+        this.view.addChild(entry.view);
       }
+      entry.update?.();
     }
-    for (const [o, view] of this.views) {
+    for (const [o, entry] of this.views) {
       if (seen.has(o)) continue;
-      view.destroy();
+      entry.view.destroy({ children: true });
       this.views.delete(o);
     }
   }

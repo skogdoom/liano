@@ -19,7 +19,7 @@ import {
 } from '../config.js';
 import { Liana } from './liana.js';
 import { Monkey, slipSteps } from './monkey.js';
-import { Obstacle, OBSTACLE_TYPES } from './obstacle.js';
+import { Obstacle, STATIC_TYPES } from './obstacle.js';
 import { ballisticStep, circleIntersectsSegment } from './physics.js';
 
 // Release-window solver. A gap is passable going forward when its obstacle stays
@@ -34,7 +34,7 @@ import { ballisticStep, circleIntersectsSegment } from './physics.js';
 
 // How often the solver was asked (queries, cached or not) and actually ran (runs),
 // so tests can check that play only uses the precomputed table.
-export const solverStats = { queries: 0, runs: 0 };
+export const solverStats = { queries: 0, runs: 0, movingRuns: 0 };
 export const MIN_WINDOW_STEPS = Math.ceil(MIN_RELEASE_WINDOW_MS / (SIM_DT * 1000) - 1e-9);
 
 // Steps from grabbing at `entryRadius` (or starting the slip `phaseSteps` into the
@@ -106,6 +106,134 @@ export function validReleaseSteps(obstacle, entryRadius, lianaX = 0, dir = 1, ph
   return { valid, positions, alive, forcedStep: lastStep };
 }
 
+// The body's flight from the step after `body` until it grabs `target` (inclusive),
+// over an empty gap; null if it does not reach it. Same rules as simulateFlight.
+function flightPath(body, target) {
+  const b = { x: body.x, y: body.y, vx: body.vx, vy: body.vy };
+  const path = [];
+  for (let i = 0; i < MAX_FLIGHT_STEPS; i++) {
+    ballisticStep(b, SIM_DT, GRAVITY);
+    path.push({ x: b.x, y: b.y });
+    if (circleIntersectsSegment(b.x, b.y, MONKEY_RADIUS, target.x, target.anchorY, target.x, target.tipY)) return path;
+    if (b.y > WORLD_HEIGHT + MONKEY_RADIUS) return null;
+  }
+  return null;
+}
+
+// Moving obstacles. Their whole path keeps clear of the swings, so a hanging monkey is
+// never hit; only flights can be. Whether a flight is hit depends on when it happens,
+// so the solver samples ARRIVAL_PHASES obstacle times at the grab of the left liana.
+// A release that reaches the next liana over an empty gap is valid with the obstacle
+// when no point of its flight touches the obstacle at that point's time. The flights
+// over an empty gap do not depend on the obstacle and are cached.
+export const ARRIVAL_PHASES = 12;
+
+const flightCache = new Map();
+
+// For grabbing liana 0 at `entryRadius` moving forward: the forced-release step and
+// every release step k that reaches liana 1 over an empty gap, with its flight.
+function emptyGapFlights(entryRadius) {
+  let result = flightCache.get(entryRadius);
+  if (result) return result;
+  const liana = new Liana(0, 0);
+  const target = { x: LIANA_SPACING, anchorY: liana.anchorY, tipY: liana.tipY };
+  const monkey = new Monkey();
+  monkey.vx = 1;
+  monkey.grab(liana, entryRadius);
+  const lastStep = forcedReleaseStep(entryRadius);
+  const flights = [];
+  for (let k = 0; k <= lastStep; k++) {
+    if (k > 0) {
+      liana.step(SIM_DT);
+      monkey.step(SIM_DT);
+    }
+    if (monkey.vx <= 0) continue;
+    const path = flightPath(monkey, target);
+    if (path) flights.push({ k, path });
+  }
+  result = { lastStep, flights };
+  flightCache.set(entryRadius, result);
+  return result;
+}
+
+// Whether the flight released at step k after a grab at world time `arrival` touches
+// the obstacle. Flight point j comes k + 1 + j steps after the grab.
+function flightHits(obstacle, flight, arrival, box) {
+  const reach = MONKEY_RADIUS;
+  for (let j = 0; j < flight.path.length; j++) {
+    const p = flight.path[j];
+    if (p.x < box.minX - reach || p.x > box.maxX + reach || p.y < box.minY - reach || p.y > box.maxY + reach) continue;
+    if (obstacle.hitsCircleAt(arrival + (flight.k + 1 + j) * SIM_DT, p.x, p.y, MONKEY_RADIUS)) return true;
+  }
+  return false;
+}
+
+// For a moving obstacle in gap 0, grabbing liana 0 at `entryRadius` at world time
+// `arrival`: whether each release step up to the forced release reaches liana 1.
+export function movingValidSteps(obstacle, entryRadius, arrival) {
+  const { lastStep, flights } = emptyGapFlights(entryRadius);
+  const box = obstacle.bounds;
+  const valid = new Array(lastStep + 1).fill(false);
+  for (const flight of flights) valid[flight.k] = !flightHits(obstacle, flight, arrival, box);
+  return valid;
+}
+
+// The longest run of valid release steps for that arrival, but stops looking once a
+// run reaches `enough` steps.
+function movingRun(obstacle, entryRadius, arrival, enough) {
+  const { flights } = emptyGapFlights(entryRadius);
+  const box = obstacle.bounds;
+  let best = 0;
+  let run = 0;
+  let previous = -2;
+  for (const flight of flights) {
+    if (flight.k !== previous + 1) run = 0;
+    previous = flight.k;
+    if (flightHits(obstacle, flight, arrival, box)) {
+      run = 0;
+      continue;
+    }
+    run++;
+    best = Math.max(best, run);
+    if (best >= enough) break;
+  }
+  return best;
+}
+
+// The arrival times the solver samples: ARRIVAL_PHASES evenly over the period.
+export function arrivalTimes(obstacle) {
+  return Array.from({ length: ARRIVAL_PHASES }, (_, i) => (i / ARRIVAL_PHASES) * obstacle.motion.period);
+}
+
+// The shortest, over every entry radius and sampled arrival, of the longest release
+// window (in steps), counting at most `enough` steps. `obstacle` is in gap 0.
+export function movingWindow(obstacle, enough = Infinity) {
+  let shortest = Infinity;
+  for (const radius of ENTRY_RADII) {
+    for (const arrival of arrivalTimes(obstacle)) {
+      shortest = Math.min(shortest, movingRun(obstacle, radius, arrival, enough));
+      if (shortest < enough && enough !== Infinity) return shortest;
+    }
+  }
+  return shortest;
+}
+
+// True if every point of the obstacle's path is clear of the lianas either side of the
+// gap starting at `leftLianaX` (see isClearOfLianas).
+export function isPathClearOfLianas(obstacle, leftLianaX) {
+  return obstacle
+    .pathPoints()
+    .every((p) => isClearOfLianas(new Obstacle(0, obstacle.type, p.x, p.y), leftLianaX));
+}
+
+// A moving obstacle may be generated: its path is clear of the lianas and every entry
+// radius and sampled arrival leaves a window of at least MIN_RELEASE_WINDOW_MS.
+// `obstacle` is in gap 0.
+export function isMovingFeasible(obstacle) {
+  solverStats.movingRuns++;
+  return isPathClearOfLianas(obstacle, 0) && movingWindow(obstacle, MIN_WINDOW_STEPS) >= MIN_WINDOW_STEPS;
+}
+
 export function longestRun(valid) {
   let best = { start: 0, length: 0 };
   let start = 0;
@@ -175,7 +303,7 @@ export function windowInputs() {
 export function computeWindowTable() {
   const [minY, maxY] = OBSTACLE_Y_RANGE;
   const windows = {};
-  for (const type of OBSTACLE_TYPES) {
+  for (const type of STATIC_TYPES) {
     windows[type] = [];
     for (let y = minY; y <= maxY; y++) {
       const clear = isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y), 0);

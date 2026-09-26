@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { longestRun, validReleaseSteps } from '../src/sim/feasibility.js';
+import { longestRun, validReleaseSteps, movingValidSteps } from '../src/sim/feasibility.js';
 import { SIM_DT, SWING_PERIOD } from '../src/config.js';
 import { World } from '../src/sim/world.js';
 import { Obstacle } from '../src/sim/obstacle.js';
@@ -68,6 +68,10 @@ export function windowForGrab(world, player = 0) {
   const dir = liana.swingDir;
   const gap = dir > 0 ? liana.index : liana.index - 1;
   const obstacle = world.obstacles.get(gap) ?? null;
+  // Moving obstacles: forward only, solved in gap 0 for the obstacle time at the grab.
+  if (obstacle?.moving && dir > 0) {
+    return longestRun(movingValidSteps(obstacle.inGap(0), monkey.gripFrom, world.time));
+  }
   return longestRun(validReleaseSteps(obstacle, monkey.gripFrom, liana.x, dir).valid);
 }
 

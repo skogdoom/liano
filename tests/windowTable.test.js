@@ -4,7 +4,7 @@ import { isPassable, tableIsFresh } from '../src/sim/windowTable.js';
 import { computeWindowTable, isFeasible, solverStats } from '../src/sim/feasibility.js';
 import { createObstacle } from '../src/sim/generator.js';
 import { World } from '../src/sim/world.js';
-import { OBSTACLE_TYPES } from '../src/sim/obstacle.js';
+import { STATIC_TYPES } from '../src/sim/obstacle.js';
 import { OBSTACLE_Y_RANGE, SIM_DT } from '../src/config.js';
 
 describe('precomputed window table', () => {
@@ -18,15 +18,16 @@ describe('precomputed window table', () => {
 
   it('answers the same as the solver for every type and height', () => {
     const [minY, maxY] = OBSTACLE_Y_RANGE;
-    for (const type of OBSTACLE_TYPES) {
+    for (const type of STATIC_TYPES) {
       for (let y = minY - 5; y <= maxY + 5; y++) expect(isPassable(type, y)).toBe(isFeasible(type, y));
     }
   });
 });
 
 describe('play does not run the solver', () => {
-  it('generates thousands of gaps and plays through worlds with lookups only', () => {
-    const before = { ...solverStats };
+  it('generates thousands of gaps and plays through worlds with static lookups only', () => {
+    // Moving obstacles need the solver; that runs in the worker (see prefetch tests).
+    const before = { queries: solverStats.queries, runs: solverStats.runs };
     for (const seed of [11, 222, 3333, 44444]) {
       for (let gap = -200; gap < 800; gap++) createObstacle(seed, gap);
     }
@@ -36,7 +37,7 @@ describe('play does not run the solver', () => {
       Object.assign(world.monkey, { x: i * 700 + 350, y: -400, vx: 0, vy: 0 });
       world.step(SIM_DT);
     }
-    expect(solverStats).toEqual(before);
+    expect({ queries: solverStats.queries, runs: solverStats.runs }).toEqual(before);
   });
 });
 

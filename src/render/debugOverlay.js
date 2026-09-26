@@ -1,7 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { MONKEY_RADIUS, SIM_DT, SWING_PERIOD } from '../config.js';
 import { MonkeyState } from '../sim/monkey.js';
-import { validReleaseSteps, longestRun } from '../sim/feasibility.js';
+import { validReleaseSteps, longestRun, movingValidSteps } from '../sim/feasibility.js';
 
 const PERIOD_STEPS = Math.round(SWING_PERIOD / SIM_DT);
 
@@ -57,6 +57,14 @@ export class DebugOverlay {
       }
     }
     g.stroke({ width: 2, color: COLORS.obstacleHitbox });
+    // Moving obstacles: where they go over a period.
+    for (const o of world.obstacles.values()) {
+      if (!o?.moving) continue;
+      const [first, ...rest] = o.pathPoints(60);
+      g.moveTo(first.x, first.y);
+      for (const p of rest) g.lineTo(p.x, p.y);
+      g.closePath().stroke({ width: 1, color: COLORS.obstacleHitbox, alpha: 0.6 });
+    }
 
     g.circle(monkey.x, monkey.y, MONKEY_RADIUS).stroke({ width: 2, color: COLORS.monkeyHitbox });
 
@@ -69,7 +77,7 @@ export class DebugOverlay {
       // and how far into the swing it started.
       const step = Math.round(monkey.gripTime / SIM_DT);
       const phase = Math.round(monkey.liana.swingTime / SIM_DT) - step;
-      const w = this.#releaseWindow(world, monkey.gripFrom, phase);
+      const w = this.#releaseWindow(world, monkey.gripFrom, phase, world.time - step * SIM_DT);
       w.positions.forEach((p, k) => {
         if (k < step) return;
         g.circle(p.x, p.y, w.valid[k] ? 3 : 2).fill(w.valid[k] ? COLORS.valid : COLORS.invalid);
@@ -98,8 +106,8 @@ export class DebugOverlay {
   }
 
   // Valid release steps for the actual entry, swing direction and phase, recomputed
-  // per grab.
-  #releaseWindow(world, gripFrom, phase) {
+  // per grab. A moving obstacle's window also depends on the world time at the grab.
+  #releaseWindow(world, gripFrom, phase, grabTime) {
     const { liana } = world.monkey;
     const dir = liana.swingDir;
     const phaseSteps = ((phase % PERIOD_STEPS) + PERIOD_STEPS) % PERIOD_STEPS;
@@ -107,7 +115,10 @@ export class DebugOverlay {
     if (this.cacheKey !== key || this.cacheWorld !== world) {
       const gap = dir > 0 ? liana.index : liana.index - 1;
       const obstacle = world.obstacles.get(gap) ?? null;
-      const { valid, positions } = validReleaseSteps(obstacle, gripFrom, liana.x, dir, phaseSteps);
+      let { valid, positions } = validReleaseSteps(obstacle?.moving ? null : obstacle, gripFrom, liana.x, dir, phaseSteps);
+      if (obstacle?.moving && dir > 0 && phaseSteps === 0) {
+        valid = movingValidSteps(obstacle.inGap(0), gripFrom, Math.round(grabTime / SIM_DT) * SIM_DT);
+      }
       this.window = { valid, positions, run: longestRun(valid) };
       this.cacheKey = key;
       this.cacheWorld = world;

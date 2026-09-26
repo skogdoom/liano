@@ -9,6 +9,9 @@ import {
 import { createFixedStepLoop } from './loop.js';
 import { createInput } from './input.js';
 import { Game, GameState } from './sim/game.js';
+import { World } from './sim/world.js';
+import { randomSeed } from './sim/rng.js';
+import { ObstaclePrefetch } from './obstaclePrefetch.js';
 import { createPause } from './pause.js';
 import { layoutFor } from './layout.js';
 import { MODE_ORDER } from './sim/match.js';
@@ -164,7 +167,22 @@ root.addChild(hud.view, controls);
 const overlays = new Overlays();
 root.addChild(overlays.view);
 
-const game = new Game();
+// Obstacles ahead are generated in a worker (see ObstaclePrefetch).
+function createObstacleWorker() {
+  try {
+    return new Worker(new URL('./obstacleWorker.js', import.meta.url), { type: 'module' });
+  } catch {
+    return null;
+  }
+}
+const prefetch = new ObstaclePrefetch(createObstacleWorker());
+const game = new Game({
+  createWorld: (options) => {
+    const seed = randomSeed();
+    prefetch.reset(seed);
+    return new World({ ...options, seed, makeObstacle: prefetch.makeObstacle });
+  },
+});
 const pause = createPause(window, document);
 // A lost graphics context (common when a phone backgrounds the page) pauses the game
 // until Pixi restores it; if it does not come back, offer a reload.
@@ -280,6 +298,7 @@ function frame(ticker) {
   if (paused) input.clear(); // a press made just before pausing must not act on resume
   const frameDt = paused ? 0 : Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
   loop.advance(frameDt);
+  prefetch.update(game.world.obstacles);
   if (lastState === GameState.PLAYING && game.state === GameState.RESULTS && !reducedMotion.matches) {
     shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
   }

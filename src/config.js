@@ -66,7 +66,37 @@ export const OBSTACLE_HITBOXES = {
     { kind: 'circle', dx: 0, dy: -14, r: 34 },
   ],
   rock: [{ kind: 'circle', dx: 0, dy: 0, r: 36 }],
+  spider: [{ kind: 'circle', dx: 0, dy: 0, r: 18 }],
+  snake: [{ kind: 'circle', dx: 0, dy: 0, r: 18 }],
+  bird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
 };
+
+// Moving obstacles (see obstacle.js). Their whole path stays clear of both
+// neighbouring lianas' swept areas, which at the gap centre leaves the heights above
+// about 213 and below about 288 (valid flights cross the centre at about 189–361).
+// Each moves with a period in this range (s) and a random phase.
+export const MOVING_PERIOD_RANGE = [1.5, 3.0];
+// Spider: hangs on a thread from the canopy at the gap centre; its lowest point and
+// how far it climbs above that.
+export const SPIDER_LOW_RANGE = [175, 212];
+export const SPIDER_TRAVEL_RANGE = [80, 150];
+// Snake: climbs a vine standing in the gap centre; its highest point and how far it
+// slides down below that.
+export const SNAKE_HIGH_RANGE = [290, 320];
+export const SNAKE_TRAVEL_RANGE = [90, 160];
+// Bird: patrols across the gap, low where flights come in over the far liana, with a
+// slight bob. Its patrol bounds are the widest that stay clear of the swings.
+export const BIRD_Y_RANGE = [330, 390];
+export const BIRD_BOB = 8;
+
+// Difficulty stages, keyed by obstacle index (the gap: obstacle #1 is in gap 1).
+// Stage 1 has no moving obstacles. So far only the moving share is used.
+export const STAGES = [
+  { first: 1, minWindowMs: 90, movingShare: 0, scale: 1.0 },
+  { first: 16, minWindowMs: 80, movingShare: 0.25, scale: 1.1 },
+  { first: 31, minWindowMs: 70, movingShare: 0.5, scale: 1.2 },
+  { first: 51, minWindowMs: 60, movingShare: 0.7, scale: 1.3 },
+];
 export const MIN_RELEASE_WINDOW_MS = 90;
 
 export const CAMERA_TARGET_X = 0.35 * SCREEN_WIDTH;

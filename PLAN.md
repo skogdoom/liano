@@ -70,10 +70,11 @@ v1 (milestones 1–14) is built and released as v1.x. It has touch and phone sup
 
 **Static** (from obstacle #1): branch, thorn bush, rock. Random height in the gap, horizontally centered, rerolled until clear of both neighbouring lianas' swept areas.
 
-**Moving** (from obstacle #16, share set by the stage). Each moving obstacle has a deterministic `position(t)` and `hitbox(t)` with period P, driven by world time since it spawned. It stays confined to its own gap and never enters a liana's swing arc, so a hanging monkey can never be hit with no way out:
+**Moving** (from obstacle #16, share set by the stage). Each moving obstacle has a deterministic `position(t)` and `hitbox(t)` with period P, driven by world time (counted in whole sim steps) plus a seeded phase, so the solver can match the world exactly. It stays confined to its own gap and never enters a liana's swing arc, so a hanging monkey can never be hit with no way out:
 - **Spider:** descends and ascends on a thread from the canopy. Vertical oscillation between two heights.
 - **Snake:** climbs up and down a vine standing in the gap, moving vertically along it.
 - **Bird:** patrols horizontally between two x bounds inside the gap, with a slight bob. The patrol bounds must stay outside every liana's swing arc.
+- Room for them: at the gap centre a moving hitbox stays clear of the swings only above y ≈ 213 or below y ≈ 288, while valid flights cross the centre at y ≈ 189–361. So spiders work the high band (lowest point 175–212), snakes the low band (highest point 290–320), and birds patrol low (y 330–390), as wide as the swings allow (±35 to ±117 px). In testing they block about 10–20 % of otherwise valid releases.
 
 ## Bananas
 
@@ -134,7 +135,7 @@ A useful design constraint: if the time on a liana from the lowest sampled entry
 Implementation notes:
 - **Step size.** The solver simulates releases at the sim step (1/120 s), so it agrees exactly with the real world. v1 tests this for every release step; keep that test.
 - **Static gaps** keep the build-time window table (`src/sim/windowTable.json`, fingerprinted by its inputs, rebuilt with `npm run windows` and checked in CI). It now also covers entry radii, the boosted variant and the stage's obstacle scale. Generation stays a table lookup, with no solver work during play.
-- **Moving gaps** are checked by the solver in a Web Worker, generating a buffer of at least 5 gaps ahead of the furthest monkey. Budget: at most 20 ms per gap. No frame may go over 16 ms because of generation.
+- **Moving gaps** are checked by the solver in a Web Worker, generating a buffer of at least 5 gaps ahead of the furthest monkey. Budget: at most 20 ms per gap. No frame may go over 16 ms because of generation. Generation is deterministic in (seed, gap), so the worker only computes ahead of time: a gap it has not delivered yet is generated on the spot with the same result. The solver reuses the empty-gap flights (cached per entry radius) and only checks them against the obstacle's position at each flight point's time: under 1 ms per candidate.
 - **Known gaps in the guarantee.** It is sampled, not a proof. It doesn't cover a monkey joining an already-swinging liana in shared mode, or respawn edge cases. This is acceptable for versus play.
 
 ## Simulation model
@@ -233,6 +234,9 @@ Values from v1 are the tuned, current ones. New v2 values are starting points.
 | LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a swept area, beyond MONKEY_RADIUS |
 | MIN_RELEASE_WINDOW_MS | 90 | Stage 1; later stages per the stage table |
 | MOVING_PERIOD_RANGE | 1.5–3.0 s | New |
+| SPIDER_LOW_RANGE, SPIDER_TRAVEL_RANGE | 175–212, 80–150 px | New; lowest point and climb |
+| SNAKE_HIGH_RANGE, SNAKE_TRAVEL_RANGE | 290–320, 90–160 px | New; highest point and slide |
+| BIRD_Y_RANGE, BIRD_BOB | 330–390, 8 px | New; patrol bounds are derived from the swings |
 | BANANA_CHANCE | 0.15 per gap | New; not within 2 gaps of the previous banana |
 | BANANA_POINTS | 3 | New |
 | BOOST_GRABS | 3 | New |
@@ -425,9 +429,11 @@ Implement in order. Each milestone must end in a runnable, tested state, with ev
 - [x] 1,000 seeded gaps: all feasible for every entry radius
 
 **17. Moving obstacles.** Spider, snake, bird with periodic motion; the solver gains the phase dimension and runs in a worker; art for all three; a "bong" pitch for each.
-- [ ] 1,000 seeded gaps from stage 2+: all feasible for every entry radius × phase
-- [ ] No moving obstacle's path intersects a swing arc; bird patrol bounds are asserted in the generator
-- [ ] No frame over 16 ms from generation
+- [x] 1,000 seeded gaps from stage 2+: all feasible for every entry radius × phase
+- [x] No moving obstacle's path intersects a swing arc; bird patrol bounds are asserted in the generator
+- [x] No frame over 16 ms from generation
+- [x] The moving solver agrees with the real world for every release step (sampled arrivals)
+- Note: the stage table (STAGES) was added here for the moving share; M18 wires up the rest of it.
 
 **18. Difficulty stages.** Stage table, stage banner, background tint, obstacle scaling.
 - [ ] Stage is derived from obstacle index; banana points don't affect it (unit tested)

@@ -4,12 +4,17 @@ import {
   isFeasible,
   isClearOfLianas,
   validReleaseSteps,
+  movingWindow,
+  movingValidSteps,
+  arrivalTimes,
+  isPathClearOfLianas,
+  isMovingFeasible,
   longestRun,
   MIN_WINDOW_STEPS,
   forcedReleaseStep,
 } from '../src/sim/feasibility.js';
-import { createObstacle, pickHeight, fallbackHeight } from '../src/sim/generator.js';
-import { Obstacle, OBSTACLE_TYPES } from '../src/sim/obstacle.js';
+import { createObstacle, pickHeight, fallbackHeight, movingCandidate } from '../src/sim/generator.js';
+import { Obstacle, STATIC_TYPES, MOVING_TYPES } from '../src/sim/obstacle.js';
 import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { mulberry32 } from '../src/sim/rng.js';
@@ -66,7 +71,7 @@ describe('release window solver', () => {
   });
 
   it('rejects obstacles in the middle heights, where the swings reach', () => {
-    for (const type of OBSTACLE_TYPES) {
+    for (const type of STATIC_TYPES) {
       const o = new Obstacle(0, type, LIANA_SPACING / 2, 250);
       expect(isClearOfLianas(o, 0)).toBe(false);
       expect(isFeasible(type, 250)).toBe(false);
@@ -102,6 +107,57 @@ describe('release window solver', () => {
   });
 });
 
+describe('moving obstacle solver', () => {
+  it('agrees with the real world for every release step and sampled arrival', () => {
+    const rand = mulberry32(2718);
+    const obstacles = MOVING_TYPES.map((type) => movingCandidate(type, 0, rand));
+    let blocked = 0;
+    for (const obstacle of obstacles) {
+      for (const c of [ENTRY_RADII[0], ENTRY_RADII[3]]) {
+        const emptyValid = validReleaseSteps(null, c).valid;
+        for (const arrivalStep of [0, 97]) {
+          const valid = movingValidSteps(obstacle, c, arrivalStep * SIM_DT);
+          for (let k = 0; k < valid.length; k++) {
+            // Steps that miss over an empty gap miss here too; check a sample of them.
+            if (!emptyValid[k] && k % 25 !== 0) continue;
+            const world = worldWith({ 0: obstacle });
+            world.start();
+            stepN(world, arrivalStep);
+            world.monkey.vx = 1; // the swing starts forward
+            world.monkey.grab(world.lianas.get(0), c); // restart the swing at this world time
+            stepN(world, k);
+            let reached = false;
+            if (world.alive) {
+              world.release();
+              reached = flyUntilGrab(world) === 1;
+            }
+            const expected = { type: obstacle.type, c, arrivalStep, k, reached: valid[k] };
+            expect({ type: obstacle.type, c, arrivalStep, k, reached }).toEqual(expected);
+            if (emptyValid[k] && !valid[k]) blocked++;
+          }
+        }
+      }
+    }
+    // The obstacles did get in the way of some flights.
+    expect(blocked).toBeGreaterThan(20);
+  });
+
+  it('samples 12 arrival phases over the period', () => {
+    const o = movingCandidate(MOVING_TYPES[0], 0, mulberry32(1));
+    const times = arrivalTimes(o);
+    expect(times).toHaveLength(12);
+    expect(times[1] - times[0]).toBeCloseTo(o.motion.period / 12, 9);
+  });
+
+  it('rejects a moving obstacle whose path reaches into a swing', () => {
+    const spider = movingCandidate(MOVING_TYPES[0], 0, mulberry32(3));
+    const reaching = new Obstacle(0, spider.type, spider.baseX, spider.baseY + 60, spider.motion);
+    expect(isPathClearOfLianas(spider, 0)).toBe(true);
+    expect(isPathClearOfLianas(reaching, 0)).toBe(false);
+    expect(isMovingFeasible(reaching)).toBe(false);
+  });
+});
+
 describe('the start liana', () => {
   it('agrees with the real world when the run starts partway through the title swing', () => {
     for (const phase of [0, 100, 250]) {
@@ -126,6 +182,11 @@ describe('fair generation', () => {
     for (const seed of [1, 99, 2024, 31337]) {
       for (let gap = 1; gap <= 250; gap++) {
         const o = createObstacle(seed, gap);
+        if (o.moving) {
+          expect(windowMs(movingWindow(o.inGap(0), MIN_WINDOW_STEPS))).toBeGreaterThanOrEqual(MIN_RELEASE_WINDOW_MS);
+          checked++;
+          continue;
+        }
         const w = releaseWindow(o.type, o.y);
         expect(windowMs(w.length)).toBeGreaterThanOrEqual(MIN_RELEASE_WINDOW_MS);
         expect(Number.isInteger(o.y)).toBe(true);
@@ -137,6 +198,48 @@ describe('fair generation', () => {
     expect(checked).toBe(1000);
   });
 
+  it(`gives every one of 1,000 seeded gaps from stage 2 on a ${MIN_RELEASE_WINDOW_MS} ms window for every entry radius × arrival phase`, () => {
+    let moving = 0;
+    for (const seed of [5, 808, 4242, 90210]) {
+      for (let gap = 16; gap < 266; gap++) {
+        const o = createObstacle(seed, gap);
+        const length = o.moving ? movingWindow(o.inGap(0), MIN_WINDOW_STEPS) : releaseWindow(o.type, o.y).length;
+        expect({ seed, gap, ms: windowMs(length) >= MIN_RELEASE_WINDOW_MS }).toEqual({ seed, gap, ms: true });
+        if (o.moving) moving++;
+      }
+    }
+    expect(moving).toBeGreaterThan(400);
+  });
+
+  it('never lets a moving obstacle’s path touch a swing or a hanging monkey', () => {
+    // Brute force as below, at 36 times over each obstacle's period.
+    const angles = [];
+    for (let a = -SWING_AMPLITUDE; a <= SWING_AMPLITUDE + 1e-9; a += SWING_AMPLITUDE / 30) angles.push(a);
+    const byType = {};
+    const hits = [];
+    for (let gap = 16; byType.bird === undefined || Object.values(byType).some((n) => n < 20); gap++) {
+      const o = createObstacle(31, gap);
+      if (!o.moving || (byType[o.type] ?? 0) >= 20) continue;
+      byType[o.type] = (byType[o.type] ?? 0) + 1;
+      const b = o.bounds;
+      for (let i = 0; i < 36; i++) {
+        const t = (i / 36) * o.motion.period;
+        for (const lianaX of [gap * LIANA_SPACING, (gap + 1) * LIANA_SPACING]) {
+          for (const a of angles) {
+            for (let r = 0; r <= LIANA_LENGTH; r += 6) {
+              const x = lianaX + r * Math.sin(a);
+              const y = ANCHOR_Y + r * Math.cos(a);
+              if (x < b.minX - MONKEY_RADIUS || x > b.maxX + MONKEY_RADIUS || y < b.minY - MONKEY_RADIUS || y > b.maxY + MONKEY_RADIUS) continue;
+              if (o.hitsCircleAt(t, x, y, MONKEY_RADIUS)) hits.push({ gap, type: o.type, t, a, r });
+            }
+          }
+        }
+      }
+    }
+    expect(hits).toEqual([]);
+    expect(byType).toEqual({ spider: 20, snake: 20, bird: 20 });
+  });
+
   it('keeps every generated obstacle clear of the swinging lianas and hanging monkey', () => {
     // Brute force, independent of the sector maths: sweep the rope and the monkey
     // (hanging anywhere on it) through the full swing of both neighbouring lianas.
@@ -144,8 +247,9 @@ describe('fair generation', () => {
     for (let a = -SWING_AMPLITUDE; a <= SWING_AMPLITUDE + 1e-9; a += SWING_AMPLITUDE / 40) angles.push(a);
     const seen = new Set();
     const hits = [];
-    for (let gap = 1; gap <= 400; gap++) {
+    for (let gap = 1; gap <= 800; gap++) {
       const o = createObstacle(77, gap);
+      if (o.moving) continue; // see the test above
       const key = `${o.type}:${o.y}`;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -164,7 +268,7 @@ describe('fair generation', () => {
   });
 
   it('rerolls infeasible heights and falls back to a known-passable one', () => {
-    for (const type of OBSTACLE_TYPES) {
+    for (const type of STATIC_TYPES) {
       expect(isFeasible(type, fallbackHeight(type))).toBe(true);
       // Always lands in the infeasible middle band.
       const stuck = () => 0.3;

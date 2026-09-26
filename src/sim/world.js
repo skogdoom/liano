@@ -23,6 +23,8 @@ export class World {
     this.makeObstacle = (gap) => makeObstacle(seed, gap);
     this.lianas = new Map();
     this.obstacles = new Map();
+    // Whole steps since the world was created; moving obstacles follow `time`.
+    this.stepCount = 0;
     this.monkeys = Array.from({ length: players }, () => new Monkey());
     updateLianas(this.lianas, 0, null);
     updateObstacles(this.obstacles, 0, this.makeObstacle);
@@ -55,6 +57,11 @@ export class World {
     return this.monkeys.some((m) => m.state !== MonkeyState.DEAD);
   }
 
+  // World time (s), counted in whole steps so the solver can match it exactly.
+  get time() {
+    return this.stepCount * SIM_DT;
+  }
+
   isAlive(player) {
     return this.monkeys[player].state !== MonkeyState.DEAD;
   }
@@ -73,6 +80,7 @@ export class World {
   }
 
   step(dt) {
+    this.stepCount++;
     // Once every monkey is dead they fall off-screen; keep the entities around the
     // camera as they are.
     const living = this.monkeys.filter((m) => m.state !== MonkeyState.DEAD);
@@ -84,6 +92,7 @@ export class World {
       updateLianas(this.lianas, ahead, held, behind);
       updateObstacles(this.obstacles, ahead, this.makeObstacle, behind);
     }
+    for (const obstacle of this.obstacles.values()) if (obstacle?.moving) obstacle.setTime(this.time);
     for (const liana of this.lianas.values()) liana.step(dt);
 
     this.monkeys.forEach((monkey, player) => {
@@ -137,17 +146,19 @@ export class World {
     for (let i = 0; i < maxSteps; i++) {
       ballisticStep(body, SIM_DT, GRAVITY);
       path.push({ x: body.x, y: body.y });
-      if (this.#hitsObstacle(body.x, body.y)) return { path, outcome: 'hit' };
+      if (this.#hitsObstacle(body.x, body.y, this.time + (i + 1) * SIM_DT)) return { path, outcome: 'hit' };
       if (this.#grabCandidate(body.x, body.y, excluded)) return { path, outcome: 'grab' };
       if (body.y > WORLD_HEIGHT + MONKEY_RADIUS) return { path, outcome: 'fall' };
     }
     return { path, outcome: 'none' };
   }
 
-  // The obstacle a monkey at (x, y) touches, or null.
-  #hitsObstacle(x, y) {
+  // The obstacle a monkey at (x, y) touches (at world time `time`, by default now), or null.
+  #hitsObstacle(x, y, time = null) {
     for (const obstacle of this.obstacles.values()) {
-      if (obstacle && obstacle.hitsCircle(x, y, MONKEY_RADIUS)) return obstacle;
+      if (!obstacle) continue;
+      const hit = time === null ? obstacle.hitsCircle(x, y, MONKEY_RADIUS) : obstacle.hitsCircleAt(time, x, y, MONKEY_RADIUS);
+      if (hit) return obstacle;
     }
     return null;
   }

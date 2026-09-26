@@ -1,7 +1,22 @@
-import { LIANA_SPACING, SCREEN_WIDTH, CAMERA_TARGET_X, WORLD_MARGIN, OBSTACLE_Y_RANGE } from '../config.js';
+import {
+  LIANA_SPACING,
+  SCREEN_WIDTH,
+  CAMERA_TARGET_X,
+  WORLD_MARGIN,
+  OBSTACLE_Y_RANGE,
+  MOVING_PERIOD_RANGE,
+  SPIDER_LOW_RANGE,
+  SPIDER_TRAVEL_RANGE,
+  SNAKE_HIGH_RANGE,
+  SNAKE_TRAVEL_RANGE,
+  BIRD_Y_RANGE,
+  BIRD_BOB,
+} from '../config.js';
 import { Liana } from './liana.js';
-import { Obstacle, OBSTACLE_TYPES } from './obstacle.js';
+import { Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from './obstacle.js';
+import { isClearOfLianas, isMovingFeasible, isPathClearOfLianas } from './feasibility.js';
 import { mixSeed, mulberry32 } from './rng.js';
+import { stageFor } from './stages.js';
 import { isPassable } from './windowTable.js';
 
 // Gaps on both sides of the start liana stay empty: the first forward gap lets the
@@ -40,12 +55,77 @@ export function pickHeight(type, rand) {
   return fallbackHeight(type);
 }
 
+const MOVING_TRIES = 20;
+// Separate random streams for the moving choice, so static obstacles are the same in
+// every stage.
+const MOVING_SALT = 0x6d0e;
+
+const lerp = ([a, b], t) => a + (b - a) * t;
+const pick = (list, rand) => list[Math.floor(rand() * list.length)];
+
+// Bird patrol bounds (gap-0 x) at height y: the widest range around the gap centre
+// where the bird, anywhere in its bob, stays clear of both swings.
+export function birdPatrolBounds(y) {
+  const clear = (x) => {
+    for (let dy = -BIRD_BOB; dy <= BIRD_BOB; dy += 1) {
+      if (!isClearOfLianas(new Obstacle(0, ObstacleType.BIRD, x, y + dy), 0)) return false;
+    }
+    return true;
+  };
+  const centre = LIANA_SPACING / 2;
+  if (!clear(centre)) return null;
+  let lo = centre;
+  let hi = centre;
+  while (clear(lo - 1)) lo--;
+  while (clear(hi + 1)) hi++;
+  return [lo + 1, hi - 1];
+}
+
+// A random moving obstacle of `type` for gap `gap`.
+export function movingCandidate(type, gap, rand) {
+  const offset = gap * LIANA_SPACING;
+  const motion = { period: lerp(MOVING_PERIOD_RANGE, rand()), phase: rand() * 2 * Math.PI, ax: 0, ay: 0, bob: 0 };
+  if (type === ObstacleType.BIRD) {
+    const y = Math.round(lerp(BIRD_Y_RANGE, rand()));
+    const [lo, hi] = birdPatrolBounds(y);
+    motion.ax = (hi - lo) / 2;
+    motion.bob = BIRD_BOB;
+    const bird = new Obstacle(gap, type, offset + (lo + hi) / 2, y, motion);
+    // The patrol must never reach into a swing.
+    if (!isPathClearOfLianas(bird, offset)) throw new Error(`Bird patrol in gap ${gap} reaches a swing`);
+    return bird;
+  }
+  const travel = lerp(type === ObstacleType.SPIDER ? SPIDER_TRAVEL_RANGE : SNAKE_TRAVEL_RANGE, rand());
+  motion.ay = travel / 2;
+  // Spiders drop from the canopy down to their lowest point; snakes climb from the
+  // floor up to their highest.
+  const y =
+    type === ObstacleType.SPIDER
+      ? lerp(SPIDER_LOW_RANGE, rand()) - motion.ay
+      : lerp(SNAKE_HIGH_RANGE, rand()) + motion.ay;
+  return new Obstacle(gap, type, offset + LIANA_SPACING / 2, y, motion);
+}
+
 // Obstacle for gap i (between lianas i and i + 1), or null. Deterministic in (seed, gap),
-// so a culled gap regenerates identically.
+// so a culled gap regenerates identically. From stage 2 a share of the gaps get a moving
+// obstacle, rerolled up to MOVING_TRIES times until the solver accepts it, else a static
+// one at its lowest-risk passable height.
 export function createObstacle(seed, gap) {
   if (EMPTY_GAPS.has(gap)) return null;
+  const { movingShare } = stageFor(gap);
+  if (movingShare > 0) {
+    const rand = mulberry32(mixSeed(seed ^ MOVING_SALT, gap));
+    if (rand() < movingShare) {
+      for (let i = 0; i < MOVING_TRIES; i++) {
+        const o = movingCandidate(pick(MOVING_TYPES, rand), gap, rand);
+        if (isMovingFeasible(o.inGap(0))) return o;
+      }
+      const type = pick(STATIC_TYPES, rand);
+      return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, fallbackHeight(type));
+    }
+  }
   const rand = mulberry32(mixSeed(seed, gap));
-  const type = OBSTACLE_TYPES[Math.floor(rand() * OBSTACLE_TYPES.length)];
+  const type = STATIC_TYPES[Math.floor(rand() * STATIC_TYPES.length)];
   return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, pickHeight(type, rand));
 }
 
