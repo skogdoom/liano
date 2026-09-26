@@ -1,5 +1,5 @@
 import { Container, Graphics } from 'pixi.js';
-import { SCREEN_WIDTH, TIP_WARNING } from '../config.js';
+import { SCREEN_WIDTH, TIP_WARNING_TIME } from '../config.js';
 import { LianaState, SWING_OMEGA } from '../sim/liana.js';
 import { mixSeed, mulberry32 } from '../sim/rng.js';
 import { leafPoints } from './shapes.js';
@@ -56,12 +56,12 @@ function drawnState(liana, flash) {
   return liana.state === LianaState.IDLE ? 'idle' : `${liana.state}:${liana.angle}:${liana.angularVelocity}:${flash}`;
 }
 
-// Whether the end of a liana held `tipDistance` px above its tip is lit: it blinks
-// within TIP_WARNING, faster as the grip slips closer (every 8 px, then every 4).
-export function tipFlashOn(tipDistance) {
-  if (!(tipDistance <= TIP_WARNING)) return false;
-  const blink = tipDistance > TIP_WARNING / 2 ? 8 : 4;
-  return Math.floor(tipDistance / blink) % 2 === 0;
+// Whether the end of a liana is lit `tipTime` s before the grip reaches its tip: it
+// blinks within TIP_WARNING_TIME, twice as fast in the second half.
+export function tipFlashOn(tipTime) {
+  if (!(tipTime <= TIP_WARNING_TIME)) return false;
+  const blink = tipTime > TIP_WARNING_TIME / 2 ? 0.2 : 0.1;
+  return Math.floor(tipTime / blink + 1e-6) % 2 === 0;
 }
 
 function drawLiana(g, liana, layout, flash) {
@@ -102,7 +102,7 @@ export class LianaView {
   update(lianas, cameraX, viewWidth = SCREEN_WIDTH, monkeys = []) {
     const margin = 500;
     const seen = new Set();
-    const flashing = new Set(monkeys.filter((m) => tipFlashOn(m.tipDistance)).map((m) => m.liana));
+    const flashing = new Set(monkeys.filter((m) => tipFlashOn(m.tipTime)).map((m) => m.liana));
     for (const liana of lianas) {
       seen.add(liana);
       let entry = this.entries.get(liana);

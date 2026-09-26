@@ -15,12 +15,18 @@ export const MAX_RESOLUTION = 2;
 
 export const ANCHOR_Y = -20;
 export const LIANA_LENGTH = 420;
-// The grip slips from where the liana was caught towards the tip at this speed; at the
-// tip the monkey is forced off with its current velocity. A release reaches the next
-// liana only from about 310 px down the rope and on the forward swing, so slipping the
-// last 110 px must take at least one swing period (≤ 42 px/s): then every grip, however
-// high, passes a forward swing low enough on the rope before it is forced off.
-export const SLIP_SPEED = 40; // px/s
+// The grip slips from where the liana was caught towards the tip; at the tip the monkey
+// is forced off with its current velocity. Each grip gets its own steady slip speed, so
+// that it reaches the tip at SLIP_OFF_PHASE: the fastest speed up to MAX_SLIP_SPEED that
+// does. A release reaches the next liana only from about 310 px down the rope and on the
+// forward swing, so slipping the last 110 px must take at least one swing period
+// (≤ 42 px/s): then every grip, however high, passes a forward swing low enough on the
+// rope before it is forced off.
+export const MAX_SLIP_SPEED = 40; // px/s
+// When the forced release comes: this fraction of the swing period after the bottom, on
+// the upswing to the right. Mid-way through the forward release window (about 0.05 to
+// 0.165), so the forced release is a hop to the next liana unless an obstacle is in the way.
+export const SLIP_OFF_PHASE = 0.11;
 // A catch lower on the rope than this grips here instead, so a monkey that catches the
 // very tip still gets a swing before it is forced off.
 export const MAX_ENTRY_RADIUS = 0.95 * LIANA_LENGTH;
@@ -28,9 +34,8 @@ export const MAX_ENTRY_RADIUS = 0.95 * LIANA_LENGTH;
 // not slip on the title screen.
 export const START_GRIP = 0.7 * LIANA_LENGTH;
 export const RESPAWN_GRIP = 0.7 * LIANA_LENGTH;
-// The vine end flashes once the grip is this close to it (px, 1 s of slip), faster
-// the closer it gets.
-export const TIP_WARNING = SLIP_SPEED;
+// The vine end blinks for this long (s) before the forced release, faster at the end.
+export const TIP_WARNING_TIME = 1;
 // Entry radii the fairness solver samples: every gap must be passable after grabbing
 // the liana at each of them.
 export const ENTRY_RADII = [0.35, 0.5, 0.65, 0.8].map((f) => f * LIANA_LENGTH).concat(MAX_ENTRY_RADIUS);

@@ -2,7 +2,8 @@ import {
   SIM_DT,
   GRAVITY,
   ANCHOR_Y,
-  SLIP_SPEED,
+  MAX_SLIP_SPEED,
+  SLIP_OFF_PHASE,
   MAX_ENTRY_RADIUS,
   ENTRY_RADII,
   LIANA_LENGTH,
@@ -17,7 +18,7 @@ import {
   OBSTACLE_HITBOXES,
 } from '../config.js';
 import { Liana } from './liana.js';
-import { Monkey } from './monkey.js';
+import { Monkey, slipSteps } from './monkey.js';
 import { Obstacle, OBSTACLE_TYPES } from './obstacle.js';
 import { ballisticStep, circleIntersectsSegment } from './physics.js';
 
@@ -36,9 +37,10 @@ import { ballisticStep, circleIntersectsSegment } from './physics.js';
 export const solverStats = { queries: 0, runs: 0 };
 export const MIN_WINDOW_STEPS = Math.ceil(MIN_RELEASE_WINDOW_MS / (SIM_DT * 1000) - 1e-9);
 
-// Steps from grabbing at `entryRadius` until the forced release at the tip.
-export function forcedReleaseStep(entryRadius) {
-  return Math.ceil((LIANA_LENGTH - Math.min(entryRadius, MAX_ENTRY_RADIUS)) / SLIP_SPEED / SIM_DT - 1e-9);
+// Steps from grabbing at `entryRadius` (or starting the slip `phaseSteps` into the
+// swing) until the forced release at the tip.
+export function forcedReleaseStep(entryRadius, dir = 1, phaseSteps = 0) {
+  return slipSteps(Math.min(entryRadius, MAX_ENTRY_RADIUS), phaseSteps, dir);
 }
 
 // True if the obstacle keeps LIANA_CLEARANCE away from everything the lianas on both
@@ -81,11 +83,14 @@ export function validReleaseSteps(obstacle, entryRadius, lianaX = 0, dir = 1, ph
   const monkey = new Monkey();
   monkey.vx = dir;
   monkey.grab(liana, entryRadius);
-  for (let i = 0; i < phaseSteps; i++) liana.step(SIM_DT);
-  monkey.step(0);
+  if (phaseSteps > 0) {
+    for (let i = 0; i < phaseSteps; i++) liana.step(SIM_DT);
+    monkey.startSlipping();
+    monkey.step(0);
+  }
   solverStats.runs++;
 
-  const lastStep = forcedReleaseStep(entryRadius);
+  const lastStep = forcedReleaseStep(entryRadius, dir, phaseSteps);
   const valid = [];
   const positions = [];
   let alive = true;
@@ -147,7 +152,8 @@ export function windowInputs() {
     SIM_DT,
     GRAVITY,
     ANCHOR_Y,
-    SLIP_SPEED,
+    MAX_SLIP_SPEED,
+    SLIP_OFF_PHASE,
     MAX_ENTRY_RADIUS,
     LIANA_LENGTH,
     LIANA_SPACING,

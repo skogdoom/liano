@@ -53,11 +53,13 @@ v1 (milestones 1–14) is built and released as v1.x. It has touch and phone sup
 ## Grip and slip
 
 - On grab the liana is vertical (θ = 0). The swing starts in the direction of the monkey's horizontal velocity: θ(t) = dir · A · sin(ω·t), where ω = 2π / period.
-- The grip radius starts at the contact radius r₀ and grows at SLIP_SPEED: r(t) = min(r₀ + SLIP_SPEED·t, L).
+- The grip radius starts at the contact radius r₀ and grows at a steady slip speed s: r(t) = min(r₀ + s·t, L).
+- Each grip gets its own s, so that the grip reaches the tip at SLIP_OFF_PHASE: on the upswing to the right, mid-way through the forward release window. s is the fastest speed up to MAX_SLIP_SPEED that lands on that phase, so it varies with where the liana was caught (about 7–38 px/s).
+- The forced release is therefore a hop to the next liana unless an obstacle is in the way. An idle player is carried forward over clear gaps.
 - Hanging position = anchor + r·(sin θ, cos θ).
 - Release velocity combines the tangential and radial components: v = r·θ'·(cos θ, −sin θ) + r'·(sin θ, cos θ).
 - A forced release at r = L uses the same formula.
-- Time on a liana is bounded: at most (L − r₀) / SLIP_SPEED. This bound is what keeps moving obstacles fair (see Feasibility).
+- Time on a liana is bounded: at most (L − r₀) / MAX_SLIP_SPEED plus one swing period. This bound is what keeps moving obstacles fair (see Feasibility).
 - A catch below MAX_ENTRY_RADIUS grips at MAX_ENTRY_RADIUS, so catching the very tip still leaves a forward swing before the forced release.
 - On the title screen the monkey hangs at START_GRIP without slipping; the slip starts with the run.
 - Consequence of the v1 swing (spacing 700): a release reaches the next liana only from about 310 px down the rope. A high catch therefore waits: from 0.35 L the first forward window opens after about 5.3 s. Backward windows exist only for grips up to about 340 px before the forced release.
@@ -220,11 +222,12 @@ Values from v1 are the tuned, current ones. New v2 values are starting points.
 | SWING_AMPLITUDE | 50° | |
 | SWING_PERIOD | 2.6 s | Slower swing, tuned in v1 (v2 draft: 1.8 s) |
 | GRAVITY | 600 px/s² | Tuned in v1; 400 felt too floaty (v2 draft: 1800) |
-| SLIP_SPEED | 40 px/s | New. At most (L − 310) / P ≈ 42 px/s, so every grip passes a forward swing low enough on the rope before it is forced off (v2 draft: 60) |
+| MAX_SLIP_SPEED | 40 px/s | New. At most (L − 310) / P ≈ 42 px/s, so every grip passes a forward swing low enough on the rope before it is forced off (v2 draft: a fixed SLIP_SPEED of 60) |
+| SLIP_OFF_PHASE | 0.11 × P after the bottom, swinging right | New; the forced release comes mid-way through the forward window (about 0.05–0.165 × P) |
 | ENTRY_RADII | [0.35, 0.5, 0.65, 0.8, 0.95] × L | New |
 | MAX_ENTRY_RADIUS | 0.95 × L | New; lower catches grip here |
 | START_GRIP | 0.7 × L | New; the grip at the start of a run |
-| TIP_WARNING | 40 px (1 s of slip) | New; the vine end blinks within this distance of the tip |
+| TIP_WARNING_TIME | 1 s | New; the vine end blinks this long before the forced release, faster in the last half |
 | MONKEY_RADIUS | 22 | |
 | OBSTACLE_Y_RANGE | [140, 375] | Heights ~[195, 315] are rejected by swing clearance (v2 draft: [140, 620]) |
 | LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a swept area, beyond MONKEY_RADIUS |

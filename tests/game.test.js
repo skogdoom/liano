@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Game, GameState } from '../src/sim/game.js';
 import { MonkeyState } from '../src/sim/monkey.js';
-import { GAMEOVER_INPUT_LOCK_MS, SIM_DT, SLIP_SPEED, START_GRIP } from '../src/config.js';
+import { GAMEOVER_INPUT_LOCK_MS, SIM_DT, START_GRIP } from '../src/config.js';
 import { FALL_RELEASE_STEP, emptyWorld, lowRockWorld, releaseStepForGrab } from './helpers.js';
 
 function stepFor(game, seconds) {
@@ -32,7 +32,7 @@ describe('Game state machine', () => {
     expect(game.world.monkey.gripRadius).toBe(START_GRIP);
     game.press();
     stepFor(game, 1);
-    expect(game.world.monkey.gripRadius).toBeCloseTo(START_GRIP + SLIP_SPEED, 6);
+    expect(game.world.monkey.gripRadius).toBeCloseTo(START_GRIP + game.world.monkey.slipSpeed, 6);
   });
 
   it('Space moves TITLE to PLAYING without releasing', () => {

@@ -65,7 +65,7 @@ export function throwMonkey(world, { x, y, vx, vy }) {
 export function windowForGrab(world, player = 0) {
   const monkey = world.monkeys[player];
   const { liana } = monkey;
-  const dir = monkey.vx < 0 ? -1 : 1;
+  const dir = liana.swingDir;
   const gap = dir > 0 ? liana.index : liana.index - 1;
   const obstacle = world.obstacles.get(gap) ?? null;
   return longestRun(validReleaseSteps(obstacle, monkey.gripFrom, liana.x, dir).valid);
