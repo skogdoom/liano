@@ -1,6 +1,6 @@
 import { createObstacle } from './sim/generator.js';
 import { Obstacle } from './sim/obstacle.js';
-import { stageFor } from './sim/stages.js';
+import { movingShareFor } from './sim/stages.js';
 
 // Gaps past the furthest generated one to have ready.
 export const PREFETCH_AHEAD = 5;
@@ -55,7 +55,7 @@ export class ObstaclePrefetch {
   // The obstacle for (seed, gap): the worker's if it is ready, else generated now.
   take(seed, gap) {
     if (seed === this.seed && this.ready.has(gap)) return Obstacle.fromData(this.ready.get(gap));
-    if (this.worker && seed === this.seed && stageFor(gap).movingShare > 0) this.misses++;
+    if (this.worker && seed === this.seed && movingShareFor(gap) > 0) this.misses++;
     return createObstacle(seed, gap);
   }
 

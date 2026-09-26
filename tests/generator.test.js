@@ -19,6 +19,7 @@ import {
   WORLD_MARGIN,
   OBSTACLE_Y_RANGE,
   STAGES,
+  MOVING_FROM,
   BIRD_Y_RANGE,
   BIRD_BOB,
 } from '../src/config.js';
@@ -131,7 +132,7 @@ describe('obstacle generation', () => {
     for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(550);
   });
 
-  it('adds moving obstacles from obstacle 16, in each stage’s share', () => {
+  it('adds moving obstacles from obstacle MOVING_FROM, in each stage’s share', () => {
     const share = (from, to) => {
       let moving = 0;
       let total = 0;
@@ -140,9 +141,11 @@ describe('obstacle generation', () => {
       }
       return moving / total;
     };
-    expect(share(1, 15)).toBe(0);
-    for (const stage of STAGES.slice(1)) {
-      const s = share(stage.first, stage.first + 14);
+    expect(MOVING_FROM).toBe(6);
+    expect(share(1, MOVING_FROM - 1)).toBe(0);
+    for (const stage of STAGES) {
+      const first = Math.max(stage.first, MOVING_FROM);
+      const s = share(first, first + 9);
       expect(s).toBeGreaterThan(stage.movingShare - 0.12);
       expect(s).toBeLessThan(stage.movingShare + 0.12);
     }
@@ -153,7 +156,7 @@ describe('obstacle generation', () => {
   it('keeps the static obstacles of every stage as they were', () => {
     // Moving choices use their own random stream: a gap that stays static gets the
     // obstacle it would have had without moving obstacles.
-    for (let gap = 16; gap < 200; gap++) {
+    for (let gap = MOVING_FROM; gap < 200; gap++) {
       const o = createObstacle(SEED, gap);
       if (o.moving) continue;
       const rand = mulberry32(mixSeed(SEED, gap));

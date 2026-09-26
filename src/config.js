@@ -90,13 +90,15 @@ export const BIRD_Y_RANGE = [330, 390];
 export const BIRD_BOB = 8;
 
 // Difficulty stages, keyed by obstacle index (the gap: obstacle #1 is in gap 1).
-// Stage 1 has no moving obstacles. So far only the moving share is used.
+// So far only the moving share is used.
 export const STAGES = [
-  { first: 1, minWindowMs: 90, movingShare: 0, scale: 1.0 },
+  { first: 1, minWindowMs: 90, movingShare: 0.15, scale: 1.0 },
   { first: 16, minWindowMs: 80, movingShare: 0.25, scale: 1.1 },
   { first: 31, minWindowMs: 70, movingShare: 0.5, scale: 1.2 },
   { first: 51, minWindowMs: 60, movingShare: 0.7, scale: 1.3 },
 ];
+// The first obstacles are always static: moving ones start at this obstacle index.
+export const MOVING_FROM = 6;
 export const MIN_RELEASE_WINDOW_MS = 90;
 
 export const CAMERA_TARGET_X = 0.35 * SCREEN_WIDTH;

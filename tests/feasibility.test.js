@@ -198,10 +198,10 @@ describe('fair generation', () => {
     expect(checked).toBe(1000);
   });
 
-  it(`gives every one of 1,000 seeded gaps from stage 2 on a ${MIN_RELEASE_WINDOW_MS} ms window for every entry radius × arrival phase`, () => {
+  it(`gives every one of 1,000 seeded gaps from obstacle 6 on a ${MIN_RELEASE_WINDOW_MS} ms window for every entry radius × arrival phase`, () => {
     let moving = 0;
     for (const seed of [5, 808, 4242, 90210]) {
-      for (let gap = 16; gap < 266; gap++) {
+      for (let gap = 6; gap < 256; gap++) {
         const o = createObstacle(seed, gap);
         const length = o.moving ? movingWindow(o.inGap(0), MIN_WINDOW_STEPS) : releaseWindow(o.type, o.y).length;
         expect({ seed, gap, ms: windowMs(length) >= MIN_RELEASE_WINDOW_MS }).toEqual({ seed, gap, ms: true });

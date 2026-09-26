@@ -70,7 +70,7 @@ v1 (milestones 1–14) is built and released as v1.x. It has touch and phone sup
 
 **Static** (from obstacle #1): branch, thorn bush, rock. Random height in the gap, horizontally centered, rerolled until clear of both neighbouring lianas' swept areas.
 
-**Moving** (from obstacle #16, share set by the stage). Each moving obstacle has a deterministic `position(t)` and `hitbox(t)` with period P, driven by world time (counted in whole sim steps) plus a seeded phase, so the solver can match the world exactly. It stays confined to its own gap and never enters a liana's swing arc, so a hanging monkey can never be hit with no way out:
+**Moving** (from obstacle #6 (MOVING_FROM), share set by the stage). Each moving obstacle has a deterministic `position(t)` and `hitbox(t)` with period P, driven by world time (counted in whole sim steps) plus a seeded phase, so the solver can match the world exactly. It stays confined to its own gap and never enters a liana's swing arc, so a hanging monkey can never be hit with no way out:
 - **Spider:** descends and ascends on a thread from the canopy. Vertical oscillation between two heights.
 - **Snake:** climbs up and down a vine standing in the gap, moving vertically along it.
 - **Bird:** patrols horizontally between two x bounds inside the gap, with a slight bob. The patrol bounds must stay outside every liana's swing arc.
@@ -91,7 +91,7 @@ Stages are keyed on **obstacle index**, not score. This way banana points don't 
 
 | Stage | Obstacles | Min release window | Moving share | Obstacle scale |
 |---|---|---|---|---|
-| 1 | 1–15 | 90 ms | 0% | 1.00 |
+| 1 | 1–15 | 90 ms | 0% for 1–5, then 15% | 1.00 |
 | 2 | 16–30 | 80 ms | 25% | 1.10 |
 | 3 | 31–50 | 70 ms | 50% | 1.20 |
 | 4 | 51+ | 60 ms | 70% | 1.30 |
@@ -233,6 +233,7 @@ Values from v1 are the tuned, current ones. New v2 values are starting points.
 | OBSTACLE_Y_RANGE | [140, 375] | Heights ~[195, 315] are rejected by swing clearance (v2 draft: [140, 620]) |
 | LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a swept area, beyond MONKEY_RADIUS |
 | MIN_RELEASE_WINDOW_MS | 90 | Stage 1; later stages per the stage table |
+| MOVING_FROM | 6 | New; obstacles 1–5 are always static (v2 draft: moving from #16) |
 | MOVING_PERIOD_RANGE | 1.5–3.0 s | New |
 | SPIDER_LOW_RANGE, SPIDER_TRAVEL_RANGE | 175–212, 80–150 px | New; lowest point and climb |
 | SNAKE_HIGH_RANGE, SNAKE_TRAVEL_RANGE | 290–320, 90–160 px | New; highest point and slide |
@@ -429,7 +430,7 @@ Implement in order. Each milestone must end in a runnable, tested state, with ev
 - [x] 1,000 seeded gaps: all feasible for every entry radius
 
 **17. Moving obstacles.** Spider, snake, bird with periodic motion; the solver gains the phase dimension and runs in a worker; art for all three; a "bong" pitch for each.
-- [x] 1,000 seeded gaps from stage 2+: all feasible for every entry radius × phase
+- [x] 1,000 seeded gaps from stage 2+: all feasible for every entry radius × phase (tested from obstacle 6, where moving obstacles now start)
 - [x] No moving obstacle's path intersects a swing arc; bird patrol bounds are asserted in the generator
 - [x] No frame over 16 ms from generation
 - [x] The moving solver agrees with the real world for every release step (sampled arrivals)

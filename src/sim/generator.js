@@ -16,7 +16,7 @@ import { Liana } from './liana.js';
 import { Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from './obstacle.js';
 import { isClearOfLianas, isMovingFeasible, isPathClearOfLianas } from './feasibility.js';
 import { mixSeed, mulberry32 } from './rng.js';
-import { stageFor } from './stages.js';
+import { movingShareFor } from './stages.js';
 import { isPassable } from './windowTable.js';
 
 // Gaps on both sides of the start liana stay empty: the first forward gap lets the
@@ -107,12 +107,12 @@ export function movingCandidate(type, gap, rand) {
 }
 
 // Obstacle for gap i (between lianas i and i + 1), or null. Deterministic in (seed, gap),
-// so a culled gap regenerates identically. From stage 2 a share of the gaps get a moving
+// so a culled gap regenerates identically. From MOVING_FROM a share of the gaps get a moving
 // obstacle, rerolled up to MOVING_TRIES times until the solver accepts it, else a static
 // one at its lowest-risk passable height.
 export function createObstacle(seed, gap) {
   if (EMPTY_GAPS.has(gap)) return null;
-  const { movingShare } = stageFor(gap);
+  const movingShare = movingShareFor(gap);
   if (movingShare > 0) {
     const rand = mulberry32(mixSeed(seed ^ MOVING_SALT, gap));
     if (rand() < movingShare) {
