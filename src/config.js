@@ -23,6 +23,13 @@ export const LIANA_LENGTH = 420;
 // (≤ 42 px/s): then every grip, however high, passes a forward swing low enough on the
 // rope before it is forced off.
 export const MAX_SLIP_SPEED = 40; // px/s
+// A catch higher on the rope than FLOW_GRIP first slides quickly down to it, at
+// QUICK_SLIP_SPEED, then slips as above. From FLOW_GRIP down there is a release window
+// on the first forward swing after a grab, so the jumps keep flowing instead of waiting
+// a swing or two for the grip to slip low enough. The quick slide does not add to the
+// release velocity.
+export const FLOW_GRIP = 0.7 * LIANA_LENGTH;
+export const QUICK_SLIP_SPEED = 1000; // px/s
 // When the forced release comes: this fraction of the swing period after the bottom, on
 // the upswing to the right. Mid-way through the forward release window (about 0.05 to
 // 0.165), so the forced release is a hop to the next liana unless an obstacle is in the way.
@@ -47,11 +54,11 @@ export const SWING_AMPLITUDE = (50 * Math.PI) / 180;
 export const SWING_PERIOD = 2.6;
 // Bananas: collected on touch (hanging or flying) for BANANA_POINTS, and the next
 // BOOST_GRABS grabs swing BOOST_FACTOR times faster. The boosted period is rounded to
-// an even number of sim steps (232, a factor of 1.345), which the slip timing needs.
+// an even number of sim steps (250, a factor of 1.248), which the slip timing needs.
 export const BANANA_RADIUS = 14;
 export const BANANA_POINTS = 3;
 export const BOOST_GRABS = 3;
-export const BOOST_FACTOR = 1.35;
+export const BOOST_FACTOR = 1.25;
 export const BOOST_PERIOD = 2 * Math.round(SWING_PERIOD / BOOST_FACTOR / SIM_DT / 2) * SIM_DT;
 // Each gap from obstacle 1 is a banana candidate with this chance; a candidate becomes
 // a banana unless one of the two gaps before it is a candidate too, so bananas are at

@@ -1,6 +1,8 @@
 import {
   BOOST_PERIOD,
+  FLOW_GRIP,
   GRAVITY,
+  QUICK_SLIP_SPEED,
   LIANA_LENGTH,
   MAX_ENTRY_RADIUS,
   MAX_SLIP_SPEED,
@@ -9,6 +11,12 @@ import {
   SWING_PERIOD,
 } from '../config.js';
 import { ballisticStep, pendulumPosition, hangingVelocity } from './physics.js';
+
+// The quick slide after a catch above FLOW_GRIP: where it ends and how long it takes (s).
+export function quickSlide(gripFrom) {
+  const quickTo = Math.max(gripFrom, FLOW_GRIP);
+  return { quickTo, quickTime: (quickTo - gripFrom) / QUICK_SLIP_SPEED };
+}
 
 // Whole steps in a swing period (both periods are an even number of steps).
 export const periodSteps = (period) => Math.round(period / SIM_DT);
@@ -19,7 +27,8 @@ export const periodSteps = (period) => Math.round(period / SIM_DT);
 // θ = dir · A · sin(ωt) is on the upswing to the right (for dir −1, half a period later).
 export function slipSteps(gripFrom, swingSteps = 0, dir = 1, period = SWING_PERIOD) {
   const steps = periodSteps(period);
-  const minSteps = Math.ceil((LIANA_LENGTH - gripFrom) / MAX_SLIP_SPEED / SIM_DT - 1e-9);
+  const { quickTo, quickTime } = quickSlide(gripFrom);
+  const minSteps = Math.ceil((quickTime + (LIANA_LENGTH - quickTo) / MAX_SLIP_SPEED) / SIM_DT - 1e-9);
   const offStep = Math.round(SLIP_OFF_PHASE * steps) + (dir > 0 ? 0 : steps / 2);
   const first = offStep - swingSteps + steps * Math.ceil((swingSteps + minSteps - offStep) / steps);
   return Math.max(first, 1);
@@ -46,6 +55,8 @@ export class Monkey {
     this.slipping = true;
     this.slipSpeed = 0;
     this.slipTime = 0;
+    this.quickTo = 0;
+    this.quickTime = 0;
     // The liana just released; it cannot be regrabbed until another one is grabbed.
     this.excludedLiana = null;
     // Boosted grabs left (from a banana): each new grab while above zero swings with
@@ -99,12 +110,17 @@ export class Monkey {
     this.#planSlip();
   }
 
+  // A quick slide down to FLOW_GRIP if caught above it, then a steady slip timed to
+  // reach the tip at SLIP_OFF_PHASE (see slipSteps).
   #planSlip() {
     const { liana } = this;
     const steps = slipSteps(this.gripFrom, Math.round(liana.swingTime / SIM_DT), liana.swingDir, liana.period);
+    const { quickTo, quickTime } = quickSlide(this.gripFrom);
     this.gripTime = 0;
+    this.quickTo = quickTo;
+    this.quickTime = quickTime;
     this.slipTime = steps * SIM_DT;
-    this.slipSpeed = (LIANA_LENGTH - this.gripFrom) / this.slipTime;
+    this.slipSpeed = (LIANA_LENGTH - quickTo) / (this.slipTime - quickTime);
   }
 
   // True once the grip has slipped to the tip: the world then forces a release. The
@@ -131,11 +147,16 @@ export class Monkey {
   }
 
   #updateHanging() {
-    this.gripRadius = Math.min(this.gripFrom + this.slipSpeed * this.gripTime, LIANA_LENGTH);
+    const t = this.gripTime;
+    const quick = t < this.quickTime;
+    this.gripRadius = quick
+      ? this.gripFrom + QUICK_SLIP_SPEED * t
+      : Math.min(this.quickTo + this.slipSpeed * (t - this.quickTime), LIANA_LENGTH);
 
     const { liana } = this;
     const p = pendulumPosition(liana.x, liana.anchorY, this.gripRadius, liana.angle);
-    const v = hangingVelocity(this.gripRadius, this.slipping ? this.slipSpeed : 0, liana.angle, liana.angularVelocity);
+    const radialSpeed = this.slipping && !quick ? this.slipSpeed : 0;
+    const v = hangingVelocity(this.gripRadius, radialSpeed, liana.angle, liana.angularVelocity);
     this.x = p.x;
     this.y = p.y;
     this.vx = v.vx;

@@ -8,6 +8,7 @@ import { emptyGapFlights, flightHits, movingWindow, releaseWindow } from '../src
 import {
   BANANA_POINTS,
   BOOST_GRABS,
+  BOOST_FACTOR,
   BOOST_PERIOD,
   ENTRY_RADII,
   LIANA_SPACING,
@@ -177,7 +178,7 @@ describe('banana pickup and boost', () => {
   it('times the boosted forced release on the upswing to the right too', () => {
     const steps = Math.round(BOOST_PERIOD / SIM_DT);
     expect(steps % 2).toBe(0);
-    expect(SWING_PERIOD / BOOST_PERIOD).toBeCloseTo(1.35, 1);
+    expect(SWING_PERIOD / BOOST_PERIOD).toBeCloseTo(BOOST_FACTOR, 1);
     for (const gripFrom of [147, 300, 399]) {
       const n = slipSteps(gripFrom, 0, 1, BOOST_PERIOD);
       expect(n % steps).toBe(Math.round(SLIP_OFF_PHASE * steps));

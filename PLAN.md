@@ -62,7 +62,7 @@ v1 (milestones 1–14) is built and released as v1.x. It has touch and phone sup
 - Time on a liana is bounded: at most (L − r₀) / MAX_SLIP_SPEED plus one swing period. This bound is what keeps moving obstacles fair (see Feasibility).
 - A catch below MAX_ENTRY_RADIUS grips at MAX_ENTRY_RADIUS, so catching the very tip still leaves a forward swing before the forced release.
 - On the title screen the monkey hangs at START_GRIP without slipping; the slip starts with the run.
-- Consequence of the v1 swing (spacing 700): a release reaches the next liana only from about 310 px down the rope. A high catch therefore waits: from 0.35 L the first forward window opens after about 5.3 s. Backward windows exist only for grips up to about 340 px before the forced release.
+- Consequence of the v1 swing (spacing 700): a release reaches the next liana only from about 290–310 px down the rope. So a catch higher than FLOW_GRIP (0.7 L) first slides quickly down to it (QUICK_SLIP_SPEED), then slips as above: every catch then has a release window on its first forward swing (about 0.2 s after the grab), boosted or not, instead of waiting up to 5 s. The quick slide does not add to the release velocity. Backward windows exist only for grips up to about 340 px before the forced release.
 - This replaces v1's grip slide to a fixed 90 % radius.
 - Visual: the monkey's hand visibly slides down the vine. Near the tip, the vine end flashes as a warning.
 
@@ -224,6 +224,7 @@ Values from v1 are the tuned, current ones. New v2 values are starting points.
 | SWING_PERIOD | 2.6 s | Slower swing, tuned in v1 (v2 draft: 1.8 s) |
 | GRAVITY | 600 px/s² | Tuned in v1; 400 felt too floaty (v2 draft: 1800) |
 | MAX_SLIP_SPEED | 40 px/s | New. At most (L − 310) / P ≈ 42 px/s, so every grip passes a forward swing low enough on the rope before it is forced off (v2 draft: a fixed SLIP_SPEED of 60) |
+| FLOW_GRIP, QUICK_SLIP_SPEED | 0.7 × L, 1000 px/s | New; catches above FLOW_GRIP slide quickly down to it |
 | SLIP_OFF_PHASE | 0.11 × P after the bottom, swinging right | New; the forced release comes mid-way through the forward window (about 0.05–0.165 × P) |
 | ENTRY_RADII | [0.35, 0.5, 0.65, 0.8, 0.95] × L | New |
 | MAX_ENTRY_RADIUS | 0.95 × L | New; lower catches grip here |
@@ -242,7 +243,7 @@ Values from v1 are the tuned, current ones. New v2 values are starting points.
 | BANANA_RADIUS | 14 | New; drawn at 1.4× |
 | BANANA_POINTS | 3 | New |
 | BOOST_GRABS | 3 | New |
-| BOOST_FACTOR | 1.35 | New; BOOST_PERIOD rounds to 232 steps (1.933 s), an even step count as the slip timing needs |
+| BOOST_FACTOR | 1.25 | New; BOOST_PERIOD rounds to 250 steps (2.083 s), an even step count as the slip timing needs (v2 draft: 1.35, felt too fast) |
 | LIVES_2P | 3 | New |
 | RESPAWN_GRIP | 0.7 × L | New |
 | RESPAWN_INVULN_MS | 1500 | New |
@@ -446,7 +447,7 @@ Implement in order. Each milestone must end in a runnable, tested state, with ev
 **19. Bananas.** Placement, pickup, boost counter, bonus points, HUD indicator; the solver gains the boosted variant.
 - [x] Gaps within BOOST_GRABS after a banana pass both normal and boosted checks
 - [x] Boost resets to BOOST_GRABS on repeat pickup and clears on death
-- Notes: whether a gap has a banana depends only on (seed, gap) (a candidate with BANANA_CHANCE 0.25, dropped if either of the two gaps before is a candidate: about 14 % of gaps, at least 3 apart), so an obstacle knows whether to pass the boosted check without generating bananas. A banana sits on a flight one or two release steps inside either end of a clearing release window. The boosted period is rounded to 232 steps (factor 1.345) for the slip timing. Bananas are generated in the worker with the obstacles. No pickup sound (decision 25); a "+3" rises where one was taken.
+- Notes: whether a gap has a banana depends only on (seed, gap) (a candidate with BANANA_CHANCE 0.25, dropped if either of the two gaps before is a candidate: about 14 % of gaps, at least 3 apart), so an obstacle knows whether to pass the boosted check without generating bananas. A banana sits on a flight one or two release steps inside either end of a clearing release window. The boosted period is rounded to 250 steps (factor 1.248) for the slip timing. Bananas are generated in the worker with the obstacles. No pickup sound (decision 25); a "+3" rises where one was taken.
 
 **20. 2P split screen.** Two worlds with one seed, two viewports, lives, respawn with invulnerability, per-pane HUD, results screen.
 - [ ] A player with no lives left stops; the other continues; the winner is decided by totals
