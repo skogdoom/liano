@@ -115,8 +115,8 @@ All of these values are starting points for tuning. Scaled obstacles must still 
 
 **Shared screen.**
 - One world containing both monkeys.
-- The camera follows the leader: the alive, non-invulnerable monkey with the largest x. If the leader dies, the camera switches smoothly to the other monkey.
-- The trailing monkey loses a life when it goes fully off the left edge.
+- The camera follows the leader: the alive, non-invulnerable monkey with the largest x (its liana while it hangs), kept at SHARED_LEADER_X of the view. If the leader dies, the camera switches smoothly to the other monkey.
+- The trailing monkey loses a life when it goes fully off the left edge (a hanging one: when its liana does).
 - Respawn on the leftmost liana that is fully on screen.
 - Monkeys do not collide with each other.
 - A liana can hold both monkeys at once. A monkey grabbing a liana that is already swinging joins the current swing phase, at its own grip radius.
@@ -248,6 +248,7 @@ Values from v1 are the tuned, current ones. New v2 values are starting points.
 | RESPAWN_GRIP | 0.7 × L | New |
 | RESPAWN_INVULN_MS | 1500 | New |
 | RESPAWN_DELAY_MS | 1000 | New; the dead monkey tumbles this long before respawning |
+| SHARED_LEADER_X | 0.62 × width | New; shared screen's leader position, so one liana behind stays in view |
 | CAMERA_TARGET_X | 0.35 × width | Landscape |
 | CAMERA_LERP | 8 /s | |
 | GAMEOVER_INPUT_LOCK_MS | 400 | |
@@ -458,8 +459,10 @@ Implement in order. Each milestone must end in a runnable, tested state, with ev
 - Notes: the off-screen arrow is for the single pane only; the title's key hints for 2P come with milestone 22.
 
 **21. 2P shared screen.** Leader camera, left-edge elimination, respawn on the leftmost fully visible liana, shared lianas.
-- [ ] Two monkeys can hang on the same liana, each at its own grip radius, in the same swing phase
-- [ ] The camera handles a leader death without snapping
+- [x] Two monkeys can hang on the same liana, each at its own grip radius, in the same swing phase
+- [x] The camera handles a leader death without snapping
+- [x] A monkey left behind the left edge loses a life and respawns on the leftmost liana fully in view
+- Notes: the leader sits at SHARED_LEADER_X (62 %) of the view, and while it hangs the camera follows its liana rather than its swing, so a monkey one liana behind stays in view. A hanging monkey is only left behind once its liana is off the left edge too (swinging back out of view is fine); a flying one by its position. A monkey joining a swing keeps its boost for its next liana. The leader camera is part of the rules (src/sim/sharedView.js), since it decides who is left behind.
 
 **22. Polish.** Key-binding hints on the title screen; death feedback and pause for 2P (both already exist for 1P).
 - [ ] Full loop in every mode: title → play → results → title, with no reload

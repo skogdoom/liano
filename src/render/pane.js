@@ -32,7 +32,8 @@ export class Pane {
     this.scene.addChild(this.background.back, this.worldLayer, this.background.front, this.overlay);
     this.clip = new Graphics();
     this.view.addChild(this.scene);
-    this.camera = new Camera();
+    this.ownCamera = new Camera();
+    this.camera = this.ownCamera;
     this.world = null;
     this.layout = null;
   }
@@ -43,7 +44,7 @@ export class Pane {
     this.view.position.set(pane.x, pane.y);
     this.scene.scale.set(pane.scale);
     this.background.resize(pane);
-    this.camera.screenX = pane.camera.screenX;
+    this.ownCamera.screenX = pane.camera.screenX;
     // Split panes clip their world (a monkey above the canopy must not draw into the
     // other pane); the single pane does without the stencil pass.
     if (pane.clip) {
@@ -54,13 +55,16 @@ export class Pane {
       this.scene.mask = null;
       this.clip.removeFromParent();
     }
-    if (this.world) this.camera.reset(this.#target());
+    if (this.world && this.camera === this.ownCamera) this.camera.reset(this.#target());
   }
 
   // Shows `world`, whose monkeys belong to `players` (their palettes, by monkey index).
-  setWorld(world, players) {
+  // `camera`: a camera the rules move (shared screen's leader camera), else the pane
+  // follows player 1's monkey with its own.
+  setWorld(world, players, camera = null) {
     this.world = world;
     this.players = players;
+    this.camera = camera ?? this.ownCamera;
     while (this.monkeyViews.length < world.monkeys.length) this.monkeyViews.push(null);
     world.monkeys.forEach((m, i) => {
       if (this.monkeyViews[i]?.player === players[i]) return;
@@ -74,16 +78,15 @@ export class Pane {
     });
     for (const view of this.monkeyViews.splice(world.monkeys.length)) view?.view.destroy({ children: true });
     for (const badge of this.badges.splice(world.monkeys.length)) badge?.view.destroy({ children: true });
-    if (this.layout) this.camera.reset(this.#target());
+    if (this.layout && !camera) this.camera.reset(this.#target());
   }
 
   // Fixed-step camera update; it holds still once everyone in the world is out.
   stepCamera(dt) {
-    if (this.world.alive) this.camera.update(this.#target(), dt);
+    if (this.camera === this.ownCamera && this.world.alive) this.camera.update(this.#target(), dt);
   }
 
-  // What the camera follows: player 1's monkey (the leader camera comes with shared
-  // screen).
+  // What the pane's own camera follows: player 1's monkey.
   #target() {
     return cameraTarget(this.world.monkey, this.layout.camera.follow);
   }

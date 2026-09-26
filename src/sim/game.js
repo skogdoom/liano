@@ -2,6 +2,7 @@ import { GAMEOVER_INPUT_LOCK_MS } from '../config.js';
 import { World } from './world.js';
 import { MODES, playerFor } from './match.js';
 import { randomSeed } from './rng.js';
+import { SharedView } from './sharedView.js';
 
 const MAX_PENDING_EVENTS = 64;
 
@@ -81,6 +82,7 @@ export class Game {
     const events = [];
     this.worlds.forEach((world, pane) => {
       world.step(dt);
+      if (this.sharedView) this.sharedView.step(dt, this.state === GameState.PLAYING);
       // Drain events every step so they do not pile up in any state.
       for (const event of world.takeEvents()) {
         const player = this.worlds.length > 1 ? pane : event.player;
@@ -169,6 +171,8 @@ export class Game {
     const seed = randomSeed();
     const panes = id === 'split' ? players : 1;
     this.worlds = Array.from({ length: panes }, () => this.createWorld({ players: players / panes, lives, seed }));
+    // Shared screen's view is part of the rules: it leaves trailing monkeys behind.
+    this.sharedView = id === 'shared' ? new SharedView(this.worlds[0]) : null;
   }
 
   #startRun() {

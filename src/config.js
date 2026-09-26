@@ -161,6 +161,10 @@ export const KEYS = Object.freeze({
   mute: ['KeyM'],
 });
 export const LIVES_2P = 3;
+// Shared screen: the camera keeps the leading monkey this far across the view (single
+// player: CAMERA_TARGET_X), so the other one can be up to a liana behind and still in
+// view.
+export const SHARED_LEADER_X = 0.62;
 // After losing a life, a monkey tumbles for RESPAWN_DELAY_MS, then hangs again on a
 // liana at RESPAWN_GRIP, invulnerable to obstacles for RESPAWN_INVULN_MS.
 export const RESPAWN_DELAY_MS = 1000;

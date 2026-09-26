@@ -7,9 +7,9 @@ import { GAMEOVER_INPUT_LOCK_MS, LIANA_SPACING, SIM_DT } from '../src/config.js'
 import { FORWARD_RELEASE_STEP, lowRockWorld, stepN } from './helpers.js';
 
 describe('modes', () => {
-  it('orders the picker 1P, shared, split, with shared not enabled yet', () => {
+  it('orders the picker 1P, shared, split, all enabled', () => {
     expect(MODE_ORDER).toEqual(['solo', 'shared', 'split']);
-    expect(MODE_ORDER.map((id) => MODES[id].enabled)).toEqual([true, false, true]);
+    expect(MODE_ORDER.map((id) => MODES[id].enabled)).toEqual([true, true, true]);
     expect(MODE_ORDER.map((id) => MODES[id].players)).toEqual([1, 2, 2]);
   });
 
@@ -34,7 +34,7 @@ describe('game modes and roles', () => {
   it('selects only enabled modes, and only on the title screen', () => {
     const game = emptyGame();
     expect(game.selectMode('solo')).toBe(true);
-    expect(game.selectMode('shared')).toBe(false);
+    expect(game.selectMode('shared')).toBe(true);
     expect(game.selectMode('split')).toBe(true);
     expect(game.selectMode('solo')).toBe(true);
     expect(game.selectMode('nope')).toBe(false);

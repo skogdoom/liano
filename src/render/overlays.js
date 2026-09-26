@@ -205,8 +205,8 @@ export class Overlays {
     this.#setPrompts(inputType === 'touch' ? 'touch' : 'other');
     const pulse = 0.65 + 0.35 * Math.sin(this.time * 4);
 
-    // The arrow over a monkey above the view is for the single, full-size pane.
-    this.indicator.view.visible = game.worlds.length === 1;
+    // The arrow over a monkey above the view is for single player.
+    this.indicator.view.visible = game.players === 1;
     if (this.indicator.view.visible) this.indicator.update(game.world.monkey, cameraX, this.layout);
     this.#updatePanes(game, dt);
 

@@ -95,6 +95,7 @@ describe('release window solver', () => {
         for (let k = 0; k < valid.length; k += k < 40 || valid.length - k < 40 ? 1 : 7) {
           const world = worldWith({ 0: obstacle });
           world.start();
+          world.monkey.release(); // let go, so the grab below starts a new swing
           world.monkey.grab(world.lianas.get(0), c); // restart the swing, grabbed at c
           stepN(world, k);
           let reached = false;
@@ -126,6 +127,7 @@ describe('moving obstacle solver', () => {
             world.start();
             stepN(world, arrivalStep);
             world.monkey.vx = 1; // the swing starts forward
+            world.monkey.release(); // let go, so the grab below starts a new swing
             world.monkey.grab(world.lianas.get(0), c); // restart the swing at this world time
             stepN(world, k);
             let reached = false;

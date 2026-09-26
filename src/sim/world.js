@@ -213,6 +213,13 @@ export class World {
     if (this.lives[player] > 0) this.respawnStep[player] = this.stepCount + Math.round(RESPAWN_DELAY_MS / 1000 / SIM_DT);
   }
 
+  // Takes a life from a monkey for a reason outside the world (`cause`), as when shared
+  // screen leaves it behind. Does nothing if it is already dead.
+  eliminate(player, cause) {
+    if (this.monkeys[player].state === MonkeyState.DEAD) return;
+    this.#die(player, cause);
+  }
+
   // Hangs the monkey on its respawn liana at RESPAWN_GRIP, swinging forward and
   // slipping, invulnerable for a while.
   #respawn(player) {
