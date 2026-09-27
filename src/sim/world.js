@@ -12,6 +12,8 @@ import {
   GRAVITY,
   DEATH_BOUNCE,
   DEATH_POP,
+  LIANA_LENGTH,
+  SWING_AMPLITUDE,
 } from '../config.js';
 import { ballisticStep, closestPointOnSegment } from './physics.js';
 import { createBanana, createObstacle, updateBananas, updateLianas, updateObstacles } from './generator.js';
@@ -280,15 +282,23 @@ export class World {
 
   // Closest liana touching a monkey at (x, y), other than `excludedIndex`. Compared by
   // index: lianas are regenerated as new objects after being culled.
+  //
+  // The gameplay hitbox of a liana is its vertical segment, whatever its cosmetic sway;
+  // but one a monkey swings on (shared screen) is caught where the rope actually is, so
+  // the one joining it does not jump across to it.
   #grabCandidate(x, y, excludedIndex) {
-    const first = Math.ceil((x - MONKEY_RADIUS) / LIANA_SPACING);
-    const last = Math.floor((x + MONKEY_RADIUS) / LIANA_SPACING);
+    const reach = MONKEY_RADIUS + LIANA_LENGTH * Math.sin(SWING_AMPLITUDE);
+    const first = Math.ceil((x - reach) / LIANA_SPACING);
+    const last = Math.floor((x + reach) / LIANA_SPACING);
     let best = null;
     let bestDistSq = MONKEY_RADIUS * MONKEY_RADIUS;
     for (let i = first; i <= last; i++) {
       const liana = this.lianas.get(i);
       if (!liana || i === excludedIndex) continue;
-      const p = closestPointOnSegment(x, y, liana.x, liana.anchorY, liana.x, liana.tipY);
+      const angle = liana.held ? liana.angle : 0;
+      const tipX = liana.x + liana.length * Math.sin(angle);
+      const tipY = liana.anchorY + liana.length * Math.cos(angle);
+      const p = closestPointOnSegment(x, y, liana.x, liana.anchorY, tipX, tipY);
       const distSq = (x - p.x) ** 2 + (y - p.y) ** 2;
       if (distSq <= bestDistSq) {
         best = { liana, contactRadius: p.t * liana.length };

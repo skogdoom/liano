@@ -36,18 +36,58 @@ function hop(world, player) {
   for (let i = 0; i < 600 && world.monkeys[player].state === MonkeyState.AIRBORNE; i++) world.step(SIM_DT);
 }
 
+// Hops monkey `first` to liana 1, then drops monkey `second` onto that liana's rope
+// (where it is, mid-swing) at `radius` from the anchor, so it joins the swing.
+function joinOnLiana1(world, first, second, radius = 220) {
+  stepN(world, 22); // inside the start grip's first window
+  world.release(first);
+  for (let i = 0; i < 600 && world.monkeys[first].state !== MonkeyState.HANGING; i++) world.step(SIM_DT);
+  stepN(world, 20);
+  const liana = world.monkeys[first].liana;
+  world.release(second);
+  // Where the rope will be after the next step.
+  const probe = { angle: liana.angle + liana.angularVelocity * SIM_DT };
+  Object.assign(world.monkeys[second], {
+    x: liana.x + radius * Math.sin(probe.angle),
+    y: liana.anchorY + radius * Math.cos(probe.angle),
+    vx: 1,
+    vy: 0,
+  });
+  world.step(SIM_DT);
+  return liana;
+}
+
 describe('shared lianas', () => {
+  it('is caught where its rope is while a monkey swings it, not along the vertical', () => {
+    const world = new World({ players: 2, makeObstacle: () => null, makeBanana: () => null });
+    world.start();
+    const [a, b] = world.monkeys;
+    stepN(world, 22);
+    world.release(0);
+    for (let i = 0; i < 600 && a.state !== MonkeyState.HANGING; i++) world.step(SIM_DT);
+    stepN(world, 30);
+    const liana = a.liana;
+    expect(Math.abs(liana.angle)).toBeGreaterThan(0.3);
+    // On the vertical line, away from the rope: not caught.
+    world.release(1);
+    Object.assign(b, { x: liana.x, y: liana.anchorY + 300, vx: 0, vy: 0 });
+    world.step(SIM_DT);
+    expect(b.state).toBe(MonkeyState.AIRBORNE);
+    // On the rope: caught, without a jump.
+    const angle = liana.angle + liana.angularVelocity * SIM_DT;
+    const at = { x: liana.x + 250 * Math.sin(angle), y: liana.anchorY + 250 * Math.cos(angle) };
+    Object.assign(b, { ...at, vx: 0, vy: 0 });
+    world.step(SIM_DT);
+    expect(b.liana).toBe(liana);
+    expect(Math.hypot(b.x - at.x, b.y - at.y)).toBeLessThan(MONKEY_RADIUS);
+  });
+
   it('holds both monkeys, each at its own grip radius, in the same swing', () => {
     const world = new World({ players: 2, makeObstacle: () => null, makeBanana: () => null });
     world.start();
     const [a, b] = world.monkeys;
-    // Player 1 hops to liana 1; player 2 follows a bit later and joins its swing.
-    // Both inside the start grip's first window (steps 21-36).
-    stepN(world, 22);
-    world.release(0);
-    stepN(world, 12);
-    world.release(1);
-    for (let i = 0; i < 600 && (a.state !== MonkeyState.HANGING || b.state !== MonkeyState.HANGING); i++) world.step(SIM_DT);
+    // Player 1 hops to liana 1; player 2 joins its swing.
+    joinOnLiana1(world, 0, 1);
     expect(a.liana.index).toBe(1);
     expect(b.liana).toBe(a.liana);
     const liana = a.liana;
@@ -71,11 +111,8 @@ describe('shared lianas', () => {
     const [a, b] = world.monkeys;
     a.boostGrabs = 2;
     b.boostGrabs = 2;
-    stepN(world, 22);
-    world.release(1); // boosted: player 2 gets to liana 1 first, swinging it boosted
-    stepN(world, 12);
-    world.release(0);
-    for (let i = 0; i < 600 && (a.state !== MonkeyState.HANGING || b.state !== MonkeyState.HANGING); i++) world.step(SIM_DT);
+    // Player 2 gets to liana 1 first, swinging it boosted; player 1 joins.
+    joinOnLiana1(world, 1, 0);
     expect(b.liana.period).toBe(BOOST_PERIOD);
     expect(a.liana).toBe(b.liana);
     // Both used one: their counts stay in step.

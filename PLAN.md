@@ -119,7 +119,7 @@ All of these values are starting points for tuning. Scaled obstacles must still 
 - The trailing monkey loses a life when it goes fully off the left edge (a hanging one: when its liana does).
 - Respawn on the leftmost liana that is fully on screen.
 - Monkeys do not collide with each other.
-- A liana can hold both monkeys at once. A monkey grabbing a liana that is already swinging joins the current swing phase, at its own grip radius.
+- A liana can hold both monkeys at once. A monkey grabbing a liana that is already swinging joins the current swing phase, at its own grip radius. A liana another monkey swings on is caught where its rope is (other lianas by their vertical hitbox), so the joining monkey does not jump across to it; a flight can miss a rope that has swung away.
 
 ## Feasibility (fairness guarantee)
 
