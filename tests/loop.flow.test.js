@@ -66,6 +66,15 @@ describe('the full loop', () => {
     expect(g.world.scores[0]).toBe(0);
   });
 
+  it('can be paused with P only during a run', () => {
+    const g = game();
+    expect(g.pausable).toBe(false);
+    g.press('start');
+    expect(g.pausable).toBe(true);
+    g.end();
+    expect(g.pausable).toBe(false);
+  });
+
   it('switches mode from the results straight back to the title screen', () => {
     const g = game();
     g.press('start');

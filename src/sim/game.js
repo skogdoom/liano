@@ -177,6 +177,11 @@ export class Game {
     this.#enter(GameState.RESULTS);
   }
 
+  // Whether P can pause: only during a run, not on the title screen or the results.
+  get pausable() {
+    return this.state === GameState.PLAYING;
+  }
+
   canRestart() {
     // Small tolerance so accumulated fixed steps (e.g. 48 × 1/120 s) count as reaching the lock time.
     return this.state === GameState.RESULTS && this.stateTime * 1000 >= GAMEOVER_INPUT_LOCK_MS - 1e-6;
