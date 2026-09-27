@@ -162,6 +162,9 @@ export class Overlays {
     this.titlePrompt = place(this.title, text('', 28), 125);
     this.modePicker = new ModePicker();
     place(this.title, this.modePicker.view, 92);
+    // The pause and menu keys, under the prompt (with a keyboard).
+    this.keysHint = place(this.title, text('P  pause   ·   Esc  menu', 15, { color: CREAM }), 153);
+    this.keysHint.alpha = 0.7;
     const versionText = place(this.title, text(`v${version}`, 13, { color: CREAM }), 150);
     versionText.anchor.set(1, 0.5);
     versionText.x = 204;
@@ -283,10 +286,11 @@ export class Overlays {
     });
   }
 
-  // The mode picker shows only with a keyboard (the two-player modes need one); the
+  // The mode picker and the keys hint show only with a keyboard (the two-player modes need one); the
   // lines above it move up to make room.
   #updateTitle(mode, showModes) {
     this.modePicker.view.visible = showModes;
+    this.keysHint.visible = showModes;
     this.modePicker.update(mode);
     this.tagline.y = showModes ? 0 : 10;
     this.titleControl.y = showModes ? 58 : 70;
