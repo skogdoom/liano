@@ -225,7 +225,7 @@ describe('input edge cases', () => {
 });
 
 describe('input roles', () => {
-  it('maps the 2P keys and Enter to their roles, ignoring auto-repeat', () => {
+  it('maps the 2P keys, Enter and Esc to their roles, ignoring auto-repeat', () => {
     const target = new EventTarget();
     const input = createInput(target);
     for (const [code, role] of [
@@ -233,6 +233,7 @@ describe('input roles', () => {
       ['KeyL', 'p2'],
       ['Enter', 'start'],
       ['NumpadEnter', 'start'],
+      ['Escape', 'menu'],
     ]) {
       keydown(target, { code });
       expect(input.consumePress(role), code).toBe(true);

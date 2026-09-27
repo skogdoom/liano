@@ -1,5 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
+import { DEATH_SHAKE_PX, DEATH_SHAKE_TIME } from '../config.js';
 import { Background } from './background.js';
+import { Shake } from './shake.js';
 import { BananaViews, BoostBadge } from './bananaView.js';
 import { Camera, cameraTarget } from './camera.js';
 import { LianaView } from './lianaView.js';
@@ -9,7 +11,8 @@ import { ObstacleViews } from './obstacleViews.js';
 // One world drawn in one rect of the view: the whole view in single player, a strip
 // per player in split screen. Back to front: sky and parallax layers, the world
 // (scrolled by the camera), the canopy strip and floor band, then `overlay` (the debug
-// view). `scene` is what the death shake moves.
+// view). `scene` is what the death shake moves: each pane shakes when a monkey in it
+// dies (a lost life in the two-player modes, the end of the run in single player).
 export class Pane {
   constructor() {
     this.view = new Container();
@@ -34,6 +37,7 @@ export class Pane {
     this.view.addChild(this.scene);
     this.ownCamera = new Camera();
     this.camera = this.ownCamera;
+    this.shake = new Shake();
     this.world = null;
     this.layout = null;
   }
@@ -92,8 +96,11 @@ export class Pane {
   }
 
   // `events`: this frame's events from this pane's world.
-  update(events, dt, shake) {
-    const { world, camera } = this;
+  // `shakes`: whether deaths shake the view (not with reduced motion).
+  update(events, dt, shakes = true) {
+    const { world, camera, shake } = this;
+    if (shakes && events.some((e) => e.type === 'death')) shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
+    shake.update(dt);
     this.scene.position.set(shake.x, this.layout.bandTop * this.layout.scale + shake.y);
     this.worldLayer.x = -camera.x;
     this.overlay.x = -camera.x;

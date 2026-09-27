@@ -4,6 +4,7 @@ import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { LianaState } from '../src/sim/liana.js';
 import { Banana } from '../src/sim/banana.js';
+import { validReleaseSteps } from '../src/sim/feasibility.js';
 import {
   BANANA_POINTS,
   BOOST_GRABS,
@@ -17,6 +18,8 @@ import {
   SHARED_LEADER_X,
   SIM_DT,
   SWING_PERIOD,
+  START_GRIP,
+  START_GRIP_STEP,
 } from '../src/config.js';
 import { FORWARD_RELEASE_STEP, flyUntilGrab, stepN } from './helpers.js';
 
@@ -266,6 +269,14 @@ describe('shared screen', () => {
     // 2 is back on the liana it fell from.
     expect(lowest).toBeGreaterThan(before - 30);
     expect(world.monkeys[1].liana.index).toBe(3);
+  });
+
+  it('starts player 2 lower on the first liana, still with an early window', () => {
+    const game = sharedGame();
+    const [a, b] = game.world.monkeys;
+    expect(b.gripRadius - a.gripRadius).toBeCloseTo(START_GRIP_STEP, 9);
+    const { valid } = validReleaseSteps(null, START_GRIP + START_GRIP_STEP);
+    expect(valid.indexOf(true)).toBeLessThan(60);
   });
 
   it('never leaves a monkey behind on the title screen', () => {

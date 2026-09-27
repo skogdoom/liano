@@ -3,7 +3,8 @@ import { KEYS } from './config.js';
 // Game input: keys by role (see KEYS in config.js), and a tap/click on the game, which
 // counts as `primary`. Presses are queued and consumed by the fixed-step loop, so they
 // are applied at a sim step boundary. Key auto-repeat is ignored for every key. `debug`
-// (D) and `mute` (M) are toggles; `mode` (1, 2, 3) picks a mode on the title screen.
+// (D) and `mute` (M) are toggles; `mode` (1, 2, 3) picks a mode on the title screen (or
+// from the results, going back to it); `menu` (Esc) goes from the results to the title.
 
 export function isFreshSpacePress(event) {
   return event.code === 'Space' && !event.repeat;

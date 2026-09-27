@@ -3,12 +3,10 @@ import {
   SIM_DT,
   MAX_FRAME_DT,
   MAX_RESOLUTION,
-  DEATH_SHAKE_PX,
-  DEATH_SHAKE_TIME,
 } from './config.js';
 import { createFixedStepLoop } from './loop.js';
 import { createInput } from './input.js';
-import { Game, GameState } from './sim/game.js';
+import { Game } from './sim/game.js';
 import { World } from './sim/world.js';
 import { ObstaclePrefetch } from './obstaclePrefetch.js';
 import { createPause } from './pause.js';
@@ -19,7 +17,6 @@ import { Overlays } from './render/overlays.js';
 import { Pane } from './render/pane.js';
 import { Hud } from './render/hud.js';
 import { DebugOverlay } from './render/debugOverlay.js';
-import { Shake } from './render/shake.js';
 import { MuteButton } from './render/muteButton.js';
 import { FullscreenButton } from './render/fullscreenButton.js';
 import { SoundPlayer } from './audio/player.js';
@@ -240,8 +237,6 @@ const input = createInput(window, app.canvas, {
     return true;
   },
 });
-const shake = new Shake();
-let lastState = game.state;
 
 // A pane per world; rebuilt when the mode or match changes the worlds. In split screen
 // pane p shows player p; otherwise the one pane shows every player.
@@ -267,14 +262,14 @@ function syncPanes() {
 syncPanes();
 
 // Action roles, in the order the loop applies them within a step (see KEYS).
-const ROLES = ['start', 'primary', 'p1', 'p2'];
+const ROLES = ['start', 'primary', 'p1', 'p2', 'menu'];
 
 const loop = createFixedStepLoop({
   dt: SIM_DT,
   maxFrameDt: MAX_FRAME_DT,
   step(dt) {
     const pick = input.consumeModePick();
-    if (pick) game.selectMode(MODE_ORDER[pick - 1]);
+    if (pick && game.selectMode(MODE_ORDER[pick - 1])) input.clear();
     for (const role of ROLES) {
       // A press that changes the state (starts or restarts a run) is the step's last.
       if (input.consumePress(role) && game.press(role)) {
@@ -302,15 +297,10 @@ function frame(ticker) {
   const frameDt = paused ? 0 : Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
   loop.advance(frameDt);
   prefetch.update(game.worlds.map((w) => w.obstacles));
-  if (lastState === GameState.PLAYING && game.state === GameState.RESULTS && !reducedMotion.matches) {
-    shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
-  }
-  lastState = game.state;
   sound.setPaused(paused);
   const events = game.takeEvents();
   for (const recipe of soundsFor(events)) sound.play(recipe);
-  shake.update(frameDt);
-  panes.forEach((pane, i) => pane.update(events.filter((e) => e.pane === i), frameDt, shake));
+  panes.forEach((pane, i) => pane.update(events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches));
   hud.update(game);
   overlays.update(game, panes[0].camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
   debugOverlay.update(game);

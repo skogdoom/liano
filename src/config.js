@@ -40,6 +40,9 @@ export const MAX_ENTRY_RADIUS = 0.95 * LIANA_LENGTH;
 // Where the monkey hangs at the start of a run (and, in 2P, after a respawn). It does
 // not slip on the title screen.
 export const START_GRIP = 0.7 * LIANA_LENGTH;
+// In shared screen player 2 starts this much lower on the same liana, so neither hides
+// the other (both grips have an early release window).
+export const START_GRIP_STEP = 0.1 * LIANA_LENGTH;
 export const RESPAWN_GRIP = 0.7 * LIANA_LENGTH;
 // The vine end blinks for this long (s) before the forced release, faster at the end.
 export const TIP_WARNING_TIME = 1;
@@ -157,6 +160,7 @@ export const KEYS = Object.freeze({
   p1: ['KeyA'],
   p2: ['KeyL'],
   mode: ['Digit1', 'Digit2', 'Digit3'],
+  menu: ['Escape'],
   debug: ['KeyD'],
   mute: ['KeyM'],
 });

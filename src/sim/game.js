@@ -111,10 +111,17 @@ export class Game {
     return events;
   }
 
-  // Selects the mode on the title screen. Returns false for an unknown or not yet
-  // enabled mode, or outside the title screen.
+  // Selects the mode on the title screen, or from the results (once they take input)
+  // goes back to the title screen with it. Returns false for an unknown or not
+  // enabled mode, or while playing.
   selectMode(mode) {
-    if (this.state !== GameState.TITLE || !MODES[mode]?.enabled) return false;
+    if (!MODES[mode]?.enabled) return false;
+    if (this.state === GameState.RESULTS && this.canRestart()) {
+      this.mode = mode;
+      this.#toTitle();
+      return true;
+    }
+    if (this.state !== GameState.TITLE) return false;
     if (mode !== this.mode) {
       this.mode = mode;
       this.#newMatch();
@@ -123,8 +130,8 @@ export class Game {
   }
 
   // Handles a press of an input role (see KEYS): `primary` is Space or a tap, `start`
-  // is Enter, `p1`/`p2` the two-player keys. Returns true if the press changed the game
-  // state.
+  // is Enter, `p1`/`p2` the two-player keys, `menu` (Esc) goes from the results back to
+  // the title screen. Returns true if the press changed the game state.
   press(role = 'primary') {
     const starts = role === 'primary' || role === 'start';
     switch (this.state) {
@@ -141,6 +148,10 @@ export class Game {
         return false;
       }
       case GameState.RESULTS:
+        if (role === 'menu' && this.canRestart()) {
+          this.#toTitle();
+          return true;
+        }
         if (!starts || !this.canRestart()) return false;
         this.#newMatch();
         this.#startRun();
@@ -173,6 +184,14 @@ export class Game {
     this.worlds = Array.from({ length: panes }, () => this.createWorld({ players: players / panes, lives, seed }));
     // Shared screen's view is part of the rules: it leaves trailing monkeys behind.
     this.sharedView = id === 'shared' ? new SharedView(this.worlds[0]) : null;
+  }
+
+  // Back to the title screen with a new match in the current mode.
+  #toTitle() {
+    this.#newMatch();
+    this.score = 0;
+    this.newBest = false;
+    this.#enter(GameState.TITLE);
   }
 
   #startRun() {

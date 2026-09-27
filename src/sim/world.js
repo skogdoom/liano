@@ -2,6 +2,7 @@ import {
   BANANA_POINTS,
   BOOST_GRABS,
   START_GRIP,
+  START_GRIP_STEP,
   RESPAWN_GRIP,
   RESPAWN_DELAY_MS,
   RESPAWN_INVULN_MS,
@@ -54,10 +55,10 @@ export class World {
     updateObstacles(this.obstacles, 0, this.makeObstacle);
     updateBananas(this.bananas, 0, this.makeBanana);
     // The monkeys hang still (no slip) until the run starts.
-    for (const monkey of this.monkeys) {
+    this.monkeys.forEach((monkey, i) => {
       monkey.slipping = false;
-      monkey.grab(this.lianas.get(0), START_GRIP);
-    }
+      monkey.grab(this.lianas.get(0), START_GRIP + i * START_GRIP_STEP);
+    });
     this.scores = this.monkeys.map(() => 0);
     // The stage each monkey has reached: that of the obstacle ahead of the furthest
     // liana it grabbed. Keyed on obstacle index, so points never change it.

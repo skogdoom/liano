@@ -140,10 +140,12 @@ const PROMPTS = {
   other: {
     start: 'Press Space to start',
     control: 'SPACE  ·  let go',
-    again: 'Press Space to play again',
+    again: 'Space: play again  ·  Esc: menu',
     resume: 'Click the game to resume',
   },
 };
+// The two-player modes' keys, one per player.
+const CONTROL_2P = 'P1  A   ·   P2  L   ·   let go';
 
 // Title, game over and pause screens, and the off-screen indicator. Positions and
 // sizes come from the layout (see layout.js).
@@ -202,7 +204,7 @@ export class Overlays {
   update(game, cameraX, { pauseReason, inputType, dt }) {
     const paused = pauseReason !== null;
     this.time += dt;
-    this.#setPrompts(inputType === 'touch' ? 'touch' : 'other');
+    this.#setPrompts(inputType === 'touch' ? 'touch' : 'other', game.players);
     const pulse = 0.65 + 0.35 * Math.sin(this.time * 4);
 
     // The arrow over a monkey above the view is for single player.
@@ -287,13 +289,15 @@ export class Overlays {
     this.titlePrompt.y = showModes ? 128 : 125;
   }
 
-  #setPrompts(kind) {
-    if (kind === this.promptsFor) return;
+  // Prompts for the input in use; the control hint also names each player's key.
+  #setPrompts(kind, players) {
+    const key = `${kind}:${players}`;
+    if (key === this.promptsFor) return;
     const p = PROMPTS[kind];
     this.titlePrompt.text = p.start;
-    this.titleControl.text = p.control;
+    this.titleControl.text = players > 1 ? CONTROL_2P : p.control;
     this.gameOverPrompt.text = p.again;
     this.pausedPrompt.text = p.resume;
-    this.promptsFor = kind;
+    this.promptsFor = key;
   }
 }
