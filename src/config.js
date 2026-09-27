@@ -163,6 +163,7 @@ export const KEYS = Object.freeze({
   menu: ['Escape'],
   debug: ['KeyD'],
   mute: ['KeyM'],
+  pause: ['KeyP'],
 });
 export const LIVES_2P = 3;
 // Shared screen: the camera keeps the leading monkey this far across the view (single

@@ -225,6 +225,18 @@ describe('input edge cases', () => {
 });
 
 describe('input roles', () => {
+  it('toggles pause with P, even while presses are not accepted', () => {
+    const target = new EventTarget();
+    const input = createInput(target, null, { accepts: () => false });
+    expect(input.consumePauseToggle()).toBe(false);
+    keydown(target, { code: 'KeyP' });
+    expect(input.consumePauseToggle()).toBe(true);
+    expect(input.consumePauseToggle()).toBe(false);
+    keydown(target, { code: 'KeyP' });
+    keydown(target, { code: 'KeyP' });
+    expect(input.consumePauseToggle()).toBe(false); // twice: back where it was
+  });
+
   it('maps the 2P keys, Enter and Esc to their roles, ignoring auto-repeat', () => {
     const target = new EventTarget();
     const input = createInput(target);

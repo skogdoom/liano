@@ -1,5 +1,6 @@
 // Pauses the game while the window is unfocused, the page is hidden, or something
-// else holds it (hold(), e.g. while the graphics context is lost). Starts unpaused
+// else holds it (hold(), e.g. while the graphics context is lost, or 'manual' while the
+// player pauses with P). Starts unpaused
 // unless hidden: some browsers report no focus until the first interaction.
 
 // Presses are ignored for this long after resuming, so the tap or click that brings
@@ -39,6 +40,10 @@ export function createPause(win, doc, { now = () => performance.now() } = {}) {
     // Pauses (on) or releases (off) the game for `reason`.
     hold(reason, on) {
       change(() => (on ? held.add(reason) : held.delete(reason)))();
+    },
+    // Holds `reason` if it is not held, else releases it.
+    toggle(reason) {
+      this.hold(reason, !held.has(reason));
     },
     acceptsInput() {
       return !isPaused() && now() - resumedAt >= RESUME_GRACE_MS;

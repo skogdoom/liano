@@ -79,6 +79,19 @@ describe('pause', () => {
     expect(pause.paused).toBe(false);
   });
 
+  it('toggles a manual pause (P) on and off', () => {
+    const c = clock();
+    const pause = createPause(new EventTarget(), fakeDocument(), { now: c.now });
+    pause.toggle('manual');
+    expect(pause.paused).toBe(true);
+    expect(pause.reason).toBe('manual');
+    pause.toggle('manual');
+    expect(pause.paused).toBe(false);
+    expect(pause.acceptsInput()).toBe(false); // the resume grace applies here too
+    c.advance(RESUME_GRACE_MS);
+    expect(pause.acceptsInput()).toBe(true);
+  });
+
   it('stops listening after destroy', () => {
     const win = new EventTarget();
     const doc = fakeDocument();

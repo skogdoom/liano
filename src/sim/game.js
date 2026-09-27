@@ -130,8 +130,9 @@ export class Game {
   }
 
   // Handles a press of an input role (see KEYS): `primary` is Space or a tap, `start`
-  // is Enter, `p1`/`p2` the two-player keys, `menu` (Esc) goes from the results back to
-  // the title screen. Returns true if the press changed the game state.
+  // is Enter, `p1`/`p2` the two-player keys, `menu` (Esc) goes back to the title screen
+  // (ending a run in progress, which still counts for the best). Returns true if the
+  // press changed the game state.
   press(role = 'primary') {
     const starts = role === 'primary' || role === 'start';
     switch (this.state) {
@@ -140,6 +141,11 @@ export class Game {
         this.#startRun();
         return true;
       case GameState.PLAYING: {
+        if (role === 'menu') {
+          this.end();
+          this.#toTitle();
+          return true;
+        }
         const player = playerFor(this.mode, role);
         if (player >= 0) {
           const { world, index } = this.slot(player);

@@ -291,6 +291,7 @@ const loop = createFixedStepLoop({
 function frame(ticker) {
   if (input.consumeDebugToggle()) debugOverlay.toggle();
   if (input.consumeMuteToggle()) toggleMute();
+  if (input.consumePauseToggle()) pause.toggle('manual');
   // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
   const paused = pause.paused;
   if (paused) input.clear(); // a press made just before pausing must not act on resume

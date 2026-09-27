@@ -240,7 +240,11 @@ export class Overlays {
       this.gameOverPrompt.alpha = pulse;
     }
 
-    this.paused.visible = pauseReason === 'unfocused';
+    // Paused by the player (P) or by the window losing focus.
+    this.paused.visible = pauseReason === 'unfocused' || pauseReason === 'manual';
+    if (this.paused.visible) {
+      this.pausedPrompt.text = pauseReason === 'manual' ? 'Press P to resume' : PROMPTS[this.promptKind].resume;
+    }
   }
 
   // Split screen's panes, or the single one: where each world is drawn in the view.
@@ -294,10 +298,10 @@ export class Overlays {
     const key = `${kind}:${players}`;
     if (key === this.promptsFor) return;
     const p = PROMPTS[kind];
+    this.promptKind = kind;
     this.titlePrompt.text = p.start;
     this.titleControl.text = players > 1 ? CONTROL_2P : p.control;
     this.gameOverPrompt.text = p.again;
-    this.pausedPrompt.text = p.resume;
     this.promptsFor = key;
   }
 }

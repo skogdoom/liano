@@ -52,6 +52,20 @@ describe('the full loop', () => {
     }
   });
 
+  it.each(MODE_ORDER)('quits a run in %s back to the title screen with Esc', (mode) => {
+    const g = game();
+    g.selectMode(mode);
+    g.press('start');
+    stepN(g, 30);
+    g.score = 4; // the run's score, as score events set it
+    expect(g.press('menu')).toBe(true);
+    expect(g.state).toBe(GameState.TITLE);
+    expect(g.mode).toBe(mode);
+    // In single player the quit run still counts for the session best.
+    expect(g.best).toBe(mode === 'solo' ? 4 : 0);
+    expect(g.world.scores[0]).toBe(0);
+  });
+
   it('switches mode from the results straight back to the title screen', () => {
     const g = game();
     g.press('start');
@@ -64,6 +78,5 @@ describe('the full loop', () => {
     // Not while playing.
     g.press('start');
     expect(g.selectMode('solo')).toBe(false);
-    expect(g.press('menu')).toBe(false);
   });
 });

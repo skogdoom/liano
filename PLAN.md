@@ -465,7 +465,8 @@ Implement in order. Each milestone must end in a runnable, tested state, with ev
 - Notes: the leader sits at SHARED_LEADER_X (62 %) of the view, and while it hangs the camera follows its liana rather than its swing, so a monkey one liana behind stays in view. A hanging monkey is only left behind once its liana is off the left edge too (swinging back out of view is fine); a flying one by its position. A banana boosts both monkeys; a monkey joining a boosted swing uses one of its boosted grabs, so the two counts stay in step, and one joining an unboosted swing keeps its boost. The leader camera is part of the rules (src/sim/sharedView.js), since it decides who is left behind.
 
 **22. Polish.** Key-binding hints on the title screen; death feedback and pause for 2P (both already exist for 1P).
-- [x] Full loop in every mode: title → play → results → title, with no reload (Esc from the results goes to the title; 1, 2, 3 go to it with that mode)
+- [x] Full loop in every mode: title → play → results → title, with no reload (Esc from a run or the results goes to the title, a quit 1P run still counting for the best; 1, 2, 3 from the results go to it with that mode)
+- [x] P pauses and resumes every mode ("Press P to resume"); blur still pauses too
 - [x] Title hints name each player's key in 2P ("P1 A · P2 L · let go"); the results prompt offers Esc for the menu
 - [x] Death feedback per pane: every death shakes its pane (each lost life in 2P), off with reduced motion; pause covers every mode
 - [x] Shared screen starts player 2 lower on the first liana (START_GRIP_STEP), so neither monkey hides the other
