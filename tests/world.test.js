@@ -96,7 +96,7 @@ describe('fall', () => {
     world.monkey.vy = 200;
     world.step(SIM_DT);
     expect(world.alive).toBe(false);
-    expect(world.takeEvents()).toEqual([{ type: 'death', cause: 'fall' }]);
+    expect(world.takeEvents()).toEqual([{ type: 'death', cause: 'fall', player: 0 }]);
     stepN(world, 50);
     expect(world.takeEvents()).toEqual([]);
   });

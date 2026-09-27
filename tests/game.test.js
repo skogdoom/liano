@@ -1,27 +1,41 @@
 import { describe, it, expect } from 'vitest';
 import { Game, GameState } from '../src/sim/game.js';
 import { MonkeyState } from '../src/sim/monkey.js';
-import { GAMEOVER_INPUT_LOCK_MS, SIM_DT } from '../src/config.js';
-import { FALL_RELEASE_STEP, FORWARD_RELEASE_STEP, emptyWorld, lowRockWorld } from './helpers.js';
+import { GAMEOVER_INPUT_LOCK_MS, SIM_DT, START_GRIP } from '../src/config.js';
+import { FALL_RELEASE_STEP, emptyWorld, lowRockWorld, releaseStepForGrab } from './helpers.js';
 
 function stepFor(game, seconds) {
   const steps = Math.round(seconds / SIM_DT);
   for (let i = 0; i < steps; i++) game.step(SIM_DT);
 }
 
+// Steps until the airborne monkey has landed (or the run is over).
+function flyOn(game) {
+  for (let i = 0; i < 600 && game.world.monkey.state === MonkeyState.AIRBORNE; i++) game.step(SIM_DT);
+}
+
 describe('Game state machine', () => {
-  it('starts in READY', () => {
-    expect(new Game().state).toBe(GameState.READY);
+  it('starts in TITLE', () => {
+    expect(new Game().state).toBe(GameState.TITLE);
   });
 
-  it('swings the monkey on the first liana while READY', () => {
+  it('swings the monkey on the first liana on the title screen', () => {
     const game = new Game();
     stepFor(game, 0.3);
     expect(game.world.monkey.state).toBe(MonkeyState.HANGING);
     expect(game.world.monkey.liana.angle).not.toBe(0);
   });
 
-  it('Space moves READY to PLAYING without releasing', () => {
+  it('holds the grip still on the title screen and starts the slip with the run', () => {
+    const game = new Game();
+    stepFor(game, 5);
+    expect(game.world.monkey.gripRadius).toBe(START_GRIP);
+    game.press();
+    stepFor(game, 1);
+    expect(game.world.monkey.gripRadius).toBeCloseTo(START_GRIP + game.world.monkey.slipSpeed, 6);
+  });
+
+  it('Space moves TITLE to PLAYING without releasing', () => {
     const game = new Game();
     expect(game.press()).toBe(true);
     expect(game.state).toBe(GameState.PLAYING);
@@ -48,13 +62,13 @@ describe('Game state machine', () => {
     expect(game.world.monkey.state).toBe(MonkeyState.HANGING);
   });
 
-  it('end() moves PLAYING to GAME_OVER and is ignored otherwise', () => {
+  it('end() moves PLAYING to RESULTS and is ignored otherwise', () => {
     const game = new Game();
     game.end();
-    expect(game.state).toBe(GameState.READY);
+    expect(game.state).toBe(GameState.TITLE);
     game.press();
     game.end();
-    expect(game.state).toBe(GameState.GAME_OVER);
+    expect(game.state).toBe(GameState.RESULTS);
   });
 
   it('locks restart input for GAMEOVER_INPUT_LOCK_MS after game over', () => {
@@ -65,7 +79,7 @@ describe('Game state machine', () => {
     stepFor(game, GAMEOVER_INPUT_LOCK_MS / 1000 - SIM_DT);
     expect(game.canRestart()).toBe(false);
     expect(game.press()).toBe(false);
-    expect(game.state).toBe(GameState.GAME_OVER);
+    expect(game.state).toBe(GameState.RESULTS);
 
     game.step(SIM_DT);
     expect(game.canRestart()).toBe(true);
@@ -95,7 +109,7 @@ describe('Game state machine', () => {
     game.press();
     let steps = 0;
     while (game.state === GameState.PLAYING && steps++ < 600) game.step(SIM_DT);
-    expect(game.state).toBe(GameState.GAME_OVER);
+    expect(game.state).toBe(GameState.RESULTS);
     expect(game.world.alive).toBe(false);
 
     // Presses during the lock are ignored.
@@ -109,9 +123,9 @@ describe('Game state machine', () => {
     expect(game.world.monkey.liana.index).toBe(0);
 
     // The new run plays normally.
-    stepFor(game, FORWARD_RELEASE_STEP * SIM_DT);
+    stepFor(game, releaseStepForGrab(game.world) * SIM_DT);
     game.press();
-    stepFor(game, 1);
+    flyOn(game);
     expect(game.state).toBe(GameState.PLAYING);
     expect(game.world.monkey.liana.index).toBe(1);
   });
@@ -130,14 +144,14 @@ describe('Game state machine', () => {
     // Hops forward `hops` times, then misses.
     function playRun(game, hops) {
       for (let i = 0; i < hops; i++) {
-        stepFor(game, FORWARD_RELEASE_STEP * SIM_DT);
+        stepFor(game, releaseStepForGrab(game.world) * SIM_DT);
         game.press();
         while (game.world.monkey.state === MonkeyState.AIRBORNE) game.step(SIM_DT);
       }
       stepFor(game, FALL_RELEASE_STEP * SIM_DT);
       game.press();
       playUntilOver(game);
-      expect(game.state).toBe(GameState.GAME_OVER);
+      expect(game.state).toBe(GameState.RESULTS);
     }
 
     it('tracks the world score during the run', () => {
@@ -195,25 +209,25 @@ describe('Game state machine', () => {
   it('drains world events every step', () => {
     const game = new Game({ createWorld: emptyWorld });
     game.press();
-    stepFor(game, FORWARD_RELEASE_STEP * SIM_DT);
+    stepFor(game, releaseStepForGrab(game.world) * SIM_DT);
     game.press();
-    stepFor(game, 1);
+    flyOn(game);
     expect(game.world.events).toEqual([]);
   });
 
   it('passes world events on for sound, and caps them when nobody reads', () => {
     const game = new Game({ createWorld: emptyWorld });
     game.press();
-    stepFor(game, FORWARD_RELEASE_STEP * SIM_DT);
+    stepFor(game, releaseStepForGrab(game.world) * SIM_DT);
     game.press();
-    stepFor(game, 1);
+    flyOn(game);
     const types = game.takeEvents().map((e) => e.type);
     expect(types).toContain('release');
     expect(types).toContain('grab');
     expect(game.takeEvents()).toEqual([]);
     // 40 unread hops: a release and a grab each.
     for (let hop = 0; hop < 40; hop++) {
-      stepFor(game, FORWARD_RELEASE_STEP * SIM_DT);
+      stepFor(game, releaseStepForGrab(game.world) * SIM_DT);
       game.press();
       while (game.world.monkey.state === MonkeyState.AIRBORNE) game.step(SIM_DT);
     }

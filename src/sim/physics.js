@@ -19,6 +19,13 @@ export function tangentialVelocity(radius, angle, angularVelocity) {
   return { vx: speed * Math.cos(angle), vy: -speed * Math.sin(angle) };
 }
 
+// Velocity of a point sliding outward along a pendulum: the tangential part plus
+// `radialSpeed` along the rope, away from the anchor.
+export function hangingVelocity(radius, radialSpeed, angle, angularVelocity) {
+  const t = tangentialVelocity(radius, angle, angularVelocity);
+  return { vx: t.vx + radialSpeed * Math.sin(angle), vy: t.vy + radialSpeed * Math.cos(angle) };
+}
+
 // Semi-implicit Euler step of a body with {x, y, vx, vy} under gravity. Mutates `body`.
 export function ballisticStep(body, dt, gravity) {
   body.vy += gravity * dt;

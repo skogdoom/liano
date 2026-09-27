@@ -1,5 +1,11 @@
 import {
-  GRIP_RADIUS,
+  BANANA_POINTS,
+  BOOST_GRABS,
+  START_GRIP,
+  START_GRIP_STEP,
+  RESPAWN_GRIP,
+  RESPAWN_DELAY_MS,
+  RESPAWN_INVULN_MS,
   LIANA_SPACING,
   MONKEY_RADIUS,
   WORLD_HEIGHT,
@@ -7,63 +13,188 @@ import {
   GRAVITY,
   DEATH_BOUNCE,
   DEATH_POP,
+  LIANA_LENGTH,
+  SWING_AMPLITUDE,
 } from '../config.js';
 import { ballisticStep, closestPointOnSegment } from './physics.js';
-import { createObstacle, updateLianas, updateObstacles } from './generator.js';
+import { createBanana, createObstacle, updateBananas, updateLianas, updateObstacles } from './generator.js';
 import { Monkey, MonkeyState } from './monkey.js';
 import { randomSeed } from './rng.js';
+import { stageFor } from './stages.js';
 
-// Lianas (keyed by index) and obstacles (keyed by gap, null for empty gaps) are
-// generated lazily around the monkey. `makeObstacle(seed, gap)` can be replaced in tests.
+// Lianas (keyed by index), obstacles and bananas (keyed by gap, null for none) are
+// generated lazily around the monkeys. There are `players` monkeys, all starting on the
+// first liana; each has its own score and scored gaps, and events carry its `player`
+// index. Each monkey has `lives`: after losing one it respawns (see respawnLiana), and
+// with none left it is out. `makeObstacle(seed, gap)` and `makeBanana(seed, gap,
+// obstacle)` can be replaced in tests.
 export class World {
-  constructor({ seed = randomSeed(), makeObstacle = createObstacle } = {}) {
+  constructor({
+    seed = randomSeed(),
+    makeObstacle = createObstacle,
+    makeBanana = createBanana,
+    players = 1,
+    lives = 1,
+  } = {}) {
     this.seed = seed;
     this.makeObstacle = (gap) => makeObstacle(seed, gap);
+    this.makeBanana = (gap) => {
+      const obstacle = this.obstacles.has(gap) ? this.obstacles.get(gap) : this.makeObstacle(gap);
+      return makeBanana(seed, gap, obstacle);
+    };
     this.lianas = new Map();
     this.obstacles = new Map();
-    this.monkey = new Monkey();
+    this.bananas = new Map();
+    // Gaps whose banana was taken. Kept outside the bananas so culling cannot bring
+    // one back.
+    this.takenBananas = new Set();
+    // Whole steps since the world was created; moving obstacles follow `time`.
+    this.stepCount = 0;
+    this.monkeys = Array.from({ length: players }, () => new Monkey());
     updateLianas(this.lianas, 0, null);
     updateObstacles(this.obstacles, 0, this.makeObstacle);
-    this.monkey.grab(this.lianas.get(0), GRIP_RADIUS);
-    this.score = 0;
-    // Gaps already scored. Kept outside the obstacles so culling cannot reset it.
-    this.scoredGaps = new Set();
+    updateBananas(this.bananas, 0, this.makeBanana);
+    // The monkeys hang still (no slip) until the run starts.
+    this.monkeys.forEach((monkey, i) => {
+      monkey.slipping = false;
+      monkey.grab(this.lianas.get(0), START_GRIP + i * START_GRIP_STEP);
+    });
+    this.scores = this.monkeys.map(() => 0);
+    // The stage each monkey has reached: that of the obstacle ahead of the furthest
+    // liana it grabbed. Keyed on obstacle index, so points never change it.
+    this.stages = this.monkeys.map(() => 1);
+    // Gaps each monkey has scored. Kept outside the obstacles so culling cannot reset them.
+    this.scoredGapsBy = this.monkeys.map(() => new Set());
+    this.lives = this.monkeys.map(() => lives);
+    // The last liana each monkey grabbed, where it respawns.
+    this.lastLiana = this.monkeys.map(() => 0);
+    // The step at which a monkey that lost a life respawns (null if none is due), and
+    // until which it is invulnerable.
+    this.respawnStep = this.monkeys.map(() => null);
+    this.invulnerableUntil = this.monkeys.map(() => 0);
     this.events = [];
   }
 
-  get alive() {
-    return this.monkey.state !== MonkeyState.DEAD;
+  // The liana a monkey respawns on: the last one it grabbed.
+  respawnLiana(player) {
+    return this.lastLiana[player];
   }
 
-  // Space while hanging. Returns false (and does nothing) while airborne.
-  release() {
-    const liana = this.monkey.release();
+  // True while the monkey passes through obstacles after a respawn.
+  isInvulnerable(player) {
+    return this.stepCount < this.invulnerableUntil[player];
+  }
+
+  // True once a monkey has lost its last life.
+  isOut(player) {
+    return this.monkeys[player].state === MonkeyState.DEAD && this.respawnStep[player] === null;
+  }
+
+  // Player 1's monkey, score and scored gaps (the only ones in single player).
+  get monkey() {
+    return this.monkeys[0];
+  }
+
+  get score() {
+    return this.scores[0];
+  }
+
+  get scoredGaps() {
+    return this.scoredGapsBy[0];
+  }
+
+  // True while any monkey is still in (alive, or about to respawn).
+  get alive() {
+    return this.monkeys.some((m, player) => !this.isOut(player));
+  }
+
+  // World time (s), counted in whole steps so the solver can match it exactly.
+  get time() {
+    return this.stepCount * SIM_DT;
+  }
+
+  isAlive(player) {
+    return !this.isOut(player);
+  }
+
+  // Starts the run: from now on grips slip towards the tips.
+  start() {
+    for (const monkey of this.monkeys) if (monkey.liana) monkey.startSlipping();
+  }
+
+  // The action key while hanging. Returns false (and does nothing) while airborne.
+  release(player = 0) {
+    const liana = this.monkeys[player].release();
     if (!liana) return false;
-    this.events.push({ type: 'release', liana: liana.index });
+    this.events.push({ type: 'release', liana: liana.index, player });
     return true;
   }
 
   step(dt) {
-    const { monkey } = this;
-    // Once dead the monkey falls off-screen; keep the entities around the camera as they are.
-    if (this.alive) {
-      updateLianas(this.lianas, monkey.x, monkey.liana);
-      updateObstacles(this.obstacles, monkey.x, this.makeObstacle);
+    this.stepCount++;
+    // Once every monkey is out they fall off-screen; keep the entities around the
+    // camera as they are. A monkey about to respawn keeps its liana around.
+    const living = this.monkeys.filter((m) => m.state !== MonkeyState.DEAD);
+    const xs = living.map((m) => m.x);
+    this.respawnStep.forEach((step, player) => {
+      if (step !== null) xs.push(this.respawnLiana(player) * LIANA_SPACING);
+    });
+    if (xs.length > 0) {
+      const ahead = Math.max(...xs);
+      const behind = Math.min(...xs);
+      const held = living.map((m) => m.liana).filter(Boolean);
+      updateLianas(this.lianas, ahead, held, behind);
+      updateObstacles(this.obstacles, ahead, this.makeObstacle, behind);
+      updateBananas(this.bananas, ahead, this.makeBanana, behind);
     }
+    for (const obstacle of this.obstacles.values()) if (obstacle?.moving) obstacle.setTime(this.time);
+    this.respawnStep.forEach((step, player) => {
+      if (step !== null && this.stepCount >= step) this.#respawn(player);
+    });
     for (const liana of this.lianas.values()) liana.step(dt);
 
-    monkey.step(dt);
-    if (!this.alive) return;
+    this.monkeys.forEach((monkey, player) => {
+      const wasAlive = monkey.state !== MonkeyState.DEAD;
+      monkey.step(dt);
+      if (!wasAlive) return;
+      // An obstacle hit wins over a grab in the same step, and applies while hanging too
+      // (not while invulnerable after a respawn).
+      const hit = this.isInvulnerable(player) ? null : this.#hitsObstacle(monkey.x, monkey.y);
+      if (hit) {
+        this.#die(player, 'obstacle', hit.type);
+        return;
+      }
+      this.#takeBanana(player);
+      // At the tip the grip gives: a forced release, flying on with the current velocity.
+      if (monkey.atTip) {
+        const liana = monkey.release();
+        this.events.push({ type: 'release', liana: liana.index, player, forced: true });
+      }
+      if (monkey.state === MonkeyState.AIRBORNE) this.#tryGrab(player);
+      // Only falling out of the bottom ends the run; flying above the top does not.
+      if (monkey.y > WORLD_HEIGHT + MONKEY_RADIUS) this.#die(player, 'fall');
+    });
+  }
 
-    // An obstacle hit wins over a grab in the same step, and applies while hanging too.
-    const hit = this.#hitsObstacle(monkey.x, monkey.y);
-    if (hit) {
-      this.#die('obstacle', hit.type);
-      return;
+  // A banana the monkey touches (hanging or flying) is taken: points for it, and the
+  // next BOOST_GRABS grabs of every monkey in the world are boosted (a second banana
+  // starts the count again). Sharing the boost keeps a shared liana's swing the same
+  // for both monkeys in shared screen.
+  #takeBanana(player) {
+    const m = this.monkeys[player];
+    for (const banana of this.bananas.values()) {
+      if (!banana || this.takenBananas.has(banana.gap) || !banana.touches(m.x, m.y, MONKEY_RADIUS)) continue;
+      this.takenBananas.add(banana.gap);
+      for (const monkey of this.monkeys) if (monkey.state !== MonkeyState.DEAD) monkey.boostGrabs = BOOST_GRABS;
+      this.scores[player] += BANANA_POINTS;
+      this.events.push({ type: 'banana', gap: banana.gap, score: this.scores[player], player });
     }
-    if (monkey.state === MonkeyState.AIRBORNE) this.#tryGrab();
-    // Only falling out of the bottom ends the run; flying above the top does not.
-    if (monkey.y > WORLD_HEIGHT + MONKEY_RADIUS) this.#die('fall');
+  }
+
+  // The banana in `gap` if it is there to take.
+  bananaAt(gap) {
+    const banana = this.bananas.get(gap);
+    return banana && !this.takenBananas.has(gap) ? banana : null;
   }
 
   // Returns and clears the events emitted since the last call.
@@ -74,21 +205,44 @@ export class World {
   }
 
   // `obstacle` is the type of obstacle hit, for cause 'obstacle'.
-  #die(cause, obstacle) {
-    const m = this.monkey;
+  #die(player, cause, obstacle) {
+    const m = this.monkeys[player];
     m.kill();
     if (cause === 'obstacle') {
       // Bounce off and pop up, then tumble down out of the screen.
       m.vx = -DEATH_BOUNCE * m.vx;
       m.vy = Math.min(m.vy, 0) - DEATH_POP;
     }
-    this.events.push(obstacle ? { type: 'death', cause, obstacle } : { type: 'death', cause });
+    this.events.push(obstacle ? { type: 'death', cause, obstacle, player } : { type: 'death', cause, player });
+    this.lives[player]--;
+    if (this.lives[player] > 0) this.respawnStep[player] = this.stepCount + Math.round(RESPAWN_DELAY_MS / 1000 / SIM_DT);
+  }
+
+  // Takes a life from a monkey for a reason outside the world (`cause`), as when shared
+  // screen leaves it behind. Does nothing if it is already dead.
+  eliminate(player, cause) {
+    if (this.monkeys[player].state === MonkeyState.DEAD) return;
+    this.#die(player, cause);
+  }
+
+  // Hangs the monkey on its respawn liana at RESPAWN_GRIP, swinging forward and
+  // slipping, invulnerable for a while.
+  #respawn(player) {
+    const m = this.monkeys[player];
+    const index = this.respawnLiana(player);
+    const liana = this.lianas.get(index);
+    this.respawnStep[player] = null;
+    Object.assign(m, { vx: 1, vy: 0, excludedLiana: null, slipping: true });
+    m.grab(liana, RESPAWN_GRIP);
+    this.lastLiana[player] = index;
+    this.invulnerableUntil[player] = this.stepCount + Math.round(RESPAWN_INVULN_MS / 1000 / SIM_DT);
+    this.events.push({ type: 'respawn', liana: index, player });
   }
 
   // Where the monkey would fly if released now (or where its current flight goes),
   // with the same rules as step(). For the debug overlay.
-  predictFlight(maxSteps = 720) {
-    const m = this.monkey;
+  predictFlight(maxSteps = 720, player = 0) {
+    const m = this.monkeys[player];
     if (m.state === MonkeyState.DEAD) return { path: [], outcome: 'dead' };
     const excluded = m.state === MonkeyState.HANGING ? m.liana.index : m.excludedLiana?.index;
     const body = { x: m.x, y: m.y, vx: m.vx, vy: m.vy };
@@ -96,45 +250,56 @@ export class World {
     for (let i = 0; i < maxSteps; i++) {
       ballisticStep(body, SIM_DT, GRAVITY);
       path.push({ x: body.x, y: body.y });
-      if (this.#hitsObstacle(body.x, body.y)) return { path, outcome: 'hit' };
+      if (this.#hitsObstacle(body.x, body.y, this.time + (i + 1) * SIM_DT)) return { path, outcome: 'hit' };
       if (this.#grabCandidate(body.x, body.y, excluded)) return { path, outcome: 'grab' };
       if (body.y > WORLD_HEIGHT + MONKEY_RADIUS) return { path, outcome: 'fall' };
     }
     return { path, outcome: 'none' };
   }
 
-  // The obstacle a monkey at (x, y) touches, or null.
-  #hitsObstacle(x, y) {
+  // The obstacle a monkey at (x, y) touches (at world time `time`, by default now), or null.
+  #hitsObstacle(x, y, time = null) {
     for (const obstacle of this.obstacles.values()) {
-      if (obstacle && obstacle.hitsCircle(x, y, MONKEY_RADIUS)) return obstacle;
+      if (!obstacle) continue;
+      const hit = time === null ? obstacle.hitsCircle(x, y, MONKEY_RADIUS) : obstacle.hitsCircleAt(time, x, y, MONKEY_RADIUS);
+      if (hit) return obstacle;
     }
     return null;
   }
 
   // Reaching liana `to` forward from liana `from` scores the obstacle in every gap
   // between them (normally one; more if the monkey flew over lianas above the canopy).
-  #score(from, to) {
+  #score(player, from, to) {
+    const scored = this.scoredGapsBy[player];
     for (let gap = from; gap < to; gap++) {
-      if (this.scoredGaps.has(gap)) continue;
+      if (scored.has(gap)) continue;
       const obstacle = this.obstacles.has(gap) ? this.obstacles.get(gap) : this.makeObstacle(gap);
       if (!obstacle) continue;
-      this.scoredGaps.add(gap);
-      this.score++;
-      this.events.push({ type: 'score', gap, score: this.score });
+      scored.add(gap);
+      this.scores[player]++;
+      this.events.push({ type: 'score', gap, score: this.scores[player], player });
     }
   }
 
   // Closest liana touching a monkey at (x, y), other than `excludedIndex`. Compared by
   // index: lianas are regenerated as new objects after being culled.
+  //
+  // The gameplay hitbox of a liana is its vertical segment, whatever its cosmetic sway;
+  // but one a monkey swings on (shared screen) is caught where the rope actually is, so
+  // the one joining it does not jump across to it.
   #grabCandidate(x, y, excludedIndex) {
-    const first = Math.ceil((x - MONKEY_RADIUS) / LIANA_SPACING);
-    const last = Math.floor((x + MONKEY_RADIUS) / LIANA_SPACING);
+    const reach = MONKEY_RADIUS + LIANA_LENGTH * Math.sin(SWING_AMPLITUDE);
+    const first = Math.ceil((x - reach) / LIANA_SPACING);
+    const last = Math.floor((x + reach) / LIANA_SPACING);
     let best = null;
     let bestDistSq = MONKEY_RADIUS * MONKEY_RADIUS;
     for (let i = first; i <= last; i++) {
       const liana = this.lianas.get(i);
       if (!liana || i === excludedIndex) continue;
-      const p = closestPointOnSegment(x, y, liana.x, liana.anchorY, liana.x, liana.tipY);
+      const angle = liana.held ? liana.angle : 0;
+      const tipX = liana.x + liana.length * Math.sin(angle);
+      const tipY = liana.anchorY + liana.length * Math.cos(angle);
+      const p = closestPointOnSegment(x, y, liana.x, liana.anchorY, tipX, tipY);
       const distSq = (x - p.x) ** 2 + (y - p.y) ** 2;
       if (distSq <= bestDistSq) {
         best = { liana, contactRadius: p.t * liana.length };
@@ -144,14 +309,21 @@ export class World {
     return best;
   }
 
-  #tryGrab() {
-    const m = this.monkey;
+  #tryGrab(player) {
+    const m = this.monkeys[player];
     const best = this.#grabCandidate(m.x, m.y, m.excludedLiana?.index);
     if (best) {
       const from = m.excludedLiana.index; // the liana released for this flight
       m.grab(best.liana, best.contactRadius);
-      this.events.push({ type: 'grab', liana: best.liana.index });
-      this.#score(from, best.liana.index);
+      this.lastLiana[player] = best.liana.index;
+      this.events.push({ type: 'grab', liana: best.liana.index, player });
+      this.#score(player, from, best.liana.index);
+      // The obstacle ahead of liana i is obstacle #i (in gap i).
+      const stage = stageFor(best.liana.index).number;
+      if (stage > this.stages[player]) {
+        this.stages[player] = stage;
+        this.events.push({ type: 'stage', stage, player });
+      }
     }
   }
 }

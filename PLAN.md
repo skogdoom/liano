@@ -53,11 +53,16 @@ v1 (milestones 1–14) is built and released as v1.x. It has touch and phone sup
 ## Grip and slip
 
 - On grab the liana is vertical (θ = 0). The swing starts in the direction of the monkey's horizontal velocity: θ(t) = dir · A · sin(ω·t), where ω = 2π / period.
-- The grip radius starts at the contact radius r₀ and grows at SLIP_SPEED: r(t) = min(r₀ + SLIP_SPEED·t, L).
+- The grip radius starts at the contact radius r₀ and grows at a steady slip speed s: r(t) = min(r₀ + s·t, L).
+- Each grip gets its own s, so that the grip reaches the tip at SLIP_OFF_PHASE: on the upswing to the right, mid-way through the forward release window. s is the fastest speed up to MAX_SLIP_SPEED that lands on that phase, so it varies with where the liana was caught (about 7–38 px/s).
+- The forced release is therefore a hop to the next liana unless an obstacle is in the way. An idle player is carried forward over clear gaps.
 - Hanging position = anchor + r·(sin θ, cos θ).
 - Release velocity combines the tangential and radial components: v = r·θ'·(cos θ, −sin θ) + r'·(sin θ, cos θ).
 - A forced release at r = L uses the same formula.
-- Time on a liana is bounded: at most (L − r₀) / SLIP_SPEED. This bound is what keeps moving obstacles fair (see Feasibility).
+- Time on a liana is bounded: at most (L − r₀) / MAX_SLIP_SPEED plus one swing period. This bound is what keeps moving obstacles fair (see Feasibility).
+- A catch below MAX_ENTRY_RADIUS grips at MAX_ENTRY_RADIUS, so catching the very tip still leaves a forward swing before the forced release.
+- On the title screen the monkey hangs at START_GRIP without slipping; the slip starts with the run.
+- Consequence of the v1 swing (spacing 700): a release reaches the next liana only from about 290–310 px down the rope. So a catch higher than FLOW_GRIP (0.7 L) first slides quickly down to it (QUICK_SLIP_SPEED), then slips as above: every catch then has a release window on its first forward swing (about 0.2 s after the grab), boosted or not, instead of waiting up to 5 s. The quick slide does not add to the release velocity. Backward windows exist only for grips up to about 340 px before the forced release.
 - This replaces v1's grip slide to a fixed 90 % radius.
 - Visual: the monkey's hand visibly slides down the vine. Near the tip, the vine end flashes as a warning.
 
@@ -65,16 +70,17 @@ v1 (milestones 1–14) is built and released as v1.x. It has touch and phone sup
 
 **Static** (from obstacle #1): branch, thorn bush, rock. Random height in the gap, horizontally centered, rerolled until clear of both neighbouring lianas' swept areas.
 
-**Moving** (from obstacle #16, share set by the stage). Each moving obstacle has a deterministic `position(t)` and `hitbox(t)` with period P, driven by world time since it spawned. It stays confined to its own gap and never enters a liana's swing arc, so a hanging monkey can never be hit with no way out:
+**Moving** (from obstacle #6 (MOVING_FROM), share set by the stage). Each moving obstacle has a deterministic `position(t)` and `hitbox(t)` with period P, driven by world time (counted in whole sim steps) plus a seeded phase, so the solver can match the world exactly. It stays confined to its own gap and never enters a liana's swing arc, so a hanging monkey can never be hit with no way out:
 - **Spider:** descends and ascends on a thread from the canopy. Vertical oscillation between two heights.
 - **Snake:** climbs up and down a vine standing in the gap, moving vertically along it.
 - **Bird:** patrols horizontally between two x bounds inside the gap, with a slight bob. The patrol bounds must stay outside every liana's swing arc.
+- Room for them: at the gap centre a moving hitbox stays clear of the swings only above y ≈ 213 or below y ≈ 288, while valid flights cross the centre at y ≈ 189–361. So spiders work the high band (lowest point 175–212), snakes the low band (highest point 290–320), and birds patrol low (y 330–390), as wide as the swings allow (±35 to ±117 px). In testing they block about 10–20 % of otherwise valid releases.
 
 ## Bananas
 
 - Placed in some gaps (BANANA_CHANCE), on a trajectory riskier than the easiest safe one. The generator picks a point along a valid but non-minimal-risk flight.
 - Collected on touch, in the air or while hanging.
-- Effect: +BANANA_POINTS, and the boost counter is set to BOOST_GRABS. Picking up another banana while boosted resets the counter to BOOST_GRABS; boosts do not stack in strength.
+- Effect: +BANANA_POINTS for the taker, and the boost counter of every alive monkey in that world is set to BOOST_GRABS (in shared screen both monkeys get the boost, so a liana they share swings the same for both). Picking up another banana while boosted resets the counter to BOOST_GRABS; boosts do not stack in strength.
 - While the counter is above zero, each new grab swings with period SWING_PERIOD / BOOST_FACTOR, and the counter decreases by 1 per grab.
 - The boost is cleared on death.
 - HUD: a banana icon near the monkey showing the remaining boosted grabs.
@@ -85,12 +91,12 @@ Stages are keyed on **obstacle index**, not score. This way banana points don't 
 
 | Stage | Obstacles | Min release window | Moving share | Obstacle scale |
 |---|---|---|---|---|
-| 1 | 1–15 | 90 ms | 0% | 1.00 |
+| 1 | 1–15 | 90 ms | 0% for 1–5, then 15% | 1.00 |
 | 2 | 16–30 | 80 ms | 25% | 1.10 |
 | 3 | 31–50 | 70 ms | 50% | 1.20 |
 | 4 | 51+ | 60 ms | 70% | 1.30 |
 
-All of these values are starting points for tuning. Scaled obstacles must still pass the swing-clearance rule; heights that fail are rerolled.
+All of these values are starting points for tuning. Scaled obstacles must still pass the swing-clearance rule; heights that fail are rerolled. The tint multiplies the background only (sky, parallax, canopy and floor), so lianas, obstacles and the monkey stay readable at night.
 
 ## Two-player rules
 
@@ -109,11 +115,11 @@ All of these values are starting points for tuning. Scaled obstacles must still 
 
 **Shared screen.**
 - One world containing both monkeys.
-- The camera follows the leader: the alive, non-invulnerable monkey with the largest x. If the leader dies, the camera switches smoothly to the other monkey.
-- The trailing monkey loses a life when it goes fully off the left edge.
-- Respawn on the leftmost liana that is fully on screen.
+- The camera follows the leader: the alive, non-invulnerable monkey with the largest x (its liana while it hangs), kept at SHARED_LEADER_X of the view. If the leader dies, the camera switches smoothly to the other monkey.
+- The trailing monkey loses a life when it goes fully off the left edge (a hanging one: when its liana does).
+- Respawn on the last liana grabbed if it is fully on screen, else on the leftmost liana that is. While no monkey is alive (the other one out, this one about to respawn) the camera holds still.
 - Monkeys do not collide with each other.
-- A liana can hold both monkeys at once. A monkey grabbing a liana that is already swinging joins the current swing phase, at its own grip radius.
+- A liana can hold both monkeys at once. A monkey grabbing a liana that is already swinging joins the current swing phase, at its own grip radius. A liana another monkey swings on is caught where its rope is (other lianas by their vertical hitbox), so the joining monkey does not jump across to it; a flight can miss a rope that has swung away.
 
 ## Feasibility (fairness guarantee)
 
@@ -129,7 +135,7 @@ A useful design constraint: if the time on a liana from the lowest sampled entry
 Implementation notes:
 - **Step size.** The solver simulates releases at the sim step (1/120 s), so it agrees exactly with the real world. v1 tests this for every release step; keep that test.
 - **Static gaps** keep the build-time window table (`src/sim/windowTable.json`, fingerprinted by its inputs, rebuilt with `npm run windows` and checked in CI). It now also covers entry radii, the boosted variant and the stage's obstacle scale. Generation stays a table lookup, with no solver work during play.
-- **Moving gaps** are checked by the solver in a Web Worker, generating a buffer of at least 5 gaps ahead of the furthest monkey. Budget: at most 20 ms per gap. No frame may go over 16 ms because of generation.
+- **Moving gaps** are checked by the solver in a Web Worker, generating a buffer of at least 5 gaps ahead of the furthest monkey. Budget: at most 20 ms per gap. No frame may go over 16 ms because of generation. Generation is deterministic in (seed, gap), so the worker only computes ahead of time: a gap it has not delivered yet is generated on the spot with the same result. The solver reuses the empty-gap flights (cached per entry radius) and only checks them against the obstacle's position at each flight point's time: under 1 ms per candidate.
 - **Known gaps in the guarantee.** It is sampled, not a proof. It doesn't cover a monkey joining an already-swinging liana in shared mode, or respawn edge cases. This is acceptable for versus play.
 
 ## Simulation model
@@ -217,20 +223,32 @@ Values from v1 are the tuned, current ones. New v2 values are starting points.
 | SWING_AMPLITUDE | 50° | |
 | SWING_PERIOD | 2.6 s | Slower swing, tuned in v1 (v2 draft: 1.8 s) |
 | GRAVITY | 600 px/s² | Tuned in v1; 400 felt too floaty (v2 draft: 1800) |
-| SLIP_SPEED | 60 px/s | New; retune against the v1 swing |
+| MAX_SLIP_SPEED | 40 px/s | New. At most (L − 310) / P ≈ 42 px/s, so every grip passes a forward swing low enough on the rope before it is forced off (v2 draft: a fixed SLIP_SPEED of 60) |
+| FLOW_GRIP, QUICK_SLIP_SPEED | 0.7 × L, 1000 px/s | New; catches above FLOW_GRIP slide quickly down to it |
+| SLIP_OFF_PHASE | 0.11 × P after the bottom, swinging right | New; the forced release comes mid-way through the forward window (about 0.05–0.165 × P) |
 | ENTRY_RADII | [0.35, 0.5, 0.65, 0.8, 0.95] × L | New |
+| MAX_ENTRY_RADIUS | 0.95 × L | New; lower catches grip here |
+| START_GRIP | 0.7 × L | New; the grip at the start of a run |
+| TIP_WARNING_TIME | 1 s | New; the vine end blinks this long before the forced release, faster in the last half |
 | MONKEY_RADIUS | 22 | |
 | OBSTACLE_Y_RANGE | [140, 375] | Heights ~[195, 315] are rejected by swing clearance (v2 draft: [140, 620]) |
 | LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a swept area, beyond MONKEY_RADIUS |
 | MIN_RELEASE_WINDOW_MS | 90 | Stage 1; later stages per the stage table |
+| MOVING_FROM | 6 | New; obstacles 1–5 are always static (v2 draft: moving from #16) |
 | MOVING_PERIOD_RANGE | 1.5–3.0 s | New |
-| BANANA_CHANCE | 0.15 per gap | New; not within 2 gaps of the previous banana |
+| SPIDER_LOW_RANGE, SPIDER_TRAVEL_RANGE | 175–212, 80–150 px | New; lowest point and climb |
+| SNAKE_HIGH_RANGE, SNAKE_TRAVEL_RANGE | 290–320, 90–160 px | New; highest point and slide |
+| BIRD_Y_RANGE, BIRD_BOB | 330–390, 8 px | New; patrol bounds are derived from the swings |
+| BANANA_CHANCE | 0.25 per gap as a candidate | New; a candidate is dropped if either of the two gaps before it is one: about 14 % of gaps, at least 3 apart (v2 draft: 0.15 per gap) |
+| BANANA_RADIUS | 14 | New; drawn at 1.4× |
 | BANANA_POINTS | 3 | New |
 | BOOST_GRABS | 3 | New |
-| BOOST_FACTOR | 1.35 | New |
+| BOOST_FACTOR | 1.25 | New; BOOST_PERIOD rounds to 250 steps (2.083 s), an even step count as the slip timing needs (v2 draft: 1.35, felt too fast) |
 | LIVES_2P | 3 | New |
 | RESPAWN_GRIP | 0.7 × L | New |
 | RESPAWN_INVULN_MS | 1500 | New |
+| RESPAWN_DELAY_MS | 1000 | New; the dead monkey tumbles this long before respawning |
+| SHARED_LEADER_X | 0.62 × width | New; shared screen's leader position, so one liana behind stays in view |
 | CAMERA_TARGET_X | 0.35 × width | Landscape |
 | CAMERA_LERP | 8 /s | |
 | GAMEOVER_INPUT_LOCK_MS | 400 | |
@@ -406,36 +424,52 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
 Implement in order. Each milestone must end in a runnable, tested state, with every v1 feature still working: touch, sound, full screen, portrait, the flexible frame and hardening. The v2 draft's milestones 1 (scaffold), 3 (world, camera, scoring), 4 (static obstacles) and 6 (base art) are already built in v1. The parts they add (modes, N monkeys, RESULTS) are folded into milestone 15.
 
 **15. Modes and N monkeys.** TITLE/PLAYING/RESULTS states, title mode picker (only 1P enabled for now), per-player keys in the input module, a world holding N monkeys (N = 1 for now), `match.js` for mode rules.
-- [ ] Held keys don't repeat for any action key; the mode picker works with keys and, for 1P, with a tap
-- [ ] 1P plays exactly as in v1 (existing tests pass unchanged)
+- [x] Held keys don't repeat for any action key; the mode picker works with keys and, for 1P, with a tap (unit tested; checked in Chromium, including touch, where the picker is hidden and a tap starts 1P)
+- [x] 1P plays exactly as in v1 (existing tests pass; the only edits are the renamed states TITLE and RESULTS and the new `player` field on events)
 
 **16. Slip and forced release.** Grip slip and forced release replace the fixed grip slide. Release velocity gains the radial part. The feasibility solver and the window table cover entry radii. The debug overlay shows the slip and the forced-release point.
-- [ ] Grab at the contact radius; slip reaches the tip and forces a release
-- [ ] Release velocity includes the radial component (unit tested)
-- [ ] The just-released liana cannot be regrabbed; backward flight can land on the previous liana
-- [ ] 1,000 seeded gaps: all feasible for every entry radius
+- [x] Grab at the contact radius; slip reaches the tip and forces a release
+- [x] Release velocity includes the radial component (unit tested)
+- [x] The just-released liana cannot be regrabbed; backward flight can land on the previous liana
+- [x] 1,000 seeded gaps: all feasible for every entry radius
 
 **17. Moving obstacles.** Spider, snake, bird with periodic motion; the solver gains the phase dimension and runs in a worker; art for all three; a "bong" pitch for each.
-- [ ] 1,000 seeded gaps from stage 2+: all feasible for every entry radius × phase
-- [ ] No moving obstacle's path intersects a swing arc; bird patrol bounds are asserted in the generator
-- [ ] No frame over 16 ms from generation
+- [x] 1,000 seeded gaps from stage 2+: all feasible for every entry radius × phase (tested from obstacle 6, where moving obstacles now start)
+- [x] No moving obstacle's path intersects a swing arc; bird patrol bounds are asserted in the generator
+- [x] No frame over 16 ms from generation
+- [x] The moving solver agrees with the real world for every release step (sampled arrivals)
+- Note: the stage table (STAGES) was added here for the moving share; M18 wires up the rest of it.
 
 **18. Difficulty stages.** Stage table, stage banner, background tint, obstacle scaling.
-- [ ] Stage is derived from obstacle index; banana points don't affect it (unit tested)
+- [x] Stage is derived from obstacle index; banana points don't affect it (unit tested)
+- [x] Each stage's obstacles use its scale and shortest release window; 1,000 seeded gaps across all stages pass their stage's window (the window table has a section per scale)
+- [x] Banner ("Stage 2 · Late afternoon") low in the band, clear of the swings; the background tint eases over 2.5 s and starts over at day on a new run
+- Notes: a stage starts on grabbing the liana before its first obstacle (obstacle #i is in gap i). At scale 1.3 a branch fits only at y 371–375, so stage-4 branches almost always sit at the bottom.
 
 **19. Bananas.** Placement, pickup, boost counter, bonus points, HUD indicator; the solver gains the boosted variant.
-- [ ] Gaps within BOOST_GRABS after a banana pass both normal and boosted checks
-- [ ] Boost resets to BOOST_GRABS on repeat pickup and clears on death
+- [x] Gaps within BOOST_GRABS after a banana pass both normal and boosted checks
+- [x] Boost resets to BOOST_GRABS on repeat pickup and clears on death
+- Notes: whether a gap has a banana depends only on (seed, gap) (a candidate with BANANA_CHANCE 0.25, dropped if either of the two gaps before is a candidate: about 14 % of gaps, at least 3 apart), so an obstacle knows whether to pass the boosted check without generating bananas. A banana sits on a flight one or two release steps inside either end of a clearing release window. The boosted period is rounded to 250 steps (factor 1.248) for the slip timing. Bananas are generated in the worker with the obstacles. No pickup sound (decision 25); a "+3" rises where one was taken.
 
 **20. 2P split screen.** Two worlds with one seed, two viewports, lives, respawn with invulnerability, per-pane HUD, results screen.
-- [ ] A player with no lives left stops; the other continues; the winner is decided by totals
+- [x] A player with no lives left stops; the other continues; the winner is decided by totals
+- [x] Two worlds with one seed in stacked 1280×360 panes at 0.5 scale (each clipped, with its own camera, background, tint and stage banner); P2's monkey is ginger
+- [x] Lives: a lost life tumbles for RESPAWN_DELAY_MS, then respawns on the last liana grabbed at RESPAWN_GRIP, blinking and invulnerable to obstacles for RESPAWN_INVULN_MS; boosts are lost
+- [x] Per-pane HUD (score and hearts, OUT), "P1 is out" in the pane, results panel with the winner or a draw; the session best is for 1P only
+- Notes: the off-screen arrow is for the single pane only; the title's key hints for 2P come with milestone 22.
 
 **21. 2P shared screen.** Leader camera, left-edge elimination, respawn on the leftmost fully visible liana, shared lianas.
-- [ ] Two monkeys can hang on the same liana, each at its own grip radius, in the same swing phase
-- [ ] The camera handles a leader death without snapping
+- [x] Two monkeys can hang on the same liana, each at its own grip radius, in the same swing phase
+- [x] The camera handles a leader death without snapping
+- [x] A monkey left behind the left edge loses a life and respawns on the leftmost liana fully in view
+- Notes: the leader sits at SHARED_LEADER_X (62 %) of the view, and while it hangs the camera follows its liana rather than its swing, so a monkey one liana behind stays in view. A hanging monkey is only left behind once its liana is off the left edge too (swinging back out of view is fine); a flying one by its position. A banana boosts both monkeys; a monkey joining a boosted swing uses one of its boosted grabs, so the two counts stay in step, and one joining an unboosted swing keeps its boost. The leader camera is part of the rules (src/sim/sharedView.js), since it decides who is left behind.
 
 **22. Polish.** Key-binding hints on the title screen; death feedback and pause for 2P (both already exist for 1P).
-- [ ] Full loop in every mode: title → play → results → title, with no reload
+- [x] Full loop in every mode: title → play → results → title, with no reload (Esc from a run or the results goes to the title, a quit 1P run still counting for the best; 1, 2, 3 from the results go to it with that mode)
+- [x] P pauses and resumes a run in every mode ("Press P to resume"), not the title screen or the results; blur still pauses too
+- [x] Title hints name each player's key in 2P ("P1 A · P2 L · let go"); the results prompt offers Esc for the menu
+- [x] Death feedback per pane: every death shakes its pane (each lost life in 2P), off with reduced motion; pause covers every mode
+- [x] Shared screen starts player 2 lower on the first liana (START_GRIP_STEP), so neither monkey hides the other
 
 ## Decisions (confirm or change)
 

@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { LianaState } from '../src/sim/liana.js';
-import { tangentialVelocity } from '../src/sim/physics.js';
+import { tangentialVelocity, hangingVelocity } from '../src/sim/physics.js';
+import { tipFlashOn } from '../src/render/lianaView.js';
+import { slipSteps, quickSlide } from '../src/sim/monkey.js';
+import { validReleaseSteps } from '../src/sim/feasibility.js';
 import {
   PERIOD_STEPS,
   FORWARD_RELEASE_STEP,
@@ -15,8 +18,17 @@ import {
 import {
   SIM_DT,
   SWING_AMPLITUDE,
-  GRIP_RADIUS,
-  GRIP_SLIDE_TIME,
+  START_GRIP,
+  MAX_SLIP_SPEED,
+  FLOW_GRIP,
+  SWING_PERIOD,
+  BOOST_PERIOD,
+  ENTRY_RADII,
+  QUICK_SLIP_SPEED,
+  SLIP_OFF_PHASE,
+  MAX_ENTRY_RADIUS,
+  LIANA_LENGTH,
+  TIP_WARNING_TIME,
   LIANA_SPACING,
   ANCHOR_Y,
 } from '../src/config.js';
@@ -31,13 +43,19 @@ function recordSwing(world, steps) {
 }
 
 describe('swing', () => {
-  it('starts hanging on liana 0 at the grip radius', () => {
+  it('starts hanging on liana 0 at the start grip, without slipping until the run starts', () => {
     const world = emptyWorld();
     const { monkey } = world;
     expect(monkey.state).toBe(MonkeyState.HANGING);
     expect(monkey.liana.index).toBe(0);
     expect(monkey.x).toBeCloseTo(0);
-    expect(monkey.y).toBeCloseTo(ANCHOR_Y + GRIP_RADIUS);
+    expect(monkey.y).toBeCloseTo(ANCHOR_Y + START_GRIP);
+    stepN(world, 3 * PERIOD_STEPS);
+    expect(monkey.gripRadius).toBe(START_GRIP);
+    world.start();
+    stepN(world, 60);
+    expect(monkey.slipSpeed).toBeGreaterThan(0);
+    expect(monkey.gripRadius).toBeCloseTo(START_GRIP + monkey.slipSpeed * 60 * SIM_DT, 9);
   });
 
   it.each([
@@ -63,24 +81,142 @@ describe('swing', () => {
     }
   });
 
-  it('slides from the contact point to the grip radius', () => {
+  it('grabs at the contact point, slides quickly down to FLOW_GRIP, then slips steadily', () => {
     const world = emptyWorld();
+    world.start();
     throwMonkey(world, { x: LIANA_SPACING - 30, y: 150, vx: 400, vy: 0 });
     expect(flyUntilGrab(world)).toBe(1);
     const { monkey } = world;
-    expect(monkey.gripRadius).toBeLessThan(GRIP_RADIUS - 100);
-
-    let previous = monkey.gripRadius;
-    const slideSteps = Math.ceil(GRIP_SLIDE_TIME / SIM_DT);
-    for (let i = 0; i < slideSteps; i++) {
+    const entry = monkey.gripRadius;
+    const speed = monkey.slipSpeed;
+    expect(speed).toBeGreaterThan(0);
+    expect(speed).toBeLessThanOrEqual(MAX_SLIP_SPEED);
+    // The contact point: where the monkey touched the rope, about 170 px down.
+    expect(entry).toBeGreaterThan(140);
+    expect(entry).toBeLessThan(200);
+    const quickTime = (FLOW_GRIP - entry) / QUICK_SLIP_SPEED;
+    for (let i = 1; i <= 120; i++) {
       world.step(SIM_DT);
-      expect(monkey.gripRadius).toBeGreaterThanOrEqual(previous);
-      previous = monkey.gripRadius;
+      const t = i * SIM_DT;
+      const expected = t < quickTime ? entry + QUICK_SLIP_SPEED * t : FLOW_GRIP + speed * (t - quickTime);
+      expect(monkey.gripRadius).toBeCloseTo(expected, 9);
+      const dx = monkey.x - monkey.liana.x;
+      const dy = monkey.y - monkey.liana.anchorY;
+      expect(Math.hypot(dx, dy)).toBeCloseTo(monkey.gripRadius, 9);
     }
-    expect(monkey.gripRadius).toBeCloseTo(GRIP_RADIUS, 9);
-    const dx = monkey.x - monkey.liana.x;
-    const dy = monkey.y - monkey.liana.anchorY;
-    expect(Math.hypot(dx, dy)).toBeCloseTo(GRIP_RADIUS, 9);
+  });
+
+  it('grips no lower than MAX_ENTRY_RADIUS when catching the tip', () => {
+    const world = emptyWorld();
+    world.start();
+    throwMonkey(world, { x: LIANA_SPACING - 30, y: ANCHOR_Y + LIANA_LENGTH + 10, vx: 400, vy: 0 });
+    expect(flyUntilGrab(world)).toBe(1);
+    expect(world.monkey.gripRadius).toBeCloseTo(MAX_ENTRY_RADIUS, 0);
+  });
+
+  it('times each slip to reach the tip on the upswing to the right, no faster than MAX_SLIP_SPEED', () => {
+    const offStep = Math.round(SLIP_OFF_PHASE * PERIOD_STEPS);
+    for (const gripFrom of [100, 147, 250, 300, 310, 380, 399]) {
+      for (const swing of [0, 17, 150, 311]) {
+        for (const dir of [1, -1]) {
+          const n = slipSteps(gripFrom, swing, dir);
+          // After any quick slide down to FLOW_GRIP.
+          const { quickTo, quickTime } = quickSlide(gripFrom);
+          const speedIn = (steps) => (LIANA_LENGTH - quickTo) / (steps * SIM_DT - quickTime);
+          expect(speedIn(n)).toBeLessThanOrEqual(MAX_SLIP_SPEED + 1e-9);
+          // As fast as allowed: one period sooner would be too fast.
+          const sooner = n - PERIOD_STEPS;
+          expect(sooner * SIM_DT <= quickTime || speedIn(sooner) > MAX_SLIP_SPEED).toBe(true);
+          // θ = dir · A · sin(ωt) is then right of vertical and rising.
+          const t = (swing + n) * SIM_DT;
+          const w = (2 * Math.PI) / (PERIOD_STEPS * SIM_DT);
+          expect(dir * Math.sin(w * t)).toBeGreaterThan(0);
+          expect(dir * Math.cos(w * t)).toBeGreaterThan(0);
+          expect(((swing + n - (dir > 0 ? 0 : PERIOD_STEPS / 2)) % PERIOD_STEPS + PERIOD_STEPS) % PERIOD_STEPS).toBe(offStep);
+        }
+      }
+    }
+  });
+
+  it('forces a release at the tip, flying on with the current velocity', () => {
+    const world = emptyWorld();
+    world.start();
+    const { monkey } = world;
+    const steps = slipSteps(START_GRIP);
+    stepN(world, steps - 1);
+    expect(monkey.state).toBe(MonkeyState.HANGING);
+    world.takeEvents();
+    const liana = monkey.liana;
+    world.step(SIM_DT);
+    expect(world.takeEvents()).toEqual([{ type: 'release', liana: 0, player: 0, forced: true }]);
+    expect(monkey.state).toBe(MonkeyState.AIRBORNE);
+    expect(monkey.excludedLiana).toBe(liana);
+    expect(liana.angle).toBeGreaterThan(0);
+    expect(liana.angularVelocity).toBeGreaterThan(0);
+    const expected = hangingVelocity(LIANA_LENGTH, monkey.slipSpeed, liana.angle, liana.angularVelocity);
+    expect(monkey.vx).toBeCloseTo(expected.vx, 9);
+    expect(monkey.vy).toBeCloseTo(expected.vy, 9);
+  });
+});
+
+describe('flow', () => {
+  it('lets every catch go on at the first forward swing, boosted or not', () => {
+    for (const period of [SWING_PERIOD, BOOST_PERIOD]) {
+      const half = Math.round(period / SIM_DT / 2);
+      for (const r of [60, 100, ...ENTRY_RADII, LIANA_LENGTH]) {
+        const { valid } = validReleaseSteps(null, r, 0, 1, 0, period);
+        const first = valid.indexOf(true);
+        expect({ period, r, early: first >= 0 && first < half }).toEqual({ period, r, early: true });
+      }
+    }
+  });
+
+  it('does not throw the monkey with the quick slide', () => {
+    const world = emptyWorld();
+    world.start();
+    throwMonkey(world, { x: LIANA_SPACING - 30, y: 60, vx: 400, vy: 0 });
+    expect(flyUntilGrab(world)).toBe(1);
+    world.step(SIM_DT);
+    const { monkey } = world;
+    const liana = monkey.liana;
+    expect(monkey.gripRadius).toBeLessThan(FLOW_GRIP);
+    const tangential = tangentialVelocity(monkey.gripRadius, liana.angle, liana.angularVelocity);
+    world.release();
+    expect(monkey.vx).toBeCloseTo(tangential.vx, 9);
+    expect(monkey.vy).toBeCloseTo(tangential.vy, 9);
+  });
+});
+
+describe('forced release', () => {
+  it('carries an idle monkey from liana to liana over empty gaps', () => {
+    const world = emptyWorld();
+    world.start();
+    for (let liana = 1; liana <= 4; liana++) {
+      expect(flyUntilGrab(world, 2000)).toBe(liana);
+    }
+    expect(world.alive).toBe(true);
+  });
+});
+
+describe('tip warning', () => {
+  it('counts down to the tip, and blinks the vine end faster near it', () => {
+    const world = emptyWorld();
+    const { monkey } = world;
+    expect(monkey.tipTime).toBe(Infinity);
+    world.start();
+    stepN(world, 60);
+    expect(monkey.tipTime).toBeCloseTo((slipSteps(START_GRIP) - 60) * SIM_DT, 9);
+
+    expect(tipFlashOn(Infinity)).toBe(false);
+    expect(tipFlashOn(TIP_WARNING_TIME + 0.01)).toBe(false);
+    const blinks = (from, to) => {
+      let changes = 0;
+      for (let t = from; t > to + 1e-9; t -= SIM_DT) if (tipFlashOn(t) !== tipFlashOn(t - SIM_DT)) changes++;
+      return changes;
+    };
+    const half = TIP_WARNING_TIME / 2;
+    expect(blinks(TIP_WARNING_TIME, half)).toBeGreaterThan(0);
+    expect(blinks(half, 0)).toBeGreaterThan(blinks(TIP_WARNING_TIME, half));
   });
 });
 
@@ -90,7 +226,7 @@ describe('release', () => {
     stepN(world, steps);
     const { monkey } = world;
     const liana = monkey.liana;
-    const expected = tangentialVelocity(GRIP_RADIUS, liana.angle, liana.angularVelocity);
+    const expected = tangentialVelocity(START_GRIP, liana.angle, liana.angularVelocity);
     const before = { x: monkey.x, y: monkey.y };
 
     expect(world.release()).toBe(true);
@@ -100,6 +236,33 @@ describe('release', () => {
     // Position is continuous across the release.
     expect(monkey.x).toBe(before.x);
     expect(monkey.y).toBe(before.y);
+  });
+
+  it('adds the slip along the rope to the tangential velocity (unit tested)', () => {
+    const world = emptyWorld();
+    world.start();
+    stepN(world, 50);
+    const { monkey } = world;
+    const liana = monkey.liana;
+    const tangential = tangentialVelocity(monkey.gripRadius, liana.angle, liana.angularVelocity);
+    world.release();
+    expect(monkey.vx).toBeCloseTo(tangential.vx + monkey.slipSpeed * Math.sin(liana.angle), 9);
+    expect(monkey.vy).toBeCloseTo(tangential.vy + monkey.slipSpeed * Math.cos(liana.angle), 9);
+  });
+
+  it('matches the slipping motion around the release', () => {
+    const probe = emptyWorld();
+    probe.start();
+    stepN(probe, 30);
+    const p0 = { x: probe.monkey.x, y: probe.monkey.y };
+    stepN(probe, 2);
+    const p2 = { x: probe.monkey.x, y: probe.monkey.y };
+
+    const world = emptyWorld();
+    world.start();
+    releaseAfter(world, 31);
+    expect(world.monkey.vx).toBeCloseTo((p2.x - p0.x) / (2 * SIM_DT), 0);
+    expect(world.monkey.vy).toBeCloseTo((p2.y - p0.y) / (2 * SIM_DT), 0);
   });
 
   it('matches the hanging motion around the release', () => {
@@ -185,6 +348,16 @@ describe('grab', () => {
     // The swing on liana 0 now starts moving backward.
     stepN(world, 30);
     expect(world.monkey.liana.angle).toBeLessThan(0);
+  });
+
+  it('can fly back to the previous liana while the grip slips', () => {
+    // Backward windows need a grip no lower than about 340 px before the forced release;
+    // the start grip has one on its first backswing.
+    const world = emptyWorld();
+    world.start();
+    releaseAfter(world, BACKWARD_RELEASE_STEP);
+    expect(world.monkey.vx).toBeLessThan(0);
+    expect(flyUntilGrab(world)).toBe(-1);
   });
 
   it('can fly backward from the start liana', () => {

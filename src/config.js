@@ -15,14 +15,58 @@ export const MAX_RESOLUTION = 2;
 
 export const ANCHOR_Y = -20;
 export const LIANA_LENGTH = 420;
-export const GRIP_RADIUS = 0.9 * LIANA_LENGTH;
-export const GRIP_SLIDE_TIME = 0.15; // slide from contact point to GRIP_RADIUS
+// The grip slips from where the liana was caught towards the tip; at the tip the monkey
+// is forced off with its current velocity. Each grip gets its own steady slip speed, so
+// that it reaches the tip at SLIP_OFF_PHASE: the fastest speed up to MAX_SLIP_SPEED that
+// does. A release reaches the next liana only from about 310 px down the rope and on the
+// forward swing, so slipping the last 110 px must take at least one swing period
+// (≤ 42 px/s): then every grip, however high, passes a forward swing low enough on the
+// rope before it is forced off.
+export const MAX_SLIP_SPEED = 40; // px/s
+// A catch higher on the rope than FLOW_GRIP first slides quickly down to it, at
+// QUICK_SLIP_SPEED, then slips as above. From FLOW_GRIP down there is a release window
+// on the first forward swing after a grab, so the jumps keep flowing instead of waiting
+// a swing or two for the grip to slip low enough. The quick slide does not add to the
+// release velocity.
+export const FLOW_GRIP = 0.7 * LIANA_LENGTH;
+export const QUICK_SLIP_SPEED = 1000; // px/s
+// When the forced release comes: this fraction of the swing period after the bottom, on
+// the upswing to the right. Mid-way through the forward release window (about 0.05 to
+// 0.165), so the forced release is a hop to the next liana unless an obstacle is in the way.
+export const SLIP_OFF_PHASE = 0.11;
+// A catch lower on the rope than this grips here instead, so a monkey that catches the
+// very tip still gets a swing before it is forced off.
+export const MAX_ENTRY_RADIUS = 0.95 * LIANA_LENGTH;
+// Where the monkey hangs at the start of a run (and, in 2P, after a respawn). It does
+// not slip on the title screen.
+export const START_GRIP = 0.7 * LIANA_LENGTH;
+// In shared screen player 2 starts this much lower on the same liana, so neither hides
+// the other (both grips have an early release window).
+export const START_GRIP_STEP = 0.1 * LIANA_LENGTH;
+export const RESPAWN_GRIP = 0.7 * LIANA_LENGTH;
+// The vine end blinks for this long (s) before the forced release, faster at the end.
+export const TIP_WARNING_TIME = 1;
+// Entry radii the fairness solver samples: every gap must be passable after grabbing
+// the liana at each of them.
+export const ENTRY_RADII = [0.35, 0.5, 0.65, 0.8].map((f) => f * LIANA_LENGTH).concat(MAX_ENTRY_RADIUS);
 // Wide enough that neighbouring swings (reach LIANA_LENGTH · sin(SWING_AMPLITUDE) ≈ 322)
 // leave the middle of each gap free for obstacles.
 export const LIANA_SPACING = 700;
 
 export const SWING_AMPLITUDE = (50 * Math.PI) / 180;
 export const SWING_PERIOD = 2.6;
+// Bananas: collected on touch (hanging or flying) for BANANA_POINTS, and the next
+// BOOST_GRABS grabs swing BOOST_FACTOR times faster. The boosted period is rounded to
+// an even number of sim steps (250, a factor of 1.248), which the slip timing needs.
+export const BANANA_RADIUS = 14;
+export const BANANA_POINTS = 3;
+export const BOOST_GRABS = 3;
+export const BOOST_FACTOR = 1.25;
+export const BOOST_PERIOD = 2 * Math.round(SWING_PERIOD / BOOST_FACTOR / SIM_DT / 2) * SIM_DT;
+// Each gap from obstacle 1 is a banana candidate with this chance; a candidate becomes
+// a banana unless one of the two gaps before it is a candidate too, so bananas are at
+// least 3 gaps apart and come in about 14 % of the gaps.
+export const BANANA_CHANCE = 0.25;
 export const LIANA_SETTLE_DAMPING = 0.35; // damping ratio of the cosmetic sway after release
 
 export const GRAVITY = 600; // low, for long flights across the wide gaps (400 felt too floaty)
@@ -44,8 +88,42 @@ export const OBSTACLE_HITBOXES = {
     { kind: 'circle', dx: 0, dy: -14, r: 34 },
   ],
   rock: [{ kind: 'circle', dx: 0, dy: 0, r: 36 }],
+  spider: [{ kind: 'circle', dx: 0, dy: 0, r: 18 }],
+  snake: [{ kind: 'circle', dx: 0, dy: 0, r: 18 }],
+  bird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
 };
+
+// Moving obstacles (see obstacle.js). Their whole path stays clear of both
+// neighbouring lianas' swept areas, which at the gap centre leaves the heights above
+// about 213 and below about 288 (valid flights cross the centre at about 189–361).
+// Each moves with a period in this range (s) and a random phase.
+export const MOVING_PERIOD_RANGE = [1.5, 3.0];
+// Spider: hangs on a thread from the canopy at the gap centre; its lowest point and
+// how far it climbs above that.
+export const SPIDER_LOW_RANGE = [175, 212];
+export const SPIDER_TRAVEL_RANGE = [80, 150];
+// Snake: climbs a vine standing in the gap centre; its highest point and how far it
+// slides down below that.
+export const SNAKE_HIGH_RANGE = [290, 320];
+export const SNAKE_TRAVEL_RANGE = [90, 160];
+// Bird: patrols across the gap, low where flights come in over the far liana, with a
+// slight bob. Its patrol bounds are the widest that stay clear of the swings.
+export const BIRD_Y_RANGE = [330, 390];
+export const BIRD_BOB = 8;
+
+// The shortest release window a gap may have in stage 1 (later stages: STAGES).
 export const MIN_RELEASE_WINDOW_MS = 90;
+// Difficulty stages, keyed by obstacle index (the gap: obstacle #1 is in gap 1), never
+// by score. Each has its shortest release window, share of moving obstacles and
+// obstacle scale.
+export const STAGES = [
+  { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.15, scale: 1.0 },
+  { first: 16, minWindowMs: 80, movingShare: 0.25, scale: 1.1 },
+  { first: 31, minWindowMs: 70, movingShare: 0.5, scale: 1.2 },
+  { first: 51, minWindowMs: 60, movingShare: 0.7, scale: 1.3 },
+];
+// The first obstacles are always static: moving ones start at this obstacle index.
+export const MOVING_FROM = 6;
 
 export const CAMERA_TARGET_X = 0.35 * SCREEN_WIDTH;
 export const CAMERA_LERP = 8;
@@ -71,6 +149,31 @@ export const MAX_UI_SCALE = 1.8;
 export const WORLD_MARGIN = 2 * SCREEN_WIDTH;
 
 export const GAMEOVER_INPUT_LOCK_MS = 400;
+
+// Keys by role (KeyboardEvent.code). `primary` is 1P's action key (a tap does the same),
+// `p1`/`p2` are the two-player action keys (not Shift: five presses open Windows' Sticky
+// Keys dialog), `mode` picks the mode on the title screen (1, 2, 3) and `start` starts it
+// (as does `primary`).
+export const KEYS = Object.freeze({
+  primary: ['Space'],
+  start: ['Enter', 'NumpadEnter'],
+  p1: ['KeyA'],
+  p2: ['KeyL'],
+  mode: ['Digit1', 'Digit2', 'Digit3'],
+  menu: ['Escape'],
+  debug: ['KeyD'],
+  mute: ['KeyM'],
+  pause: ['KeyP'],
+});
+export const LIVES_2P = 3;
+// Shared screen: the camera keeps the leading monkey this far across the view (single
+// player: CAMERA_TARGET_X), so the other one can be up to a liana behind and still in
+// view.
+export const SHARED_LEADER_X = 0.62;
+// After losing a life, a monkey tumbles for RESPAWN_DELAY_MS, then hangs again on a
+// liana at RESPAWN_GRIP, invulnerable to obstacles for RESPAWN_INVULN_MS.
+export const RESPAWN_DELAY_MS = 1000;
+export const RESPAWN_INVULN_MS = 1500;
 
 // Death feedback. Hitting an obstacle bounces the monkey back (fraction of its
 // horizontal speed) and pops it up (px/s) so the tumble is visible.

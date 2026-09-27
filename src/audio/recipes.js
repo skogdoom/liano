@@ -11,8 +11,9 @@
 const SILENT = 0.0001;
 
 // Base pitch of the bong for each obstacle type: a deep rock, a mid branch, a
-// higher thorn bush.
-export const BONG_PITCH = { rock: 110, branch: 165, thornBush: 247 };
+// higher thorn bush; among the moving ones a low snake, a higher spider and the
+// highest bird.
+export const BONG_PITCH = { rock: 110, snake: 131, branch: 165, thornBush: 247, spider: 294, bird: 392 };
 const BONG_PARTIALS = [
   { ratio: 1, level: 0.5, decay: 1.2 },
   { ratio: 2.76, level: 0.25, decay: 0.8 },

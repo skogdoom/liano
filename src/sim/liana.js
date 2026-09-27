@@ -26,21 +26,38 @@ export class Liana {
     this.angularVelocity = 0;
     this.swingTime = 0;
     this.swingDir = 1;
+    this.period = SWING_PERIOD;
+    // Monkeys hanging on it (both can, in shared screen).
+    this.holders = 0;
+  }
+
+  // True while a monkey swings on it: another monkey grabbing it joins that swing.
+  get held() {
+    return this.state === LianaState.SWINGING && this.holders > 0;
   }
 
   get tipY() {
     return this.anchorY + this.length;
   }
 
-  grab(dir) {
+  // Starts swinging in `dir` with `period` (SWING_PERIOD, or BOOST_PERIOD when the
+  // monkey is boosted). If a monkey already swings on it, the new one joins that swing
+  // instead: same phase, direction and period.
+  grab(dir, period = SWING_PERIOD) {
+    const joining = this.held;
+    this.holders++;
+    if (joining) return;
     this.state = LianaState.SWINGING;
     this.swingDir = dir;
     this.swingTime = 0;
+    this.period = period;
     this.#updateSwing();
   }
 
+  // One monkey lets go; the liana settles once none holds it.
   release() {
-    if (this.state === LianaState.SWINGING) this.state = LianaState.SETTLING;
+    this.holders = Math.max(this.holders - 1, 0);
+    if (this.holders === 0 && this.state === LianaState.SWINGING) this.state = LianaState.SETTLING;
   }
 
   step(dt) {
@@ -61,7 +78,8 @@ export class Liana {
   }
 
   #updateSwing() {
-    this.angle = pendulumAngle(this.swingTime, this.swingDir, SWING_AMPLITUDE, SWING_OMEGA);
-    this.angularVelocity = pendulumAngularVelocity(this.swingTime, this.swingDir, SWING_AMPLITUDE, SWING_OMEGA);
+    const omega = (2 * Math.PI) / this.period;
+    this.angle = pendulumAngle(this.swingTime, this.swingDir, SWING_AMPLITUDE, omega);
+    this.angularVelocity = pendulumAngularVelocity(this.swingTime, this.swingDir, SWING_AMPLITUDE, omega);
   }
 }

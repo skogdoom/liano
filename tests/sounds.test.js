@@ -3,7 +3,7 @@ import { soundsFor } from '../src/audio/sounds.js';
 import { Game } from '../src/sim/game.js';
 import { Obstacle } from '../src/sim/obstacle.js';
 import { SIM_DT } from '../src/config.js';
-import { FORWARD_RELEASE_STEP, FALL_RELEASE_STEP, lowRockWorld, worldWith, emptyWorld, releaseAfter } from './helpers.js';
+import { FORWARD_RELEASE_STEP, FALL_RELEASE_STEP, lowRockWorld, worldWith, emptyWorld, releaseAfter, releaseStepForGrab } from './helpers.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 
 const names = (sounds) => sounds.map((s) => s.name);
@@ -44,7 +44,7 @@ describe('sound in a real run', () => {
     const sounds = [];
     game.press();
     for (let hop = 0; hop < 4; hop++) {
-      run(game, FORWARD_RELEASE_STEP, sounds);
+      run(game, releaseStepForGrab(game.world), sounds);
       game.press();
       while (game.world.monkey.state === MonkeyState.AIRBORNE) run(game, 1, sounds);
     }
