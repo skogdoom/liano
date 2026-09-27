@@ -117,7 +117,7 @@ All of these values are starting points for tuning. Scaled obstacles must still 
 - One world containing both monkeys.
 - The camera follows the leader: the alive, non-invulnerable monkey with the largest x (its liana while it hangs), kept at SHARED_LEADER_X of the view. If the leader dies, the camera switches smoothly to the other monkey.
 - The trailing monkey loses a life when it goes fully off the left edge (a hanging one: when its liana does).
-- Respawn on the leftmost liana that is fully on screen.
+- Respawn on the last liana grabbed if it is fully on screen, else on the leftmost liana that is. While no monkey is alive (the other one out, this one about to respawn) the camera holds still.
 - Monkeys do not collide with each other.
 - A liana can hold both monkeys at once. A monkey grabbing a liana that is already swinging joins the current swing phase, at its own grip radius. A liana another monkey swings on is caught where its rope is (other lianas by their vertical hitbox), so the joining monkey does not jump across to it; a flight can miss a rope that has swung away.
 

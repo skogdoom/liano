@@ -228,11 +228,44 @@ describe('shared screen', () => {
     for (let i = 0; i < steps(RESPAWN_DELAY_MS) + 2; i++) game.step(SIM_DT);
     const liana = world.monkeys[0].liana;
     expect(world.monkeys[0].state).toBe(MonkeyState.HANGING);
-    expect(liana.index).toBe(view.respawnLiana());
+    expect(liana.index).toBe(view.respawnLiana(0));
     expect(liana.x - MONKEY_RADIUS).toBeGreaterThanOrEqual(view.camera.x - 5);
     expect(liana.x - LIANA_SPACING - MONKEY_RADIUS).toBeLessThan(view.camera.x);
     expect(world.isInvulnerable(0)).toBe(true);
     expect(game.state).toBe(GameState.PLAYING);
+  });
+
+  it('holds still while the only monkey still in waits to respawn', () => {
+    const game = sharedGame();
+    game.press('start');
+    const world = game.world;
+    const view = game.sharedView;
+    // Player 1 is out for good at the start.
+    world.lives[0] = 1;
+    world.eliminate(0, 'left');
+    // Player 2 hops ahead three lianas, then falls.
+    for (let h = 0; h < 3; h++) {
+      const l = world.monkeys[1].liana;
+      while (!((l.swingTime / l.period) % 1 > 0.075 && (l.swingTime / l.period) % 1 < 0.085)) game.step(SIM_DT);
+      game.press('p2');
+      for (let i = 0; i < 600 && world.monkeys[1].state === MonkeyState.AIRBORNE; i++) game.step(SIM_DT);
+    }
+    expect(world.monkeys[1].liana.index).toBe(3);
+    stepN(game, 60);
+    world.release(1);
+    Object.assign(world.monkeys[1], { y: 760, vy: 100 });
+    const before = view.camera.x;
+    let lowest = before;
+    for (let i = 0; i < steps(RESPAWN_DELAY_MS) + 2; i++) {
+      game.step(SIM_DT);
+      lowest = Math.min(lowest, view.camera.x);
+    }
+    expect(game.playerOut(0)).toBe(true);
+    expect(world.monkeys[1].state).toBe(MonkeyState.HANGING);
+    // The view did not go back to player 1 (at most a nudge as the fall began); player
+    // 2 is back on the liana it fell from.
+    expect(lowest).toBeGreaterThan(before - 30);
+    expect(world.monkeys[1].liana.index).toBe(3);
   });
 
   it('never leaves a monkey behind on the title screen', () => {
