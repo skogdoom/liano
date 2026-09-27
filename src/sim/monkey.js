@@ -67,16 +67,23 @@ export class Monkey {
   // Grabs `liana` at `contactRadius` from its anchor (at most MAX_ENTRY_RADIUS); the
   // grip then slips towards the tip (see slipSteps). The swing starts in the direction
   // the monkey was moving horizontally, boosted if the monkey has boosted grabs left.
-  // On a liana another monkey swings on, it joins that swing (and keeps its boost).
+  // On a liana another monkey swings on, it joins that swing: joining a boosted swing
+  // uses one of its boosted grabs (if it has any), so monkeys travelling together use
+  // their shared boost in step; joining an unboosted one keeps its boost.
   grab(liana, contactRadius) {
     const dir = this.vx < 0 ? -1 : 1;
     this.state = MonkeyState.HANGING;
     this.liana = liana;
     this.gripFrom = Math.min(contactRadius, MAX_ENTRY_RADIUS);
     this.excludedLiana = null;
-    const boosted = !liana.held && this.boostGrabs > 0;
-    if (boosted) this.boostGrabs--;
-    liana.grab(dir, boosted ? BOOST_PERIOD : SWING_PERIOD);
+    if (liana.held) {
+      if (liana.period === BOOST_PERIOD && this.boostGrabs > 0) this.boostGrabs--;
+      liana.grab(dir);
+    } else {
+      const boosted = this.boostGrabs > 0;
+      if (boosted) this.boostGrabs--;
+      liana.grab(dir, boosted ? BOOST_PERIOD : SWING_PERIOD);
+    }
     this.#planSlip();
     this.#updateHanging();
   }

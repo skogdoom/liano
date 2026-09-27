@@ -3,7 +3,10 @@ import { Game, GameState } from '../src/sim/game.js';
 import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { LianaState } from '../src/sim/liana.js';
+import { Banana } from '../src/sim/banana.js';
 import {
+  BANANA_POINTS,
+  BOOST_GRABS,
   BOOST_PERIOD,
   CAMERA_LERP,
   LIANA_SPACING,
@@ -62,10 +65,11 @@ describe('shared lianas', () => {
     expect(liana.state).toBe(LianaState.SETTLING);
   });
 
-  it('keeps a boost for the next liana of its own when joining a swing', () => {
+  it('uses a boosted grab when joining a boosted swing, and keeps it on an unboosted one', () => {
     const world = new World({ players: 2, makeObstacle: () => null, makeBanana: () => null });
     world.start();
     const [a, b] = world.monkeys;
+    a.boostGrabs = 2;
     b.boostGrabs = 2;
     stepN(world, 22);
     world.release(1); // boosted: player 2 gets to liana 1 first, swinging it boosted
@@ -74,8 +78,8 @@ describe('shared lianas', () => {
     for (let i = 0; i < 600 && (a.state !== MonkeyState.HANGING || b.state !== MonkeyState.HANGING); i++) world.step(SIM_DT);
     expect(b.liana.period).toBe(BOOST_PERIOD);
     expect(a.liana).toBe(b.liana);
-    expect(b.boostGrabs).toBe(1);
-    expect(a.boostGrabs).toBe(0);
+    // Both used one: their counts stay in step.
+    expect([a.boostGrabs, b.boostGrabs]).toEqual([1, 1]);
     // A monkey with a boost joining an unboosted swing keeps its boost.
     const c = new World({ players: 2, makeObstacle: () => null, makeBanana: () => null });
     c.monkeys[1].boostGrabs = 3;
@@ -84,6 +88,37 @@ describe('shared lianas', () => {
     c.monkeys[1].grab(c.lianas.get(0), 200);
     expect(c.lianas.get(0).period).toBe(SWING_PERIOD);
     expect(c.monkeys[1].boostGrabs).toBe(3);
+  });
+});
+
+describe('bananas in shared screen', () => {
+  it('boost both monkeys when one takes a banana; the points are the taker’s', () => {
+    const world = new World({
+      players: 2,
+      makeObstacle: () => null,
+      makeBanana: (seed, gap) => (gap === 0 ? new Banana(0, 100, 100) : null),
+    });
+    world.start();
+    world.release(0);
+    Object.assign(world.monkeys[0], { x: 100, y: 100, vx: 0, vy: 0 });
+    world.step(SIM_DT);
+    expect(world.monkeys.map((m) => m.boostGrabs)).toEqual([BOOST_GRABS, BOOST_GRABS]);
+    expect(world.scores).toEqual([BANANA_POINTS, 0]);
+  });
+
+  it('does not boost a monkey that is dead', () => {
+    const world = new World({
+      players: 2,
+      lives: 2,
+      makeObstacle: () => null,
+      makeBanana: (seed, gap) => (gap === 0 ? new Banana(0, 100, 100) : null),
+    });
+    world.start();
+    world.eliminate(1, 'left');
+    world.release(0);
+    Object.assign(world.monkeys[0], { x: 100, y: 100, vx: 0, vy: 0 });
+    world.step(SIM_DT);
+    expect(world.monkeys.map((m) => m.boostGrabs)).toEqual([BOOST_GRABS, 0]);
   });
 });
 

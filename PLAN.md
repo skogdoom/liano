@@ -80,7 +80,7 @@ v1 (milestones 1–14) is built and released as v1.x. It has touch and phone sup
 
 - Placed in some gaps (BANANA_CHANCE), on a trajectory riskier than the easiest safe one. The generator picks a point along a valid but non-minimal-risk flight.
 - Collected on touch, in the air or while hanging.
-- Effect: +BANANA_POINTS, and the boost counter is set to BOOST_GRABS. Picking up another banana while boosted resets the counter to BOOST_GRABS; boosts do not stack in strength.
+- Effect: +BANANA_POINTS for the taker, and the boost counter of every alive monkey in that world is set to BOOST_GRABS (in shared screen both monkeys get the boost, so a liana they share swings the same for both). Picking up another banana while boosted resets the counter to BOOST_GRABS; boosts do not stack in strength.
 - While the counter is above zero, each new grab swings with period SWING_PERIOD / BOOST_FACTOR, and the counter decreases by 1 per grab.
 - The boost is cleared on death.
 - HUD: a banana icon near the monkey showing the remaining boosted grabs.
@@ -462,7 +462,7 @@ Implement in order. Each milestone must end in a runnable, tested state, with ev
 - [x] Two monkeys can hang on the same liana, each at its own grip radius, in the same swing phase
 - [x] The camera handles a leader death without snapping
 - [x] A monkey left behind the left edge loses a life and respawns on the leftmost liana fully in view
-- Notes: the leader sits at SHARED_LEADER_X (62 %) of the view, and while it hangs the camera follows its liana rather than its swing, so a monkey one liana behind stays in view. A hanging monkey is only left behind once its liana is off the left edge too (swinging back out of view is fine); a flying one by its position. A monkey joining a swing keeps its boost for its next liana. The leader camera is part of the rules (src/sim/sharedView.js), since it decides who is left behind.
+- Notes: the leader sits at SHARED_LEADER_X (62 %) of the view, and while it hangs the camera follows its liana rather than its swing, so a monkey one liana behind stays in view. A hanging monkey is only left behind once its liana is off the left edge too (swinging back out of view is fine); a flying one by its position. A banana boosts both monkeys; a monkey joining a boosted swing uses one of its boosted grabs, so the two counts stay in step, and one joining an unboosted swing keeps its boost. The leader camera is part of the rules (src/sim/sharedView.js), since it decides who is left behind.
 
 **22. Polish.** Key-binding hints on the title screen; death feedback and pause for 2P (both already exist for 1P).
 - [ ] Full loop in every mode: title → play → results → title, with no reload

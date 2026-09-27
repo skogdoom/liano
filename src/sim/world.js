@@ -173,14 +173,16 @@ export class World {
     });
   }
 
-  // A banana the monkey touches (hanging or flying) is taken: points, and the next
-  // BOOST_GRABS grabs are boosted (a second banana starts the count again).
+  // A banana the monkey touches (hanging or flying) is taken: points for it, and the
+  // next BOOST_GRABS grabs of every monkey in the world are boosted (a second banana
+  // starts the count again). Sharing the boost keeps a shared liana's swing the same
+  // for both monkeys in shared screen.
   #takeBanana(player) {
     const m = this.monkeys[player];
     for (const banana of this.bananas.values()) {
       if (!banana || this.takenBananas.has(banana.gap) || !banana.touches(m.x, m.y, MONKEY_RADIUS)) continue;
       this.takenBananas.add(banana.gap);
-      m.boostGrabs = BOOST_GRABS;
+      for (const monkey of this.monkeys) if (monkey.state !== MonkeyState.DEAD) monkey.boostGrabs = BOOST_GRABS;
       this.scores[player] += BANANA_POINTS;
       this.events.push({ type: 'banana', gap: banana.gap, score: this.scores[player], player });
     }
