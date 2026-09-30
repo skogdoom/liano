@@ -26,7 +26,7 @@ describe('precomputed window table', () => {
         }
       }
     }
-    expect(Object.keys(table.windows)).toEqual(['normal', 'boosted']);
+    expect(Object.keys(table.windows)).toEqual(['normal', 'boosted', 'sharedBoosted']);
     expect(Object.keys(table.windows.boosted).map(Number)).toEqual(STAGE_SCALES);
   });
 

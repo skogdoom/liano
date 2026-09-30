@@ -18,6 +18,7 @@ import {
   OBSTACLE_HITBOXES,
   STAGES,
   BOOST_PERIOD,
+  SHARED_BOOST_PERIOD,
 } from '../config.js';
 import { Liana } from './liana.js';
 import { Monkey, slipSteps } from './monkey.js';
@@ -47,8 +48,10 @@ export const STAGE_SCALES = [...new Set(STAGES.map((s) => s.scale))];
 
 // The swing variants: normal, and boosted by a banana. A gap within BOOST_GRABS gaps
 // after a banana must pass both (the player may or may not have taken it).
-export const PERIODS = { normal: SWING_PERIOD, boosted: BOOST_PERIOD };
-const variantsFor = (boosted) => (boosted ? [SWING_PERIOD, BOOST_PERIOD] : [SWING_PERIOD]);
+// Shared screen's bananas boost less (SHARED_BOOST_PERIOD); generation does not know the
+// mode, so gaps after a banana pass that swing too.
+export const PERIODS = { normal: SWING_PERIOD, boosted: BOOST_PERIOD, sharedBoosted: SHARED_BOOST_PERIOD };
+const variantsFor = (boosted) => (boosted ? Object.values(PERIODS) : [SWING_PERIOD]);
 
 // Steps from grabbing at `entryRadius` (or starting the slip `phaseSteps` into the
 // swing) until the forced release at the tip, swinging with `period`.
@@ -90,13 +93,14 @@ export function simulateFlight(body, obstacle, target) {
 // position at each step. A release moving away from the target is invalid without
 // flying it. `phaseSteps` starts the slip that many steps into the swing (the start
 // liana swings on the title screen before the run starts the slip); grabs start at 0.
-// The swing has `period` (SWING_PERIOD, or BOOST_PERIOD when boosted).
+// The swing has `period` (SWING_PERIOD, or a boosted one: see PERIODS).
 export function validReleaseSteps(obstacle, entryRadius, lianaX = 0, dir = 1, phaseSteps = 0, period = SWING_PERIOD) {
   const liana = new Liana(0, lianaX);
   const target = { x: lianaX + dir * LIANA_SPACING, anchorY: liana.anchorY, tipY: liana.tipY };
   const monkey = new Monkey();
   monkey.vx = dir;
   monkey.boostGrabs = period === SWING_PERIOD ? 0 : 1;
+  monkey.boostPeriod = period;
   monkey.grab(liana, entryRadius);
   if (phaseSteps > 0) {
     for (let i = 0; i < phaseSteps; i++) liana.step(SIM_DT);
@@ -157,6 +161,7 @@ export function emptyGapFlights(entryRadius, period = SWING_PERIOD) {
   const monkey = new Monkey();
   monkey.vx = 1;
   monkey.boostGrabs = period === SWING_PERIOD ? 0 : 1;
+  monkey.boostPeriod = period;
   monkey.grab(liana, entryRadius);
   const lastStep = forcedReleaseStep(entryRadius, 1, 0, period);
   const flights = [];
@@ -324,6 +329,7 @@ export function windowInputs() {
     ENTRY_RADII,
     STAGE_SCALES,
     BOOST_PERIOD,
+    SHARED_BOOST_PERIOD,
   };
 }
 

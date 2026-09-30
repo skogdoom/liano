@@ -19,7 +19,9 @@ import {
   SIM_DT,
   SWING_PERIOD,
   START_GRIP,
-  START_GRIP_STEP,
+  SHARED_ZOOM,
+  SHARED_BOOST_PERIOD,
+  SHARED_BOOST_FACTOR,
 } from '../src/config.js';
 import { FORWARD_RELEASE_STEP, flyUntilGrab, stepN } from './helpers.js';
 
@@ -131,34 +133,74 @@ describe('shared lianas', () => {
   });
 });
 
-describe('bananas in shared screen', () => {
-  it('boost both monkeys when one takes a banana; the points are the taker’s', () => {
-    const world = new World({
-      players: 2,
-      makeObstacle: () => null,
-      makeBanana: (seed, gap) => (gap === 0 ? new Banana(0, 100, 100) : null),
-    });
-    world.start();
-    world.release(0);
-    Object.assign(world.monkeys[0], { x: 100, y: 100, vx: 0, vy: 0 });
-    world.step(SIM_DT);
-    expect(world.monkeys.map((m) => m.boostGrabs)).toEqual([BOOST_GRABS, BOOST_GRABS]);
-    expect(world.scores).toEqual([BANANA_POINTS, 0]);
+describe('own lianas in shared screen', () => {
+  it('gives each monkey its own set, hanging from the same places', () => {
+    const game = sharedGame();
+    const world = game.world;
+    expect(world.lianaSets).toHaveLength(2);
+    const [a, b] = world.lianaSets;
+    for (const i of [0, 1, 2]) {
+      expect(a.get(i)).not.toBe(b.get(i));
+      expect(b.get(i).x).toBe(a.get(i).x);
+    }
+    expect(world.monkeys[0].liana).toBe(a.get(0));
+    expect(world.monkeys[1].liana).toBe(b.get(0));
+    // Single player and split screen keep one set per world.
+    expect(new World({ makeObstacle: () => null }).lianaSets).toHaveLength(1);
   });
 
-  it('does not boost a monkey that is dead', () => {
+  it('lets each monkey grab only its own lianas, swinging them on its own', () => {
+    const game = sharedGame();
+    game.press('start');
+    const world = game.world;
+    const [a, b] = world.lianaSets;
+    // Player 2 hops to its liana 1; player 1's liana 1 stays still.
+    const l = b.get(0);
+    while (!((l.swingTime / l.period) % 1 > 0.075 && (l.swingTime / l.period) % 1 < 0.085)) game.step(SIM_DT);
+    game.press('p2');
+    for (let i = 0; i < 600 && world.monkeys[1].state === MonkeyState.AIRBORNE; i++) game.step(SIM_DT);
+    expect(world.monkeys[1].liana).toBe(b.get(1));
+    expect(b.get(1).state).toBe(LianaState.SWINGING);
+    expect(a.get(1).state).toBe(LianaState.IDLE);
+    // Player 1 dropped onto player 2's swinging rope does not catch it...
+    world.release(0);
+    const rope = b.get(1);
+    const at = { x: rope.x + 250 * Math.sin(rope.angle), y: rope.anchorY + 250 * Math.cos(rope.angle) };
+    Object.assign(world.monkeys[0], { ...at, vx: 0, vy: 0 });
+    world.step(SIM_DT);
+    expect(world.monkeys[0].liana).not.toBe(rope);
+    // ...but catches its own liana 1, which starts its own swing.
+    world.monkeys[0].excludedLiana = a.get(0);
+    Object.assign(world.monkeys[0], { x: LIANA_SPACING - 5, y: 250, vx: 50, vy: 0 });
+    world.step(SIM_DT);
+    expect(world.monkeys[0].liana).toBe(a.get(1));
+    expect(a.get(1).swingTime).toBeLessThan(rope.swingTime);
+  });
+
+  it('boosts only the monkey that takes a banana', () => {
     const world = new World({
       players: 2,
-      lives: 2,
+      ownLianas: true,
       makeObstacle: () => null,
       makeBanana: (seed, gap) => (gap === 0 ? new Banana(0, 100, 100) : null),
     });
     world.start();
-    world.eliminate(1, 'left');
     world.release(0);
     Object.assign(world.monkeys[0], { x: 100, y: 100, vx: 0, vy: 0 });
     world.step(SIM_DT);
     expect(world.monkeys.map((m) => m.boostGrabs)).toEqual([BOOST_GRABS, 0]);
+    expect(world.scores).toEqual([BANANA_POINTS, 0]);
+  });
+
+  it('respawns a monkey on its own lianas', () => {
+    const game = sharedGame();
+    game.press('start');
+    const world = game.world;
+    world.release(1);
+    Object.assign(world.monkeys[1], { y: 760, vy: 100 });
+    for (let i = 0; i < steps(RESPAWN_DELAY_MS) + 3; i++) game.step(SIM_DT);
+    expect(world.monkeys[1].state).toBe(MonkeyState.HANGING);
+    expect(world.lianaSets[1].get(world.monkeys[1].liana.index)).toBe(world.monkeys[1].liana);
   });
 });
 
@@ -168,7 +210,10 @@ describe('shared screen', () => {
     game.press('start');
     const world = game.world;
     const view = game.sharedView;
-    expect(view.camera.screenX).toBeCloseTo(SHARED_LEADER_X * SCREEN_WIDTH, 9);
+    // A wider view than single player, with the leader in the middle of it.
+    expect(view.width).toBeCloseTo(SCREEN_WIDTH / SHARED_ZOOM, 9);
+    expect(view.camera.screenX).toBeCloseTo(SHARED_LEADER_X * view.width, 9);
+    expect(view.width - view.camera.screenX).toBeGreaterThan(LIANA_SPACING + MONKEY_RADIUS); // the next liana
     stepN(game, FORWARD_RELEASE_STEP);
     game.press('p2');
     for (let i = 0; i < 600 && world.monkeys[1].state === MonkeyState.AIRBORNE; i++) game.step(SIM_DT);
@@ -271,12 +316,28 @@ describe('shared screen', () => {
     expect(world.monkeys[1].liana.index).toBe(3);
   });
 
-  it('starts player 2 lower on the first liana, still with an early window', () => {
+  it('starts both monkeys at the same height, each on its own first liana', () => {
     const game = sharedGame();
     const [a, b] = game.world.monkeys;
-    expect(b.gripRadius - a.gripRadius).toBeCloseTo(START_GRIP_STEP, 9);
-    const { valid } = validReleaseSteps(null, START_GRIP + START_GRIP_STEP);
-    expect(valid.indexOf(true)).toBeLessThan(60);
+    expect([a.gripRadius, b.gripRadius]).toEqual([START_GRIP, START_GRIP]);
+    expect(a.liana).not.toBe(b.liana);
+  });
+
+  it('boosts less with a banana than single player does', () => {
+    const game = sharedGame();
+    expect(game.world.monkeys.map((m) => m.boostPeriod)).toEqual([SHARED_BOOST_PERIOD, SHARED_BOOST_PERIOD]);
+    expect(SWING_PERIOD / SHARED_BOOST_PERIOD).toBeCloseTo(SHARED_BOOST_FACTOR, 2);
+    expect(SHARED_BOOST_PERIOD).toBeGreaterThan(BOOST_PERIOD);
+    expect(Math.round(SHARED_BOOST_PERIOD / SIM_DT) % 2).toBe(0);
+    // A boosted grab swings with it.
+    const m = game.world.monkeys[1];
+    m.boostGrabs = 1;
+    m.release();
+    m.vx = 1;
+    m.grab(game.world.lianasOf(1).get(1), 250);
+    expect(m.liana.period).toBe(SHARED_BOOST_PERIOD);
+    // Single player keeps the stronger boost.
+    expect(new World({ makeObstacle: () => null }).monkey.boostPeriod).toBe(BOOST_PERIOD);
   });
 
   it('never leaves a monkey behind on the title screen', () => {

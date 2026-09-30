@@ -3,6 +3,7 @@ import {
   SIM_DT,
   MAX_FRAME_DT,
   MAX_RESOLUTION,
+  SHARED_ZOOM,
 } from './config.js';
 import { createFixedStepLoop } from './loop.js';
 import { createInput } from './input.js';
@@ -87,7 +88,9 @@ function layout() {
     .rect(0, y, x, bottom - y)
     .rect(right, y, w - right, bottom - y)
     .fill(0x000000);
-  paneLayouts(current, panes.length).forEach((pane, i) => panes[i].resize(pane));
+  // Shared screen shows a wider stretch of the world.
+  const zoom = game.mode === 'shared' ? SHARED_ZOOM : 1;
+  paneLayouts(current, panes.length, zoom).forEach((pane, i) => panes[i].resize(pane));
   hud.resize(current);
   overlays.resize(current);
   controls.position.set(current.insets.left, current.insets.top);

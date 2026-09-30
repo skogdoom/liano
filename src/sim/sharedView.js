@@ -1,4 +1,4 @@
-import { LIANA_SPACING, MONKEY_RADIUS, SCREEN_WIDTH, SHARED_LEADER_X } from '../config.js';
+import { LIANA_SPACING, MONKEY_RADIUS, SCREEN_WIDTH, SHARED_LEADER_X, SHARED_ZOOM } from '../config.js';
 import { Camera, cameraTarget } from '../render/camera.js';
 import { MonkeyState } from './monkey.js';
 
@@ -9,11 +9,11 @@ import { MonkeyState } from './monkey.js';
 // edge loses a life (a hanging one only once its liana is off too: swinging back out
 // of view is fine), and respawns on the leftmost liana fully on screen.
 //
-// The leader sits further right than in single player (SHARED_LEADER_X), so a monkey
-// one liana behind is still in view while the leader hangs; once the leader flies on,
-// it has to follow.
+// The view is SCREEN_WIDTH / SHARED_ZOOM of world wide, with the leader at
+// SHARED_LEADER_X of it: the next liana is in view ahead, and a monkey a liana behind
+// is still in view while the leader hangs; once the leader flies on, it has to follow.
 export class SharedView {
-  constructor(world, width = SCREEN_WIDTH) {
+  constructor(world, width = SCREEN_WIDTH / SHARED_ZOOM) {
     this.world = world;
     this.width = width;
     this.camera = new Camera(0, SHARED_LEADER_X * width);

@@ -210,6 +210,11 @@ describe('two-player layout', () => {
     // Twice the width of world in view, with the monkey at the same fraction of it.
     expect(panes[0].view).toEqual({ width: 2560, height: 720 });
     expect(panes[0].camera.screenX / 2560).toBeCloseTo(CAMERA_TARGET_X / 1280, 9);
+    // Shared screen: one pane drawn at a zoom, the band centred in a taller world view.
+    const [wide] = paneLayouts(l, 1, 0.75);
+    expect([wide.width, wide.height, wide.scale, wide.clip]).toEqual([1280, 720, 0.75, false]);
+    expect(wide.view.width).toBeCloseTo(1280 / 0.75, 9);
+    expect(wide.bandTop * wide.scale + 720 * wide.scale / 2).toBeCloseTo(360, 9);
     // A single pane is the whole view.
     const [single] = paneLayouts(layoutFor(1280, 720), 1);
     expect([single.width, single.height, single.scale, single.clip]).toEqual([1280, 720, 1, false]);

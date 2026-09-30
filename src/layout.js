@@ -106,8 +106,16 @@ export function layoutFor(width, height, insets = { top: 0, right: 0, bottom: 0,
 // The panes the world is drawn in: the whole view, or (split screen) `count` strips
 // stacked top to bottom, each showing the world band scaled to fit its height. Each
 // pane has a rect in the view, the `scale` its world is drawn at, and a layout of its
-// own for the background and camera (in world pixels).
-export function paneLayouts(layout, count = 1) {
+// own for the background and camera (in world pixels). A single pane can be drawn at
+// `zoom` (shared screen), centring the band with forest above and below it.
+export function paneLayouts(layout, count = 1, zoom = 1) {
+  if (count === 1 && zoom !== 1) {
+    const { width, height } = layout.view;
+    const view = { width: width / zoom, height: height / zoom };
+    const camera = { follow: 'monkey', screenX: (CAMERA_TARGET_X / SCREEN_WIDTH) * view.width };
+    const bandTop = (view.height - WORLD_HEIGHT) / 2;
+    return [{ x: 0, y: 0, width, height, scale: zoom, clip: false, view, bandTop, floorShift: 0, camera }];
+  }
   if (count === 1) {
     const { view, bandTop, floorShift, camera } = layout;
     return [{ x: 0, y: 0, width: view.width, height: view.height, scale: 1, clip: false, view, bandTop, floorShift, camera }];

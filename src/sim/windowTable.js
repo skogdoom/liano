@@ -1,5 +1,5 @@
 import table from './windowTable.json';
-import { isFeasible, windowInputs, MIN_WINDOW_STEPS } from './feasibility.js';
+import { isFeasible, windowInputs, MIN_WINDOW_STEPS, PERIODS } from './feasibility.js';
 
 // Passability lookups from the table built by scripts/build-windows.mjs, so play
 // never runs the solver. If the table was built from different tunables (a config
@@ -12,11 +12,11 @@ export const tableIsFresh = fresh;
 // Same answer as isFeasible(type, y, scale, minSteps, boosted), from the table when
 // possible.
 export function isPassable(type, y, scale = 1, minSteps = MIN_WINDOW_STEPS, boosted = false) {
-  const normal = table.windows.normal?.[scale]?.[type];
-  const fast = table.windows.boosted?.[scale]?.[type];
-  if (fresh && normal && fast && Number.isInteger(y) && y >= table.minY && y <= table.maxY) {
+  const rows = Object.keys(PERIODS).map((variant) => table.windows[variant]?.[scale]?.[type]);
+  if (fresh && rows.every(Boolean) && Number.isInteger(y) && y >= table.minY && y <= table.maxY) {
     const i = y - table.minY;
-    return normal[i] >= minSteps && (!boosted || fast[i] >= minSteps);
+    // The normal swing, and with `boosted` every boosted one too.
+    return (boosted ? rows : rows.slice(0, 1)).every((row) => row[i] >= minSteps);
   }
   return isFeasible(type, y, scale, minSteps, boosted);
 }
