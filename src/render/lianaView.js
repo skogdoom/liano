@@ -4,10 +4,14 @@ import { LianaState, SWING_OMEGA } from '../sim/liana.js';
 import { mixSeed, mulberry32 } from '../sim/rng.js';
 import { leafPoints } from './shapes.js';
 
-const ROPE_DARK = 0x2c5219;
-const ROPE = 0x6da539;
-const LEAF = 0x4e8c2c;
-const LEAF_DARK = 0x3a6d20;
+// Vine colours: green, and in shared screen golden for player 2's own lianas.
+export const LIANA_PALETTES = [
+  { ropeDark: 0x2c5219, rope: 0x6da539, leaf: 0x4e8c2c, leafDark: 0x3a6d20 },
+  { ropeDark: 0x7a5516, rope: 0xd9a53a, leaf: 0xb8902c, leafDark: 0x8c6b1e },
+];
+// In shared screen the two players' lianas hang from the same anchors; at rest they
+// bow this far to opposite sides (px), so both show.
+const PAIR_CURVE = 8;
 const TIP_FLASH = 0xffd23f;
 // Where along the rope (fraction of its length) the tip warning starts.
 const TIP_FLASH_FROM = 0.55;
@@ -18,7 +22,8 @@ const SETTLE_BEND = 0.35;
 const IDLE_CURVE = 5;
 
 // Per-liana leaf layout, derived from the index so it is stable across culling.
-function leafLayout(index) {
+// `bowSide` (−1 or 1) fixes the bow's side and size, for a pair of lianas.
+function leafLayout(index, bowSide = 0) {
   const rand = mulberry32(mixSeed(0x11a4a, index));
   const leaves = [];
   let side = rand() < 0.5 ? -1 : 1;
@@ -26,7 +31,8 @@ function leafLayout(index) {
     leaves.push({ s, side, length: 11 + rand() * 6, spread: 0.7 + rand() * 0.5, dark: rand() < 0.4 });
     side = -side;
   }
-  return { leaves, bow: (rand() < 0.5 ? -1 : 1) * IDLE_CURVE * (0.5 + rand() * 0.5) };
+  const bow = bowSide ? bowSide * PAIR_CURVE : (rand() < 0.5 ? -1 : 1) * IDLE_CURVE * (0.5 + rand() * 0.5);
+  return { leaves, bow };
 }
 
 // Points along the rope. It is straight while swinging (the monkey hangs on it), and
@@ -64,21 +70,21 @@ export function tipFlashOn(tipTime) {
   return Math.floor(tipTime / blink + 1e-6) % 2 === 0;
 }
 
-function drawLiana(g, liana, layout, flash) {
+function drawLiana(g, liana, layout, flash, palette) {
   const points = ropePoints(liana, layout.bow);
   const path = (width, color) => {
     g.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < points.length; i++) g.lineTo(points[i].x, points[i].y);
     g.stroke({ width, color, cap: 'round', join: 'round' });
   };
-  path(7, ROPE_DARK);
-  path(4, ROPE);
+  path(7, palette.ropeDark);
+  path(4, palette.rope);
   for (const leaf of layout.leaves) {
     const p = points[Math.round(leaf.s * SEGMENTS)];
     // Rope direction as a screen angle (0 = +x), rotated out to the leaf's side.
     const down = Math.PI / 2 - p.angle;
     const a = down - leaf.side * leaf.spread;
-    g.poly(leafPoints(p.x, p.y, a, leaf.length, leaf.length * 0.5)).fill(leaf.dark ? LEAF_DARK : LEAF);
+    g.poly(leafPoints(p.x, p.y, a, leaf.length, leaf.length * 0.5)).fill(leaf.dark ? palette.leafDark : palette.leaf);
   }
   if (flash) {
     // The lower end lights up: the grip is about to slip off. It starts well above the
@@ -92,7 +98,11 @@ function drawLiana(g, liana, layout, flash) {
 
 // One Graphics per liana, kept while the liana exists and hidden when off-screen.
 export class LianaView {
-  constructor() {
+  // `palette`: one of LIANA_PALETTES. `side`: for one of a pair of liana sets (shared
+  // screen), the side its lianas bow to at rest; 0 for a single set.
+  constructor(palette = LIANA_PALETTES[0], side = 0) {
+    this.palette = palette;
+    this.side = side;
     this.view = new Container();
     this.entries = new Map(); // liana -> { g, layout, drawn }
     this.redraws = 0; // for tests and profiling
@@ -107,7 +117,7 @@ export class LianaView {
       seen.add(liana);
       let entry = this.entries.get(liana);
       if (!entry) {
-        entry = { g: new Graphics(), layout: leafLayout(liana.index), drawn: null };
+        entry = { g: new Graphics(), layout: leafLayout(liana.index, this.side), drawn: null };
         this.entries.set(liana, entry);
         this.view.addChild(entry.g);
       }
@@ -117,7 +127,7 @@ export class LianaView {
       const flash = flashing.has(liana);
       const state = drawnState(liana, flash);
       if (state === entry.drawn) continue;
-      drawLiana(entry.g.clear(), liana, entry.layout, flash);
+      drawLiana(entry.g.clear(), liana, entry.layout, flash, this.palette);
       entry.drawn = state;
       this.redraws++;
     }

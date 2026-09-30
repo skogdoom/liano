@@ -35,6 +35,7 @@ export class World {
     makeBanana = createBanana,
     players = 1,
     lives = 1,
+    ownLianas = false,
   } = {}) {
     this.seed = seed;
     this.makeObstacle = (gap) => makeObstacle(seed, gap);
@@ -42,7 +43,10 @@ export class World {
       const obstacle = this.obstacles.has(gap) ? this.obstacles.get(gap) : this.makeObstacle(gap);
       return makeBanana(seed, gap, obstacle);
     };
-    this.lianas = new Map();
+    // One set of lianas for all monkeys, or with `ownLianas` (shared screen) one set per
+    // monkey: same places, but each monkey only grabs its own. `lianas` is player 1's.
+    this.lianaSets = Array.from({ length: ownLianas ? players : 1 }, () => new Map());
+    this.lianas = this.lianaSets[0];
     this.obstacles = new Map();
     this.bananas = new Map();
     // Gaps whose banana was taken. Kept outside the bananas so culling cannot bring
@@ -51,13 +55,13 @@ export class World {
     // Whole steps since the world was created; moving obstacles follow `time`.
     this.stepCount = 0;
     this.monkeys = Array.from({ length: players }, () => new Monkey());
-    updateLianas(this.lianas, 0, null);
+    for (const set of this.lianaSets) updateLianas(set, 0, null);
     updateObstacles(this.obstacles, 0, this.makeObstacle);
     updateBananas(this.bananas, 0, this.makeBanana);
     // The monkeys hang still (no slip) until the run starts.
     this.monkeys.forEach((monkey, i) => {
       monkey.slipping = false;
-      monkey.grab(this.lianas.get(0), START_GRIP + i * START_GRIP_STEP);
+      monkey.grab(this.lianasOf(i).get(0), START_GRIP + i * START_GRIP_STEP);
     });
     this.scores = this.monkeys.map(() => 0);
     // The stage each monkey has reached: that of the obstacle ahead of the furthest
@@ -73,6 +77,11 @@ export class World {
     this.respawnStep = this.monkeys.map(() => null);
     this.invulnerableUntil = this.monkeys.map(() => 0);
     this.events = [];
+  }
+
+  // The lianas monkey `player` can grab.
+  lianasOf(player) {
+    return this.lianaSets[this.lianaSets.length > 1 ? player : 0];
   }
 
   // The liana a monkey respawns on: the last one it grabbed.
@@ -143,7 +152,7 @@ export class World {
       const ahead = Math.max(...xs);
       const behind = Math.min(...xs);
       const held = living.map((m) => m.liana).filter(Boolean);
-      updateLianas(this.lianas, ahead, held, behind);
+      for (const set of this.lianaSets) updateLianas(set, ahead, held, behind);
       updateObstacles(this.obstacles, ahead, this.makeObstacle, behind);
       updateBananas(this.bananas, ahead, this.makeBanana, behind);
     }
@@ -151,7 +160,7 @@ export class World {
     this.respawnStep.forEach((step, player) => {
       if (step !== null && this.stepCount >= step) this.#respawn(player);
     });
-    for (const liana of this.lianas.values()) liana.step(dt);
+    for (const set of this.lianaSets) for (const liana of set.values()) liana.step(dt);
 
     this.monkeys.forEach((monkey, player) => {
       const wasAlive = monkey.state !== MonkeyState.DEAD;
@@ -176,16 +185,14 @@ export class World {
     });
   }
 
-  // A banana the monkey touches (hanging or flying) is taken: points for it, and the
-  // next BOOST_GRABS grabs of every monkey in the world are boosted (a second banana
-  // starts the count again). Sharing the boost keeps a shared liana's swing the same
-  // for both monkeys in shared screen.
+  // A banana the monkey touches (hanging or flying) is taken: points, and its next
+  // BOOST_GRABS grabs are boosted (a second banana starts the count again).
   #takeBanana(player) {
     const m = this.monkeys[player];
     for (const banana of this.bananas.values()) {
       if (!banana || this.takenBananas.has(banana.gap) || !banana.touches(m.x, m.y, MONKEY_RADIUS)) continue;
       this.takenBananas.add(banana.gap);
-      for (const monkey of this.monkeys) if (monkey.state !== MonkeyState.DEAD) monkey.boostGrabs = BOOST_GRABS;
+      m.boostGrabs = BOOST_GRABS;
       this.scores[player] += BANANA_POINTS;
       this.events.push({ type: 'banana', gap: banana.gap, score: this.scores[player], player });
     }
@@ -230,7 +237,7 @@ export class World {
   #respawn(player) {
     const m = this.monkeys[player];
     const index = this.respawnLiana(player);
-    const liana = this.lianas.get(index);
+    const liana = this.lianasOf(player).get(index);
     this.respawnStep[player] = null;
     Object.assign(m, { vx: 1, vy: 0, excludedLiana: null, slipping: true });
     m.grab(liana, RESPAWN_GRIP);
@@ -251,7 +258,7 @@ export class World {
       ballisticStep(body, SIM_DT, GRAVITY);
       path.push({ x: body.x, y: body.y });
       if (this.#hitsObstacle(body.x, body.y, this.time + (i + 1) * SIM_DT)) return { path, outcome: 'hit' };
-      if (this.#grabCandidate(body.x, body.y, excluded)) return { path, outcome: 'grab' };
+      if (this.#grabCandidate(body.x, body.y, excluded, player)) return { path, outcome: 'grab' };
       if (body.y > WORLD_HEIGHT + MONKEY_RADIUS) return { path, outcome: 'fall' };
     }
     return { path, outcome: 'none' };
@@ -287,14 +294,15 @@ export class World {
   // The gameplay hitbox of a liana is its vertical segment, whatever its cosmetic sway;
   // but one a monkey swings on (shared screen) is caught where the rope actually is, so
   // the one joining it does not jump across to it.
-  #grabCandidate(x, y, excludedIndex) {
+  #grabCandidate(x, y, excludedIndex, player) {
+    const lianas = this.lianasOf(player);
     const reach = MONKEY_RADIUS + LIANA_LENGTH * Math.sin(SWING_AMPLITUDE);
     const first = Math.ceil((x - reach) / LIANA_SPACING);
     const last = Math.floor((x + reach) / LIANA_SPACING);
     let best = null;
     let bestDistSq = MONKEY_RADIUS * MONKEY_RADIUS;
     for (let i = first; i <= last; i++) {
-      const liana = this.lianas.get(i);
+      const liana = lianas.get(i);
       if (!liana || i === excludedIndex) continue;
       const angle = liana.held ? liana.angle : 0;
       const tipX = liana.x + liana.length * Math.sin(angle);
@@ -311,7 +319,7 @@ export class World {
 
   #tryGrab(player) {
     const m = this.monkeys[player];
-    const best = this.#grabCandidate(m.x, m.y, m.excludedLiana?.index);
+    const best = this.#grabCandidate(m.x, m.y, m.excludedLiana?.index, player);
     if (best) {
       const from = m.excludedLiana.index; // the liana released for this flight
       m.grab(best.liana, best.contactRadius);

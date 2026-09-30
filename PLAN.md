@@ -81,8 +81,8 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 - Whether a gap has a banana depends only on (seed, gap): each gap from obstacle 1 is a candidate with BANANA_CHANCE, and a candidate is dropped if either of the two gaps before it is one. That gives bananas in about 14 % of gaps, at least 3 apart, and lets an obstacle know whether a banana may boost the swings over it without generating bananas.
 - A banana sits on a flight that clears the obstacle but is not the safest: a release one or two steps inside either end of a release window.
 - Collected on touch, in the air or while hanging; only once, even if its gap is culled and regenerated.
-- Effect: +BANANA_POINTS for the taker, and the boost counter of every alive monkey in that world is set to BOOST_GRABS (in shared screen both monkeys get it, so a liana they share swings the same for both). Another banana resets the counter to BOOST_GRABS; boosts do not stack.
-- While the counter is above zero, each new grab swings with BOOST_PERIOD and uses one. Joining a boosted swing uses one too; joining an unboosted one keeps the boost.
+- Effect: +BANANA_POINTS and the taker's boost counter is set to BOOST_GRABS. Another banana resets the counter to BOOST_GRABS; boosts do not stack. In shared screen a banana is gone for both once one monkey takes it.
+- While the counter is above zero, each new grab swings with BOOST_PERIOD and uses one.
 - The boost is cleared on death.
 - Feedback: a "+3" rises where a banana was taken, and a badge over the monkey shows the boosted grabs left. No sound.
 
@@ -121,7 +121,7 @@ Scaled obstacles must still pass the swing-clearance rule; heights that fail are
 - A monkey is left behind, losing a life, when it goes fully off the left edge; a hanging one only once its liana is off the left edge too. A monkey one liana behind the leader stays in view while the leader hangs; once the leader flies on, it has to follow.
 - Respawn on the last liana grabbed if it is fully on screen, else on the leftmost liana that is.
 - Monkeys do not collide with each other.
-- A liana can hold both monkeys. A monkey grabbing a liana the other swings on joins its swing (same phase, direction and period) at its own grip radius. Such a liana is caught where its rope is, not on the vertical hitbox of idle lianas, so the joining monkey doesn't jump across to it; a flight can miss a rope that has swung away. The liana settles once neither holds it.
+- **Each monkey has its own lianas:** two sets hanging from the same anchors as in single player, green for P1 and golden for P2, and a monkey only grabs its own. So each swings on its own timing, and each gets the same fairness guarantee as single player. At rest the two vines of a pair bow to opposite sides, so both show. Obstacles and bananas are shared.
 
 ## Feasibility (fairness guarantee)
 
@@ -137,7 +137,7 @@ Implementation:
 - **Static gaps** use a build-time window table (`src/sim/windowTable.json`, fingerprinted by its inputs, rebuilt with `npm run windows` and checked in CI). It has a section per swing variant (normal, boosted) and stage scale; the stage's minimum window is applied at lookup. Static generation is a table lookup, with no solver work during play.
 - **Moving gaps** reuse the flights over an empty gap (cached per entry radius and period) and check them against the obstacle's position at each flight point's time: under 1 ms per candidate.
 - **The worker** (`src/obstacleWorker.js`, driven by `src/obstaclePrefetch.js`) generates obstacles and bananas 5 gaps ahead of each world. Generation is deterministic in (seed, gap), so a gap the worker has not delivered yet is generated on the spot with the same result. No frame goes over 16 ms because of generation.
-- **Known gaps in the guarantee.** It is sampled, not a proof. It doesn't cover a monkey joining an already-swinging liana in shared screen, or respawn edge cases. This is acceptable for versus play.
+- **Known gaps in the guarantee.** It is sampled, not a proof, and doesn't cover respawn edge cases. This is acceptable for versus play.
 
 ## Simulation model
 
@@ -145,8 +145,8 @@ Implementation:
 - `Game` owns the match: one world with every monkey (1P, shared screen), or one world per player (split screen). Its events carry the world (`pane`) and the match-wide `player`.
 - **Loop:** a fixed timestep (1/120 s) with an accumulator. The frame delta is clamped to 100 ms.
 - **Pause:** the game pauses on window blur, on a hidden page, while the graphics context is lost, and on `P` during a run.
-- **Liana:** anchor at (x, ANCHOR_Y) above the top of the world band, length L. States: `idle | swinging | settling`; it counts the monkeys holding it. Released lianas settle back to vertical with a damped cosmetic sway.
-- **Grab detection:** circle (monkey) against segment (liana), while airborne, excluding the just-released liana. The segment is vertical, except on a liana another monkey swings (shared screen).
+- **Liana:** anchor at (x, ANCHOR_Y) above the top of the world band, length L. States: `idle | swinging | settling`. Released lianas settle back to vertical with a damped cosmetic sway. A world has one set of lianas, or with `ownLianas` (shared screen) one per monkey.
+- **Grab detection:** circle (monkey) against the liana's vertical segment, while airborne, among the monkey's own lianas, excluding the just-released one.
 - **Collisions:** checked every step in both hanging and airborne states, except while invulnerable. If an obstacle hit and a grab happen in the same step, the hit wins.
 - **Generation:** a seeded RNG (mulberry32), with a random seed per match and fixed seeds in tests. Liana i sits at x = i · LIANA_SPACING. Entities are generated lazily around the monkeys (and a monkey's respawn liana) and culled 2 screens behind the rearmost, with hysteresis.
 - **Events:** grab, release (forced or not), score, banana, stage, death, respawn. `Game` passes them on each frame to sound and effects.
@@ -288,7 +288,7 @@ liano/
     sim/
       rng.js
       physics.js            # pendulum, ballistic step, hit tests
-      liana.js              # swing, settle, holders
+      liana.js              # swing, settle
       monkey.js             # hanging/airborne/dead, grip, quick slide and slip, boost
       obstacle.js           # static and moving obstacles, scaled hitboxes, motion
       banana.js
@@ -303,7 +303,7 @@ liano/
     render/
       pane.js               # one world drawn in one rect: background, entities, camera, shake
       background.js         # parallax layers, taller views, stage tint
-      lianaView.js          # vine, leaves, tip warning
+      lianaView.js          # vine, leaves, tip warning; green or golden
       monkeyView.js         # per-player palette, invulnerable blink
       obstacleViews.js      # static art, animated spider, snake and bird
       bananaView.js         # bananas, "+3" pops, boost badge
@@ -326,7 +326,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
   - Look: round body and head, lighter face and belly, curled tail, one arm reaching up to the grip point.
   - Player colors: P1 brown, P2 ginger.
   - Poses: hanging, airborne spread, dead tumble. A respawned monkey blinks while invulnerable.
-- **Lianas.** A green polyline with leaves, which bends slightly while settling. The grip slide is visible, and the lower vine blinks yellow near the forced release.
+- **Lianas.** A green polyline with leaves (P2's in shared screen golden), which bends slightly while settling. The grip slide is visible, and the lower vine blinks yellow near the forced release.
 - **Static obstacles.**
   - Branch: brown limb with a leaf tuft.
   - Thorn bush: dark blob with thorns.
@@ -469,6 +469,13 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] Death feedback per pane: every death shakes its pane (each lost life in 2P), off with reduced motion; pause covers every mode
 - [x] Shared screen starts player 2 lower on the first liana (START_GRIP_STEP), so neither monkey hides the other
 
+### After v2.0.0
+
+**23. Own lianas in shared screen.** Shared lianas made shared screen almost impossible to play; each monkey now has its own set.
+- [x] Two liana sets at the same anchors (green for P1, golden for P2); each monkey grabs only its own and swings it on its own (unit tested)
+- [x] A banana boosts only its taker again; respawns use the monkey's own set
+- [x] At rest the two vines of a pair bow to opposite sides, so both show
+
 ## Design decisions
 
 1. **Swing starts at vertical, in the direction of travel.** Released lianas settle back to vertical with a damped cosmetic sway.
@@ -490,9 +497,9 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 17. **Single player has 1 life.** Lives exist only in 2P.
 18. **2P keys A and L**, avoiding Shift because of Windows Sticky Keys. They don't clash with `M`, `F`, `D` or `P`.
 19. **2P modes are keyboard-only and use the 16:9 frame.** Portrait and the flexible frame are for 1P.
-20. **Boosts reset rather than stack,** are lost on death, and in shared screen are shared by both monkeys.
-21. **Shared screen: monkeys can share a liana** and don't collide with each other. The leader camera is part of the rules.
-22. **The fairness guarantee is sampled, not proven**, and doesn't cover joining a liana mid-swing or respawn edge cases.
+20. **Boosts reset rather than stack,** are lost on death, and belong to the monkey that took the banana.
+21. **Shared screen: each monkey has its own lianas** at the same places, and the monkeys don't collide. The leader camera is part of the rules.
+22. **The fairness guarantee is sampled, not proven**, and doesn't cover respawn edge cases.
 23. **Split-screen panes render at 0.5 scale** with a wider horizontal view.
 
 ## Out of scope

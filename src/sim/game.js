@@ -192,7 +192,9 @@ export class Game {
     const { players, lives, id } = MODES[this.mode];
     const seed = randomSeed();
     const panes = id === 'split' ? players : 1;
-    this.worlds = Array.from({ length: panes }, () => this.createWorld({ players: players / panes, lives, seed }));
+    // In shared screen each monkey has its own lianas.
+    const own = id === 'shared' ? { ownLianas: true } : {};
+    this.worlds = Array.from({ length: panes }, () => this.createWorld({ players: players / panes, lives, seed, ...own }));
     // Shared screen's view is part of the rules: it leaves trailing monkeys behind.
     this.sharedView = id === 'shared' ? new SharedView(this.worlds[0]) : null;
   }

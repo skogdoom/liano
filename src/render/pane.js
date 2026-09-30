@@ -4,7 +4,7 @@ import { Background } from './background.js';
 import { Shake } from './shake.js';
 import { BananaViews, BoostBadge } from './bananaView.js';
 import { Camera, cameraTarget } from './camera.js';
-import { LianaView } from './lianaView.js';
+import { LIANA_PALETTES, LianaView } from './lianaView.js';
 import { MonkeyView, PALETTES } from './monkeyView.js';
 import { ObstacleViews } from './obstacleViews.js';
 
@@ -19,7 +19,9 @@ export class Pane {
     this.scene = new Container();
     this.background = new Background();
     this.worldLayer = new Container();
-    this.lianaView = new LianaView();
+    // A liana view per liana set (two in shared screen: green and golden).
+    this.lianaLayer = new Container();
+    this.lianaViews = [];
     this.obstacleViews = new ObstacleViews();
     this.bananaViews = new BananaViews();
     this.monkeyLayer = new Container();
@@ -27,7 +29,7 @@ export class Pane {
     this.badges = [];
     this.worldLayer.addChild(
       this.obstacleViews.view,
-      this.lianaView.view,
+      this.lianaLayer,
       this.bananaViews.view,
       this.monkeyLayer,
     );
@@ -40,6 +42,11 @@ export class Pane {
     this.shake = new Shake();
     this.world = null;
     this.layout = null;
+  }
+
+  // Player 1's liana view (for the browser console hooks).
+  get lianaView() {
+    return this.lianaViews[0];
   }
 
   // `pane` is one of paneLayouts(): where it goes and how its world is drawn.
@@ -69,6 +76,15 @@ export class Pane {
     this.world = world;
     this.players = players;
     this.camera = camera ?? this.ownCamera;
+    const sets = world.lianaSets.length;
+    if (this.lianaViews.length !== sets) {
+      for (const view of this.lianaViews) view.view.destroy({ children: true });
+      this.lianaViews =
+        sets === 1
+          ? [new LianaView()]
+          : world.lianaSets.map((_, i) => new LianaView(LIANA_PALETTES[i % LIANA_PALETTES.length], i === 0 ? -1 : 1));
+      this.lianaLayer.addChild(...this.lianaViews.map((v) => v.view));
+    }
     while (this.monkeyViews.length < world.monkeys.length) this.monkeyViews.push(null);
     world.monkeys.forEach((m, i) => {
       if (this.monkeyViews[i]?.player === players[i]) return;
@@ -106,7 +122,9 @@ export class Pane {
     this.overlay.x = -camera.x;
     this.background.update(camera.x);
     this.background.setStage(Math.max(...world.stages), world, dt);
-    this.lianaView.update(world.lianas.values(), camera.x, this.layout.view.width, world.monkeys);
+    world.lianaSets.forEach((set, i) => {
+      this.lianaViews[i].update(set.values(), camera.x, this.layout.view.width, world.monkeys);
+    });
     this.obstacleViews.update(world.obstacles.values());
     this.bananaViews.update(world, events, dt);
     world.monkeys.forEach((m, i) => {
