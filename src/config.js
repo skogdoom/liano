@@ -40,9 +40,6 @@ export const MAX_ENTRY_RADIUS = 0.95 * LIANA_LENGTH;
 // Where the monkey hangs at the start of a run (and, in 2P, after a respawn). It does
 // not slip on the title screen.
 export const START_GRIP = 0.7 * LIANA_LENGTH;
-// In shared screen player 2 starts this much lower on the same liana, so neither hides
-// the other (both grips have an early release window).
-export const START_GRIP_STEP = 0.1 * LIANA_LENGTH;
 export const RESPAWN_GRIP = 0.7 * LIANA_LENGTH;
 // The vine end blinks for this long (s) before the forced release, faster at the end.
 export const TIP_WARNING_TIME = 1;
@@ -63,6 +60,9 @@ export const BANANA_POINTS = 3;
 export const BOOST_GRABS = 3;
 export const BOOST_FACTOR = 1.25;
 export const BOOST_PERIOD = 2 * Math.round(SWING_PERIOD / BOOST_FACTOR / SIM_DT / 2) * SIM_DT;
+// Shared screen's bananas boost less: 278 steps, a factor of 1.122.
+export const SHARED_BOOST_FACTOR = 1.12;
+export const SHARED_BOOST_PERIOD = 2 * Math.round(SWING_PERIOD / SHARED_BOOST_FACTOR / SIM_DT / 2) * SIM_DT;
 // Each gap from obstacle 1 is a banana candidate with this chance; a candidate becomes
 // a banana unless one of the two gaps before it is a candidate too, so bananas are at
 // least 3 gaps apart and come in about 14 % of the gaps.
@@ -166,10 +166,11 @@ export const KEYS = Object.freeze({
   pause: ['KeyP'],
 });
 export const LIVES_2P = 3;
-// Shared screen: the camera keeps the leading monkey this far across the view (single
-// player: CAMERA_TARGET_X), so the other one can be up to a liana behind and still in
-// view.
-export const SHARED_LEADER_X = 0.62;
+// Shared screen draws the world at this scale in the 16:9 frame, a wider view
+// (SCREEN_WIDTH / SHARED_ZOOM of world), and keeps the leading monkey this far across
+// it: the next liana is in view ahead, and the other monkey can be over a liana behind.
+export const SHARED_ZOOM = 0.75;
+export const SHARED_LEADER_X = 0.5;
 // After losing a life, a monkey tumbles for RESPAWN_DELAY_MS, then hangs again on a
 // liana at RESPAWN_GRIP, invulnerable to obstacles for RESPAWN_INVULN_MS.
 export const RESPAWN_DELAY_MS = 1000;

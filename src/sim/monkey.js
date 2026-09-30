@@ -60,8 +60,9 @@ export class Monkey {
     // The liana just released; it cannot be regrabbed until another one is grabbed.
     this.excludedLiana = null;
     // Boosted grabs left (from a banana): each new grab while above zero swings with
-    // BOOST_PERIOD and uses one up.
+    // `boostPeriod` (BOOST_PERIOD, or SHARED_BOOST_PERIOD in shared screen) and uses one.
     this.boostGrabs = 0;
+    this.boostPeriod = BOOST_PERIOD;
   }
 
   // Grabs `liana` at `contactRadius` from its anchor (at most MAX_ENTRY_RADIUS); the
@@ -77,12 +78,12 @@ export class Monkey {
     this.gripFrom = Math.min(contactRadius, MAX_ENTRY_RADIUS);
     this.excludedLiana = null;
     if (liana.held) {
-      if (liana.period === BOOST_PERIOD && this.boostGrabs > 0) this.boostGrabs--;
+      if (liana.period !== SWING_PERIOD && this.boostGrabs > 0) this.boostGrabs--;
       liana.grab(dir);
     } else {
       const boosted = this.boostGrabs > 0;
       if (boosted) this.boostGrabs--;
-      liana.grab(dir, boosted ? BOOST_PERIOD : SWING_PERIOD);
+      liana.grab(dir, boosted ? this.boostPeriod : SWING_PERIOD);
     }
     this.#planSlip();
     this.#updateHanging();

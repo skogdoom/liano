@@ -23,6 +23,7 @@ import {
   FLOW_GRIP,
   SWING_PERIOD,
   BOOST_PERIOD,
+  SHARED_BOOST_PERIOD,
   ENTRY_RADII,
   QUICK_SLIP_SPEED,
   SLIP_OFF_PHASE,
@@ -161,7 +162,7 @@ describe('swing', () => {
 
 describe('flow', () => {
   it('lets every catch go on at the first forward swing, boosted or not', () => {
-    for (const period of [SWING_PERIOD, BOOST_PERIOD]) {
+    for (const period of [SWING_PERIOD, BOOST_PERIOD, SHARED_BOOST_PERIOD]) {
       const half = Math.round(period / SIM_DT / 2);
       for (const r of [60, 100, ...ENTRY_RADII, LIANA_LENGTH]) {
         const { valid } = validReleaseSteps(null, r, 0, 1, 0, period);

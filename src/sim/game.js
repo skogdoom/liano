@@ -2,6 +2,7 @@ import { GAMEOVER_INPUT_LOCK_MS } from '../config.js';
 import { World } from './world.js';
 import { MODES, playerFor } from './match.js';
 import { randomSeed } from './rng.js';
+import { SHARED_BOOST_PERIOD } from '../config.js';
 import { SharedView } from './sharedView.js';
 
 const MAX_PENDING_EVENTS = 64;
@@ -192,8 +193,8 @@ export class Game {
     const { players, lives, id } = MODES[this.mode];
     const seed = randomSeed();
     const panes = id === 'split' ? players : 1;
-    // In shared screen each monkey has its own lianas.
-    const own = id === 'shared' ? { ownLianas: true } : {};
+    // In shared screen each monkey has its own lianas, and bananas boost less.
+    const own = id === 'shared' ? { ownLianas: true, boostPeriod: SHARED_BOOST_PERIOD } : {};
     this.worlds = Array.from({ length: panes }, () => this.createWorld({ players: players / panes, lives, seed, ...own }));
     // Shared screen's view is part of the rules: it leaves trailing monkeys behind.
     this.sharedView = id === 'shared' ? new SharedView(this.worlds[0]) : null;

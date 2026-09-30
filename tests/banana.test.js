@@ -10,6 +10,7 @@ import {
   BOOST_GRABS,
   BOOST_FACTOR,
   BOOST_PERIOD,
+  SHARED_BOOST_PERIOD,
   ENTRY_RADII,
   LIANA_SPACING,
   SIM_DT,
@@ -68,14 +69,14 @@ describe('banana placement', () => {
     }
   });
 
-  it(`keeps a long enough window in both swings for 1,000 seeded gaps after bananas`, () => {
+  it(`keeps a long enough window in every swing variant for 1,000 seeded gaps after bananas`, () => {
     let checked = 0;
     for (const seed of [4, 44, 444, 4444, 44444, 5, 55, 555]) {
       for (let gap = 1; gap < 400 && checked < 1000; gap++) {
         if (!mayBeBoosted(seed, gap)) continue;
         const o = createObstacle(seed, gap);
         const { minSteps } = rulesFor(gap);
-        for (const period of [SWING_PERIOD, BOOST_PERIOD]) {
+        for (const period of [SWING_PERIOD, BOOST_PERIOD, SHARED_BOOST_PERIOD]) {
           const length = o.moving
             ? movingWindow(o.inGap(0), minSteps, period)
             : releaseWindow(o.type, o.y, o.scale, period).length;

@@ -1,8 +1,8 @@
 import {
   BANANA_POINTS,
   BOOST_GRABS,
+  BOOST_PERIOD,
   START_GRIP,
-  START_GRIP_STEP,
   RESPAWN_GRIP,
   RESPAWN_DELAY_MS,
   RESPAWN_INVULN_MS,
@@ -36,6 +36,7 @@ export class World {
     players = 1,
     lives = 1,
     ownLianas = false,
+    boostPeriod = BOOST_PERIOD,
   } = {}) {
     this.seed = seed;
     this.makeObstacle = (gap) => makeObstacle(seed, gap);
@@ -54,14 +55,14 @@ export class World {
     this.takenBananas = new Set();
     // Whole steps since the world was created; moving obstacles follow `time`.
     this.stepCount = 0;
-    this.monkeys = Array.from({ length: players }, () => new Monkey());
+    this.monkeys = Array.from({ length: players }, () => Object.assign(new Monkey(), { boostPeriod }));
     for (const set of this.lianaSets) updateLianas(set, 0, null);
     updateObstacles(this.obstacles, 0, this.makeObstacle);
     updateBananas(this.bananas, 0, this.makeBanana);
     // The monkeys hang still (no slip) until the run starts.
     this.monkeys.forEach((monkey, i) => {
       monkey.slipping = false;
-      monkey.grab(this.lianasOf(i).get(0), START_GRIP + i * START_GRIP_STEP);
+      monkey.grab(this.lianasOf(i).get(0), START_GRIP);
     });
     this.scores = this.monkeys.map(() => 0);
     // The stage each monkey has reached: that of the obstacle ahead of the furthest

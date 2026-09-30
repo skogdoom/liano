@@ -62,7 +62,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 - Hanging position = anchor + r·(sin θ, cos θ).
 - Release velocity combines the tangential and radial components: v = r·θ'·(cos θ, −sin θ) + r'·(sin θ, cos θ). A forced release at r = L uses the same formula.
 - Time on a liana is bounded: at most (L − r₀) / MAX_SLIP_SPEED plus one swing period. This bound keeps moving obstacles fair (see Feasibility).
-- On the title screen the monkeys hang at START_GRIP (player 2 in shared screen START_GRIP_STEP lower) without slipping; the slip starts with the run.
+- On the title screen the monkeys hang at START_GRIP without slipping (in shared screen each on its own first liana); the slip starts with the run.
 - Backward windows exist only for grips up to about 340 px before the forced release.
 - Visual: the monkey's hand slides down the vine. In the last TIP_WARNING_TIME before the forced release the lower half of the vine blinks, faster at the end.
 
@@ -81,7 +81,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 - Whether a gap has a banana depends only on (seed, gap): each gap from obstacle 1 is a candidate with BANANA_CHANCE, and a candidate is dropped if either of the two gaps before it is one. That gives bananas in about 14 % of gaps, at least 3 apart, and lets an obstacle know whether a banana may boost the swings over it without generating bananas.
 - A banana sits on a flight that clears the obstacle but is not the safest: a release one or two steps inside either end of a release window.
 - Collected on touch, in the air or while hanging; only once, even if its gap is culled and regenerated.
-- Effect: +BANANA_POINTS and the taker's boost counter is set to BOOST_GRABS. Another banana resets the counter to BOOST_GRABS; boosts do not stack. In shared screen a banana is gone for both once one monkey takes it.
+- Effect: +BANANA_POINTS and the taker's boost counter is set to BOOST_GRABS (the boost is milder in shared screen: SHARED_BOOST_FACTOR). Another banana resets the counter to BOOST_GRABS; boosts do not stack. In shared screen a banana is gone for both once one monkey takes it.
 - While the counter is above zero, each new grab swings with BOOST_PERIOD and uses one.
 - The boost is cleared on death.
 - Feedback: a "+3" rises where a banana was taken, and a badge over the monkey shows the boosted grabs left. No sound.
@@ -116,9 +116,9 @@ Scaled obstacles must still pass the swing-clearance rule; heights that fail are
 - There is no interaction between the players.
 
 **Shared screen.**
-- One world containing both monkeys.
-- The leader camera (`src/sim/sharedView.js`, part of the rules since it decides who is left behind) follows the alive, non-invulnerable monkey furthest right, at SHARED_LEADER_X of the view; while the leader hangs it follows its liana rather than its swing. A change of leader pans with the usual easing. While no monkey is alive (one out, the other about to respawn) the camera holds still.
-- A monkey is left behind, losing a life, when it goes fully off the left edge; a hanging one only once its liana is off the left edge too. A monkey one liana behind the leader stays in view while the leader hangs; once the leader flies on, it has to follow.
+- One world containing both monkeys, drawn at SHARED_ZOOM in the 16:9 frame: a wider view (about 1707 px of world), with forest above and below the band.
+- The leader camera (`src/sim/sharedView.js`, part of the rules since it decides who is left behind) follows the alive, non-invulnerable monkey furthest right, in the middle of the view (SHARED_LEADER_X), so the next liana is in view ahead; while the leader hangs it follows its liana rather than its swing. A change of leader pans with the usual easing. While no monkey is alive (one out, the other about to respawn) the camera holds still.
+- A monkey is left behind, losing a life, when it goes fully off the left edge; a hanging one only once its liana is off the left edge too. A monkey over a liana behind the leader stays in view while the leader hangs; once the leader flies on, it has to follow.
 - Respawn on the last liana grabbed if it is fully on screen, else on the leftmost liana that is.
 - Monkeys do not collide with each other.
 - **Each monkey has its own lianas:** two sets hanging from the same anchors as in single player, green for P1 and golden for P2, and a monkey only grabs its own. So each swings on its own timing, and each gets the same fairness guarantee as single player. At rest the two vines of a pair bow to opposite sides, so both show. Obstacles and bananas are shared.
@@ -128,13 +128,13 @@ Scaled obstacles must still pass the swing-clearance rule; heights that fail are
 The generator only emits gaps the solver accepts. For a gap, the solver must find a release window at least as long as the stage's minimum, **before the forced release**, for every combination of:
 - entry radius r₀ ∈ ENTRY_RADII,
 - obstacle phase at arrival, sampled at 12 points over P (moving obstacles only),
-- swing variant: normal, plus boosted for the BOOST_GRABS gaps after a banana. The solver can't know whether the player took the banana, so both variants must pass.
+- swing variant: normal, plus both boosted swings (single player and split screen's, and shared screen's milder one) for the BOOST_GRABS gaps after a banana. The solver knows neither whether the player took the banana nor the mode, so every variant must pass.
 
 "Valid" means the flight reaches the next liana without touching the obstacle or falling out. The obstacle must also be clear of both neighbouring lianas' swept areas by MONKEY_RADIUS + LIANA_CLEARANCE. A static height is rerolled up to 20 times, then falls back to the lowest passable height; a moving obstacle is rerolled (type and motion) up to 20 times, then falls back to a static obstacle at its lowest passable height.
 
 Implementation:
 - **Step size.** The solver simulates releases at the sim step (1/120 s), so it agrees exactly with the real world. Tests check this for every release step, for static and moving obstacles.
-- **Static gaps** use a build-time window table (`src/sim/windowTable.json`, fingerprinted by its inputs, rebuilt with `npm run windows` and checked in CI). It has a section per swing variant (normal, boosted) and stage scale; the stage's minimum window is applied at lookup. Static generation is a table lookup, with no solver work during play.
+- **Static gaps** use a build-time window table (`src/sim/windowTable.json`, fingerprinted by its inputs, rebuilt with `npm run windows` and checked in CI). It has a section per swing variant (normal, boosted, shared-boosted) and stage scale; the stage's minimum window is applied at lookup. Static generation is a table lookup, with no solver work during play.
 - **Moving gaps** reuse the flights over an empty gap (cached per entry radius and period) and check them against the obstacle's position at each flight point's time: under 1 ms per candidate.
 - **The worker** (`src/obstacleWorker.js`, driven by `src/obstaclePrefetch.js`) generates obstacles and bananas 5 gaps ahead of each world. Generation is deterministic in (seed, gap), so a gap the worker has not delivered yet is generated on the spot with the same result. No frame goes over 16 ms because of generation.
 - **Known gaps in the guarantee.** It is sampled, not a proof, and doesn't cover respawn edge cases. This is acceptable for versus play.
@@ -226,7 +226,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | SLIP_OFF_PHASE | 0.11 × P after the bottom, swinging right | The forced release comes mid-way through the forward window (about 0.05–0.165 × P) |
 | ENTRY_RADII | [0.35, 0.5, 0.65, 0.8, 0.95] × L | The entry radii the solver checks |
 | MAX_ENTRY_RADIUS | 0.95 × L | Lower catches grip here |
-| START_GRIP, START_GRIP_STEP | 0.7 × L, 0.1 × L | The grip at the start of a run; player 2 in shared screen starts a step lower |
+| START_GRIP | 0.7 × L | The grip at the start of a run |
 | TIP_WARNING_TIME | 1 s | The vine end blinks this long before the forced release, faster in the last half |
 | MONKEY_RADIUS | 22 | |
 | OBSTACLE_Y_RANGE | [140, 375] | Heights ~[195, 315] are rejected by swing clearance |
@@ -243,11 +243,12 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | BANANA_POINTS | 3 | |
 | BOOST_GRABS | 3 | |
 | BOOST_FACTOR | 1.25 | BOOST_PERIOD rounds to 250 steps (2.083 s), an even step count as the slip timing needs |
+| SHARED_BOOST_FACTOR | 1.12 | Shared screen's milder boost; SHARED_BOOST_PERIOD rounds to 278 steps (a factor of 1.122) |
 | LIVES_2P | 3 | |
 | RESPAWN_GRIP | 0.7 × L | |
 | RESPAWN_DELAY_MS | 1000 | The dead monkey tumbles this long before respawning |
 | RESPAWN_INVULN_MS | 1500 | |
-| SHARED_LEADER_X | 0.62 × width | Shared screen's leader position, so one liana behind stays in view |
+| SHARED_ZOOM, SHARED_LEADER_X | 0.75, 0.5 × width | Shared screen's scale (a view of 1280 / 0.75 ≈ 1707 px of world) and leader position: the next liana is in view ahead, and over a liana behind |
 | CAMERA_TARGET_X | 0.35 × width | Landscape 1P; split panes keep the same fraction |
 | CAMERA_LERP | 8 /s | |
 | GAMEOVER_INPUT_LOCK_MS | 400 | |
@@ -475,6 +476,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] Two liana sets at the same anchors (green for P1, golden for P2); each monkey grabs only its own and swings it on its own (unit tested)
 - [x] A banana boosts only its taker again; respawns use the monkey's own set
 - [x] At rest the two vines of a pair bow to opposite sides, so both show
+- [x] A wider view (SHARED_ZOOM 0.75) with the leader in the middle; both monkeys start at START_GRIP; bananas boost less (SHARED_BOOST_FACTOR 1.12), and the gaps after a banana pass that swing too
 
 ## Design decisions
 
