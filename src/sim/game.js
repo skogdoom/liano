@@ -27,6 +27,10 @@ export class Game {
   constructor({ createWorld = (options) => new World(options) } = {}) {
     this.createWorld = createWorld;
     this.mode = 'solo';
+    // Slipping (G) and bananas (B), on unless turned off; for every world and match
+    // until the page is reloaded.
+    this.slip = true;
+    this.bananas = true;
     this.#newMatch();
     this.state = GameState.TITLE;
     this.stateTime = 0;
@@ -130,6 +134,18 @@ export class Game {
     return true;
   }
 
+  // Turns slipping on or off in every world (see World.setSlip).
+  toggleSlip() {
+    this.slip = !this.slip;
+    for (const world of this.worlds) world.setSlip(this.slip);
+  }
+
+  // Turns bananas on or off in every world (see World.setBananas).
+  toggleBananas() {
+    this.bananas = !this.bananas;
+    for (const world of this.worlds) world.setBananas(this.bananas);
+  }
+
   // Handles a press of an input role (see KEYS): `primary` is Space or a tap, `start`
   // is Enter, `p1`/`p2` the two-player keys, `menu` (Esc) goes back to the title screen
   // (ending a run in progress, which still counts for the best). Returns true if the
@@ -195,7 +211,10 @@ export class Game {
     const panes = id === 'split' ? players : 1;
     // In shared screen each monkey has its own lianas, and bananas boost less.
     const own = id === 'shared' ? { ownLianas: true, boostPeriod: SHARED_BOOST_PERIOD } : {};
-    this.worlds = Array.from({ length: panes }, () => this.createWorld({ players: players / panes, lives, seed, ...own }));
+    const settings = { slip: this.slip, bananas: this.bananas };
+    this.worlds = Array.from({ length: panes }, () =>
+      this.createWorld({ players: players / panes, lives, seed, ...own, ...settings }),
+    );
     // Shared screen's view is part of the rules: it leaves trailing monkeys behind.
     this.sharedView = id === 'shared' ? new SharedView(this.worlds[0]) : null;
   }

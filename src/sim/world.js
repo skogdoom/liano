@@ -28,6 +28,10 @@ import { stageFor } from './stages.js';
 // index. Each monkey has `lives`: after losing one it respawns (see respawnLiana), and
 // with none left it is out. `makeObstacle(seed, gap)` and `makeBanana(seed, gap,
 // obstacle)` can be replaced in tests.
+//
+// `slip` and `bananas` (both on by default) turn slipping and bananas off for trying
+// the game without them (see setSlip and setBananas). Generation does not depend on
+// them: a seed gives the same jungle either way.
 export class World {
   constructor({
     seed = randomSeed(),
@@ -37,8 +41,12 @@ export class World {
     lives = 1,
     ownLianas = false,
     boostPeriod = BOOST_PERIOD,
+    slip = true,
+    bananas = true,
   } = {}) {
     this.seed = seed;
+    this.slip = slip;
+    this.bananasOn = bananas;
     this.makeObstacle = (gap) => makeObstacle(seed, gap);
     this.makeBanana = (gap) => {
       const obstacle = this.obstacles.has(gap) ? this.obstacles.get(gap) : this.makeObstacle(gap);
@@ -62,6 +70,7 @@ export class World {
     // The monkeys hang still (no slip) until the run starts.
     this.monkeys.forEach((monkey, i) => {
       monkey.slipping = false;
+      monkey.holds = !slip;
       monkey.grab(this.lianasOf(i).get(0), START_GRIP);
     });
     this.scores = this.monkeys.map(() => 0);
@@ -127,9 +136,28 @@ export class World {
     return !this.isOut(player);
   }
 
-  // Starts the run: from now on grips slip towards the tips.
+  // Starts the run: from now on grips slip towards the tips (or tire, with slipping off).
   start() {
-    for (const monkey of this.monkeys) if (monkey.liana) monkey.startSlipping();
+    for (const monkey of this.monkeys) {
+      if (!monkey.liana) continue;
+      monkey.holds = !this.slip;
+      monkey.startSlipping();
+    }
+  }
+
+  // Turns slipping on or off. Off, a monkey holds on at HOLD_GRIP until it tires (see
+  // Monkey.holds). Takes effect from each monkey's next grab: changing a grip mid-swing
+  // would make the monkey jump along the rope.
+  setSlip(on) {
+    this.slip = on;
+  }
+
+  // Turns bananas on or off. Off, none are shown or taken and every boost ends (a liana
+  // already swinging boosted keeps its period until let go). Back on, the bananas not
+  // taken yet are back.
+  setBananas(on) {
+    this.bananasOn = on;
+    if (!on) for (const monkey of this.monkeys) monkey.boostGrabs = 0;
   }
 
   // The action key while hanging. Returns false (and does nothing) while airborne.
@@ -175,8 +203,9 @@ export class World {
         return;
       }
       this.#takeBanana(player);
-      // At the tip the grip gives: a forced release, flying on with the current velocity.
-      if (monkey.atTip) {
+      // At the tip (or tired out) the grip gives: a forced release, flying on with the
+      // current velocity.
+      if (monkey.forcedOff) {
         const liana = monkey.release();
         this.events.push({ type: 'release', liana: liana.index, player, forced: true });
       }
@@ -189,6 +218,7 @@ export class World {
   // A banana the monkey touches (hanging or flying) is taken: points, and its next
   // BOOST_GRABS grabs are boosted (a second banana starts the count again).
   #takeBanana(player) {
+    if (!this.bananasOn) return;
     const m = this.monkeys[player];
     for (const banana of this.bananas.values()) {
       if (!banana || this.takenBananas.has(banana.gap) || !banana.touches(m.x, m.y, MONKEY_RADIUS)) continue;
@@ -199,10 +229,10 @@ export class World {
     }
   }
 
-  // The banana in `gap` if it is there to take.
+  // The banana in `gap` if it is there to take (none with bananas off).
   bananaAt(gap) {
     const banana = this.bananas.get(gap);
-    return banana && !this.takenBananas.has(gap) ? banana : null;
+    return banana && this.bananasOn && !this.takenBananas.has(gap) ? banana : null;
   }
 
   // Returns and clears the events emitted since the last call.
@@ -234,13 +264,13 @@ export class World {
   }
 
   // Hangs the monkey on its respawn liana at RESPAWN_GRIP, swinging forward and
-  // slipping, invulnerable for a while.
+  // slipping (or holding on), invulnerable for a while.
   #respawn(player) {
     const m = this.monkeys[player];
     const index = this.respawnLiana(player);
     const liana = this.lianasOf(player).get(index);
     this.respawnStep[player] = null;
-    Object.assign(m, { vx: 1, vy: 0, excludedLiana: null, slipping: true });
+    Object.assign(m, { vx: 1, vy: 0, excludedLiana: null, slipping: true, holds: !this.slip });
     m.grab(liana, RESPAWN_GRIP);
     this.lastLiana[player] = index;
     this.invulnerableUntil[player] = this.stepCount + Math.round(RESPAWN_INVULN_MS / 1000 / SIM_DT);
@@ -323,6 +353,7 @@ export class World {
     const best = this.#grabCandidate(m.x, m.y, m.excludedLiana?.index, player);
     if (best) {
       const from = m.excludedLiana.index; // the liana released for this flight
+      m.holds = !this.slip;
       m.grab(best.liana, best.contactRadius);
       this.lastLiana[player] = best.liana.index;
       this.events.push({ type: 'grab', liana: best.liana.index, player });

@@ -30,6 +30,10 @@ export const MAX_SLIP_SPEED = 40; // px/s
 // release velocity.
 export const FLOW_GRIP = 0.7 * LIANA_LENGTH;
 export const QUICK_SLIP_SPEED = 1000; // px/s
+// With slipping turned off (G), the grip holds still at HOLD_GRIP (see Monkey.holds).
+// Deeper than FLOW_GRIP: a slipping grip is lower on the rope by the time it lets go, and
+// a held one needs the same reach. From here every generated gap keeps its windows.
+export const HOLD_GRIP = 350;
 // When the forced release comes: this fraction of the swing period after the bottom, on
 // the upswing to the right. Mid-way through the forward release window (about 0.05 to
 // 0.165), so the forced release is a hop to the next liana unless an obstacle is in the way.
@@ -153,7 +157,8 @@ export const GAMEOVER_INPUT_LOCK_MS = 400;
 // Keys by role (KeyboardEvent.code). `primary` is 1P's action key (a tap does the same),
 // `p1`/`p2` are the two-player action keys (not Shift: five presses open Windows' Sticky
 // Keys dialog), `mode` picks the mode on the title screen (1, 2, 3) and `start` starts it
-// (as does `primary`).
+// (as does `primary`). `slip` (G, for grip) and `bananas` (B) turn slipping and bananas
+// on and off.
 export const KEYS = Object.freeze({
   primary: ['Space'],
   start: ['Enter', 'NumpadEnter'],
@@ -164,6 +169,8 @@ export const KEYS = Object.freeze({
   debug: ['KeyD'],
   mute: ['KeyM'],
   pause: ['KeyP'],
+  slip: ['KeyG'],
+  bananas: ['KeyB'],
 });
 export const LIVES_2P = 3;
 // Shared screen draws the world at this scale in the 16:9 frame, a wider view

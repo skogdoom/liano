@@ -11,7 +11,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 - A Web Worker that generates obstacles and bananas ahead of the world (the moving-obstacle solver runs there).
 - Web Audio API for synthesized sound (no audio files).
 - GitHub Actions: tests and build on every PR, deploy to GitHub Pages on `master`.
-- No other runtime dependencies. No backend. No persistence (the best score and the mute setting live in memory for the page session).
+- No other runtime dependencies. No backend. No persistence (the best score, the mute setting and the slip and banana toggles live in memory for the page session).
 
 ## Modes and controls
 
@@ -21,13 +21,14 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 | 2P Shared screen | P1 `A`, P2 `L` | 3 each | Higher total score after both are out of lives; equal = draw |
 | 2P Split screen | P1 `A`, P2 `L` | 3 each | Same as shared |
 
-- **Title screen.** A mode picker: keys `1` / `2` / `3` select a mode, and Space or Enter starts it. On a touch device the picker is hidden and a tap starts 1P: the 2P modes are keyboard-only. The title shows the controls for the selected mode ("SPACE · let go", or "P1 A · P2 L · let go") and "P pause · Esc menu" with a keyboard.
+- **Title screen.** A mode picker: keys `1` / `2` / `3` select a mode, and Space or Enter starts it. On a touch device the picker is hidden and a tap starts 1P: the 2P modes are keyboard-only. The title shows the controls for the selected mode ("SPACE · let go", or "P1 A · P2 L · let go") and "P pause · Esc menu · G slipping · B bananas" with a keyboard.
 - **During a run:** `P` pauses and resumes; `Esc` ends the run and goes back to the title screen (in 1P the run's score still counts for the best).
 - **Results:** after a 400 ms input lock, Space or Enter plays again in the same mode, `Esc` goes to the title screen, and `1` / `2` / `3` go to it with that mode selected.
 - **Other keys:**
   - `M` or the on-screen speaker mutes the sound.
   - `F` or the on-screen button toggles full screen.
   - `D` toggles the debug overlay.
+  - `G` and `B` turn slipping and bananas off and on (see Trying without slip or bananas).
   - None of these ever counts as a game press.
 - **Key rules.** Keys are defined in `config.js` (`KEYS`). Shift is avoided: on Windows, pressing it five times opens the Sticky Keys dialog. Key auto-repeat (`event.repeat`) is ignored for every key.
 - **Presses and pause.** Presses while paused, or within 250 ms of resuming, are ignored.
@@ -65,6 +66,14 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 - On the title screen the monkeys hang at START_GRIP without slipping (in shared screen each on its own first liana); the slip starts with the run.
 - Backward windows exist only for grips up to about 340 px before the forced release.
 - Visual: the monkey's hand slides down the vine. In the last TIP_WARNING_TIME before the forced release the lower half of the vine blinks, faster at the end.
+
+## Trying without slip or bananas
+
+To test whether slipping and bananas help the pacing, `G` and `B` turn them off and on, anywhere (title, run, pause, results), for every monkey and world. Both are on after a reload; nothing is stored. A note top right ("Slipping off · Bananas off") shows what is off, and is gone with everything on. Generation does not depend on either: a seed gives the same jungle.
+
+- **Slipping off:** the grip goes quickly (QUICK_SLIP_SPEED, up or down) to HOLD_GRIP and holds still there. The monkey tires and lets go on the step a slip from the catch (or from FLOW_GRIP, for a catch below it) would have reached the tip: the same forward hop, the same tip blink before it, and the same time bound on a liana. The change applies from each monkey's next grab.
+- **HOLD_GRIP is 350 px, not FLOW_GRIP:** a slipping grip is lower on the rope by the time it lets go, and a still grip needs the same reach. Held at 0.7 L, about one gap in five fell short of its stage's window; from about 346 px none do in a 40-seed sample. A test checks the held grip against generated gaps (static and moving, boosted swings included).
+- **Bananas off:** none are shown or taken, and every boost ends (a liana already swinging boosted keeps its period until let go). Back on, the bananas not yet taken are back.
 
 ## Obstacles
 
@@ -223,6 +232,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | GRAVITY | 600 px/s² | 400 felt too floaty |
 | MAX_SLIP_SPEED | 40 px/s | At most (L − 310) / P ≈ 42 px/s, so every grip passes a forward swing low enough on the rope before it is forced off |
 | FLOW_GRIP, QUICK_SLIP_SPEED | 0.7 × L, 1000 px/s | Catches above FLOW_GRIP slide quickly down to it |
+| HOLD_GRIP | 350 px (about 0.83 × L) | Where the grip holds with slipping off (G); the shallowest grip that keeps every sampled gap's window |
 | SLIP_OFF_PHASE | 0.11 × P after the bottom, swinging right | The forced release comes mid-way through the forward window (about 0.05–0.165 × P) |
 | ENTRY_RADII | [0.35, 0.5, 0.65, 0.8, 0.95] × L | The entry radii the solver checks |
 | MAX_ENTRY_RADIUS | 0.95 × L | Lower catches grip here |
@@ -257,7 +267,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | MAX_RESOLUTION | 2 | Canvas pixels per CSS pixel |
 | MIN_VISIBLE_WORLD_HEIGHT, MAX_VIEW_WIDTH | 570, 1600 | Flexible landscape frame |
 | PORTRAIT_VIEW_WIDTH, PORTRAIT_ANCHOR_X | 1100, 0.3 | Portrait |
-| KEYS | Space (1P); Enter (start); A, L (P1, P2); 1, 2, 3 (mode); Esc (menu); P (pause); M (mute); D (debug) | F (full screen) is bound in `fullscreen.js` |
+| KEYS | Space (1P); Enter (start); A, L (P1, P2); 1, 2, 3 (mode); Esc (menu); P (pause); M (mute); D (debug); G (slipping); B (bananas) | F (full screen) is bound in `fullscreen.js` |
 
 ## Project structure
 
@@ -477,6 +487,12 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] A banana boosts only its taker again; respawns use the monkey's own set
 - [x] At rest the two vines of a pair bow to opposite sides, so both show
 - [x] A wider view (SHARED_ZOOM 0.75) with the leader in the middle; both monkeys start at START_GRIP; bananas boost less (SHARED_BOOST_FACTOR 1.12), and the gaps after a banana pass that swing too
+
+**24. Slip and banana toggles.** To test the pacing without them: `G` turns slipping off and on, `B` bananas (see Trying without slip or bananas). Version 2.2.0-dev.0.
+- [x] Slipping off: a quick slide to HOLD_GRIP, held still, and a tired forced release on the step a slip would have ended (unit tested)
+- [x] Held grips keep every sampled generated gap's window; the jungle is the same with either setting
+- [x] Bananas off: none shown or taken, boosts end; back on, the untaken ones return
+- [x] Both apply to every world, carry over to later matches, and reset on reload; a title hint and a HUD note
 
 ## Design decisions
 

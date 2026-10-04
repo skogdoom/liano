@@ -1,6 +1,7 @@
 import {
   BOOST_PERIOD,
   FLOW_GRIP,
+  HOLD_GRIP,
   GRAVITY,
   QUICK_SLIP_SPEED,
   LIANA_LENGTH,
@@ -53,6 +54,10 @@ export class Monkey {
     this.gripTime = 0;
     // Whether the grip slips towards the tip (off on the title screen), and how fast.
     this.slipping = true;
+    // With slipping turned off (G), the monkey holds on instead: the grip goes quickly
+    // to HOLD_GRIP and stays there, and the monkey tires and lets go on the step a slip
+    // would have reached the tip (see #planSlip). Read at each grab.
+    this.holds = false;
     this.slipSpeed = 0;
     this.slipTime = 0;
     this.quickTo = 0;
@@ -120,26 +125,39 @@ export class Monkey {
   }
 
   // A quick slide down to FLOW_GRIP if caught above it, then a steady slip timed to
-  // reach the tip at SLIP_OFF_PHASE (see slipSteps).
+  // reach the tip at SLIP_OFF_PHASE (see slipSteps). Holding on, a quick slide (up or
+  // down) to HOLD_GRIP, and the grip gives when a slip from FLOW_GRIP (or from a catch
+  // above it) would have reached the tip.
   #planSlip() {
     const { liana } = this;
-    const steps = slipSteps(this.gripFrom, Math.round(liana.swingTime / SIM_DT), liana.swingDir, liana.period);
-    const { quickTo, quickTime } = quickSlide(this.gripFrom);
+    const swingSteps = Math.round(liana.swingTime / SIM_DT);
     this.gripTime = 0;
+    if (this.holds) {
+      const steps = slipSteps(Math.min(this.gripFrom, FLOW_GRIP), swingSteps, liana.swingDir, liana.period);
+      this.quickTo = HOLD_GRIP;
+      this.quickTime = Math.abs(HOLD_GRIP - this.gripFrom) / QUICK_SLIP_SPEED;
+      this.slipTime = steps * SIM_DT;
+      this.slipSpeed = 0;
+      return;
+    }
+    const steps = slipSteps(this.gripFrom, swingSteps, liana.swingDir, liana.period);
+    const { quickTo, quickTime } = quickSlide(this.gripFrom);
     this.quickTo = quickTo;
     this.quickTime = quickTime;
     this.slipTime = steps * SIM_DT;
     this.slipSpeed = (LIANA_LENGTH - quickTo) / (this.slipTime - quickTime);
   }
 
-  // True once the grip has slipped to the tip: the world then forces a release. The
-  // tolerance absorbs the rounding of the summed steps, so the release comes on the
-  // step slipSteps() predicts.
-  get atTip() {
-    return this.state === MonkeyState.HANGING && this.gripRadius >= LIANA_LENGTH - 1e-6;
+  // True once the grip gives: slipped to the tip, or (holding on) tired out. The world
+  // then forces a release. The tolerances absorb the rounding of the summed steps, so
+  // the release comes on the step slipSteps() predicts.
+  get forcedOff() {
+    if (this.state !== MonkeyState.HANGING) return false;
+    if (this.holds) return this.slipping && this.gripTime >= this.slipTime - SIM_DT / 2;
+    return this.gripRadius >= LIANA_LENGTH - 1e-6;
   }
 
-  // Seconds until the slipping grip reaches the tip, or Infinity when not slipping.
+  // Seconds until the grip gives (see forcedOff), or Infinity when not slipping.
   get tipTime() {
     if (this.state !== MonkeyState.HANGING || !this.slipping) return Infinity;
     return Math.max(this.slipTime - this.gripTime, 0);
@@ -159,7 +177,7 @@ export class Monkey {
     const t = this.gripTime;
     const quick = t < this.quickTime;
     this.gripRadius = quick
-      ? this.gripFrom + QUICK_SLIP_SPEED * t
+      ? this.gripFrom + Math.sign(this.quickTo - this.gripFrom) * QUICK_SLIP_SPEED * t
       : Math.min(this.quickTo + this.slipSpeed * (t - this.quickTime), LIANA_LENGTH);
 
     const { liana } = this;

@@ -21,6 +21,12 @@ function label(size, color) {
   return t;
 }
 
+// What is turned off (G, B), or '' with everything on.
+export function settingsLine(game) {
+  const off = [!game.slip && 'Slipping off', !game.bananas && 'Bananas off'].filter(Boolean);
+  return off.join('  ·  ');
+}
+
 // The text for player `p` in two-player modes: their score and lives left.
 export function playerLine(game, p) {
   const lives = game.playerLives(p);
@@ -30,13 +36,18 @@ export function playerLine(game, p) {
 
 // Top-right. Single player: the score and the best score of this page session. Split
 // screen: each player's score and lives at the top right of their pane; shared
-// screen: both players' side by side.
+// screen: both players' side by side. Under them, in every state, a note of what is
+// turned off (see settingsLine).
 export class Hud {
   constructor() {
     this.view = new Container();
+    this.scores = new Container();
     this.solo = label(36, PLAYER_COLORS[0]);
     this.players = PLAYER_COLORS.map((color) => label(28, color));
-    this.view.addChild(this.solo, ...this.players);
+    this.scores.addChild(this.solo, ...this.players);
+    this.settings = label(18, PLAYER_COLORS[0]);
+    this.settings.alpha = 0.8;
+    this.view.addChild(this.scores, this.settings);
     this.shown = [];
   }
 
@@ -46,8 +57,11 @@ export class Hud {
   }
 
   update(game) {
-    this.view.visible = game.state !== GameState.TITLE;
     const { layout } = this;
+    const settings = settingsLine(game);
+    this.settings.visible = settings !== '';
+    if (this.settings.text !== settings) this.settings.text = settings;
+    this.scores.visible = game.state !== GameState.TITLE;
     const solo = game.players === 1;
     this.solo.visible = solo;
     const placement = `${game.players}:${game.worlds.length}`;
@@ -57,6 +71,8 @@ export class Hud {
       const right = layout.view.width - layout.insets.right - 24;
       this.solo.position.set(right, layout.insets.top + 12);
       this.solo.scale.set(layout.ui);
+      this.settings.position.set(right, layout.insets.top + 12 + 46 * layout.ui);
+      this.settings.scale.set(layout.ui);
       const panes = paneLayouts(layout, game.worlds.length);
       this.players.forEach((t, p) => {
         if (panes.length > 1) t.position.set(right, panes[p].y + 8);

@@ -28,7 +28,7 @@ describe('game modes and roles', () => {
   it('creates the world with the mode’s number of players', () => {
     const calls = [];
     new Game({ createWorld: (options) => (calls.push(options), new World({ ...options, makeObstacle: () => null })) });
-    expect(calls).toEqual([{ players: 1, lives: 1, seed: expect.any(Number) }]);
+    expect(calls).toEqual([{ players: 1, lives: 1, seed: expect.any(Number), slip: true, bananas: true }]);
   });
 
   it('selects only enabled modes, and only on the title screen', () => {
