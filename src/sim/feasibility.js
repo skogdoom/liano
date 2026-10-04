@@ -19,6 +19,7 @@ import {
   STAGES,
   BOOST_PERIOD,
   SHARED_BOOST_PERIOD,
+  FLOW_GRIP,
 } from '../config.js';
 import { Liana } from './liana.js';
 import { Monkey, slipSteps } from './monkey.js';
@@ -55,8 +56,13 @@ const variantsFor = (boosted) => (boosted ? Object.values(PERIODS) : [SWING_PERI
 
 // Steps from grabbing at `entryRadius` (or starting the slip `phaseSteps` into the
 // swing) until the forced release at the tip, swinging with `period`.
-export function forcedReleaseStep(entryRadius, dir = 1, phaseSteps = 0, period = SWING_PERIOD) {
-  return slipSteps(Math.min(entryRadius, MAX_ENTRY_RADIUS), phaseSteps, dir, period);
+//
+// `hold`: with slipping turned off (Monkey.holds), the grip stays at HOLD_GRIP and the
+// forced release comes when a slip from the catch, or from FLOW_GRIP for a catch below
+// it, would have reached the tip. Generation does not check held grips (a seed gives
+// the same jungle either way); tests measure how they fare in it.
+export function forcedReleaseStep(entryRadius, dir = 1, phaseSteps = 0, period = SWING_PERIOD, hold = false) {
+  return slipSteps(Math.min(entryRadius, hold ? FLOW_GRIP : MAX_ENTRY_RADIUS), phaseSteps, dir, period);
 }
 
 // True if the obstacle keeps LIANA_CLEARANCE away from everything the lianas on both
@@ -94,13 +100,22 @@ export function simulateFlight(body, obstacle, target) {
 // flying it. `phaseSteps` starts the slip that many steps into the swing (the start
 // liana swings on the title screen before the run starts the slip); grabs start at 0.
 // The swing has `period` (SWING_PERIOD, or a boosted one: see PERIODS).
-export function validReleaseSteps(obstacle, entryRadius, lianaX = 0, dir = 1, phaseSteps = 0, period = SWING_PERIOD) {
+export function validReleaseSteps(
+  obstacle,
+  entryRadius,
+  lianaX = 0,
+  dir = 1,
+  phaseSteps = 0,
+  period = SWING_PERIOD,
+  hold = false,
+) {
   const liana = new Liana(0, lianaX);
   const target = { x: lianaX + dir * LIANA_SPACING, anchorY: liana.anchorY, tipY: liana.tipY };
   const monkey = new Monkey();
   monkey.vx = dir;
   monkey.boostGrabs = period === SWING_PERIOD ? 0 : 1;
   monkey.boostPeriod = period;
+  monkey.holds = hold;
   monkey.grab(liana, entryRadius);
   if (phaseSteps > 0) {
     for (let i = 0; i < phaseSteps; i++) liana.step(SIM_DT);
@@ -109,7 +124,7 @@ export function validReleaseSteps(obstacle, entryRadius, lianaX = 0, dir = 1, ph
   }
   solverStats.runs++;
 
-  const lastStep = forcedReleaseStep(entryRadius, dir, phaseSteps, period);
+  const lastStep = forcedReleaseStep(entryRadius, dir, phaseSteps, period, hold);
   const valid = [];
   const positions = [];
   let alive = true;
@@ -151,9 +166,9 @@ const flightCache = new Map();
 
 // For grabbing liana 0 at `entryRadius` moving forward, swinging with `period`: the
 // forced-release step and every release step k that reaches liana 1 over an empty gap,
-// with its flight.
-export function emptyGapFlights(entryRadius, period = SWING_PERIOD) {
-  const key = `${entryRadius}:${period}`;
+// with its flight. `hold`: the grip held at HOLD_GRIP (see forcedReleaseStep).
+export function emptyGapFlights(entryRadius, period = SWING_PERIOD, hold = false) {
+  const key = `${entryRadius}:${period}:${hold}`;
   let result = flightCache.get(key);
   if (result) return result;
   const liana = new Liana(0, 0);
@@ -162,8 +177,9 @@ export function emptyGapFlights(entryRadius, period = SWING_PERIOD) {
   monkey.vx = 1;
   monkey.boostGrabs = period === SWING_PERIOD ? 0 : 1;
   monkey.boostPeriod = period;
+  monkey.holds = hold;
   monkey.grab(liana, entryRadius);
-  const lastStep = forcedReleaseStep(entryRadius, 1, 0, period);
+  const lastStep = forcedReleaseStep(entryRadius, 1, 0, period, hold);
   const flights = [];
   for (let k = 0; k <= lastStep; k++) {
     if (k > 0) {
@@ -194,8 +210,8 @@ export function flightHits(obstacle, flight, arrival, box = obstacle.bounds) {
 // For a moving obstacle in gap 0, grabbing liana 0 at `entryRadius` at world time
 // `arrival` and swinging with `period`: whether each release step up to the forced
 // release reaches liana 1.
-export function movingValidSteps(obstacle, entryRadius, arrival, period = SWING_PERIOD) {
-  const { lastStep, flights } = emptyGapFlights(entryRadius, period);
+export function movingValidSteps(obstacle, entryRadius, arrival, period = SWING_PERIOD, hold = false) {
+  const { lastStep, flights } = emptyGapFlights(entryRadius, period, hold);
   const box = obstacle.bounds;
   const valid = new Array(lastStep + 1).fill(false);
   for (const flight of flights) valid[flight.k] = !flightHits(obstacle, flight, arrival, box);
@@ -204,8 +220,8 @@ export function movingValidSteps(obstacle, entryRadius, arrival, period = SWING_
 
 // The longest run of valid release steps for that arrival, but stops looking once a
 // run reaches `enough` steps.
-function movingRun(obstacle, entryRadius, arrival, enough, period) {
-  const { flights } = emptyGapFlights(entryRadius, period);
+function movingRun(obstacle, entryRadius, arrival, enough, period, hold) {
+  const { flights } = emptyGapFlights(entryRadius, period, hold);
   const box = obstacle.bounds;
   let best = 0;
   let run = 0;
@@ -230,13 +246,13 @@ export function arrivalTimes(obstacle) {
 }
 
 // The shortest, over every entry radius and sampled arrival, of the longest release
-// window (in steps), counting at most `enough` steps, swinging with `period`.
-// `obstacle` is in gap 0.
-export function movingWindow(obstacle, enough = Infinity, period = SWING_PERIOD) {
+// window (in steps), counting at most `enough` steps, swinging with `period` (with the
+// grip held if `hold`). `obstacle` is in gap 0.
+export function movingWindow(obstacle, enough = Infinity, period = SWING_PERIOD, hold = false) {
   let shortest = Infinity;
   for (const radius of ENTRY_RADII) {
     for (const arrival of arrivalTimes(obstacle)) {
-      shortest = Math.min(shortest, movingRun(obstacle, radius, arrival, enough, period));
+      shortest = Math.min(shortest, movingRun(obstacle, radius, arrival, enough, period, hold));
       if (shortest < enough && enough !== Infinity) return shortest;
     }
   }

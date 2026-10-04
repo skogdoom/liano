@@ -294,6 +294,9 @@ const loop = createFixedStepLoop({
 function frame(ticker) {
   if (input.consumeDebugToggle()) debugOverlay.toggle();
   if (input.consumeMuteToggle()) toggleMute();
+  // G and B turn slipping and bananas on and off, anywhere (paused too).
+  if (input.consumeSlipToggle()) game.toggleSlip();
+  if (input.consumeBananasToggle()) game.toggleBananas();
   // P pauses a run, and resumes whatever it paused.
   if (input.consumePauseToggle() && (game.pausable || pause.reason === 'manual')) pause.toggle('manual');
   // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
