@@ -1,7 +1,4 @@
 import {
-  BANANA_POINTS,
-  BOOST_GRABS,
-  BOOST_PERIOD,
   START_GRIP,
   RESPAWN_GRIP,
   HOLD_GRIP,
@@ -30,9 +27,8 @@ import { stageFor } from './stages.js';
 // with none left it is out. `makeObstacle(seed, gap)` and `makeBanana(seed, gap,
 // obstacle)` can be replaced in tests.
 //
-// `slip` and `bananas` (both on by default) turn slipping and bananas off for trying
-// the game without them (see setSlip and setBananas). Generation does not depend on
-// them: a seed gives the same jungle either way.
+// `slip` (on by default) turns slipping off for trying the game without it (see
+// setSlip). Generation does not depend on it: a seed gives the same jungle either way.
 export class World {
   constructor({
     seed = randomSeed(),
@@ -41,17 +37,16 @@ export class World {
     players = 1,
     lives = 1,
     ownLianas = false,
-    boostPeriod = BOOST_PERIOD,
     slip = true,
-    bananas = true,
   } = {}) {
     this.seed = seed;
     this.slip = slip;
-    this.bananasOn = bananas;
     this.makeObstacle = (gap) => makeObstacle(seed, gap);
     this.makeBanana = (gap) => {
       const obstacle = this.obstacles.has(gap) ? this.obstacles.get(gap) : this.makeObstacle(gap);
-      return makeBanana(seed, gap, obstacle);
+      const banana = makeBanana(seed, gap, obstacle);
+      if (banana) this.bananaGaps.add(gap);
+      return banana;
     };
     // One set of lianas for all monkeys, or with `ownLianas` (shared screen) one set per
     // monkey: same places, but each monkey only grabs its own. `lianas` is player 1's.
@@ -59,12 +54,15 @@ export class World {
     this.lianas = this.lianaSets[0];
     this.obstacles = new Map();
     this.bananas = new Map();
-    // Gaps whose banana was taken. Kept outside the bananas so culling cannot bring
-    // one back.
+    // Gaps with a banana (all generated so far), and those whose banana was taken. Kept
+    // outside the bananas so culling cannot forget or bring one back.
+    this.bananaGaps = new Set();
     this.takenBananas = new Set();
     // Whole steps since the world was created; moving obstacles follow `time`.
     this.stepCount = 0;
-    this.monkeys = Array.from({ length: players }, () => Object.assign(new Monkey(), { boostPeriod }));
+    this.monkeys = Array.from({ length: players }, () => new Monkey());
+    // Bananas each monkey has taken.
+    this.bananasTaken = this.monkeys.map(() => 0);
     for (const set of this.lianaSets) updateLianas(set, 0, null);
     updateObstacles(this.obstacles, 0, this.makeObstacle);
     updateBananas(this.bananas, 0, this.makeBanana);
@@ -166,14 +164,6 @@ export class World {
     return this.slip ? grip : HOLD_GRIP;
   }
 
-  // Turns bananas on or off. Off, none are shown or taken and every boost ends (a liana
-  // already swinging boosted keeps its period until let go). Back on, the bananas not
-  // taken yet are back.
-  setBananas(on) {
-    this.bananasOn = on;
-    if (!on) for (const monkey of this.monkeys) monkey.boostGrabs = 0;
-  }
-
   // The action key while hanging. Returns false (and does nothing) while airborne.
   release(player = 0) {
     const liana = this.monkeys[player].release();
@@ -229,24 +219,33 @@ export class World {
     });
   }
 
-  // A banana the monkey touches (hanging or flying) is taken: points, and its next
-  // BOOST_GRABS grabs are boosted (a second banana starts the count again).
+  // A banana the monkey touches (hanging or flying) is taken, by the first monkey to
+  // reach it, and counts for its player. It changes neither the score nor the swing.
   #takeBanana(player) {
-    if (!this.bananasOn) return;
     const m = this.monkeys[player];
     for (const banana of this.bananas.values()) {
       if (!banana || this.takenBananas.has(banana.gap) || !banana.touches(m.x, m.y, MONKEY_RADIUS)) continue;
       this.takenBananas.add(banana.gap);
-      m.boostGrabs = BOOST_GRABS;
-      this.scores[player] += BANANA_POINTS;
-      this.events.push({ type: 'banana', gap: banana.gap, score: this.scores[player], player });
+      this.bananasTaken[player]++;
+      this.events.push({ type: 'banana', gap: banana.gap, taken: this.bananasTaken[player], player });
     }
   }
 
-  // The banana in `gap` if it is there to take (none with bananas off).
+  // The banana in `gap` if it is there to take.
   bananaAt(gap) {
     const banana = this.bananas.get(gap);
-    return banana && this.bananasOn && !this.takenBananas.has(gap) ? banana : null;
+    return banana && !this.takenBananas.has(gap) ? banana : null;
+  }
+
+  // Monkey `player`'s bananas: `taken`, and `passed`, the most it could have: the
+  // bananas in the gaps passed so far (scored by any monkey of this world) or taken.
+  // Shared screen's monkeys take from the same bananas, so `passed` is the same for both.
+  bananaTally(player) {
+    let passed = 0;
+    for (const gap of this.bananaGaps) {
+      if (this.takenBananas.has(gap) || this.scoredGapsBy.some((scored) => scored.has(gap))) passed++;
+    }
+    return { taken: this.bananasTaken[player], passed };
   }
 
   // Returns and clears the events emitted since the last call.

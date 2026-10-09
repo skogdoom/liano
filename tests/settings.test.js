@@ -5,11 +5,9 @@ import { Banana } from '../src/sim/banana.js';
 import { Liana } from '../src/sim/liana.js';
 import { Monkey, MonkeyState, slipSteps } from '../src/sim/monkey.js';
 import { createInput } from '../src/input.js';
-import { settingsLine } from '../src/render/hud.js';
-import { createObstacle, mayBeBoosted, rulesFor } from '../src/sim/generator.js';
-import { forcedReleaseStep, longestRun, movingWindow, PERIODS, validReleaseSteps } from '../src/sim/feasibility.js';
+import { createObstacle, rulesFor } from '../src/sim/generator.js';
+import { forcedReleaseStep, longestRun, movingWindow, validReleaseSteps } from '../src/sim/feasibility.js';
 import {
-  BOOST_GRABS,
   ENTRY_RADII,
   FLOW_GRIP,
   HOLD_GRIP,
@@ -18,7 +16,6 @@ import {
   MAX_ENTRY_RADIUS,
   SIM_DT,
   START_GRIP,
-  SWING_PERIOD,
 } from '../src/config.js';
 import { FORWARD_RELEASE_STEP, flyUntilGrab, stepN } from './helpers.js';
 
@@ -33,14 +30,12 @@ function world({ spots = {}, ...options } = {}) {
 
 // Steps a monkey holding on at `entryRadius` until the grip gives; returns the steps
 // and the grip radius at each.
-function holdUntilOff(entryRadius, period = SWING_PERIOD, catchSpeed = 0) {
+function holdUntilOff(entryRadius, catchSpeed = 0) {
   const liana = new Liana(0, 0);
   const monkey = new Monkey();
   monkey.vx = 1;
   monkey.vy = catchSpeed;
   monkey.holds = true;
-  monkey.boostGrabs = period === SWING_PERIOD ? 0 : 1;
-  monkey.boostPeriod = period;
   monkey.grab(liana, entryRadius);
   const radii = [];
   let steps = 0;
@@ -56,7 +51,7 @@ function holdUntilOff(entryRadius, period = SWING_PERIOD, catchSpeed = 0) {
 describe('slipping off (G)', () => {
   it('holds a catch from HOLD_GRIP down still where it caught: the grip never moves up', () => {
     for (const r of [HOLD_GRIP, 370, MAX_ENTRY_RADIUS, LIANA_LENGTH]) {
-      const { radii } = holdUntilOff(r, SWING_PERIOD, 300);
+      const { radii } = holdUntilOff(r, 300);
       expect(radii.every((x) => x === Math.min(r, MAX_ENTRY_RADIUS))).toBe(true);
     }
   });
@@ -64,7 +59,7 @@ describe('slipping off (G)', () => {
   it('slides a catch above HOLD_GRIP down to it, braking to a stop within HOLD_SLIDE_TIME', () => {
     for (const r of [60, FLOW_GRIP, 330, HOLD_GRIP - 1]) {
       for (const speed of [0, 280, 600]) {
-        const { radii } = holdUntilOff(r, SWING_PERIOD, speed);
+        const { radii } = holdUntilOff(r, speed);
         const settled = radii.findIndex((x) => x === HOLD_GRIP);
         expect(settled).toBeGreaterThanOrEqual(0);
         expect(settled).toBeLessThanOrEqual(Math.round(HOLD_SLIDE_TIME / SIM_DT));
@@ -79,7 +74,7 @@ describe('slipping off (G)', () => {
 
   it('starts the slide at the speed the monkey came in along the rope, when that is fast enough', () => {
     // 40 px at 600 px/s: braking evenly, it stops after 2 · 40 / 600 s.
-    const { radii } = holdUntilOff(310, SWING_PERIOD, 600);
+    const { radii } = holdUntilOff(310, 600);
     expect(radii[0] - 310).toBeCloseTo(600 * SIM_DT, 0);
     expect(radii.findIndex((x) => x === HOLD_GRIP)).toBe(Math.ceil((2 * 40) / 600 / SIM_DT) - 1);
   });
@@ -110,12 +105,10 @@ describe('slipping off (G)', () => {
   });
 
   it('lets go, tired, when a slip from the catch (or from FLOW_GRIP below it) would reach the tip', () => {
-    for (const period of Object.values(PERIODS)) {
-      for (const r of [60, ...ENTRY_RADII, LIANA_LENGTH]) {
-        const expected = slipSteps(Math.min(r, MAX_ENTRY_RADIUS, FLOW_GRIP), 0, 1, period);
-        expect(holdUntilOff(r, period).steps).toBe(expected);
-        expect(forcedReleaseStep(r, 1, 0, period, true)).toBe(expected);
-      }
+    for (const r of [60, ...ENTRY_RADII, LIANA_LENGTH]) {
+      const expected = slipSteps(Math.min(r, MAX_ENTRY_RADIUS, FLOW_GRIP));
+      expect(holdUntilOff(r).steps).toBe(expected);
+      expect(forcedReleaseStep(r, 1, 0, true)).toBe(expected);
     }
   });
 
@@ -174,50 +167,17 @@ describe('slipping off (G)', () => {
       for (let gap = 1; gap <= 70; gap++) {
         const o = createObstacle(seed, gap);
         if (!o) continue;
-        const { minSteps, boosted } = rulesFor(gap, mayBeBoosted(seed, gap));
+        const { minSteps } = rulesFor(gap);
         const inGap = o.inGap(0);
-        for (const period of boosted ? Object.values(PERIODS) : [SWING_PERIOD]) {
-          const length = o.moving
-            ? movingWindow(inGap, minSteps, period, true)
-            : Math.min(...ENTRY_RADII.map((r) => longestRun(validReleaseSteps(inGap, r, 0, 1, 0, period, true).valid).length));
-          expect({ seed, gap, period, ok: length >= minSteps }).toEqual({ seed, gap, period, ok: true });
-          checked++;
-        }
+        const length = o.moving
+          ? movingWindow(inGap, minSteps, true)
+          : Math.min(...ENTRY_RADII.map((r) => longestRun(validReleaseSteps(inGap, r, 0, 1, 0, true).valid).length));
+        expect({ seed, gap, ok: length >= minSteps }).toEqual({ seed, gap, ok: true });
+        checked++;
       }
     }
     expect(checked).toBeGreaterThan(250);
   }, 120_000);
-});
-
-describe('bananas off (B)', () => {
-  // Where the monkey is `steps` steps into the forward flight from liana 0.
-  function flightPoint(steps) {
-    const probe = world();
-    stepN(probe, FORWARD_RELEASE_STEP);
-    return probe.predictFlight().path[steps];
-  }
-
-  it('hides bananas and takes none, and brings back the ones not taken', () => {
-    const p = flightPoint(40);
-    const w = world({ spots: { 0: [p.x, p.y] } });
-    w.setBananas(false);
-    expect(w.bananaAt(0)).toBeNull();
-    stepN(w, FORWARD_RELEASE_STEP);
-    w.release();
-    w.takeEvents();
-    flyUntilGrab(w);
-    expect(w.score).toBe(0);
-    expect(w.monkey.boostGrabs).toBe(0);
-    w.setBananas(true);
-    expect(w.bananaAt(0)).not.toBeNull();
-  });
-
-  it('ends every boost', () => {
-    const w = world({ players: 2 });
-    for (const m of w.monkeys) m.boostGrabs = BOOST_GRABS;
-    w.setBananas(false);
-    expect(w.monkeys.map((m) => m.boostGrabs)).toEqual([0, 0]);
-  });
 });
 
 describe('settings in the game', () => {
@@ -228,41 +188,21 @@ describe('settings in the game', () => {
     const game = makeGame();
     game.selectMode('split');
     game.toggleSlip();
-    game.toggleBananas();
-    expect(game.worlds.map((w) => [w.slip, w.bananasOn])).toEqual([
-      [false, false],
-      [false, false],
-    ]);
+    expect(game.worlds.map((w) => w.slip)).toEqual([false, false]);
     game.selectMode('solo');
-    expect([game.world.slip, game.world.bananasOn]).toEqual([false, false]);
+    expect(game.world.slip).toBe(false);
     game.toggleSlip();
-    expect([game.world.slip, game.world.bananasOn]).toEqual([true, false]);
+    expect(game.world.slip).toBe(true);
   });
 
-  it('starts with the settings it is given, in every world', () => {
+  it('starts with the setting it is given, in every world', () => {
     const game = new Game({
       slip: false,
-      bananas: false,
       createWorld: (options) => new World({ ...options, makeObstacle: () => null, makeBanana: () => null }),
     });
-    expect([game.slip, game.bananas, game.world.slip, game.world.bananasOn, game.world.monkey.holds]).toEqual([
-      false,
-      false,
-      false,
-      false,
-      true,
-    ]);
+    expect([game.slip, game.world.slip, game.world.monkey.holds]).toEqual([false, false, true]);
     game.selectMode('split');
-    expect(game.worlds.map((w) => [w.slip, w.bananasOn])).toEqual([
-      [false, false],
-      [false, false],
-    ]);
-  });
-
-  it('names the settings for the HUD in debug mode only', () => {
-    for (const slip of [true, false]) for (const bananas of [true, false]) expect(settingsLine({ slip, bananas }, false)).toBe('');
-    expect(settingsLine({ slip: true, bananas: false }, true)).toBe('Slipping on  ·  Bananas off');
-    expect(settingsLine({ slip: false, bananas: true }, true)).toBe('Slipping off  ·  Bananas on');
+    expect(game.worlds.map((w) => w.slip)).toEqual([false, false]);
   });
 });
 
@@ -270,16 +210,15 @@ describe('setting keys', () => {
   const keydown = (target, code, repeat = false) =>
     target.dispatchEvent(Object.assign(new Event('keydown', { cancelable: true }), { code, repeat }));
 
-  it('toggles slipping on G and bananas on B, also while presses are not accepted', () => {
+  it('toggles slipping on G, also while presses are not accepted', () => {
     const target = new EventTarget();
     const input = createInput(target, null, { accepts: () => false });
     keydown(target, 'KeyG');
     keydown(target, 'KeyG', true);
-    keydown(target, 'KeyB');
-    keydown(target, 'KeyB');
+    keydown(target, 'KeyB'); // not a key any more
     expect(input.consumeSlipToggle()).toBe(true);
     expect(input.consumeSlipToggle()).toBe(false);
-    expect(input.consumeBananasToggle()).toBe(false);
+    expect(input.consumePress('primary')).toBe(false);
     expect(input.consumeModePick()).toBeNull();
   });
 });

@@ -4,11 +4,7 @@ import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { LianaState } from '../src/sim/liana.js';
 import { Banana } from '../src/sim/banana.js';
-import { validReleaseSteps } from '../src/sim/feasibility.js';
 import {
-  BANANA_POINTS,
-  BOOST_GRABS,
-  BOOST_PERIOD,
   CAMERA_LERP,
   LIANA_SPACING,
   LIVES_2P,
@@ -17,13 +13,10 @@ import {
   SCREEN_WIDTH,
   SHARED_LEADER_X,
   SIM_DT,
-  SWING_PERIOD,
   START_GRIP,
   SHARED_ZOOM,
-  SHARED_BOOST_PERIOD,
-  SHARED_BOOST_FACTOR,
 } from '../src/config.js';
-import { FORWARD_RELEASE_STEP, flyUntilGrab, stepN } from './helpers.js';
+import { FORWARD_RELEASE_STEP, stepN } from './helpers.js';
 
 const steps = (ms) => Math.round(ms / 1000 / SIM_DT);
 
@@ -109,28 +102,6 @@ describe('shared lianas', () => {
     world.release(1);
     expect(liana.state).toBe(LianaState.SETTLING);
   });
-
-  it('uses a boosted grab when joining a boosted swing, and keeps it on an unboosted one', () => {
-    const world = new World({ players: 2, makeObstacle: () => null, makeBanana: () => null });
-    world.start();
-    const [a, b] = world.monkeys;
-    a.boostGrabs = 2;
-    b.boostGrabs = 2;
-    // Player 2 gets to liana 1 first, swinging it boosted; player 1 joins.
-    joinOnLiana1(world, 1, 0);
-    expect(b.liana.period).toBe(BOOST_PERIOD);
-    expect(a.liana).toBe(b.liana);
-    // Both used one: their counts stay in step.
-    expect([a.boostGrabs, b.boostGrabs]).toEqual([1, 1]);
-    // A monkey with a boost joining an unboosted swing keeps its boost.
-    const c = new World({ players: 2, makeObstacle: () => null, makeBanana: () => null });
-    c.monkeys[1].boostGrabs = 3;
-    c.monkeys[1].release();
-    c.monkeys[1].vx = 1;
-    c.monkeys[1].grab(c.lianas.get(0), 200);
-    expect(c.lianas.get(0).period).toBe(SWING_PERIOD);
-    expect(c.monkeys[1].boostGrabs).toBe(3);
-  });
 });
 
 describe('own lianas in shared screen', () => {
@@ -175,21 +146,6 @@ describe('own lianas in shared screen', () => {
     world.step(SIM_DT);
     expect(world.monkeys[0].liana).toBe(a.get(1));
     expect(a.get(1).swingTime).toBeLessThan(rope.swingTime);
-  });
-
-  it('boosts only the monkey that takes a banana', () => {
-    const world = new World({
-      players: 2,
-      ownLianas: true,
-      makeObstacle: () => null,
-      makeBanana: (seed, gap) => (gap === 0 ? new Banana(0, 100, 100) : null),
-    });
-    world.start();
-    world.release(0);
-    Object.assign(world.monkeys[0], { x: 100, y: 100, vx: 0, vy: 0 });
-    world.step(SIM_DT);
-    expect(world.monkeys.map((m) => m.boostGrabs)).toEqual([BOOST_GRABS, 0]);
-    expect(world.scores).toEqual([BANANA_POINTS, 0]);
   });
 
   it('respawns a monkey on its own lianas', () => {
@@ -321,23 +277,6 @@ describe('shared screen', () => {
     const [a, b] = game.world.monkeys;
     expect([a.gripRadius, b.gripRadius]).toEqual([START_GRIP, START_GRIP]);
     expect(a.liana).not.toBe(b.liana);
-  });
-
-  it('boosts less with a banana than single player does', () => {
-    const game = sharedGame();
-    expect(game.world.monkeys.map((m) => m.boostPeriod)).toEqual([SHARED_BOOST_PERIOD, SHARED_BOOST_PERIOD]);
-    expect(SWING_PERIOD / SHARED_BOOST_PERIOD).toBeCloseTo(SHARED_BOOST_FACTOR, 2);
-    expect(SHARED_BOOST_PERIOD).toBeGreaterThan(BOOST_PERIOD);
-    expect(Math.round(SHARED_BOOST_PERIOD / SIM_DT) % 2).toBe(0);
-    // A boosted grab swings with it.
-    const m = game.world.monkeys[1];
-    m.boostGrabs = 1;
-    m.release();
-    m.vx = 1;
-    m.grab(game.world.lianasOf(1).get(1), 250);
-    expect(m.liana.period).toBe(SHARED_BOOST_PERIOD);
-    // Single player keeps the stronger boost.
-    expect(new World({ makeObstacle: () => null }).monkey.boostPeriod).toBe(BOOST_PERIOD);
   });
 
   it('never leaves a monkey behind on the title screen', () => {

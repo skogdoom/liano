@@ -3,9 +3,9 @@ import { KEYS } from './config.js';
 // Game input: keys by role (see KEYS in config.js), and a tap/click on the game, which
 // counts as `primary`. Presses are queued and consumed by the fixed-step loop, so they
 // are applied at a sim step boundary. Key auto-repeat is ignored for every key. `debug`
-// (D), `mute` (M), `pause` (P), `slip` (G) and `bananas` (B) are toggles; `mode` (1, 2,
-// 3) picks a mode on the title screen (or from the results, going back to it); `menu`
-// (Esc) goes back to the title.
+// (D), `mute` (M), `pause` (P) and `slip` (G) are toggles; `mode` (1, 2, 3) picks a mode
+// on the title screen (or from the results, going back to it); `menu` (Esc) goes back to
+// the title.
 
 export function isFreshSpacePress(event) {
   return event.code === 'Space' && !event.repeat;
@@ -25,7 +25,7 @@ export function createInput(
   const roleOf = new Map();
   for (const [role, codes] of Object.entries(keys)) for (const code of codes) roleOf.set(code, role);
   const pending = new Set(); // action roles pressed since they were last consumed
-  const toggles = { debug: 0, mute: 0, pause: 0, slip: 0, bananas: 0 };
+  const toggles = { debug: 0, mute: 0, pause: 0, slip: 0 };
   let modePick = null;
   let lastType = initialType;
 
@@ -93,10 +93,6 @@ export function createInput(
     // True if G was pressed an odd number of times since the last call.
     consumeSlipToggle() {
       return consumeToggle('slip');
-    },
-    // True if B was pressed an odd number of times since the last call.
-    consumeBananasToggle() {
-      return consumeToggle('bananas');
     },
     // The input type used last, for prompts ("Tap" or "Press Space").
     get lastType() {

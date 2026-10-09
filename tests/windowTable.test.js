@@ -26,8 +26,7 @@ describe('precomputed window table', () => {
         }
       }
     }
-    expect(Object.keys(table.windows)).toEqual(['normal', 'boosted', 'sharedBoosted']);
-    expect(Object.keys(table.windows.boosted).map(Number)).toEqual(STAGE_SCALES);
+    expect(Object.keys(table.windows).map(Number)).toEqual(STAGE_SCALES);
   });
 
   it('answers the same as the solver for every type and height', () => {

@@ -61,17 +61,9 @@ export const LIANA_SPACING = 700;
 
 export const SWING_AMPLITUDE = (50 * Math.PI) / 180;
 export const SWING_PERIOD = 2.6;
-// Bananas: collected on touch (hanging or flying) for BANANA_POINTS, and the next
-// BOOST_GRABS grabs swing BOOST_FACTOR times faster. The boosted period is rounded to
-// an even number of sim steps (250, a factor of 1.248), which the slip timing needs.
+// Bananas: collected on touch (hanging or flying), and counted per player against the
+// bananas passed. They change neither the score nor the swing.
 export const BANANA_RADIUS = 14;
-export const BANANA_POINTS = 3;
-export const BOOST_GRABS = 3;
-export const BOOST_FACTOR = 1.25;
-export const BOOST_PERIOD = 2 * Math.round(SWING_PERIOD / BOOST_FACTOR / SIM_DT / 2) * SIM_DT;
-// Shared screen's bananas boost less: 278 steps, a factor of 1.122.
-export const SHARED_BOOST_FACTOR = 1.12;
-export const SHARED_BOOST_PERIOD = 2 * Math.round(SWING_PERIOD / SHARED_BOOST_FACTOR / SIM_DT / 2) * SIM_DT;
 // Each gap from obstacle 1 is a banana candidate with this chance; a candidate becomes
 // a banana unless one of the two gaps before it is a candidate too, so bananas are at
 // least 3 gaps apart and come in about 14 % of the gaps.
@@ -171,8 +163,7 @@ export const GAMEOVER_INPUT_LOCK_MS = 400;
 // Keys by role (KeyboardEvent.code). `primary` is 1P's action key (a tap does the same),
 // `p1`/`p2` are the two-player action keys (not Shift: five presses open Windows' Sticky
 // Keys dialog), `mode` picks the mode on the title screen (1, 2, 3) and `start` starts it
-// (as does `primary`). `slip` (G, for grip) and `bananas` (B) turn slipping and bananas
-// on and off.
+// (as does `primary`). `slip` (G, for grip) turns slipping on and off.
 export const KEYS = Object.freeze({
   primary: ['Space'],
   start: ['Enter', 'NumpadEnter'],
@@ -184,7 +175,6 @@ export const KEYS = Object.freeze({
   mute: ['KeyM'],
   pause: ['KeyP'],
   slip: ['KeyG'],
-  bananas: ['KeyB'],
 });
 export const LIVES_2P = 3;
 // Shared screen draws the world at this scale in the 16:9 frame, a wider view

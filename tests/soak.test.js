@@ -4,7 +4,7 @@ import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { windowForGrab } from './helpers.js';
 import { mulberry32 } from '../src/sim/rng.js';
-import { SIM_DT, SCREEN_WIDTH, LIANA_SPACING, WORLD_MARGIN, GAMEOVER_INPUT_LOCK_MS, BANANA_POINTS } from '../src/config.js';
+import { SIM_DT, SCREEN_WIDTH, LIANA_SPACING, WORLD_MARGIN, GAMEOVER_INPUT_LOCK_MS } from '../src/config.js';
 
 // Lianas in the generation range, one extra on each side for hysteresis, plus the held one.
 const MAX_LIANAS = Math.floor((SCREEN_WIDTH + 2 * WORLD_MARGIN) / LIANA_SPACING) + 1 + 2 + 1;
@@ -37,9 +37,13 @@ describe('soak', () => {
     for (let gap = 0; gap < 5000; gap++) hop(game, rand);
     expect(game.state).toBe(GameState.PLAYING);
     expect(game.world.monkey.liana.index).toBe(5000);
-    // Gap 0 is empty; bananas add their points (and boost the swings after them).
+    // Gap 0 is empty; bananas are counted apart from the score.
     expect(game.world.takenBananas.size).toBeGreaterThan(100);
-    expect(game.score).toBe(4999 + BANANA_POINTS * game.world.takenBananas.size);
+    expect(game.score).toBe(4999);
+    const { taken, passed } = game.world.bananaTally(0);
+    expect(taken).toBe(game.world.takenBananas.size);
+    expect(passed).toBeGreaterThanOrEqual(taken);
+    expect(passed).toBeGreaterThan(500);
     expect(limits.lianas).toBeLessThanOrEqual(MAX_LIANAS);
     expect(limits.obstacles).toBeLessThanOrEqual(MAX_LIANAS);
     expect(limits.events).toBeLessThanOrEqual(3);
@@ -54,7 +58,7 @@ describe('soak', () => {
     for (let run = 0; run < 20; run++) {
       for (let h = 0; h < 5; h++) hop(game, rand);
       // Each run reaches liana 5, past gaps 1-4 (gap 0 is empty), plus its bananas.
-      expect(game.score).toBe(4 + BANANA_POINTS * game.world.takenBananas.size);
+      expect(game.score).toBe(4);
       best = Math.max(best, game.score);
       // Let go and drop straight out of the screen.
       game.world.release();

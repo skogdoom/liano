@@ -12,9 +12,8 @@ import {
   longestRun,
   MIN_WINDOW_STEPS,
   forcedReleaseStep,
-  PERIODS,
 } from '../src/sim/feasibility.js';
-import { createObstacle, pickHeight, fallbackHeight, movingCandidate, rulesFor, mayBeBoosted } from '../src/sim/generator.js';
+import { createObstacle, pickHeight, fallbackHeight, movingCandidate, rulesFor } from '../src/sim/generator.js';
 import { Obstacle, STATIC_TYPES, MOVING_TYPES } from '../src/sim/obstacle.js';
 import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
@@ -29,12 +28,10 @@ import {
   LIANA_SPACING,
   MIN_RELEASE_WINDOW_MS,
   STAGES,
-  BANANA_POINTS,
   MONKEY_RADIUS,
   OBSTACLE_Y_RANGE,
   SIM_DT,
   SWING_AMPLITUDE,
-  SWING_PERIOD,
 } from '../src/config.js';
 import { FORWARD_RELEASE_STEP, FALL_RELEASE_STEP, worldWith, stepN, flyUntilGrab, windowForGrab } from './helpers.js';
 
@@ -208,7 +205,7 @@ describe('fair generation', () => {
     expect(checked).toBe(1000);
   });
 
-  it('keeps the late stages passable, down to the shortest window, boosted swings included', () => {
+  it('keeps the late stages passable, down to the shortest window', () => {
     let checked = 0;
     const late = [];
     // A gap from each stage up to the one that reaches the floor, and beyond it.
@@ -216,16 +213,14 @@ describe('fair generation', () => {
     for (const seed of [5, 50, 500]) {
       for (const gap of late) {
         const o = createObstacle(seed, gap);
-        const { scale, minSteps, boosted } = rulesFor(gap, mayBeBoosted(seed, gap));
+        const { scale, minSteps } = rulesFor(gap);
         expect(o.scale).toBe(scale);
-        for (const period of boosted ? Object.values(PERIODS) : [SWING_PERIOD]) {
-          const length = o.moving ? movingWindow(o.inGap(0), minSteps, period) : releaseWindow(o.type, o.y, o.scale, period).length;
-          expect({ seed, gap, period, ok: length >= minSteps }).toEqual({ seed, gap, period, ok: true });
-          checked++;
-        }
+        const length = o.moving ? movingWindow(o.inGap(0), minSteps) : releaseWindow(o.type, o.y, o.scale).length;
+        expect({ seed, gap, ok: length >= minSteps }).toEqual({ seed, gap, ok: true });
+        checked++;
       }
     }
-    expect(checked).toBeGreaterThan(120);
+    expect(checked).toBe(3 * 14 * 3);
   }, 120_000);
 
   it(`gives every one of 1,000 seeded gaps from obstacle 6 on a ${MIN_RELEASE_WINDOW_MS} ms window for every entry radius × arrival phase`, () => {
@@ -347,8 +342,8 @@ describe('fairness in play', () => {
       for (const seed of [3, 17, 256, 4096]) {
         const world = playForward(seed, 60, pick);
         expect(world.alive).toBe(true);
-        // Gap 0 is empty; bananas add their points.
-        expect(world.score).toBe(59 + BANANA_POINTS * world.takenBananas.size);
+        // Gap 0 is empty; bananas don't count towards the score.
+        expect(world.score).toBe(59);
       }
     });
   }

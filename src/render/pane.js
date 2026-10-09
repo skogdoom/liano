@@ -2,7 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import { DEATH_SHAKE_PX, DEATH_SHAKE_TIME } from '../config.js';
 import { Background } from './background.js';
 import { Shake } from './shake.js';
-import { BananaViews, BoostBadge } from './bananaView.js';
+import { BananaViews } from './bananaView.js';
 import { Camera, cameraTarget } from './camera.js';
 import { LIANA_PALETTES, LianaView } from './lianaView.js';
 import { MonkeyView, PALETTES } from './monkeyView.js';
@@ -26,7 +26,6 @@ export class Pane {
     this.bananaViews = new BananaViews();
     this.monkeyLayer = new Container();
     this.monkeyViews = [];
-    this.badges = [];
     this.worldLayer.addChild(
       this.obstacleViews.view,
       this.lianaLayer,
@@ -89,15 +88,12 @@ export class Pane {
     world.monkeys.forEach((m, i) => {
       if (this.monkeyViews[i]?.player === players[i]) return;
       this.monkeyViews[i]?.view.destroy({ children: true });
-      this.badges[i]?.view.destroy({ children: true });
       const view = new MonkeyView(PALETTES[players[i]]);
       view.player = players[i];
       this.monkeyViews[i] = view;
-      this.badges[i] = new BoostBadge();
-      this.monkeyLayer.addChild(view.view, this.badges[i].view);
+      this.monkeyLayer.addChild(view.view);
     });
     for (const view of this.monkeyViews.splice(world.monkeys.length)) view?.view.destroy({ children: true });
-    for (const badge of this.badges.splice(world.monkeys.length)) badge?.view.destroy({ children: true });
     if (this.layout && !camera) this.camera.reset(this.#target());
   }
 
@@ -127,9 +123,6 @@ export class Pane {
     });
     this.obstacleViews.update(world.obstacles.values());
     this.bananaViews.update(world, events, dt);
-    world.monkeys.forEach((m, i) => {
-      this.monkeyViews[i].update(m, dt, world.isInvulnerable(i));
-      this.badges[i].update(m);
-    });
+    world.monkeys.forEach((m, i) => this.monkeyViews[i].update(m, dt, world.isInvulnerable(i)));
   }
 }
