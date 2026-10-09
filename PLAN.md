@@ -347,7 +347,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
   - Spider: dark body with a red mark and wriggling legs, on a thin thread.
   - Snake: green coils on a leafy stalk, its head pointing the way it climbs.
   - Bird: red body with a yellow belly and flapping wings, facing the way it flies.
-- **Banana.** A yellow crescent with a gentle bob and a glint.
+- **Banana.** A single tilted banana, tapering to both ends, with a lighter ridge, a stem and a dark tip, and a gentle bob. The same drawing is the icon in the HUD and on the results.
 - **Background.** Three parallax layers, a canopy strip at the top, and a dark jungle floor band at the bottom. Taller views extend the forest upward and the undergrowth downward. The tint shifts per stage, through a five-step day (day, late afternoon, dusk, night, dawn) that repeats.
 - **HUD and buttons.** Readable text with a subtle shadow, plus the speaker and fullscreen icons.
 - **Readability.** Hitboxes visually match the drawings. Check this with the debug overlay.

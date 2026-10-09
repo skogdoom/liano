@@ -2,40 +2,66 @@ import { Container, Graphics, Text } from 'pixi.js';
 import { BANANA_RADIUS } from '../config.js';
 
 const PEEL = 0xffd23f;
-const PEEL_SHADE = 0xe0a91f;
+const RIDGE = 0xfff3a0;
+const STEM = 0x6b5a2a;
 const TIP = 0x5a3d1c;
-const SPARKLE = 0xffffff;
 const POP_TIME = 0.8; // s
 
-// A yellow crescent `r` in radius, centred on (0, 0). Bananas are drawn a little larger
-// than their hitbox, which with the monkey's makes pickups generous anyway.
+// A banana `r` in size (about 2r long), centred on (0, 0): a curved body tapering to
+// both ends, tilted, with a lighter ridge, a stem at one end and a dark tip at the other.
+// Bananas are drawn a little larger than their hitbox, which with the monkey's makes
+// pickups generous anyway.
 export function drawBanana(g, r = BANANA_RADIUS * 1.4) {
+  const radius = 1.25 * r; // of the arc along the middle of the banana
+  const centreY = -0.95 * r;
+  const tilt = -0.45;
+  const [cos, sin] = [Math.cos(tilt), Math.sin(tilt)];
+  // A point at angle `a` on the arc, `d` out from it, tilted.
+  const at = (a, d, along = 0) => {
+    const x = (radius + d) * Math.cos(a) + along * Math.sin(a);
+    const y = centreY + (radius + d) * Math.sin(a) - along * Math.cos(a);
+    return [x * cos - y * sin, x * sin + y * cos];
+  };
+  const from = Math.PI * 0.18;
+  const to = Math.PI * 0.82;
+  const n = 16;
   const outer = [];
   const inner = [];
-  for (let i = 0; i <= 12; i++) {
-    const a = Math.PI * (0.15 + 0.7 * (i / 12));
-    outer.push(r * Math.cos(a), r * Math.sin(a) - r * 0.63);
-    inner.push(r * 0.72 * Math.cos(a), r * 0.55 * Math.sin(a) - r * 0.63);
+  const ridge = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const a = from + (to - from) * t;
+    const w = 0.42 * r * Math.sin(Math.PI * t) ** 0.6 + 0.03 * r;
+    outer.push(at(a, w / 2));
+    inner.unshift(at(a, -w / 2));
+    ridge.push(at(a, w * 0.1));
   }
-  const pts = [...outer];
-  for (let i = inner.length - 2; i >= 0; i -= 2) pts.push(inner[i], inner[i + 1]);
-  g.poly(pts).fill(PEEL);
-  g.poly(pts.slice(outer.length / 2)).fill({ color: PEEL_SHADE, alpha: 0.6 });
-  g.circle(outer[0], outer[1], r * 0.14).fill(TIP);
-  g.circle(outer[outer.length - 2], outer[outer.length - 1], r * 0.14).fill(TIP);
+  // Centre the body's bounding box on (0, 0).
+  const body = [...outer, ...inner];
+  const xs = body.map(([x]) => x);
+  const ys = body.map(([, y]) => y);
+  const dx = -(Math.min(...xs) + Math.max(...xs)) / 2;
+  const dy = -(Math.min(...ys) + Math.max(...ys)) / 2;
+  const flat = (points) => points.flatMap(([x, y]) => [x + dx, y + dy]);
+  const stemWidth = 0.07 * r;
+  const stemLength = 0.28 * r;
+  const stem = [at(from, stemWidth), at(from, stemWidth, stemLength), at(from, -stemWidth, stemLength), at(from, -stemWidth)];
+  g.poly(flat(stem)).fill(STEM);
+  g.poly(flat(body)).fill(PEEL);
+  const line = flat(ridge);
+  g.moveTo(line[0], line[1]);
+  for (let i = 2; i < line.length; i += 2) g.lineTo(line[i], line[i + 1]);
+  g.stroke({ width: Math.max(0.06 * r, 1), color: RIDGE, alpha: 0.7, cap: 'round' });
+  const [tipX, tipY] = at(to, 0);
+  g.circle(tipX + dx, tipY + dy, 0.06 * r).fill(TIP);
 }
 
-// A four-pointed glint.
-function drawSparkle(g, size) {
-  g.poly([0, -size, size * 0.25, -size * 0.25, size, 0, size * 0.25, size * 0.25, 0, size, -size * 0.25, size * 0.25, -size, 0, -size * 0.25, -size * 0.25]).fill(SPARKLE);
-}
-
-// The bananas still to take, bobbing and glinting (the bob is only drawn), and a "+1"
+// The bananas still to take, bobbing gently (the bob is only drawn), and a "+1"
 // rising where one was taken.
 export class BananaViews {
   constructor() {
     this.view = new Container();
-    this.views = new Map(); // banana -> { view, sparkle }
+    this.views = new Map(); // banana -> { view, phase }
     this.pops = [];
   }
 
@@ -51,17 +77,13 @@ export class BananaViews {
         const view = new Container();
         const body = new Graphics();
         drawBanana(body);
-        const sparkle = new Graphics();
-        drawSparkle(sparkle, 5);
-        sparkle.position.set(BANANA_RADIUS * 0.6, -BANANA_RADIUS * 0.9);
-        view.addChild(body, sparkle);
-        entry = { view, sparkle, phase: banana.gap * 1.7 };
+        view.addChild(body);
+        entry = { view, phase: banana.gap * 1.7 };
         this.views.set(banana, entry);
         this.view.addChild(view);
       }
       entry.view.position.set(banana.x, banana.y + 3 * Math.sin(t * 3 + entry.phase));
       entry.view.rotation = 0.15 * Math.sin(t * 2 + entry.phase);
-      entry.sparkle.alpha = Math.max(0, Math.sin(t * 4 + entry.phase));
     }
     for (const [banana, entry] of this.views) {
       if (seen.has(banana)) continue;
