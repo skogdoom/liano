@@ -30,10 +30,15 @@ export const MAX_SLIP_SPEED = 40; // px/s
 // release velocity.
 export const FLOW_GRIP = 0.7 * LIANA_LENGTH;
 export const QUICK_SLIP_SPEED = 1000; // px/s
-// With slipping turned off (G), the grip holds still at HOLD_GRIP (see Monkey.holds).
-// Deeper than FLOW_GRIP: a slipping grip is lower on the rope by the time it lets go, and
-// a held one needs the same reach. From here every generated gap keeps its windows.
+// With slipping turned off (G), the grip holds still where it catches, but no higher
+// than HOLD_GRIP (see Monkey.holds): a catch above it slides down to it. Deeper than
+// FLOW_GRIP: a slipping grip is lower on the rope by the time it lets go, and a held one
+// needs the same reach. Held anywhere from here to MAX_ENTRY_RADIUS, every generated gap
+// keeps its windows.
 export const HOLD_GRIP = 350;
+// That slide carries on the monkey's fall along the rope and brakes evenly to a stop, in
+// at most HOLD_SLIDE_TIME (faster if the monkey came in falling fast enough).
+export const HOLD_SLIDE_TIME = 0.25; // s
 // When the forced release comes: this fraction of the swing period after the bottom, on
 // the upswing to the right. Mid-way through the forward release window (about 0.05 to
 // 0.165), so the forced release is a hop to the next liana unless an obstacle is in the way.
