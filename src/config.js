@@ -126,9 +126,15 @@ export const STAGES = [
   { first: 31, minWindowMs: 70, movingShare: 0.5, scale: 1.2 },
   { first: 51, minWindowMs: 60, movingShare: 0.7, scale: 1.3 },
 ];
-// From the last stage's first obstacle on, the difficulty stays that of the last stage,
-// but the stage number (the time of day) counts on every STAGE_LENGTH_AFTER obstacles.
+// From the last stage's first obstacle on, the stage number (and the time of day) counts
+// on every STAGE_LENGTH_AFTER obstacles. Each stage after the last then keeps the last
+// one's obstacle scale but asks a little more: a shortest release window 2 ms shorter
+// (down to 40 ms, about 5 sim steps) and 4 points more moving obstacles (up to 90 %).
 export const STAGE_LENGTH_AFTER = 20;
+export const LATER_WINDOW_STEP_MS = 2;
+export const LATER_MIN_WINDOW_MS = 40;
+export const LATER_MOVING_STEP = 0.04;
+export const LATER_MOVING_MAX = 0.9;
 // The first obstacles are always static: moving ones start at this obstacle index.
 export const MOVING_FROM = 6;
 

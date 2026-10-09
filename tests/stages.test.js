@@ -5,7 +5,7 @@ import { Game } from '../src/sim/game.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { Obstacle } from '../src/sim/obstacle.js';
 import { createObstacle } from '../src/sim/generator.js';
-import { LIANA_SPACING, OBSTACLE_HITBOXES, SIM_DT, STAGES } from '../src/config.js';
+import { LIANA_SPACING, OBSTACLE_HITBOXES, SIM_DT, STAGES, STAGE_LENGTH_AFTER } from '../src/config.js';
 
 describe('stages', () => {
   it('are keyed on the obstacle index (the gap)', () => {
@@ -14,12 +14,23 @@ describe('stages', () => {
     expect([1, 16, 31, 51].map((gap) => stageFor(gap).movingShare)).toEqual([0.15, 0.25, 0.5, 0.7]);
   });
 
-  it('counts on every STAGE_LENGTH_AFTER obstacles after the last, with the last stage\'s difficulty', () => {
-    const last = STAGES.at(-1);
+  it('counts on every STAGE_LENGTH_AFTER obstacles after the last', () => {
     expect([51, 70, 71, 90, 91, 111, 151, 1051].map((gap) => stageFor(gap).number)).toEqual([4, 4, 5, 5, 6, 7, 9, 54]);
-    for (const gap of [51, 71, 500, 5000]) {
-      const { minWindowMs, movingShare, scale } = stageFor(gap);
-      expect({ minWindowMs, movingShare, scale }).toEqual({ minWindowMs: last.minWindowMs, movingShare: last.movingShare, scale: last.scale });
+  });
+
+  it('asks a little more each stage after the last, up to a limit, at the last stage\'s scale', () => {
+    const last = STAGES.at(-1);
+    const at = (stage) => stageFor(last.first + (stage - 4) * STAGE_LENGTH_AFTER);
+    expect([4, 5, 6, 9, 14].map((n) => at(n).minWindowMs)).toEqual([60, 58, 56, 50, 40]);
+    [4, 5, 6, 8, 9].forEach((n, i) => expect(at(n).movingShare).toBeCloseTo([0.7, 0.74, 0.78, 0.86, 0.9][i], 9));
+    for (const n of [4, 5, 20, 200]) expect(at(n).scale).toBe(last.scale);
+    // Levelled out.
+    for (const n of [14, 15, 200]) expect(at(n).minWindowMs).toBe(40);
+    for (const n of [9, 10, 200]) expect(at(n).movingShare).toBeCloseTo(0.9, 9);
+    // Never easier than the stage before.
+    for (let n = 5; n < 30; n++) {
+      expect(at(n).minWindowMs).toBeLessThanOrEqual(at(n - 1).minWindowMs);
+      expect(at(n).movingShare).toBeGreaterThanOrEqual(at(n - 1).movingShare);
     }
   });
 
