@@ -190,6 +190,26 @@ describe('settings in the game', () => {
     expect([game.world.slip, game.world.bananasOn]).toEqual([true, false]);
   });
 
+  it('starts with the settings it is given, in every world', () => {
+    const game = new Game({
+      slip: false,
+      bananas: false,
+      createWorld: (options) => new World({ ...options, makeObstacle: () => null, makeBanana: () => null }),
+    });
+    expect([game.slip, game.bananas, game.world.slip, game.world.bananasOn, game.world.monkey.holds]).toEqual([
+      false,
+      false,
+      false,
+      false,
+      true,
+    ]);
+    game.selectMode('split');
+    expect(game.worlds.map((w) => [w.slip, w.bananasOn])).toEqual([
+      [false, false],
+      [false, false],
+    ]);
+  });
+
   it('names what is off for the HUD', () => {
     expect(settingsLine({ slip: true, bananas: true })).toBe('');
     expect(settingsLine({ slip: false, bananas: true })).toBe('Slipping off');

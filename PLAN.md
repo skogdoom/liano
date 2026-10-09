@@ -69,7 +69,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 
 ## Trying without slip or bananas
 
-To test whether slipping and bananas help the pacing, `G` and `B` turn them off and on, anywhere (title, run, pause, results), for every monkey and world. Both are on after a reload; nothing is stored. A note top right ("Slipping off · Bananas off") shows what is off, and is gone with everything on. Generation does not depend on either: a seed gives the same jungle.
+To test whether slipping and bananas help the pacing, `G` and `B` turn them off and on, anywhere (title, run, pause, results), for every monkey and world. Both are on after a reload on a keyboard device; nothing is stored. Touch devices (`(pointer: coarse)`) have no G and B keys, so they start with both off. A note top right ("Slipping off · Bananas off") shows what is off, and is gone with everything on. Generation does not depend on either: a seed gives the same jungle.
 
 - **Slipping off:** the grip goes quickly (QUICK_SLIP_SPEED, up or down) to HOLD_GRIP and holds still there. The monkey tires and lets go on the step a slip from the catch (or from FLOW_GRIP, for a catch below it) would have reached the tip: the same forward hop, the same tip blink before it, and the same time bound on a liana. The change applies from each monkey's next grab.
 - **HOLD_GRIP is 350 px, not FLOW_GRIP:** a slipping grip is lower on the rope by the time it lets go, and a still grip needs the same reach. Held at 0.7 L, about one gap in five fell short of its stage's window; from about 346 px none do in a 40-seed sample. A test checks the held grip against generated gaps (static and moving, boosted swings included).
