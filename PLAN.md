@@ -91,7 +91,7 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 - Collected on touch, in the air or while hanging; only once, even if its gap is culled and regenerated.
 - They are an extra challenge only: a banana counts for the player who took it, and changes neither the score nor the swing. In shared screen it goes to the first monkey to reach it, and is gone for the other.
 - The tally is "taken / passed". Passed is the most there was to take: the bananas in the gaps passed so far (scored by any monkey of the world), plus any taken. In shared screen it is the same for both players; in split screen each world counts its own. Deaths don't reset it.
-- The HUD shows only how many each player has taken, under their score (a banana icon and "3"). The results show the tally: "Bananas 3 / 5", or one per player in two-player.
+- The HUD shows only how many each player has taken, under their score (a banana icon and "3"). The results show the tally after a banana icon: "3 / 5", or "P1 3 / 5 · P2 2 / 5" in two-player.
 - Feedback: a "+1" rises where a banana was taken. No sound.
 
 ## Difficulty stages

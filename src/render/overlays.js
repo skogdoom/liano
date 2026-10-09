@@ -5,6 +5,7 @@ import { MODES, MODE_ORDER } from '../sim/match.js';
 import { paneLayouts } from '../layout.js';
 import { version } from '../../package.json';
 import { bananaLine } from './hud.js';
+import { drawBanana } from './bananaView.js';
 
 const CREAM = 0xf4e7c5;
 const GOLD = 0xffcf4a;
@@ -176,8 +177,12 @@ export class Overlays {
     this.gameOverTitle = place(this.gameOver, text('GAME OVER', 72, { weight: 'bold' }), -110);
     this.scoreText = place(this.gameOver, text('', 44, { weight: 'bold' }), -38);
     this.bestText = place(this.gameOver, text('', 26), 6);
-    // Bananas taken out of those passed, per player.
-    this.bananasText = place(this.gameOver, text('', 24, { color: GOLD }), 42);
+    // A banana, then the bananas taken out of those passed, per player.
+    this.bananas = place(this.gameOver, new Container(), 42);
+    this.bananaIcon = new Graphics();
+    drawBanana(this.bananaIcon, 13);
+    this.bananasText = text('', 24, { color: GOLD });
+    this.bananas.addChild(this.bananaIcon, this.bananasText);
     this.newBestText = place(this.gameOver, text('New best!', 28, { color: GOLD, weight: 'bold' }), 82);
     this.gameOverPrompt = place(this.gameOver, text('', 28), 128);
 
@@ -234,15 +239,22 @@ export class Overlays {
           this.gameOverTitle.text = 'GAME OVER';
           this.scoreText.text = `Score ${game.score}`;
           this.bestText.text = `Best ${game.best}`;
-          this.bananasText.text = `Bananas ${bananas[0]}`;
+          this.bananasText.text = bananas[0];
         } else {
           // Totals over all lives decide.
           const winners = game.winners;
           this.gameOverTitle.text = winners.length > 1 ? 'DRAW' : `P${winners[0] + 1} WINS`;
           this.scoreText.text = `P1 ${game.playerScore(0)}  ·  P2 ${game.playerScore(1)}`;
-          this.bestText.text = 'Bananas';
+          this.bestText.text = '';
           this.bananasText.text = `P1 ${bananas[0]}  ·  P2 ${bananas[1]}`;
         }
+        // The icon and the text, centred together; in 2P in the line Best has in 1P.
+        this.bananas.y = solo ? 42 : 10;
+        const iconWidth = 26;
+        const gap = 10;
+        const left = -(iconWidth + gap + this.bananasText.width) / 2;
+        this.bananaIcon.position.set(left + iconWidth / 2, 6);
+        this.bananasText.x = left + iconWidth + gap + this.bananasText.width / 2;
         this.shown = shown;
       }
       this.newBestText.visible = game.newBest && solo;
