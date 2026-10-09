@@ -4,6 +4,7 @@ import {
   BOOST_PERIOD,
   START_GRIP,
   RESPAWN_GRIP,
+  HOLD_GRIP,
   RESPAWN_DELAY_MS,
   RESPAWN_INVULN_MS,
   LIANA_SPACING,
@@ -71,7 +72,7 @@ export class World {
     this.monkeys.forEach((monkey, i) => {
       monkey.slipping = false;
       monkey.holds = !slip;
-      monkey.grab(this.lianasOf(i).get(0), START_GRIP);
+      monkey.grab(this.lianasOf(i).get(0), this.#hangGrip(START_GRIP));
     });
     this.scores = this.monkeys.map(() => 0);
     // The stage each monkey has reached: that of the obstacle ahead of the furthest
@@ -145,11 +146,24 @@ export class World {
     }
   }
 
-  // Turns slipping on or off. Off, a monkey holds on at HOLD_GRIP until it tires (see
-  // Monkey.holds). Takes effect from each monkey's next grab: changing a grip mid-swing
-  // would make the monkey jump along the rope.
+  // Turns slipping on or off. Off, a monkey holds on where it caught (no higher than
+  // HOLD_GRIP) until it tires (see Monkey.holds). Takes effect from each monkey's next
+  // grab: changing a grip mid-swing would make the monkey jump along the rope. Monkeys
+  // still waiting for the run to start move to the grip they start from.
   setSlip(on) {
     this.slip = on;
+    // Before the run starts the monkeys hang still: move them to the grip they start from.
+    for (const monkey of this.monkeys) {
+      if (monkey.slipping) continue;
+      monkey.holds = !on;
+      monkey.hangAt(this.#hangGrip(START_GRIP));
+    }
+  }
+
+  // Where a monkey placed on a liana (at the start, or on a respawn) hangs: `grip`, or
+  // with slipping off HOLD_GRIP, so its grip need not move once the run is on.
+  #hangGrip(grip) {
+    return this.slip ? grip : HOLD_GRIP;
   }
 
   // Turns bananas on or off. Off, none are shown or taken and every boost ends (a liana
@@ -271,7 +285,7 @@ export class World {
     const liana = this.lianasOf(player).get(index);
     this.respawnStep[player] = null;
     Object.assign(m, { vx: 1, vy: 0, excludedLiana: null, slipping: true, holds: !this.slip });
-    m.grab(liana, RESPAWN_GRIP);
+    m.grab(liana, this.#hangGrip(RESPAWN_GRIP));
     this.lastLiana[player] = index;
     this.invulnerableUntil[player] = this.stepCount + Math.round(RESPAWN_INVULN_MS / 1000 / SIM_DT);
     this.events.push({ type: 'respawn', liana: index, player });

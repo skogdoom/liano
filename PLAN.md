@@ -71,8 +71,8 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 
 To test whether slipping and bananas help the pacing, `G` and `B` turn them off and on, anywhere (title, run, pause, results), for every monkey and world. The game starts with both off, on every device (touch devices have no G and B keys); nothing is stored, so a reload turns them off again. In debug mode (`D`) a note top right ("Slipping off · Bananas on") shows both settings; otherwise the HUD says nothing about them. Generation does not depend on either: a seed gives the same jungle.
 
-- **Slipping off:** the grip goes quickly (QUICK_SLIP_SPEED, up or down) to HOLD_GRIP and holds still there. The monkey tires and lets go on the step a slip from the catch (or from FLOW_GRIP, for a catch below it) would have reached the tip: the same forward hop, the same tip blink before it, and the same time bound on a liana. The change applies from each monkey's next grab.
-- **HOLD_GRIP is 350 px, not FLOW_GRIP:** a slipping grip is lower on the rope by the time it lets go, and a still grip needs the same reach. Held at 0.7 L, about one gap in five fell short of its stage's window; from about 346 px none do in a 40-seed sample. A test checks the held grip against generated gaps (static and moving, boosted swings included).
+- **Slipping off:** the grip holds still where the monkey caught the rope, but no higher than HOLD_GRIP. In play, catches land about 300–400 px down the rope, so about 40 % stay exactly where they land, and the grip never moves up. A catch above HOLD_GRIP slides down to it: the slide carries on the monkey's speed along the rope at the catch and brakes evenly to a stop, in at most HOLD_SLIDE_TIME (0.25 s), so it reads as a catch with friction rather than a correction. Before the run and on a respawn the monkey hangs at HOLD_GRIP, so its grip doesn't move when the run starts. The monkey tires and lets go on the step a slip from the catch (or from FLOW_GRIP, for a catch below it) would have reached the tip: the same forward hop, the same tip blink before it, and the same time bound on a liana. The change applies from each monkey's next grab.
+- **HOLD_GRIP is 350 px, not FLOW_GRIP:** a slipping grip is lower on the rope by the time it lets go, and a still grip needs the same reach. Held at 0.7 L, about one gap in five fell short of its stage's window; from about 346 px down to the tip (checked at 350, 380 and 399 px) none do in a 40-seed sample. A test checks the held grip against generated gaps (static and moving, boosted swings included), with the slowest slide (a catch with no speed along the rope).
 - **Bananas off:** none are shown or taken, and every boost ends (a liana already swinging boosted keeps its period until let go). Back on, the bananas not yet taken are back.
 
 ## Obstacles
@@ -234,7 +234,8 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | GRAVITY | 600 px/s² | 400 felt too floaty |
 | MAX_SLIP_SPEED | 40 px/s | At most (L − 310) / P ≈ 42 px/s, so every grip passes a forward swing low enough on the rope before it is forced off |
 | FLOW_GRIP, QUICK_SLIP_SPEED | 0.7 × L, 1000 px/s | Catches above FLOW_GRIP slide quickly down to it |
-| HOLD_GRIP | 350 px (about 0.83 × L) | Where the grip holds with slipping off (G); the shallowest grip that keeps every sampled gap's window |
+| HOLD_GRIP | 350 px (about 0.83 × L) | With slipping off (G) the grip holds where it catches but no higher; the shallowest grip that keeps every sampled gap's window |
+| HOLD_SLIDE_TIME | 0.25 s | Longest slide down to HOLD_GRIP; it starts at the catch speed along the rope and brakes evenly |
 | SLIP_OFF_PHASE | 0.11 × P after the bottom, swinging right | The forced release comes mid-way through the forward window (about 0.05–0.165 × P) |
 | ENTRY_RADII | [0.35, 0.5, 0.65, 0.8, 0.95] × L | The entry radii the solver checks |
 | MAX_ENTRY_RADIUS | 0.95 × L | Lower catches grip here |
@@ -504,6 +505,12 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] Each such stage has a 2 ms shorter shortest window (down to 40 ms) and 4 points more moving obstacles (up to 90 %), at Stage 4's obstacle scale; stages up to well past the limit are checked passable, boosted swings included (tested)
 - [x] A dawn tint and name; the tint and banner follow the stage number modulo the five times of day
 - [x] The window table is unchanged; generation stays cheap (about 1.5 ms per obstacle on average in the late stages)
+
+**26. Holding where caught.** With slipping off, the grip no longer snaps to one height on every catch.
+- [x] A catch from HOLD_GRIP down holds where it caught; the grip never moves up (unit tested)
+- [x] A catch above it slides down, carrying on the catch speed and braking to a stop within HOLD_SLIDE_TIME (unit tested)
+- [x] Before the run and on a respawn the monkey hangs at HOLD_GRIP; switching G on the title screen moves it there
+- [x] Every sampled generated gap keeps its windows with held grips (tested)
 
 ## Design decisions
 

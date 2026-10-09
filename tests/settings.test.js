@@ -13,6 +13,7 @@ import {
   ENTRY_RADII,
   FLOW_GRIP,
   HOLD_GRIP,
+  HOLD_SLIDE_TIME,
   LIANA_LENGTH,
   MAX_ENTRY_RADIUS,
   SIM_DT,
@@ -32,10 +33,11 @@ function world({ spots = {}, ...options } = {}) {
 
 // Steps a monkey holding on at `entryRadius` until the grip gives; returns the steps
 // and the grip radius at each.
-function holdUntilOff(entryRadius, period = SWING_PERIOD) {
+function holdUntilOff(entryRadius, period = SWING_PERIOD, catchSpeed = 0) {
   const liana = new Liana(0, 0);
   const monkey = new Monkey();
   monkey.vx = 1;
+  monkey.vy = catchSpeed;
   monkey.holds = true;
   monkey.boostGrabs = period === SWING_PERIOD ? 0 : 1;
   monkey.boostPeriod = period;
@@ -52,14 +54,58 @@ function holdUntilOff(entryRadius, period = SWING_PERIOD) {
 }
 
 describe('slipping off (G)', () => {
-  it('holds every catch still at HOLD_GRIP, after a quick slide up or down', () => {
-    for (const r of [60, FLOW_GRIP, HOLD_GRIP, 380, LIANA_LENGTH]) {
-      const { radii } = holdUntilOff(r);
-      expect(radii.at(-1)).toBe(HOLD_GRIP);
-      // Within a tenth of a second at QUICK_SLIP_SPEED, then still.
-      const settled = radii.findIndex((x) => x === HOLD_GRIP);
-      expect(settled).toBeLessThan(Math.ceil(0.3 / SIM_DT));
-      expect(radii.slice(settled).every((x) => x === HOLD_GRIP)).toBe(true);
+  it('holds a catch from HOLD_GRIP down still where it caught: the grip never moves up', () => {
+    for (const r of [HOLD_GRIP, 370, MAX_ENTRY_RADIUS, LIANA_LENGTH]) {
+      const { radii } = holdUntilOff(r, SWING_PERIOD, 300);
+      expect(radii.every((x) => x === Math.min(r, MAX_ENTRY_RADIUS))).toBe(true);
+    }
+  });
+
+  it('slides a catch above HOLD_GRIP down to it, braking to a stop within HOLD_SLIDE_TIME', () => {
+    for (const r of [60, FLOW_GRIP, 330, HOLD_GRIP - 1]) {
+      for (const speed of [0, 280, 600]) {
+        const { radii } = holdUntilOff(r, SWING_PERIOD, speed);
+        const settled = radii.findIndex((x) => x === HOLD_GRIP);
+        expect(settled).toBeGreaterThanOrEqual(0);
+        expect(settled).toBeLessThanOrEqual(Math.round(HOLD_SLIDE_TIME / SIM_DT));
+        expect(radii.slice(settled).every((x) => x === HOLD_GRIP)).toBe(true);
+        // Down only, slowing as it goes.
+        const moves = [r, ...radii.slice(0, settled + 1)].map((x, i, all) => (i ? x - all[i - 1] : 0)).slice(1);
+        expect(moves.every((m) => m > 0)).toBe(true);
+        for (let i = 1; i < moves.length; i++) expect(moves[i]).toBeLessThan(moves[i - 1] + 1e-9);
+      }
+    }
+  });
+
+  it('starts the slide at the speed the monkey came in along the rope, when that is fast enough', () => {
+    // 40 px at 600 px/s: braking evenly, it stops after 2 · 40 / 600 s.
+    const { radii } = holdUntilOff(310, SWING_PERIOD, 600);
+    expect(radii[0] - 310).toBeCloseTo(600 * SIM_DT, 0);
+    expect(radii.findIndex((x) => x === HOLD_GRIP)).toBe(Math.ceil((2 * 40) / 600 / SIM_DT) - 1);
+  });
+
+  it('hangs at HOLD_GRIP before the run and on a respawn, so the grip does not move then', () => {
+    const w = world({ slip: false, players: 2, lives: 2 });
+    expect(w.monkeys.map((m) => m.gripRadius)).toEqual([HOLD_GRIP, HOLD_GRIP]);
+    w.setSlip(true);
+    expect(w.monkeys.map((m) => m.gripRadius)).toEqual([START_GRIP, START_GRIP]);
+    w.setSlip(false);
+    expect(w.monkeys.map((m) => m.gripRadius)).toEqual([HOLD_GRIP, HOLD_GRIP]);
+    w.start();
+    for (let i = 0; i < 60; i++) {
+      w.step(SIM_DT);
+      expect(w.monkey.gripRadius).toBe(HOLD_GRIP);
+    }
+    w.eliminate(0, 'test');
+    let respawned = false;
+    for (let i = 0; i < 400 && !respawned; i++) {
+      w.step(SIM_DT);
+      respawned = w.takeEvents().some((e) => e.type === 'respawn');
+    }
+    expect(respawned).toBe(true);
+    for (let i = 0; i < 60; i++) {
+      expect(w.monkey.gripRadius).toBe(HOLD_GRIP);
+      w.step(SIM_DT);
     }
   });
 
@@ -107,8 +153,11 @@ describe('slipping off (G)', () => {
     expect(flyUntilGrab(w)).toBe(1);
     expect(w.monkey.holds).toBe(true);
     w.setSlip(true);
+    stepN(w, Math.round(HOLD_SLIDE_TIME / SIM_DT));
+    const held = w.monkey.gripRadius;
+    expect(held).toBeGreaterThanOrEqual(HOLD_GRIP);
     stepN(w, 20);
-    expect(w.monkey.gripRadius).toBe(HOLD_GRIP);
+    expect(w.monkey.gripRadius).toBe(held);
     expect(w.monkey.holds).toBe(true);
   });
 

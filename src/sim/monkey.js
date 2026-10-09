@@ -2,6 +2,7 @@ import {
   BOOST_PERIOD,
   FLOW_GRIP,
   HOLD_GRIP,
+  HOLD_SLIDE_TIME,
   GRAVITY,
   QUICK_SLIP_SPEED,
   LIANA_LENGTH,
@@ -54,10 +55,12 @@ export class Monkey {
     this.gripTime = 0;
     // Whether the grip slips towards the tip (off on the title screen), and how fast.
     this.slipping = true;
-    // With slipping turned off (G), the monkey holds on instead: the grip goes quickly
-    // to HOLD_GRIP and stays there, and the monkey tires and lets go on the step a slip
-    // would have reached the tip (see #planSlip). Read at each grab.
+    // With slipping turned off (G), the monkey holds on instead: the grip stays where it
+    // caught, or slides down to HOLD_GRIP from above it, and the monkey tires and lets go
+    // on the step a slip would have reached the tip (see #planSlip). Read at each grab.
     this.holds = false;
+    // Speed along the rope (px/s, down positive) when the monkey caught it.
+    this.catchSpeed = 0;
     this.slipSpeed = 0;
     this.slipTime = 0;
     this.quickTo = 0;
@@ -90,6 +93,8 @@ export class Monkey {
       if (boosted) this.boostGrabs--;
       liana.grab(dir, boosted ? this.boostPeriod : SWING_PERIOD);
     }
+    const angle = liana.angle;
+    this.catchSpeed = this.vx * Math.sin(angle) + this.vy * Math.cos(angle);
     this.#planSlip();
     this.#updateHanging();
   }
@@ -121,21 +126,33 @@ export class Monkey {
   startSlipping() {
     this.slipping = true;
     this.gripFrom = this.gripRadius;
+    this.catchSpeed = 0;
     this.#planSlip();
   }
 
+  // Moves the grip of a monkey hanging still (on the title screen) to `radius`.
+  hangAt(radius) {
+    if (this.state !== MonkeyState.HANGING) return;
+    this.gripFrom = Math.min(radius, MAX_ENTRY_RADIUS);
+    this.catchSpeed = 0;
+    this.#planSlip();
+    this.#updateHanging();
+  }
+
   // A quick slide down to FLOW_GRIP if caught above it, then a steady slip timed to
-  // reach the tip at SLIP_OFF_PHASE (see slipSteps). Holding on, a quick slide (up or
-  // down) to HOLD_GRIP, and the grip gives when a slip from FLOW_GRIP (or from a catch
-  // above it) would have reached the tip.
+  // reach the tip at SLIP_OFF_PHASE (see slipSteps). Holding on, the grip stays where
+  // it caught, or (caught above HOLD_GRIP) slides down to it, carrying on the catch speed
+  // along the rope and braking evenly to a stop, in at most HOLD_SLIDE_TIME; the grip
+  // gives when a slip from FLOW_GRIP (or from a catch above it) would have reached the tip.
   #planSlip() {
     const { liana } = this;
     const swingSteps = Math.round(liana.swingTime / SIM_DT);
     this.gripTime = 0;
     if (this.holds) {
       const steps = slipSteps(Math.min(this.gripFrom, FLOW_GRIP), swingSteps, liana.swingDir, liana.period);
-      this.quickTo = HOLD_GRIP;
-      this.quickTime = Math.abs(HOLD_GRIP - this.gripFrom) / QUICK_SLIP_SPEED;
+      const distance = Math.max(HOLD_GRIP - this.gripFrom, 0);
+      this.quickTo = this.gripFrom + distance;
+      this.quickTime = distance > 0 ? Math.min((2 * distance) / Math.max(this.catchSpeed, 0), HOLD_SLIDE_TIME) : 0;
       this.slipTime = steps * SIM_DT;
       this.slipSpeed = 0;
       return;
@@ -176,9 +193,12 @@ export class Monkey {
   #updateHanging() {
     const t = this.gripTime;
     const quick = t < this.quickTime;
-    this.gripRadius = quick
-      ? this.gripFrom + Math.sign(this.quickTo - this.gripFrom) * QUICK_SLIP_SPEED * t
-      : Math.min(this.quickTo + this.slipSpeed * (t - this.quickTime), LIANA_LENGTH);
+    if (!quick) this.gripRadius = Math.min(this.quickTo + this.slipSpeed * (t - this.quickTime), LIANA_LENGTH);
+    else if (this.holds) {
+      // Braking evenly from the start of the slide to a stop at quickTo.
+      const u = 1 - t / this.quickTime;
+      this.gripRadius = this.quickTo - (this.quickTo - this.gripFrom) * u * u;
+    } else this.gripRadius = this.gripFrom + QUICK_SLIP_SPEED * t;
 
     const { liana } = this;
     const p = pendulumPosition(liana.x, liana.anchorY, this.gripRadius, liana.angle);
