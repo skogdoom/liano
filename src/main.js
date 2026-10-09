@@ -159,11 +159,10 @@ function createObstacleWorker() {
   }
 }
 const prefetch = new ObstaclePrefetch(createObstacleWorker());
-// Touch devices have no G and B keys: they play without slipping and bananas.
-const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+// The game starts without slipping and bananas (G and B turn them on).
 const game = new Game({
-  slip: !coarsePointer,
-  bananas: !coarsePointer,
+  slip: false,
+  bananas: false,
   // Split screen's worlds share the match seed, and so the prefetched gaps.
   createWorld: (options) => {
     if (options.seed !== prefetch.seed) prefetch.reset(options.seed);
@@ -232,6 +231,7 @@ if (fullscreenButton.view.visible) {
 // Presses count only while running, and not just after resuming (see pause.js). A
 // tap on the mute button toggles sound instead, and one on the fullscreen button is
 // handled by its own controls.
+const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const input = createInput(window, app.canvas, {
   initialType: coarsePointer ? 'touch' : 'keyboard',
   accepts: () => pause.acceptsInput(),
