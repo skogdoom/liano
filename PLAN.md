@@ -91,7 +91,7 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 - Collected on touch, in the air or while hanging; only once, even if its gap is culled and regenerated.
 - They are an extra challenge only: a banana counts for the player who took it, and changes neither the score nor the swing. In shared screen it goes to the first monkey to reach it, and is gone for the other.
 - The tally is "taken / passed". Passed is the most there was to take: the bananas in the gaps passed so far (scored by any monkey of the world), plus any taken. In shared screen it is the same for both players; in split screen each world counts its own. Deaths don't reset it.
-- Shown under each player's score in the HUD (a banana icon and "3 / 5"), and on the results ("Bananas 3 / 5", or one per player in two-player).
+- The HUD shows only how many each player has taken, under their score (a banana icon and "3"). The results show the tally: "Bananas 3 / 5", or one per player in two-player.
 - Feedback: a "+1" rises where a banana was taken. No sound.
 
 ## Difficulty stages
@@ -509,7 +509,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 **27. Bananas as a challenge.** Bananas no longer speed up the swing or add points; each player's are counted against the bananas passed.
 - [x] No boost: lianas always swing with SWING_PERIOD; the solver drops the boosted swing variants and the window table its boosted sections (rebuilt, so the jungle of a seed changes a little)
 - [x] No points: the score is one per gap crossed; a "+1" pops where a banana is taken
-- [x] A tally per player, "taken / passed", in the HUD under each score and on the results; in shared screen passed is the same for both and a banana goes to the first to reach it (unit tested)
+- [x] A tally per player, "taken / passed", on the results (the HUD shows just the taken count under each score); in shared screen passed is the same for both and a banana goes to the first to reach it (unit tested)
 - [x] B and the bananas-off setting are gone; the debug text shows the slipping setting
 
 ## Design decisions

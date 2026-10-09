@@ -29,13 +29,13 @@ export function playerLine(game, p) {
   return `P${p + 1}  ${game.playerScore(p)}  ${hearts}`;
 }
 
-// Player `p`'s bananas: taken out of passed.
+// Player `p`'s bananas, for the results: taken out of passed.
 export function bananaLine(game, p) {
   const { taken, passed } = game.playerBananas(p);
   return `${taken} / ${passed}`;
 }
 
-// A banana and "taken / passed", right-aligned at its position.
+// A banana and a count, right-aligned at its position.
 class BananaTally {
   constructor(color) {
     this.view = new Container();
@@ -54,8 +54,8 @@ class BananaTally {
 
 // Top-right. Single player: the score and the best score of this page session. Split
 // screen: each player's score and lives at the top right of their pane; shared
-// screen: both players' side by side. Under each score, that player's bananas: taken
-// out of passed (see World.bananaTally).
+// screen: both players' side by side. Under each score, how many bananas that player
+// has taken (out of how many passed only shows on the results).
 export class Hud {
   constructor() {
     this.view = new Container();
@@ -106,7 +106,7 @@ export class Hud {
     this.players.forEach((t) => (t.visible = !solo));
     this.tallies.forEach((tally, p) => {
       tally.view.visible = p < game.players;
-      if (tally.view.visible) tally.update(bananaLine(game, p));
+      if (tally.view.visible) tally.update(String(game.playerBananas(p).taken));
     });
   }
 }
