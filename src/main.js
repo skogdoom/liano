@@ -312,7 +312,7 @@ function frame(ticker) {
   const events = game.takeEvents();
   for (const recipe of soundsFor(events)) sound.play(recipe);
   panes.forEach((pane, i) => pane.update(events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches));
-  hud.update(game);
+  hud.update(game, debugOverlay.visible);
   overlays.update(game, panes[0].camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
   debugOverlay.update(game);
 }

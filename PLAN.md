@@ -69,7 +69,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 
 ## Trying without slip or bananas
 
-To test whether slipping and bananas help the pacing, `G` and `B` turn them off and on, anywhere (title, run, pause, results), for every monkey and world. The game starts with both off, on every device (touch devices have no G and B keys); nothing is stored, so a reload turns them off again. A note top right ("Slipping off · Bananas off") shows what is off, and is gone with everything on. Generation does not depend on either: a seed gives the same jungle.
+To test whether slipping and bananas help the pacing, `G` and `B` turn them off and on, anywhere (title, run, pause, results), for every monkey and world. The game starts with both off, on every device (touch devices have no G and B keys); nothing is stored, so a reload turns them off again. In debug mode (`D`) a note top right ("Slipping off · Bananas on") shows both settings; otherwise the HUD says nothing about them. Generation does not depend on either: a seed gives the same jungle.
 
 - **Slipping off:** the grip goes quickly (QUICK_SLIP_SPEED, up or down) to HOLD_GRIP and holds still there. The monkey tires and lets go on the step a slip from the catch (or from FLOW_GRIP, for a catch below it) would have reached the tip: the same forward hop, the same tip blink before it, and the same time bound on a liana. The change applies from each monkey's next grab.
 - **HOLD_GRIP is 350 px, not FLOW_GRIP:** a slipping grip is lower on the rope by the time it lets go, and a still grip needs the same reach. Held at 0.7 L, about one gap in five fell short of its stage's window; from about 346 px none do in a 40-seed sample. A test checks the held grip against generated gaps (static and moving, boosted swings included).
@@ -492,7 +492,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] Slipping off: a quick slide to HOLD_GRIP, held still, and a tired forced release on the step a slip would have ended (unit tested)
 - [x] Held grips keep every sampled generated gap's window; the jungle is the same with either setting
 - [x] Bananas off: none shown or taken, boosts end; back on, the untaken ones return
-- [x] Both apply to every world, carry over to later matches, and reset on reload; a title hint and a HUD note
+- [x] Both apply to every world, carry over to later matches, and reset on reload; a title hint, and a settings note in the debug view
 
 ## Design decisions
 

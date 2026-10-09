@@ -210,10 +210,10 @@ describe('settings in the game', () => {
     ]);
   });
 
-  it('names what is off for the HUD', () => {
-    expect(settingsLine({ slip: true, bananas: true })).toBe('');
-    expect(settingsLine({ slip: false, bananas: true })).toBe('Slipping off');
-    expect(settingsLine({ slip: false, bananas: false })).toBe('Slipping off  ·  Bananas off');
+  it('names the settings for the HUD in debug mode only', () => {
+    for (const slip of [true, false]) for (const bananas of [true, false]) expect(settingsLine({ slip, bananas }, false)).toBe('');
+    expect(settingsLine({ slip: true, bananas: false }, true)).toBe('Slipping on  ·  Bananas off');
+    expect(settingsLine({ slip: false, bananas: true }, true)).toBe('Slipping off  ·  Bananas on');
   });
 });
 
