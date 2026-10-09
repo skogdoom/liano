@@ -92,7 +92,7 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 - They are an extra challenge only: a banana counts for the player who took it, and changes neither the score nor the swing. In shared screen it goes to the first monkey to reach it, and is gone for the other.
 - The tally is "taken / passed". Passed is the most there was to take: the bananas in the gaps passed so far (scored by any monkey of the world), plus any taken. In shared screen it is the same for both players; in split screen each world counts its own. Deaths don't reset it.
 - The HUD shows only how many each player has taken, under their score (a banana icon and "3"). The results show the tally after a banana icon: "3 / 5", or "P1 3 / 5 · P2 2 / 5" in two-player.
-- Feedback: a "+1" rises where a banana was taken. No sound.
+- Feedback: a "+1" rises where a banana was taken, with a "pling" (see Sound).
 
 ## Difficulty stages
 
@@ -171,7 +171,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 
 - **Recipes and player:** each sound is a pure recipe function (data, unit-tested in Node). A thin player is the only code that touches `AudioContext`.
 - **When sound plays:** on by default from the first press. Mute is toggled with `M` or the speaker button, and kept in memory only. The `AudioContext` is suspended while paused.
-- **Sound set:** only deaths have sounds. Release sounds (a "swish", several "wheee"s) were tried and dropped; bananas, stages, respawns and results are silent.
+- **Sound set:** deaths, and a "pling" for a banana taken: two quick, soft sine notes a fifth apart (E6, then B6, 80 ms later), each with a faint octave, fading in about half a second, quieter than the deaths. Release sounds (a "swish", several "wheee"s) were tried and dropped; stages, respawns and results are silent.
 
 ## Touch, phones and tablets
 

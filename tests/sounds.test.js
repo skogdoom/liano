@@ -14,6 +14,10 @@ describe('sound for events', () => {
     expect(names(soundsFor([{ type: 'death', cause: 'fall' }]))).toEqual(['crash']);
   });
 
+  it('plings for a banana taken', () => {
+    expect(names(soundsFor([{ type: 'banana', gap: 3, taken: 1, player: 0 }]))).toEqual(['pling']);
+  });
+
   it('is silent for everything else: release, grab, score', () => {
     expect(
       soundsFor([

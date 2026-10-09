@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bong, crash, BONG_PITCH } from '../src/audio/recipes.js';
+import { bong, crash, pling, BONG_PITCH, PLING_NOTES } from '../src/audio/recipes.js';
 
 const recipes = {
   'bong (rock)': bong('rock'),
@@ -9,6 +9,7 @@ const recipes = {
   'bong (snake)': bong('snake'),
   'bong (bird)': bong('bird'),
   crash: crash(),
+  pling: pling(),
 };
 
 function envelopes(voice) {
@@ -69,6 +70,17 @@ describe('sound recipes', () => {
       });
     });
   }
+
+  it('plings two notes rising, the second just after the first, softer than a bong', () => {
+    const notes = pling().voices.filter((v) => v.source.freq[0].v === PLING_NOTES[0].freq || v.source.freq[0].v === PLING_NOTES[1].freq);
+    expect(notes).toHaveLength(2);
+    const peak = (voice) => Math.max(...voice.gain.map((p) => p.v));
+    const start = (voice) => voice.gain.find((p) => p.v === peak(voice)).t;
+    expect(PLING_NOTES[1].freq).toBeGreaterThan(PLING_NOTES[0].freq);
+    expect(start(notes[1])).toBeGreaterThan(start(notes[0]));
+    const loudness = (recipe) => recipe.voices.reduce((sum, v) => sum + peak(v), 0);
+    expect(loudness(pling())).toBeLessThan(loudness(bong('rock')));
+  });
 
   it('pitches the bong by obstacle type, rock lowest', () => {
     const base = (type) => bong(type).voices[0].source.freq[0].v;
