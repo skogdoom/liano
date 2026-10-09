@@ -128,7 +128,7 @@ describe('obstacle generation', () => {
   it('uses all types, roughly evenly', () => {
     const counts = Object.fromEntries([...STATIC_TYPES, ...MOVING_TYPES].map((t) => [t, 0]));
     for (let gap = 1; gap <= 3000; gap++) counts[createObstacle(SEED, gap).type]++;
-    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(200);
+    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(80); // late stages are 90 % moving
     for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(550);
   });
 

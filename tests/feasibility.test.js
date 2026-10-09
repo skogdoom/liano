@@ -12,8 +12,9 @@ import {
   longestRun,
   MIN_WINDOW_STEPS,
   forcedReleaseStep,
+  PERIODS,
 } from '../src/sim/feasibility.js';
-import { createObstacle, pickHeight, fallbackHeight, movingCandidate, rulesFor } from '../src/sim/generator.js';
+import { createObstacle, pickHeight, fallbackHeight, movingCandidate, rulesFor, mayBeBoosted } from '../src/sim/generator.js';
 import { Obstacle, STATIC_TYPES, MOVING_TYPES } from '../src/sim/obstacle.js';
 import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
@@ -33,6 +34,7 @@ import {
   OBSTACLE_Y_RANGE,
   SIM_DT,
   SWING_AMPLITUDE,
+  SWING_PERIOD,
 } from '../src/config.js';
 import { FORWARD_RELEASE_STEP, FALL_RELEASE_STEP, worldWith, stepN, flyUntilGrab, windowForGrab } from './helpers.js';
 
@@ -206,6 +208,26 @@ describe('fair generation', () => {
     expect(checked).toBe(1000);
   });
 
+  it('keeps the late stages passable, down to the shortest window, boosted swings included', () => {
+    let checked = 0;
+    const late = [];
+    // A gap from each stage up to the one that reaches the floor, and beyond it.
+    for (let stage = 4; stage <= 17; stage++) for (const k of [0, 7, 13]) late.push(STAGES.at(-1).first + (stage - 4) * 20 + k);
+    for (const seed of [5, 50, 500]) {
+      for (const gap of late) {
+        const o = createObstacle(seed, gap);
+        const { scale, minSteps, boosted } = rulesFor(gap, mayBeBoosted(seed, gap));
+        expect(o.scale).toBe(scale);
+        for (const period of boosted ? Object.values(PERIODS) : [SWING_PERIOD]) {
+          const length = o.moving ? movingWindow(o.inGap(0), minSteps, period) : releaseWindow(o.type, o.y, o.scale, period).length;
+          expect({ seed, gap, period, ok: length >= minSteps }).toEqual({ seed, gap, period, ok: true });
+          checked++;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(120);
+  }, 120_000);
+
   it(`gives every one of 1,000 seeded gaps from obstacle 6 on a ${MIN_RELEASE_WINDOW_MS} ms window for every entry radius × arrival phase`, () => {
     let moving = 0;
     for (const seed of [5, 808, 4242, 90210]) {
@@ -273,7 +295,7 @@ describe('fair generation', () => {
       }
     }
     expect(hits).toEqual([]);
-    expect(seen.size).toBeGreaterThan(100);
+    expect(seen.size).toBeGreaterThan(50); // the late stages are mostly moving
   });
 
   it('rerolls infeasible heights and falls back to a known-passable one', () => {

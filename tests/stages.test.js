@@ -5,13 +5,33 @@ import { Game } from '../src/sim/game.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { Obstacle } from '../src/sim/obstacle.js';
 import { createObstacle } from '../src/sim/generator.js';
-import { LIANA_SPACING, OBSTACLE_HITBOXES, SIM_DT, STAGES } from '../src/config.js';
+import { LIANA_SPACING, OBSTACLE_HITBOXES, SIM_DT, STAGES, STAGE_LENGTH_AFTER } from '../src/config.js';
 
 describe('stages', () => {
   it('are keyed on the obstacle index (the gap)', () => {
-    expect([1, 15, 16, 30, 31, 50, 51, 500].map((gap) => stageFor(gap).number)).toEqual([1, 1, 2, 2, 3, 3, 4, 4]);
+    expect([1, 15, 16, 30, 31, 50, 51].map((gap) => stageFor(gap).number)).toEqual([1, 1, 2, 2, 3, 3, 4]);
     expect(stageFor(-3).number).toBe(1);
     expect([1, 16, 31, 51].map((gap) => stageFor(gap).movingShare)).toEqual([0.15, 0.25, 0.5, 0.7]);
+  });
+
+  it('counts on every STAGE_LENGTH_AFTER obstacles after the last', () => {
+    expect([51, 70, 71, 90, 91, 111, 151, 1051].map((gap) => stageFor(gap).number)).toEqual([4, 4, 5, 5, 6, 7, 9, 54]);
+  });
+
+  it('asks a little more each stage after the last, up to a limit, at the last stage\'s scale', () => {
+    const last = STAGES.at(-1);
+    const at = (stage) => stageFor(last.first + (stage - 4) * STAGE_LENGTH_AFTER);
+    expect([4, 5, 6, 9, 14].map((n) => at(n).minWindowMs)).toEqual([60, 58, 56, 50, 40]);
+    [4, 5, 6, 8, 9].forEach((n, i) => expect(at(n).movingShare).toBeCloseTo([0.7, 0.74, 0.78, 0.86, 0.9][i], 9));
+    for (const n of [4, 5, 20, 200]) expect(at(n).scale).toBe(last.scale);
+    // Levelled out.
+    for (const n of [14, 15, 200]) expect(at(n).minWindowMs).toBe(40);
+    for (const n of [9, 10, 200]) expect(at(n).movingShare).toBeCloseTo(0.9, 9);
+    // Never easier than the stage before.
+    for (let n = 5; n < 30; n++) {
+      expect(at(n).minWindowMs).toBeLessThanOrEqual(at(n - 1).minWindowMs);
+      expect(at(n).movingShare).toBeGreaterThanOrEqual(at(n - 1).movingShare);
+    }
   });
 
   it('keeps the first five obstacles static', () => {
@@ -47,6 +67,16 @@ describe('stages in play', () => {
     expect(world.stages).toEqual([2]);
     expect(reach(world, 52)).toEqual([{ type: 'stage', stage: 4, player: 0 }]);
     expect(game.stage).toBe(4);
+  });
+
+  it('keeps entering stages after the last, as the sky goes on through its day', () => {
+    const world = new World({ makeObstacle: () => null });
+    const game = new Game({ createWorld: () => world });
+    game.press();
+    reach(world, 52);
+    expect(reach(world, 71)).toEqual([{ type: 'stage', stage: 5, player: 0 }]);
+    expect(reach(world, 91)).toEqual([{ type: 'stage', stage: 6, player: 0 }]);
+    expect(game.stage).toBe(6);
   });
 
   it('is not changed by points (bananas will add points, not obstacles)', () => {

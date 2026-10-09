@@ -39,8 +39,9 @@ function place(parent, child, y) {
   return child;
 }
 
-// Names for the stages, by time of day (the background tint follows them).
-export const STAGE_NAMES = ['Day', 'Late afternoon', 'Dusk', 'Night'];
+// Names for the stages, by time of day (the background tint follows them); after Dawn
+// the day starts over.
+export const STAGE_NAMES = ['Day', 'Late afternoon', 'Dusk', 'Night', 'Dawn'];
 const BANNER_IN = 0.3; // s
 const BANNER_HOLD = 1.6;
 const BANNER_OUT = 0.6;
@@ -77,7 +78,7 @@ class StageBanner {
     if (stage > this.stage) {
       this.stage = stage;
       this.title.text = `Stage ${this.stage}`;
-      this.subtitle.text = STAGE_NAMES[this.stage - 1] ?? '';
+      this.subtitle.text = STAGE_NAMES[(this.stage - 1) % STAGE_NAMES.length];
       this.time = 0;
     }
     this.time += dt;
