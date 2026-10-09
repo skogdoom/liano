@@ -9,9 +9,18 @@ import { LIANA_SPACING, OBSTACLE_HITBOXES, SIM_DT, STAGES } from '../src/config.
 
 describe('stages', () => {
   it('are keyed on the obstacle index (the gap)', () => {
-    expect([1, 15, 16, 30, 31, 50, 51, 500].map((gap) => stageFor(gap).number)).toEqual([1, 1, 2, 2, 3, 3, 4, 4]);
+    expect([1, 15, 16, 30, 31, 50, 51].map((gap) => stageFor(gap).number)).toEqual([1, 1, 2, 2, 3, 3, 4]);
     expect(stageFor(-3).number).toBe(1);
     expect([1, 16, 31, 51].map((gap) => stageFor(gap).movingShare)).toEqual([0.15, 0.25, 0.5, 0.7]);
+  });
+
+  it('counts on every STAGE_LENGTH_AFTER obstacles after the last, with the last stage\'s difficulty', () => {
+    const last = STAGES.at(-1);
+    expect([51, 70, 71, 90, 91, 111, 151, 1051].map((gap) => stageFor(gap).number)).toEqual([4, 4, 5, 5, 6, 7, 9, 54]);
+    for (const gap of [51, 71, 500, 5000]) {
+      const { minWindowMs, movingShare, scale } = stageFor(gap);
+      expect({ minWindowMs, movingShare, scale }).toEqual({ minWindowMs: last.minWindowMs, movingShare: last.movingShare, scale: last.scale });
+    }
   });
 
   it('keeps the first five obstacles static', () => {
@@ -47,6 +56,16 @@ describe('stages in play', () => {
     expect(world.stages).toEqual([2]);
     expect(reach(world, 52)).toEqual([{ type: 'stage', stage: 4, player: 0 }]);
     expect(game.stage).toBe(4);
+  });
+
+  it('keeps entering stages after the last, as the sky goes on through its day', () => {
+    const world = new World({ makeObstacle: () => null });
+    const game = new Game({ createWorld: () => world });
+    game.press();
+    reach(world, 52);
+    expect(reach(world, 71)).toEqual([{ type: 'stage', stage: 5, player: 0 }]);
+    expect(reach(world, 91)).toEqual([{ type: 'stage', stage: 6, player: 0 }]);
+    expect(game.stage).toBe(6);
   });
 
   it('is not changed by points (bananas will add points, not obstacles)', () => {

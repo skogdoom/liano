@@ -99,6 +99,8 @@ To test whether slipping and bananas help the pacing, `G` and `B` turn them off 
 
 Stages are keyed on **obstacle index**, not score, so banana points don't speed up difficulty and in shared screen both players meet the same level. A stage starts when a monkey grabs the liana before the stage's first obstacle (obstacle #i is in gap i). A banner ("Stage 2 · Late afternoon") fades in low in the band, and the background tint eases over 2.5 s (day → late afternoon → dusk → night). A new run starts over at day.
 
+The day goes on past Stage 4: the stage number and the time of day keep counting every STAGE_LENGTH_AFTER (20) obstacles, from obstacle 51 on: Night 51–70, Dawn 71–90, then Day again, Late afternoon, Dusk, Night, Dawn, and so on, for as long as the run lasts ("Stage 6 · Day"). Only the sky, the banner and the stage counter go on: difficulty (window, moving share, obstacle scale) stays at Stage 4's, so generation is unchanged.
+
 | Stage | Obstacles | Min release window | Moving share | Obstacle scale |
 |---|---|---|---|---|
 | 1 | 1–15 | 90 ms | 0% for 1–5, then 15% | 1.00 |
@@ -243,6 +245,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a swept area, beyond MONKEY_RADIUS |
 | MIN_RELEASE_WINDOW_MS | 90 | Stage 1; later stages per STAGES |
 | STAGES | see Difficulty stages | First obstacle, shortest window, moving share and obstacle scale per stage |
+| STAGE_LENGTH_AFTER | 20 obstacles | After the last stage, the stage number (the time of day) counts on this often; the difficulty stays |
 | MOVING_FROM | 6 | Obstacles 1–5 are always static |
 | MOVING_PERIOD_RANGE | 1.5–3.0 s | |
 | SPIDER_LOW_RANGE, SPIDER_TRAVEL_RANGE | 175–212, 80–150 px | Lowest point and climb |
@@ -348,7 +351,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
   - Snake: green coils on a leafy stalk, its head pointing the way it climbs.
   - Bird: red body with a yellow belly and flapping wings, facing the way it flies.
 - **Banana.** A yellow crescent with a gentle bob and a glint.
-- **Background.** Three parallax layers, a canopy strip at the top, and a dark jungle floor band at the bottom. Taller views extend the forest upward and the undergrowth downward. The tint shifts per stage.
+- **Background.** Three parallax layers, a canopy strip at the top, and a dark jungle floor band at the bottom. Taller views extend the forest upward and the undergrowth downward. The tint shifts per stage, through a five-step day (day, late afternoon, dusk, night, dawn) that repeats.
 - **HUD and buttons.** Readable text with a subtle shadow, plus the speaker and fullscreen icons.
 - **Readability.** Hitboxes visually match the drawings. Check this with the debug overlay.
 
@@ -494,6 +497,11 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] Bananas off: none shown or taken, boosts end; back on, the untaken ones return
 - [x] Both apply to every world, carry over to later matches, and reset on reload; a title hint, and a settings note in the debug view
 
+**25. The day goes on.** The stage number and the sky keep cycling after Stage 4: night, dawn, day, late afternoon, dusk, night, ... every 20 obstacles; difficulty stays at Stage 4's (see Difficulty stages).
+- [x] `stageFor` counts on every STAGE_LENGTH_AFTER obstacles past the last stage, with its difficulty; the world raises a `stage` event for each
+- [x] A dawn tint and name; the tint and banner follow the stage number modulo the five times of day
+- [x] Generation and the window table are unchanged
+
 ## Design decisions
 
 1. **Swing starts at vertical, in the direction of travel.** Released lianas settle back to vertical with a damped cosmetic sway.
@@ -510,7 +518,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 12. **Forced release at the tip, not death,** timed to be a hop to the next liana over a clear gap.
 13. **A quick slide to a flowing grip:** a catch high on the rope slides down to where the next forward swing can reach the next liana, so the jumps keep flowing.
 14. **Scoring per gap crossed,** on a forward grab of its far liana (a bird's x isn't fixed, so "passing an obstacle" is measured at the gap boundary). Flying past without reaching the liana doesn't score.
-15. **Difficulty keyed on obstacle index**, not score, in four stages.
+15. **Difficulty keyed on obstacle index**, not score, in four stages. The day cycle goes on after them (dawn, then day again) without raising the difficulty.
 16. **Moving obstacles never reach into a swing,** which confines them to the few bands the swings leave free.
 17. **Single player has 1 life.** Lives exist only in 2P.
 18. **2P keys A and L**, avoiding Shift because of Windows Sticky Keys. They don't clash with `M`, `F`, `D` or `P`.

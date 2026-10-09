@@ -126,6 +126,9 @@ export const STAGES = [
   { first: 31, minWindowMs: 70, movingShare: 0.5, scale: 1.2 },
   { first: 51, minWindowMs: 60, movingShare: 0.7, scale: 1.3 },
 ];
+// From the last stage's first obstacle on, the difficulty stays that of the last stage,
+// but the stage number (the time of day) counts on every STAGE_LENGTH_AFTER obstacles.
+export const STAGE_LENGTH_AFTER = 20;
 // The first obstacles are always static: moving ones start at this obstacle index.
 export const MOVING_FROM = 6;
 
