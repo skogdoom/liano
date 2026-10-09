@@ -23,14 +23,14 @@ export const GameState = Object.freeze({
 // has one world per player, all with the same seed. Events carry the index of the
 // world they come from (`pane`) and the match-wide `player`.
 export class Game {
-  // `createWorld({ players, lives, seed })` can be replaced in tests.
-  constructor({ createWorld = (options) => new World(options) } = {}) {
+  // `createWorld({ players, lives, seed })` can be replaced in tests. `slip` and
+  // `bananas` are the settings the game starts with (see toggleSlip).
+  constructor({ createWorld = (options) => new World(options), slip = true, bananas = true } = {}) {
     this.createWorld = createWorld;
     this.mode = 'solo';
-    // Slipping (G) and bananas (B), on unless turned off; for every world and match
-    // until the page is reloaded.
-    this.slip = true;
-    this.bananas = true;
+    // Slipping (G) and bananas (B), for every world and match until the page is reloaded.
+    this.slip = slip;
+    this.bananas = bananas;
     this.#newMatch();
     this.state = GameState.TITLE;
     this.stateTime = 0;

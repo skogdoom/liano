@@ -159,7 +159,10 @@ function createObstacleWorker() {
   }
 }
 const prefetch = new ObstaclePrefetch(createObstacleWorker());
+// The game starts without slipping and bananas (G and B turn them on).
 const game = new Game({
+  slip: false,
+  bananas: false,
   // Split screen's worlds share the match seed, and so the prefetched gaps.
   createWorld: (options) => {
     if (options.seed !== prefetch.seed) prefetch.reset(options.seed);
@@ -309,7 +312,7 @@ function frame(ticker) {
   const events = game.takeEvents();
   for (const recipe of soundsFor(events)) sound.play(recipe);
   panes.forEach((pane, i) => pane.update(events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches));
-  hud.update(game);
+  hud.update(game, debugOverlay.visible);
   overlays.update(game, panes[0].camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
   debugOverlay.update(game);
 }

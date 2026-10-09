@@ -21,10 +21,11 @@ function label(size, color) {
   return t;
 }
 
-// What is turned off (G, B), or '' with everything on.
-export function settingsLine(game) {
-  const off = [!game.slip && 'Slipping off', !game.bananas && 'Bananas off'].filter(Boolean);
-  return off.join('  ·  ');
+// The state of the G and B settings, for the debug view; '' otherwise.
+export function settingsLine(game, debug) {
+  if (!debug) return '';
+  const word = (on) => (on ? 'on' : 'off');
+  return `Slipping ${word(game.slip)}  ·  Bananas ${word(game.bananas)}`;
 }
 
 // The text for player `p` in two-player modes: their score and lives left.
@@ -36,8 +37,8 @@ export function playerLine(game, p) {
 
 // Top-right. Single player: the score and the best score of this page session. Split
 // screen: each player's score and lives at the top right of their pane; shared
-// screen: both players' side by side. Under them, in every state, a note of what is
-// turned off (see settingsLine).
+// screen: both players' side by side. Under them, in debug mode, the G and B settings
+// (see settingsLine).
 export class Hud {
   constructor() {
     this.view = new Container();
@@ -56,9 +57,9 @@ export class Hud {
     this.placed = null;
   }
 
-  update(game) {
+  update(game, debug = false) {
     const { layout } = this;
-    const settings = settingsLine(game);
+    const settings = settingsLine(game, debug);
     this.settings.visible = settings !== '';
     if (this.settings.text !== settings) this.settings.text = settings;
     this.scores.visible = game.state !== GameState.TITLE;
