@@ -171,7 +171,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 
 - **Recipes and player:** each sound is a pure recipe function (data, unit-tested in Node). A thin player is the only code that touches `AudioContext`.
 - **When sound plays:** on by default from the first press. Mute is toggled with `M` or the speaker button, and kept in memory only. The `AudioContext` is suspended while paused.
-- **Sound set:** deaths, and a "pling" for a banana taken: one quick, soft sine note (E6) with a faint octave, fading in about half a second, quieter than the deaths. Release sounds (a "swish", several "wheee"s) were tried and dropped; stages, respawns and results are silent.
+- **Sound set:** deaths, and a "pling" for a banana taken: two quick, soft sine notes a fifth apart (E6, then B6, 80 ms later), each with a faint octave, fading in about half a second, quieter than the deaths. Release sounds (a "swish", several "wheee"s) were tried and dropped; stages, respawns and results are silent.
 
 ## Touch, phones and tablets
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bong, crash, pling, BONG_PITCH, PLING_PITCH } from '../src/audio/recipes.js';
+import { bong, crash, pling, BONG_PITCH, PLING_NOTES } from '../src/audio/recipes.js';
 
 const recipes = {
   'bong (rock)': bong('rock'),
@@ -71,14 +71,13 @@ describe('sound recipes', () => {
     });
   }
 
-  it('plings one note, struck once, softer than a bong', () => {
+  it('plings two notes rising, the second just after the first, softer than a bong', () => {
+    const notes = pling().voices.filter((v) => v.source.freq[0].v === PLING_NOTES[0].freq || v.source.freq[0].v === PLING_NOTES[1].freq);
+    expect(notes).toHaveLength(2);
     const peak = (voice) => Math.max(...voice.gain.map((p) => p.v));
-    const voices = pling().voices;
-    expect(voices[0].source.freq[0].v).toBe(PLING_PITCH);
-    // Every partial is struck at the same moment, right at the start.
-    const strikes = voices.map((v) => v.gain.find((p) => p.v === peak(v)).t);
-    expect(new Set(strikes).size).toBe(1);
-    expect(strikes[0]).toBeLessThan(0.01);
+    const start = (voice) => voice.gain.find((p) => p.v === peak(voice)).t;
+    expect(PLING_NOTES[1].freq).toBeGreaterThan(PLING_NOTES[0].freq);
+    expect(start(notes[1])).toBeGreaterThan(start(notes[0]));
     const loudness = (recipe) => recipe.voices.reduce((sum, v) => sum + peak(v), 0);
     expect(loudness(pling())).toBeLessThan(loudness(bong('rock')));
   });

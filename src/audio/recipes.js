@@ -81,9 +81,12 @@ export function crash() {
   };
 }
 
-// "Pling": a banana taken. One quick, soft bell note (E6) with a faint octave above,
-// fading in about half a second. Quieter than the deaths.
-export const PLING_PITCH = 1319;
+// "Pling": a banana taken. Two quick, soft bell notes a fifth apart (E6, then B6), each
+// with a faint octave above, fading in about half a second. Quieter than the deaths.
+export const PLING_NOTES = [
+  { at: 0, freq: 1319 },
+  { at: 0.08, freq: 1976 },
+];
 const PLING_PARTIALS = [
   { ratio: 1, level: 0.22, decay: 0.5 },
   { ratio: 2, level: 0.05, decay: 0.2 },
@@ -92,14 +95,17 @@ const PLING_PARTIALS = [
 export function pling() {
   return {
     name: 'pling',
-    duration: 0.6,
-    voices: PLING_PARTIALS.map(({ ratio, level, decay }) => ({
-      source: { kind: 'osc', wave: 'sine', freq: [{ t: 0, v: PLING_PITCH * ratio, ramp: 'set' }] },
-      gain: [
-        { t: 0, v: SILENT, ramp: 'set' },
-        { t: 0.004, v: level, ramp: 'linear' },
-        { t: decay, v: SILENT, ramp: 'exp' },
-      ],
-    })),
+    duration: 0.7,
+    voices: PLING_NOTES.flatMap(({ at, freq }) =>
+      PLING_PARTIALS.map(({ ratio, level, decay }) => ({
+        source: { kind: 'osc', wave: 'sine', freq: [{ t: 0, v: freq * ratio, ramp: 'set' }] },
+        gain: [
+          { t: 0, v: SILENT, ramp: 'set' },
+          ...(at > 0 ? [{ t: at, v: SILENT, ramp: 'linear' }] : []),
+          { t: at + 0.004, v: level, ramp: 'linear' },
+          { t: at + decay, v: SILENT, ramp: 'exp' },
+        ],
+      })),
+    ),
   };
 }
