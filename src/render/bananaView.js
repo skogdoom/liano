@@ -5,12 +5,13 @@ const PEEL = 0xffd23f;
 const RIDGE = 0xfff3a0;
 const STEM = 0x6b5a2a;
 const TIP = 0x5a3d1c;
+const GLINT = 0xffffff;
 const POP_TIME = 0.8; // s
 
 // A banana `r` in size (about 2r long), centred on (0, 0): a curved body tapering to
 // both ends, tilted, with a lighter ridge, a stem at one end and a dark tip at the other.
 // Bananas are drawn a little larger than their hitbox, which with the monkey's makes
-// pickups generous anyway.
+// pickups generous anyway. Returns where a glint goes: on the body, near the stem.
 export function drawBanana(g, r = BANANA_RADIUS * 1.4) {
   const radius = 1.25 * r; // of the arc along the middle of the banana
   const centreY = -0.95 * r;
@@ -54,14 +55,22 @@ export function drawBanana(g, r = BANANA_RADIUS * 1.4) {
   g.stroke({ width: Math.max(0.06 * r, 1), color: RIDGE, alpha: 0.7, cap: 'round' });
   const [tipX, tipY] = at(to, 0);
   g.circle(tipX + dx, tipY + dy, 0.06 * r).fill(TIP);
+  const [glintX, glintY] = at(from + (to - from) * 0.28, 0.04 * r);
+  return { x: glintX + dx, y: glintY + dy };
 }
 
-// The bananas still to take, bobbing gently (the bob is only drawn), and a "+1"
+// A four-pointed glint.
+function drawGlint(g, size) {
+  const s = size * 0.25;
+  g.poly([0, -size, s, -s, size, 0, s, s, 0, size, -s, s, -size, 0, -s, -s]).fill(GLINT);
+}
+
+// The bananas still to take, bobbing gently and glinting (only drawn), and a "+1"
 // rising where one was taken.
 export class BananaViews {
   constructor() {
     this.view = new Container();
-    this.views = new Map(); // banana -> { view, phase }
+    this.views = new Map(); // banana -> { view, glint, phase }
     this.pops = [];
   }
 
@@ -76,14 +85,19 @@ export class BananaViews {
       if (!entry) {
         const view = new Container();
         const body = new Graphics();
-        drawBanana(body);
-        view.addChild(body);
-        entry = { view, phase: banana.gap * 1.7 };
+        const spot = drawBanana(body);
+        const glint = new Graphics();
+        drawGlint(glint, 8);
+        glint.position.set(spot.x, spot.y);
+        view.addChild(body, glint);
+        entry = { view, glint, phase: banana.gap * 1.7 };
         this.views.set(banana, entry);
         this.view.addChild(view);
       }
       entry.view.position.set(banana.x, banana.y + 3 * Math.sin(t * 3 + entry.phase));
       entry.view.rotation = 0.15 * Math.sin(t * 2 + entry.phase);
+      // It fades in and out over half of every 1.6 s.
+      entry.glint.alpha = Math.max(0, Math.sin(t * 4 + entry.phase));
     }
     for (const [banana, entry] of this.views) {
       if (seen.has(banana)) continue;
