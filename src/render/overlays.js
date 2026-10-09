@@ -253,7 +253,7 @@ export class Overlays {
         const iconWidth = 26;
         const gap = 10;
         const left = -(iconWidth + gap + this.bananasText.width) / 2;
-        this.bananaIcon.position.set(left + iconWidth / 2, 6);
+        this.bananaIcon.position.set(left + iconWidth / 2, -1);
         this.bananasText.x = left + iconWidth + gap + this.bananasText.width / 2;
         this.shown = shown;
       }
