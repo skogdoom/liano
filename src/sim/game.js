@@ -2,7 +2,6 @@ import { GAMEOVER_INPUT_LOCK_MS } from '../config.js';
 import { World } from './world.js';
 import { MODES, playerFor } from './match.js';
 import { randomSeed } from './rng.js';
-import { SHARED_BOOST_PERIOD } from '../config.js';
 import { SharedView } from './sharedView.js';
 
 const MAX_PENDING_EVENTS = 64;
@@ -23,14 +22,13 @@ export const GameState = Object.freeze({
 // has one world per player, all with the same seed. Events carry the index of the
 // world they come from (`pane`) and the match-wide `player`.
 export class Game {
-  // `createWorld({ players, lives, seed })` can be replaced in tests. `slip` and
-  // `bananas` are the settings the game starts with (see toggleSlip).
-  constructor({ createWorld = (options) => new World(options), slip = true, bananas = true } = {}) {
+  // `createWorld({ players, lives, seed })` can be replaced in tests. `slip` is the
+  // setting the game starts with (see toggleSlip).
+  constructor({ createWorld = (options) => new World(options), slip = true } = {}) {
     this.createWorld = createWorld;
     this.mode = 'solo';
-    // Slipping (G) and bananas (B), for every world and match until the page is reloaded.
+    // Slipping (G), for every world and match until the page is reloaded.
     this.slip = slip;
-    this.bananas = bananas;
     this.#newMatch();
     this.state = GameState.TITLE;
     this.stateTime = 0;
@@ -59,6 +57,13 @@ export class Game {
   playerScore(p) {
     const { world, index } = this.slot(p);
     return world.scores[index];
+  }
+
+  // Player `p`'s bananas: how many they took, and how many they could have (see
+  // World.bananaTally).
+  playerBananas(p) {
+    const { world, index } = this.slot(p);
+    return world.bananaTally(index);
   }
 
   playerLives(p) {
@@ -99,7 +104,7 @@ export class Game {
     if (this.events.length > MAX_PENDING_EVENTS) this.events.splice(0, this.events.length - MAX_PENDING_EVENTS);
     if (this.state !== GameState.PLAYING) return;
     for (const event of events) {
-      if ((event.type === 'score' || event.type === 'banana') && event.player === 0) this.score = event.score;
+      if (event.type === 'score' && event.player === 0) this.score = event.score;
       else if (event.type === 'death' && !this.alive) this.end();
     }
   }
@@ -138,12 +143,6 @@ export class Game {
   toggleSlip() {
     this.slip = !this.slip;
     for (const world of this.worlds) world.setSlip(this.slip);
-  }
-
-  // Turns bananas on or off in every world (see World.setBananas).
-  toggleBananas() {
-    this.bananas = !this.bananas;
-    for (const world of this.worlds) world.setBananas(this.bananas);
   }
 
   // Handles a press of an input role (see KEYS): `primary` is Space or a tap, `start`
@@ -209,9 +208,9 @@ export class Game {
     const { players, lives, id } = MODES[this.mode];
     const seed = randomSeed();
     const panes = id === 'split' ? players : 1;
-    // In shared screen each monkey has its own lianas, and bananas boost less.
-    const own = id === 'shared' ? { ownLianas: true, boostPeriod: SHARED_BOOST_PERIOD } : {};
-    const settings = { slip: this.slip, bananas: this.bananas };
+    // In shared screen each monkey has its own lianas.
+    const own = id === 'shared' ? { ownLianas: true } : {};
+    const settings = { slip: this.slip };
     this.worlds = Array.from({ length: panes }, () =>
       this.createWorld({ players: players / panes, lives, seed, ...own, ...settings }),
     );

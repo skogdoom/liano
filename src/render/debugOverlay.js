@@ -1,5 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { BANANA_RADIUS, MONKEY_RADIUS, SIM_DT, SWING_PERIOD } from '../config.js';
+import { BANANA_RADIUS, MONKEY_RADIUS, SIM_DT } from '../config.js';
 import { MonkeyState } from '../sim/monkey.js';
 import { validReleaseSteps, longestRun, movingValidSteps } from '../sim/feasibility.js';
 
@@ -72,7 +72,10 @@ export class DebugOverlay {
 
     g.circle(monkey.x, monkey.y, MONKEY_RADIUS).stroke({ width: 2, color: COLORS.monkeyHitbox });
 
-    const lines = [`${game.state}  stage ${game.stage}  score ${game.score}  lianas ${world.lianas.size}  obstacles ${world.obstacles.size}`];
+    const lines = [
+      `${game.state}  stage ${game.stage}  score ${game.score}  lianas ${world.lianas.size}  obstacles ${world.obstacles.size}`,
+      `slipping ${game.slip ? 'on' : 'off'} (G)`,
+    ];
 
     if (monkey.state === MonkeyState.HANGING && !monkey.slipping) {
       lines.push(`liana #${monkey.liana.index}  grip ${Math.round(monkey.gripRadius)}  no slip until the run starts`);
@@ -81,7 +84,7 @@ export class DebugOverlay {
       // and how far into the swing it started.
       const step = Math.round(monkey.gripTime / SIM_DT);
       const phase = Math.round(monkey.liana.swingTime / SIM_DT) - step;
-      const w = this.#releaseWindow(world, monkey.gripFrom, phase, world.time - step * SIM_DT);
+      const w = this.#releaseWindow(world, monkey.gripFrom, phase, world.time - step * SIM_DT, monkey.holds);
       w.positions.forEach((p, k) => {
         if (k < step) return;
         g.circle(p.x, p.y, w.valid[k] ? 3 : 2).fill(w.valid[k] ? COLORS.valid : COLORS.invalid);
@@ -91,7 +94,7 @@ export class DebugOverlay {
       const ms = (steps) => Math.round(steps * SIM_DT * 1000);
       const forcedIn = ((w.valid.length - 1 - step) * SIM_DT).toFixed(2);
       lines.push(
-        `liana #${monkey.liana.index}  dir ${monkey.liana.swingDir > 0 ? '+' : '-'}  entry ${Math.round(monkey.gripFrom)}  grip ${Math.round(monkey.gripRadius)}  step ${step}  boost ${monkey.boostGrabs}${monkey.liana.period !== SWING_PERIOD ? ' (boosted swing)' : ''}`,
+        `liana #${monkey.liana.index}  dir ${monkey.liana.swingDir > 0 ? '+' : '-'}  entry ${Math.round(monkey.gripFrom)}  grip ${Math.round(monkey.gripRadius)}  step ${step}${monkey.holds ? '  held' : ''}`,
         `window ${w.run.length} steps (${ms(w.run.length)} ms) at ${w.run.start}-${w.run.start + w.run.length - 1}  now: ${w.valid[step] ? 'VALID' : 'invalid'}`,
         `forced release in ${forcedIn} s (step ${w.valid.length - 1})`,
       );
@@ -111,19 +114,20 @@ export class DebugOverlay {
 
   // Valid release steps for the actual entry, swing direction and phase, recomputed
   // per grab. A moving obstacle's window also depends on the world time at the grab.
-  #releaseWindow(world, gripFrom, phase, grabTime) {
+  // `hold`: the grip is held (slipping off).
+  #releaseWindow(world, gripFrom, phase, grabTime, hold) {
     const { liana } = world.monkey;
     const dir = liana.swingDir;
     const steps = Math.round(liana.period / SIM_DT);
     const phaseSteps = ((phase % steps) + steps) % steps;
-    const key = `${liana.index}:${gripFrom}:${dir}:${phaseSteps}:${liana.period}`;
+    const key = `${liana.index}:${gripFrom}:${dir}:${phaseSteps}:${hold}`;
     if (this.cacheKey !== key || this.cacheWorld !== world) {
       const gap = dir > 0 ? liana.index : liana.index - 1;
       const obstacle = world.obstacles.get(gap) ?? null;
       const staticObstacle = obstacle?.moving ? null : obstacle;
-      let { valid, positions } = validReleaseSteps(staticObstacle, gripFrom, liana.x, dir, phaseSteps, liana.period);
+      let { valid, positions } = validReleaseSteps(staticObstacle, gripFrom, liana.x, dir, phaseSteps, hold);
       if (obstacle?.moving && dir > 0 && phaseSteps === 0) {
-        valid = movingValidSteps(obstacle.inGap(0), gripFrom, Math.round(grabTime / SIM_DT) * SIM_DT, liana.period);
+        valid = movingValidSteps(obstacle.inGap(0), gripFrom, Math.round(grabTime / SIM_DT) * SIM_DT, hold);
       }
       this.window = { valid, positions, run: longestRun(valid) };
       this.cacheKey = key;

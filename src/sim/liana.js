@@ -40,9 +40,8 @@ export class Liana {
     return this.anchorY + this.length;
   }
 
-  // Starts swinging in `dir` with `period` (SWING_PERIOD, or BOOST_PERIOD when the
-  // monkey is boosted). If a monkey already swings on it, the new one joins that swing
-  // instead: same phase, direction and period.
+  // Starts swinging in `dir` with `period`. If a monkey already swings on it, the new one
+  // joins that swing instead: same phase, direction and period.
   grab(dir, period = SWING_PERIOD) {
     const joining = this.held;
     this.holders++;

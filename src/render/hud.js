@@ -1,7 +1,8 @@
-import { Container, Text } from 'pixi.js';
+import { Container, Graphics, Text } from 'pixi.js';
 import { LIVES_2P } from '../config.js';
 import { paneLayouts } from '../layout.js';
 import { GameState } from '../sim/game.js';
+import { drawBanana } from './bananaView.js';
 
 // Label colours per player, matching their monkeys' fur.
 export const PLAYER_COLORS = [0xf4e7c5, 0xffb061];
@@ -21,13 +22,6 @@ function label(size, color) {
   return t;
 }
 
-// The state of the G and B settings, for the debug view; '' otherwise.
-export function settingsLine(game, debug) {
-  if (!debug) return '';
-  const word = (on) => (on ? 'on' : 'off');
-  return `Slipping ${word(game.slip)}  ·  Bananas ${word(game.bananas)}`;
-}
-
 // The text for player `p` in two-player modes: their score and lives left.
 export function playerLine(game, p) {
   const lives = game.playerLives(p);
@@ -35,20 +29,40 @@ export function playerLine(game, p) {
   return `P${p + 1}  ${game.playerScore(p)}  ${hearts}`;
 }
 
+// Player `p`'s bananas: taken out of passed.
+export function bananaLine(game, p) {
+  const { taken, passed } = game.playerBananas(p);
+  return `${taken} / ${passed}`;
+}
+
+// A banana and "taken / passed", right-aligned at its position.
+class BananaTally {
+  constructor(color) {
+    this.view = new Container();
+    this.icon = new Graphics();
+    drawBanana(this.icon, 11);
+    this.text = label(22, color);
+    this.view.addChild(this.icon, this.text);
+  }
+
+  update(text) {
+    if (this.text.text === text) return;
+    this.text.text = text;
+    this.icon.position.set(-this.text.width - 16, 15);
+  }
+}
+
 // Top-right. Single player: the score and the best score of this page session. Split
 // screen: each player's score and lives at the top right of their pane; shared
-// screen: both players' side by side. Under them, in debug mode, the G and B settings
-// (see settingsLine).
+// screen: both players' side by side. Under each score, that player's bananas: taken
+// out of passed (see World.bananaTally).
 export class Hud {
   constructor() {
     this.view = new Container();
-    this.scores = new Container();
     this.solo = label(36, PLAYER_COLORS[0]);
     this.players = PLAYER_COLORS.map((color) => label(28, color));
-    this.scores.addChild(this.solo, ...this.players);
-    this.settings = label(18, PLAYER_COLORS[0]);
-    this.settings.alpha = 0.8;
-    this.view.addChild(this.scores, this.settings);
+    this.tallies = PLAYER_COLORS.map((color) => new BananaTally(color));
+    this.view.addChild(this.solo, ...this.players, ...this.tallies.map((t) => t.view));
     this.shown = [];
   }
 
@@ -57,12 +71,9 @@ export class Hud {
     this.placed = null;
   }
 
-  update(game, debug = false) {
+  update(game) {
+    this.view.visible = game.state !== GameState.TITLE;
     const { layout } = this;
-    const settings = settingsLine(game, debug);
-    this.settings.visible = settings !== '';
-    if (this.settings.text !== settings) this.settings.text = settings;
-    this.scores.visible = game.state !== GameState.TITLE;
     const solo = game.players === 1;
     this.solo.visible = solo;
     const placement = `${game.players}:${game.worlds.length}`;
@@ -70,14 +81,18 @@ export class Hud {
       this.placed = placement;
       this.shown = [];
       const right = layout.view.width - layout.insets.right - 24;
-      this.solo.position.set(right, layout.insets.top + 12);
+      const top = layout.insets.top + 12;
+      this.solo.position.set(right, top);
       this.solo.scale.set(layout.ui);
-      this.settings.position.set(right, layout.insets.top + 12 + 46 * layout.ui);
-      this.settings.scale.set(layout.ui);
       const panes = paneLayouts(layout, game.worlds.length);
       this.players.forEach((t, p) => {
         if (panes.length > 1) t.position.set(right, panes[p].y + 8);
-        else t.position.set(right - (1 - p) * 300, layout.insets.top + 12);
+        else t.position.set(right - (1 - p) * 300, top);
+      });
+      this.tallies.forEach((tally, p) => {
+        if (solo) tally.view.position.set(right, top + 46 * layout.ui);
+        else tally.view.position.set(this.players[p].x, this.players[p].y + 36);
+        tally.view.scale.set(solo ? layout.ui : 1);
       });
     }
     const texts = solo
@@ -89,5 +104,9 @@ export class Hud {
     });
     this.shown = texts;
     this.players.forEach((t) => (t.visible = !solo));
+    this.tallies.forEach((tally, p) => {
+      tally.view.visible = p < game.players;
+      if (tally.view.visible) tally.update(bananaLine(game, p));
+    });
   }
 }

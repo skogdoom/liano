@@ -4,6 +4,7 @@ import { GameState } from '../sim/game.js';
 import { MODES, MODE_ORDER } from '../sim/match.js';
 import { paneLayouts } from '../layout.js';
 import { version } from '../../package.json';
+import { bananaLine } from './hud.js';
 
 const CREAM = 0xf4e7c5;
 const GOLD = 0xffcf4a;
@@ -164,7 +165,7 @@ export class Overlays {
     this.modePicker = new ModePicker();
     place(this.title, this.modePicker.view, 92);
     // The pause, menu and setting keys, under the prompt (with a keyboard).
-    this.keysHint = place(this.title, text('P  pause  ·  Esc  menu  ·  G  slipping  ·  B  bananas', 15, { color: CREAM }), 153);
+    this.keysHint = place(this.title, text('P  pause  ·  Esc  menu  ·  G  slipping', 15, { color: CREAM }), 153);
     this.keysHint.alpha = 0.7;
     const versionText = place(this.title, text(`v${version}`, 13, { color: CREAM }), -150);
     versionText.anchor.set(1, 0.5);
@@ -172,11 +173,13 @@ export class Overlays {
     versionText.alpha = 0.55;
 
     this.gameOver = panel(0, 0, 520, 340);
-    this.gameOverTitle = place(this.gameOver, text('GAME OVER', 72, { weight: 'bold' }), -105);
-    this.scoreText = place(this.gameOver, text('', 44, { weight: 'bold' }), -25);
-    this.bestText = place(this.gameOver, text('', 26), 25);
-    this.newBestText = place(this.gameOver, text('New best!', 28, { color: GOLD, weight: 'bold' }), 70);
-    this.gameOverPrompt = place(this.gameOver, text('', 28), 125);
+    this.gameOverTitle = place(this.gameOver, text('GAME OVER', 72, { weight: 'bold' }), -110);
+    this.scoreText = place(this.gameOver, text('', 44, { weight: 'bold' }), -38);
+    this.bestText = place(this.gameOver, text('', 26), 6);
+    // Bananas taken out of those passed, per player.
+    this.bananasText = place(this.gameOver, text('', 24, { color: GOLD }), 42);
+    this.newBestText = place(this.gameOver, text('New best!', 28, { color: GOLD, weight: 'bold' }), 82);
+    this.gameOverPrompt = place(this.gameOver, text('', 28), 128);
 
     this.paused = panel(0, 0, 420, 170);
     place(this.paused, text('Paused', 64, { weight: 'bold' }), -25);
@@ -224,18 +227,21 @@ export class Overlays {
     if (this.gameOver.visible) {
       this.gameOver.alpha = Math.min(game.stateTime / FADE_IN, 1);
       const solo = game.players === 1;
-      const shown = solo ? `${game.score}:${game.best}:${game.newBest}` : `${game.mode}:${game.playerScore(0)}:${game.playerScore(1)}`;
+      const bananas = Array.from({ length: game.players }, (_, p) => bananaLine(game, p));
+      const shown = [solo ? `${game.score}:${game.best}:${game.newBest}` : `${game.mode}:${game.playerScore(0)}:${game.playerScore(1)}`, ...bananas].join(':');
       if (shown !== this.shown) {
         if (solo) {
           this.gameOverTitle.text = 'GAME OVER';
           this.scoreText.text = `Score ${game.score}`;
           this.bestText.text = `Best ${game.best}`;
+          this.bananasText.text = `Bananas ${bananas[0]}`;
         } else {
           // Totals over all lives decide.
           const winners = game.winners;
           this.gameOverTitle.text = winners.length > 1 ? 'DRAW' : `P${winners[0] + 1} WINS`;
           this.scoreText.text = `P1 ${game.playerScore(0)}  ·  P2 ${game.playerScore(1)}`;
-          this.bestText.text = '';
+          this.bestText.text = 'Bananas';
+          this.bananasText.text = `P1 ${bananas[0]}  ·  P2 ${bananas[1]}`;
         }
         this.shown = shown;
       }

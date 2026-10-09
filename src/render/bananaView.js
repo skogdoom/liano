@@ -1,5 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { BANANA_POINTS, BANANA_RADIUS } from '../config.js';
+import { BANANA_RADIUS } from '../config.js';
 
 const PEEL = 0xffd23f;
 const PEEL_SHADE = 0xe0a91f;
@@ -9,7 +9,7 @@ const POP_TIME = 0.8; // s
 
 // A yellow crescent `r` in radius, centred on (0, 0). Bananas are drawn a little larger
 // than their hitbox, which with the monkey's makes pickups generous anyway.
-function drawBanana(g, r = BANANA_RADIUS * 1.4) {
+export function drawBanana(g, r = BANANA_RADIUS * 1.4) {
   const outer = [];
   const inner = [];
   for (let i = 0; i <= 12; i++) {
@@ -30,7 +30,7 @@ function drawSparkle(g, size) {
   g.poly([0, -size, size * 0.25, -size * 0.25, size, 0, size * 0.25, size * 0.25, 0, size, -size * 0.25, size * 0.25, -size, 0, -size * 0.25, -size * 0.25]).fill(SPARKLE);
 }
 
-// The bananas still to take, bobbing and glinting (the bob is only drawn), and a "+3"
+// The bananas still to take, bobbing and glinting (the bob is only drawn), and a "+1"
 // rising where one was taken.
 export class BananaViews {
   constructor() {
@@ -74,7 +74,7 @@ export class BananaViews {
       const banana = world.bananas.get(e.gap);
       if (!banana) continue;
       const text = new Text({
-        text: `+${BANANA_POINTS}`,
+        text: '+1',
         style: { fontFamily: 'sans-serif', fontSize: 26, fontWeight: 'bold', fill: PEEL, stroke: { color: TIP, width: 4 } },
       });
       text.anchor.set(0.5);
@@ -89,31 +89,5 @@ export class BananaViews {
     }
     for (const pop of this.pops.filter((p) => p.age >= POP_TIME)) pop.text.destroy();
     this.pops = this.pops.filter((p) => p.age < POP_TIME);
-  }
-}
-
-// Over the monkey while boosted: a banana and the boosted grabs left.
-export class BoostBadge {
-  constructor() {
-    this.view = new Container();
-    const icon = new Graphics();
-    drawBanana(icon, 10);
-    icon.x = -12;
-    this.count = new Text({
-      text: '',
-      style: { fontFamily: 'sans-serif', fontSize: 18, fontWeight: 'bold', fill: PEEL, stroke: { color: TIP, width: 3 } },
-    });
-    this.count.anchor.set(0, 0.5);
-    this.count.position.set(2, -3);
-    this.view.addChild(icon, this.count);
-    this.view.visible = false;
-  }
-
-  update(monkey) {
-    const grabs = monkey.state === 'DEAD' ? 0 : monkey.boostGrabs;
-    this.view.visible = grabs > 0;
-    if (!this.view.visible) return;
-    this.count.text = `×${grabs}`;
-    this.view.position.set(monkey.x, monkey.y - 48);
   }
 }

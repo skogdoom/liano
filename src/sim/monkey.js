@@ -1,5 +1,4 @@
 import {
-  BOOST_PERIOD,
   FLOW_GRIP,
   HOLD_GRIP,
   HOLD_SLIDE_TIME,
@@ -67,32 +66,19 @@ export class Monkey {
     this.quickTime = 0;
     // The liana just released; it cannot be regrabbed until another one is grabbed.
     this.excludedLiana = null;
-    // Boosted grabs left (from a banana): each new grab while above zero swings with
-    // `boostPeriod` (BOOST_PERIOD, or SHARED_BOOST_PERIOD in shared screen) and uses one.
-    this.boostGrabs = 0;
-    this.boostPeriod = BOOST_PERIOD;
   }
 
   // Grabs `liana` at `contactRadius` from its anchor (at most MAX_ENTRY_RADIUS); the
   // grip then slips towards the tip (see slipSteps). The swing starts in the direction
-  // the monkey was moving horizontally, boosted if the monkey has boosted grabs left.
-  // On a liana another monkey swings on, it joins that swing: joining a boosted swing
-  // uses one of its boosted grabs (if it has any), so monkeys travelling together use
-  // their shared boost in step; joining an unboosted one keeps its boost.
+  // the monkey was moving horizontally. On a liana another monkey swings on, it joins
+  // that swing.
   grab(liana, contactRadius) {
     const dir = this.vx < 0 ? -1 : 1;
     this.state = MonkeyState.HANGING;
     this.liana = liana;
     this.gripFrom = Math.min(contactRadius, MAX_ENTRY_RADIUS);
     this.excludedLiana = null;
-    if (liana.held) {
-      if (liana.period !== SWING_PERIOD && this.boostGrabs > 0) this.boostGrabs--;
-      liana.grab(dir);
-    } else {
-      const boosted = this.boostGrabs > 0;
-      if (boosted) this.boostGrabs--;
-      liana.grab(dir, boosted ? this.boostPeriod : SWING_PERIOD);
-    }
+    liana.grab(dir);
     const angle = liana.angle;
     this.catchSpeed = this.vx * Math.sin(angle) + this.vy * Math.cos(angle);
     this.#planSlip();
@@ -111,10 +97,8 @@ export class Monkey {
     return liana;
   }
 
-  // Ends the run (or the life). The monkey keeps its velocity and falls ballistically;
-  // any boost is lost.
+  // Ends the run (or the life). The monkey keeps its velocity and falls ballistically.
   kill() {
-    this.boostGrabs = 0;
     if (this.liana) {
       this.liana.release();
       this.liana = null;

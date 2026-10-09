@@ -159,10 +159,9 @@ function createObstacleWorker() {
   }
 }
 const prefetch = new ObstaclePrefetch(createObstacleWorker());
-// The game starts without slipping and bananas (G and B turn them on).
+// The game starts without slipping (G turns it on).
 const game = new Game({
   slip: false,
-  bananas: false,
   // Split screen's worlds share the match seed, and so the prefetched gaps.
   createWorld: (options) => {
     if (options.seed !== prefetch.seed) prefetch.reset(options.seed);
@@ -297,9 +296,8 @@ const loop = createFixedStepLoop({
 function frame(ticker) {
   if (input.consumeDebugToggle()) debugOverlay.toggle();
   if (input.consumeMuteToggle()) toggleMute();
-  // G and B turn slipping and bananas on and off, anywhere (paused too).
+  // G turns slipping on and off, anywhere (paused too).
   if (input.consumeSlipToggle()) game.toggleSlip();
-  if (input.consumeBananasToggle()) game.toggleBananas();
   // P pauses a run, and resumes whatever it paused.
   if (input.consumePauseToggle() && (game.pausable || pause.reason === 'manual')) pause.toggle('manual');
   // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
@@ -312,7 +310,7 @@ function frame(ticker) {
   const events = game.takeEvents();
   for (const recipe of soundsFor(events)) sound.play(recipe);
   panes.forEach((pane, i) => pane.update(events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches));
-  hud.update(game, debugOverlay.visible);
+  hud.update(game);
   overlays.update(game, panes[0].camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
   debugOverlay.update(game);
 }
