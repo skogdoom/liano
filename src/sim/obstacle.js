@@ -8,6 +8,7 @@ export const ObstacleType = Object.freeze({
   BRANCH: 'branch',
   THORN_BUSH: 'thornBush',
   ROCK: 'rock',
+  BEEHIVE: 'beehive',
   SPIDER: 'spider',
   SNAKE: 'snake',
   BIRD: 'bird',
@@ -15,7 +16,7 @@ export const ObstacleType = Object.freeze({
   BLUE_BIRD: 'blueBird',
 });
 
-export const STATIC_TYPES = [ObstacleType.BRANCH, ObstacleType.THORN_BUSH, ObstacleType.ROCK];
+export const STATIC_TYPES = [ObstacleType.BRANCH, ObstacleType.THORN_BUSH, ObstacleType.ROCK, ObstacleType.BEEHIVE];
 // Every moving type; which of them a gap gets depends on its time of day (see
 // movingTypesFor in generator.js).
 export const MOVING_TYPES = [

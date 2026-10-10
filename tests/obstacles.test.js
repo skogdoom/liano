@@ -69,8 +69,23 @@ describe('moving obstacles', () => {
 
 describe('obstacle hitboxes', () => {
   it('has a hitbox for every type', () => {
-    expect(STATIC_TYPES.sort()).toEqual(['branch', 'rock', 'thornBush']);
+    expect([...STATIC_TYPES].sort()).toEqual(['beehive', 'branch', 'rock', 'thornBush']);
     for (const type of STATIC_TYPES) expect(new Obstacle(0, type, 0, 0).hitbox.length).toBeGreaterThan(0);
+  });
+
+  it('beehive is a tapering stack of three circles, widest in the middle', () => {
+    const hive = new Obstacle(0, ObstacleType.BEEHIVE, 0, 0);
+    const hits = (x, y) => hive.hitsCircle(x, y, MONKEY_RADIUS);
+    // The widest circle, in the middle.
+    expect(hits(24 + MONKEY_RADIUS, 2)).toBe(true);
+    expect(hits(24 + MONKEY_RADIUS + 0.1, 2)).toBe(false);
+    // Narrower at the top and the bottom.
+    expect(hits(0, -16 - 18 - MONKEY_RADIUS)).toBe(true);
+    expect(hits(0, -16 - 18 - MONKEY_RADIUS - 0.1)).toBe(false);
+    expect(hits(0, 22 + 18 + MONKEY_RADIUS)).toBe(true);
+    expect(hits(0, 22 + 18 + MONKEY_RADIUS + 0.1)).toBe(false);
+    // A gap between the top circle and the middle one's shoulder at the far side.
+    expect(hits(40 + MONKEY_RADIUS, -30)).toBe(false);
   });
 
   it('rock is a circle', () => {

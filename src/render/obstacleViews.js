@@ -26,6 +26,13 @@ const ROCK = 0x858b90;
 const ROCK_LIGHT = 0xa6acb1;
 const ROCK_DARK = 0x62676c;
 const ROCK_EDGE = 0x464a4e;
+const HIVE = 0xe2a93c;
+const HIVE_LIGHT = 0xf3cd6e;
+const HIVE_DARK = 0xb57a1f;
+const HIVE_EDGE = 0x7d5114;
+const BEE = 0xffd23f;
+const BEE_STRIPE = 0x2a1f12;
+const BEE_WING = 0xf4fbff;
 
 function vine(g, x, fromY, toY, sway) {
   g.moveTo(x, fromY)
@@ -122,7 +129,71 @@ function drawRock(g, o, rand, hangs) {
   facet(0, 2, ROCK_DARK);
 }
 
-const DRAW = { branch: drawBranch, thornBush: drawThornBush, rock: drawRock };
+// Hitbox: three stacked circles. A teardrop paper nest in gold bands with a dark
+// entrance at the bottom, hanging from a vine, or from an arm off a trunk when it is low;
+// bees buzz around it (scenery: only the nest is the hitbox). Returns the bees'
+// animation.
+function drawBeehive(g, o, rand, hangs, view) {
+  const circles = OBSTACLE_HITBOXES.beehive;
+  const top = circles[0].dy - circles[0].r;
+  const bottom = circles[2].dy + circles[2].r;
+  if (hangs) {
+    vine(g, 0, (CANOPY_Y - o.y) / o.scale, top + 2, 7);
+  } else {
+    // A trunk beside it with an arm over it, and the nest on a rope from the arm.
+    const floor = (FLOOR_Y + 20 - o.y) / o.scale;
+    const armY = top - 12;
+    g.poly([30, armY - 6, 42, armY - 6, 46, floor, 26, floor]).fill(SUPPORT_TRUNK);
+    g.moveTo(34, armY).quadraticCurveTo(14, armY - 8, -4, armY - 1).stroke({ width: 7, color: SUPPORT_TRUNK, cap: 'round' });
+    g.moveTo(0, armY).lineTo(0, top + 3).stroke({ width: 2.5, color: VINE, cap: 'round' });
+  }
+  // The nest.
+  const outline = (grow = 0) => {
+    const k = 1 + grow;
+    g.moveTo(0, top * k)
+      .bezierCurveTo(12 * k, top * k, 22 * k, -18 * k, 23 * k, 0)
+      .bezierCurveTo(24 * k, 16 * k, 14 * k, bottom * k, 0, bottom * k)
+      .bezierCurveTo(-14 * k, bottom * k, -24 * k, 16 * k, -23 * k, 0)
+      .bezierCurveTo(-22 * k, -18 * k, -12 * k, top * k, 0, top * k);
+  };
+  outline();
+  g.fill(HIVE).stroke({ width: 2, color: HIVE_EDGE, join: 'round' });
+  // Paper bands: arcs across the nest, as wide as the hitbox is at that height.
+  const half = (y) => Math.max(...circles.map((c) => Math.sqrt(Math.max(0, c.r ** 2 - (y - c.dy) ** 2))));
+  for (const y of [-26, -14, -2, 10, 22, 32]) {
+    const w = half(y) - 2;
+    g.moveTo(-w, y).quadraticCurveTo(0, y + 7, w, y).stroke({ width: 1.6, color: HIVE_EDGE, alpha: 0.65 });
+  }
+  g.ellipse(-8, -8, 7, 13).fill({ color: HIVE_LIGHT, alpha: 0.8 });
+  g.ellipse(8, 14, 6, 11).fill({ color: HIVE_DARK, alpha: 0.5 });
+  g.ellipse(0, bottom - 6, 6.5, 4.5).fill(BEE_STRIPE);
+
+  const bees = new Graphics();
+  view.addChild(bees);
+  const swarm = Array.from({ length: 5 }, () => ({
+    speed: 1.6 + rand() * 1.6,
+    phase: rand() * Math.PI * 2,
+    rx: 30 + rand() * 12,
+    ry: 20 + rand() * 20,
+    cy: 2 + rand() * 12,
+  }));
+  return (t) => {
+    bees.clear();
+    for (const b of swarm) {
+      const a = b.speed * t + b.phase;
+      const x = b.rx * Math.cos(a);
+      const y = b.cy + b.ry * Math.sin(a * 1.7);
+      // A round yellow body with a dark stripe and two wings that beat.
+      const beat = 0.5 + 0.5 * Math.sin(t * 60 + b.phase);
+      bees.ellipse(x - 2.5, y - 3, 2.6, 1.2 + 1.4 * beat).fill({ color: BEE_WING, alpha: 0.8 });
+      bees.ellipse(x + 2.5, y - 3, 2.6, 1.2 + 1.4 * beat).fill({ color: BEE_WING, alpha: 0.8 });
+      bees.ellipse(x, y, 4, 3).fill(BEE);
+      bees.rect(x - 0.8, y - 3, 1.6, 6).fill(BEE_STRIPE);
+    }
+  };
+}
+
+const DRAW = { branch: drawBranch, thornBush: drawThornBush, rock: drawRock, beehive: drawBeehive };
 
 // Moving obstacles: a body that follows the obstacle, with parts animated from its
 // time, plus scenery that stays put (the snake's vine) or stretches (the spider's
@@ -304,13 +375,18 @@ function buildObstacle(o) {
     update();
     return { view, update };
   }
-  const g = new Graphics();
-  DRAW[o.type](g, o, mulberry32(mixSeed(0x0b57, o.gap)), o.y < HANGS_ABOVE_Y);
-  g.position.set(o.x, o.y);
   // The art is drawn at scale 1 (supports reaching the canopy or floor are divided by
-  // the scale), then scaled with the hitbox.
-  g.scale.set(o.scale);
-  return { view: g, update: null };
+  // the scale), then scaled with the hitbox. A drawing may return an animation: a
+  // function of the world time for the parts it added to `view`.
+  const view = new Container();
+  const g = new Graphics();
+  view.addChild(g);
+  const animate = DRAW[o.type](g, o, mulberry32(mixSeed(0x0b57, o.gap)), o.y < HANGS_ABOVE_Y, view);
+  view.position.set(o.x, o.y);
+  view.scale.set(o.scale);
+  if (!animate) return { view, update: null };
+  animate(0);
+  return { view, update: (time) => animate(time) };
 }
 
 export class ObstacleViews {
@@ -319,7 +395,8 @@ export class ObstacleViews {
     this.views = new Map();
   }
 
-  update(obstacles) {
+  // `time` is the world time (s), for the scenery that moves on its own (the bees).
+  update(obstacles, time = 0) {
     const seen = new Set();
     for (const o of obstacles) {
       if (!o) continue;
@@ -330,7 +407,7 @@ export class ObstacleViews {
         this.views.set(o, entry);
         this.view.addChild(entry.view);
       }
-      entry.update?.();
+      entry.update?.(time);
     }
     for (const [o, entry] of this.views) {
       if (seen.has(o)) continue;

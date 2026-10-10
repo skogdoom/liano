@@ -95,6 +95,13 @@ export const OBSTACLE_HITBOXES = {
   // The bat takes the bird's place at night: the same hitbox, so the same patrols.
   bat: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
   blueBird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
+  // A skep-shaped hive: three stacked circles, about as wide as a thorn bush and a
+  // little taller than a rock.
+  beehive: [
+    { kind: 'circle', dx: 0, dy: -16, r: 18 },
+    { kind: 'circle', dx: 0, dy: 2, r: 24 },
+    { kind: 'circle', dx: 0, dy: 22, r: 18 },
+  ],
 };
 
 // Moving obstacles (see obstacle.js). Their whole path stays clear of both

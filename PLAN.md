@@ -46,7 +46,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 | Regrab | The liana just released cannot be regrabbed until a different liana has been grabbed. |
 | Backward | Releasing on the backswing is allowed. The monkey may fly backward and grab the previous liana. |
 | Layout | Lianas have identical length and identical horizontal spacing. |
-| Obstacles | One per gap (none in the first gap, nor in the gap behind the start liana). Static types: branch, thorn bush, rock. Moving types (spider, snake, bird, bats at night, and blue birds by day) from obstacle 6. No liana ever sweeps over an obstacle: static and moving obstacles alike stay clear of the area either neighbouring liana can swing through, with the rope and a hanging monkey at any grip radius. |
+| Obstacles | One per gap (none in the first gap, nor in the gap behind the start liana). Static types: branch, thorn bush, rock, beehive. Moving types (spider, snake, bird, bats at night, and blue birds by day) from obstacle 6. No liana ever sweeps over an obstacle: static and moving obstacles alike stay clear of the area either neighbouring liana can swing through, with the rope and a hanging monkey at any grip radius. |
 | Bananas | Collected on touch, and counted per player against the bananas passed. They change neither the score nor the swing. |
 | Difficulty | Stages keyed on obstacle index. Levers: shorter release windows, a larger share of moving obstacles, bigger obstacles. Swing speed and slip speed do not ramp. |
 | Death | Collision with an obstacle, falling below the world band (world y WORLD_HEIGHT; the visible bottom edge can be higher when the flexible frame crops), or (shared screen only) being left behind the left edge. Going above the top edge is not a death. |
@@ -76,7 +76,7 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 
 ## Obstacles
 
-**Static:** branch, thorn bush, rock. A random height in OBSTACLE_Y_RANGE, horizontally centred, rerolled until the gap is passable and clear of both neighbouring lianas' swept areas.
+**Static:** branch, thorn bush, rock, beehive (all four equally likely). A random height in OBSTACLE_Y_RANGE, horizontally centred, rerolled until the gap is passable and clear of both neighbouring lianas' swept areas.
 
 **Moving** (from obstacle MOVING_FROM, in each stage's share). Each has a deterministic position with period P (MOVING_PERIOD_RANGE), driven by world time (counted in whole sim steps) plus a seeded phase, so the solver matches the world exactly. It stays in its own gap and its whole path stays clear of both swings, so a hanging monkey is never hit:
 - **Spider:** drops and climbs on a thread from the canopy at the gap centre.
@@ -168,7 +168,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 
 | Event | Sim trigger | Synthesis |
 |---|---|---|
-| "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock 110 Hz, snake 131, branch 165, thorn bush 247, spider 294, blue bird 349, bird 392, bat 466. |
+| "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock 110 Hz, snake 131, branch 165, thorn bush 247, spider 294, blue bird 349, bird 392, bat 466; beehive 196. |
 | "Crash" | `death` from a fall, or from being left behind | A low-passed noise burst plus a falling low sine thud, about 0.8 s. |
 
 - **Recipes and player:** each sound is a pure recipe function (data, unit-tested in Node). A thin player is the only code that touches `AudioContext`.
@@ -344,7 +344,8 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
   - Branch: brown limb with a leaf tuft.
   - Thorn bush: dark blob with thorns.
   - Rock: grey polygon on a small ledge.
-  - High ones hang from the canopy on vines; low ones stand on a trunk or pole.
+  - Beehive: a teardrop paper nest in gold bands with a dark entrance, hanging from a vine, or from an arm off a trunk when it is low (its hitbox is three stacked circles, widest in the middle). A handful of bees buzz around it; they are scenery, and the animation takes the world time, so they stop while the game is paused.
+  - High ones hang from the canopy on vines; low ones stand on a trunk or pole (the beehive hangs from an arm off the trunk).
 - **Moving obstacles.**
   - Spider: dark body with a red mark and wriggling legs, on a thin thread.
   - Snake: green coils on a leafy stalk, its head pointing the way it climbs.

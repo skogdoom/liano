@@ -121,7 +121,7 @@ export class Pane {
     world.lianaSets.forEach((set, i) => {
       this.lianaViews[i].update(set.values(), camera.x, this.layout.view.width, world.monkeys);
     });
-    this.obstacleViews.update(world.obstacles.values());
+    this.obstacleViews.update(world.obstacles.values(), world.time);
     this.bananaViews.update(world, events, dt);
     world.monkeys.forEach((m, i) => this.monkeyViews[i].update(m, dt, world.isInvulnerable(i)));
   }

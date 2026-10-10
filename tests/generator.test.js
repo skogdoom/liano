@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createLiana,
   createObstacle,
+  rulesFor,
   birdPatrolBounds,
   movingCandidate,
   movingTypesFor,
@@ -13,6 +14,7 @@ import {
 import { mulberry32, mixSeed } from '../src/sim/rng.js';
 import { Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from '../src/sim/obstacle.js';
 import { timeOfDayFor, TimeOfDay } from '../src/sim/stages.js';
+import { isPassable } from '../src/sim/windowTable.js';
 import { isPathClearOfLianas } from '../src/sim/feasibility.js';
 import { World } from '../src/sim/world.js';
 import {
@@ -135,9 +137,21 @@ describe('obstacle generation', () => {
   it('uses all types, roughly evenly', () => {
     const counts = Object.fromEntries([...STATIC_TYPES, ...MOVING_TYPES].map((t) => [t, 0]));
     for (let gap = 1; gap <= 3000; gap++) counts[createObstacle(SEED, gap).type]++;
-    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(80); // late stages are 90 % moving
+    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(50); // late stages are 90 % moving
     // The bat only flies at night, one stage in five.
     for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BAT ? 100 : 400);
+  });
+
+  it('hangs beehives among the static obstacles, at heights that can be passed', () => {
+    let hives = 0;
+    for (let gap = 1; gap <= 400; gap++) {
+      const o = createObstacle(SEED, gap);
+      if (o.type !== ObstacleType.BEEHIVE) continue;
+      hives++;
+      expect(o.moving).toBe(false);
+      expect(isPassable(o.type, o.y, o.scale, rulesFor(gap).minSteps)).toBe(true);
+    }
+    expect(hives).toBeGreaterThan(10);
   });
 
   it('replaces the bird with a bat at night, and only then', () => {
