@@ -10,10 +10,12 @@
 
 const SILENT = 0.0001;
 
-// Base pitch of the bong for each obstacle type: a deep rock, a mid branch, a beehive,
+// Base pitch of the bong for each obstacle type: a deep rock (and, deeper, a temple), a
+// mid branch, a beehive,
 // a higher thorn bush; among the moving ones a low snake, a higher spider, a blue bird,
 // a bird and the highest, the bat.
 export const BONG_PITCH = {
+  temple: 98,
   rock: 110,
   snake: 131,
   branch: 165,

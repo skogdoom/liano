@@ -46,7 +46,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 | Regrab | The liana just released cannot be regrabbed until a different liana has been grabbed. |
 | Backward | Releasing on the backswing is allowed. The monkey may fly backward and grab the previous liana. |
 | Layout | Lianas have identical length and identical horizontal spacing. |
-| Obstacles | One per gap (none in the first gap, nor in the gap behind the start liana). Static types: branch, thorn bush, rock, beehive. Moving types (spider, snake, bird, bats at night, and blue birds by day) from obstacle 6. No liana ever sweeps over an obstacle: static and moving obstacles alike stay clear of the area either neighbouring liana can swing through, with the rope and a hanging monkey at any grip radius. |
+| Obstacles | One per gap (none in the first gap, nor in the gap behind the start liana). Static types: branch, thorn bush, rock, beehive, and a rare temple. Moving types (spider, snake, bird, bats at night, and blue birds by day) from obstacle 6. No liana ever sweeps over an obstacle: static and moving obstacles alike stay clear of the area either neighbouring liana can swing through, with the rope and a hanging monkey at any grip radius. |
 | Bananas | Collected on touch, and counted per player against the bananas passed. They change neither the score nor the swing. |
 | Difficulty | Stages keyed on obstacle index. Levers: shorter release windows, a larger share of moving obstacles, bigger obstacles. Swing speed and slip speed do not ramp. |
 | Death | Collision with an obstacle, falling below the world band (world y WORLD_HEIGHT; the visible bottom edge can be higher when the flexible frame crops), or (shared screen only) being left behind the left edge. Going above the top edge is not a death. |
@@ -77,6 +77,8 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 ## Obstacles
 
 **Static:** branch, thorn bush, rock, beehive (BEEHIVE_SHARE, 8 % of the static gaps; the other three equally likely). A random height in OBSTACLE_Y_RANGE, horizontally centred, rerolled until the gap is passable and clear of both neighbouring lianas' swept areas.
+
+**Temple.** A rare Mayan-style temple, a static obstacle in the lower region. Each day/night cycle (the five stages from Day to Dawn: obstacles 1–90, then 91–190, and so on) has at most one, at a random gap in it (not among the first TEMPLE_MIN_GAP, 6), so about one every five stages, and it is not drawn from the ordinary static pool. Which gap, its height and its look depend only on (seed, cycle) and (seed, gap). It comes in TEMPLE_VARIANTS (4) looks, which share one hitbox and differ only in the art. The hitbox is a stepped pyramid drawn from the top centre of the shrine down: a shrine 100 wide and 64 tall, three tiers 46 tall and each wider than the last (180, 272, 368), and a base 472 wide, tall enough to reach the floor at any height, so a flight has to pass over it. It is big on purpose: a door and a staircase bigger than the monkey, so it reads as the top of a temple far larger than the gap. It fits the free area under the swings, which widens downward like its steps; the shrine's width at the top is what limits how high it can stand, and the solver passes it from an apex height of about y 308 (320 at the largest scale) down to 375, the lowest region, with the same windows as any other static obstacle.
 
 **Branch decorations.** By day about one branch in seven (BRANCH_DECORATION_CHANCE, 0.14) carries a decoration: a bird, a snake, a hanging monkey, a bird's nest, a panther, a cluster of flowers or a bunch of coconuts, picked at random, and at night also a hanging bat or an owl. A night decoration only appears on a branch in a Night stage (see Difficulty stages). Night stages are few and a branch is only about one gap in thirteen in them, so by day's odds the hanging bat and the owl would almost never show: at night about two branches in five carry a decoration (BRANCH_DECORATION_CHANCE_NIGHT, 0.4), and half of those (NIGHT_DECORATION_SHARE) carry a night one, which comes to about one night animal per three or four night stages. It is scenery: the obstacle is the same branch with the same hitbox, so nothing about passability or difficulty changes, and a flight can pass through the decoration unharmed. Whether a branch has one, and which, depends only on (seed, gap) with its own random stream, and rides along with the obstacle's data to the worker and back. A branch is about one gap in thirty, so a decoration shows about once or twice in a run.
 
@@ -170,7 +172,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 
 | Event | Sim trigger | Synthesis |
 |---|---|---|
-| "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock 110 Hz, snake 131, branch 165, thorn bush 247, spider 294, blue bird 349, bird 392, bat 466; beehive 196. |
+| "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock 110 Hz, snake 131, branch 165, thorn bush 247, spider 294, blue bird 349, bird 392, bat 466; beehive 196, temple 98. |
 | "Crash" | `death` from a fall, or from being left behind | A low-passed noise burst plus a falling low sine thud, about 0.8 s. |
 
 - **Recipes and player:** each sound is a pure recipe function (data, unit-tested in Node). A thin player is the only code that touches `AudioContext`.
@@ -238,6 +240,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | FLOW_GRIP, QUICK_SLIP_SPEED | 0.7 × L, 1000 px/s | Catches above FLOW_GRIP slide quickly down to it |
 | HOLD_GRIP | 350 px (about 0.83 × L) | With slipping off (G) the grip holds where it catches but no higher; the shallowest grip that keeps every sampled gap's window |
 | HOLD_SLIDE_TIME | 0.25 s | Longest slide down to HOLD_GRIP; it starts at the catch speed along the rope and brakes evenly |
+| TEMPLE_MIN_GAP, TEMPLE_VARIANTS | 6, 4 | The temple (one a day/night cycle, see Obstacles) is never among the first 6 obstacles, and has 4 looks |
 | SLIP_OFF_PHASE | 0.11 × P after the bottom, swinging right | The forced release comes mid-way through the forward window (about 0.05–0.165 × P) |
 | ENTRY_RADII | [0.35, 0.5, 0.65, 0.8, 0.95] × L | The entry radii the solver checks |
 | MAX_ENTRY_RADIUS | 0.95 × L | Lower catches grip here |
@@ -355,6 +358,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
     - Hanging monkey: a small grey monkey hanging from the underside of the limb by its hands, swaying like a pendulum, with its legs swinging, its tail curling out to one side and an occasional blink. It hangs below the limb, clear of the vines it hangs from.
   - Thorn bush: dark blob with thorns.
   - Rock: grey polygon on a small ledge.
+  - Temple: a stepped pyramid with a shrine on top and a staircase up the middle of its front, on a platform of mouldings and recessed panels, drawn big (a door taller than the monkey) and buried: only the top shows, the lower part lost in a green haze that thickens toward the ground and a thick fringe of ferns and leaves wider than the temple, with moss, vines and ferns on every tier. Four looks, one of which each temple has: limestone with a stepped-fret frieze round the shrine; sandstone with a roof comb over the shrine; mossy grey-green stone with serpent heads on the stairs, moss and ferns; and dark basalt with gold inlay and two braziers whose flames flicker.
   - Beehive: a teardrop paper nest in gold bands with a dark entrance, hanging from a vine, or from an arm off a trunk when it is low (its hitbox is three stacked circles, widest in the middle). A handful of bees buzz around it; they are scenery, and the animation takes the world time, so they stop while the game is paused.
   - High ones hang from the canopy on vines; low ones stand on a trunk or pole (the beehive hangs from an arm off the trunk).
 - **Moving obstacles.**

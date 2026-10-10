@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createLiana,
   createObstacle,
+  templeGapFor,
   staticTypeFor,
   branchDecorationFor,
   rulesFor,
@@ -23,7 +24,7 @@ import {
   STATIC_TYPES,
   MOVING_TYPES,
 } from '../src/sim/obstacle.js';
-import { timeOfDayFor, TimeOfDay } from '../src/sim/stages.js';
+import { dayCycleFor, dayCycleRange, timeOfDayFor, TimeOfDay } from '../src/sim/stages.js';
 import { isPassable } from '../src/sim/windowTable.js';
 import { isPathClearOfLianas } from '../src/sim/feasibility.js';
 import { World } from '../src/sim/world.js';
@@ -45,6 +46,8 @@ import {
   BRANCH_DECORATION_CHANCE_NIGHT,
   NIGHT_DECORATION_SHARE,
   BEEHIVE_SHARE,
+  TEMPLE_MIN_GAP,
+  TEMPLE_VARIANTS,
 } from '../src/config.js';
 
 describe('liana generation', () => {
@@ -151,9 +154,11 @@ describe('obstacle generation', () => {
   it('uses all types, roughly evenly', () => {
     const counts = Object.fromEntries([...STATIC_TYPES, ...MOVING_TYPES].map((t) => [t, 0]));
     for (let gap = 1; gap <= 3000; gap++) counts[createObstacle(SEED, gap).type]++;
-    // Late stages are 90 % moving; beehives are rarer than the rest.
-    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BEEHIVE ? 10 : 50);
-    const statics = STATIC_TYPES.reduce((sum, t) => sum + counts[t], 0);
+    // Late stages are 90 % moving; beehives are rarer than the rest, and temples much rarer
+    // (one a day/night cycle: see below).
+    const rare = [ObstacleType.BEEHIVE, ObstacleType.TEMPLE];
+    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(rare.includes(t) ? 10 : 50);
+    const statics = STATIC_TYPES.reduce((sum, t) => sum + counts[t], 0) - counts[ObstacleType.TEMPLE];
     expect(counts[ObstacleType.BEEHIVE] / statics).toBeGreaterThan(BEEHIVE_SHARE - 0.05);
     expect(counts[ObstacleType.BEEHIVE] / statics).toBeLessThan(BEEHIVE_SHARE + 0.05);
     // The bat only flies at night, one stage in five.
@@ -182,6 +187,77 @@ describe('obstacle generation', () => {
     }
     expect(branches).toBeGreaterThan(100);
     expect(decorated).toBeGreaterThan(5);
+  });
+
+  describe('the temple', () => {
+    const cycles = 8;
+    const lastGap = dayCycleRange(cycles - 1)[1];
+
+    it('comes once in each day/night cycle, at a random gap in it, and nowhere else', () => {
+      for (const seed of [1, 2, 3]) {
+        const found = {};
+        for (let gap = 1; gap <= lastGap; gap++) {
+          if (createObstacle(seed, gap).type !== ObstacleType.TEMPLE) continue;
+          const cycle = dayCycleFor(gap);
+          (found[cycle] ??= []).push(gap);
+        }
+        for (let cycle = 0; cycle < cycles; cycle++) {
+          const [first, last] = dayCycleRange(cycle);
+          expect(found[cycle]).toEqual([templeGapFor(seed, cycle)]);
+          expect(found[cycle][0]).toBeGreaterThanOrEqual(Math.max(first, TEMPLE_MIN_GAP));
+          expect(found[cycle][0]).toBeLessThanOrEqual(last);
+        }
+      }
+    });
+
+    it('is anywhere in its cycle, so it differs from one cycle and seed to the next', () => {
+      const offsets = new Set();
+      for (let seed = 1; seed <= 20; seed++) {
+        for (let cycle = 1; cycle < 6; cycle++) offsets.add(templeGapFor(seed, cycle) - dayCycleRange(cycle)[0]);
+      }
+      expect(offsets.size).toBeGreaterThan(60);
+      const early = [];
+      const late = [];
+      for (let seed = 1; seed <= 200; seed++) {
+        const o = templeGapFor(seed, 3) - dayCycleRange(3)[0];
+        (o < 50 ? early : late).push(o);
+      }
+      expect(early.length).toBeGreaterThan(60);
+      expect(late.length).toBeGreaterThan(60);
+    });
+
+    it('is a static obstacle in the lower region, at a height that can be passed, with a look of its own', () => {
+      const variants = new Set();
+      for (let seed = 1; seed <= 30; seed++) {
+        for (let cycle = 0; cycle < 6; cycle++) {
+          const gap = templeGapFor(seed, cycle);
+          const o = createObstacle(seed, gap);
+          expect(o.type).toBe(ObstacleType.TEMPLE);
+          expect(o.moving).toBe(false);
+          expect(o.decoration).toBeNull();
+          expect(o.x).toBe((gap + 0.5) * LIANA_SPACING);
+          expect(o.y).toBeGreaterThanOrEqual(305);
+          expect(o.y).toBeLessThanOrEqual(OBSTACLE_Y_RANGE[1]);
+          expect(isPassable(o.type, o.y, o.scale, rulesFor(gap).minSteps)).toBe(true);
+          expect(o.variant).toBeGreaterThanOrEqual(0);
+          expect(o.variant).toBeLessThan(TEMPLE_VARIANTS);
+          variants.add(o.variant);
+          // The same hitbox whatever the look: what differs is only the art.
+          expect(o.hitbox).toBe(new Obstacle(gap, ObstacleType.TEMPLE, 0, 0, null, o.scale, null, 3 - o.variant).hitbox);
+          // Deterministic in (seed, gap).
+          expect(createObstacle(seed, gap).toData()).toEqual(o.toData());
+        }
+      }
+      expect([...variants].sort()).toEqual([0, 1, 2, 3]);
+    });
+
+    it('goes to the worker and back with its look', () => {
+      const o = createObstacle(5, templeGapFor(5, 1));
+      const back = Obstacle.fromData(JSON.parse(JSON.stringify(o.toData())));
+      expect(back.variant).toBe(o.variant);
+      expect(back.inGap(0).variant).toBe(o.variant);
+      expect(new Obstacle(0, ObstacleType.ROCK, 0, 0).variant).toBeNull();
+    });
   });
 
   it('keeps the night decorations for the night, and shows more decorations then', () => {
@@ -329,7 +405,7 @@ describe('obstacle generation', () => {
     // obstacle it would have had without moving obstacles.
     for (let gap = MOVING_FROM; gap < 200; gap++) {
       const o = createObstacle(SEED, gap);
-      if (o.moving) continue;
+      if (o.moving || o.type === ObstacleType.TEMPLE) continue;
       const rand = mulberry32(mixSeed(SEED, gap));
       expect(o.type).toBe(staticTypeFor(rand));
     }

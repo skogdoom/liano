@@ -743,7 +743,155 @@ function drawBeehive(g, o, rand, hangs, view) {
   };
 }
 
-const DRAW = { branch: drawBranch, thornBush: drawThornBush, rock: drawRock, beehive: drawBeehive };
+// Hitbox: the stepped pyramid in OBSTACLE_HITBOXES.temple (a shrine, three tiers and a base
+// down to the floor), big enough for a door taller than the monkey. What shows is only the
+// top of a temple far bigger than the gap: its lower part is buried in the jungle, lost
+// in a green haze and overgrown with ferns and vines, so it reads as something huge
+// rising out of the undergrowth. A Mayan-style temple in one of four looks, `o.variant`;
+// the shape and hitbox are the same for all, and the looks differ in stone and detail:
+//   0  limestone, a stepped-fret frieze round the shrine
+//   1  sandstone, with a roof comb over the shrine
+//   2  mossy grey-green stone, serpent heads on the stairs, moss and ferns
+//   3  dark basalt, gold inlay and two braziers whose flames flicker
+// A staircase climbs the middle of the front, from the jungle to the shrine's door.
+const TEMPLE_STYLES = [
+  { stone: 0xd8ceb0, light: 0xefe8d2, dark: 0xa89d7d, deep: 0x4a4332 },
+  { stone: 0xc78a55, light: 0xe2ab78, dark: 0x9a6334, deep: 0x4a2c18 },
+  { stone: 0x8c9f89, light: 0xaabda6, dark: 0x667a64, deep: 0x2f3a31 },
+  { stone: 0x676a77, light: 0x888b99, dark: 0x484a56, deep: 0x1d1e25 },
+];
+const GOLD = 0xdcab3e;
+const MOSS = 0x4f8a3a;
+const MOSS_LIGHT = 0x73ad4c;
+const FLAME = 0xff9a2e;
+const FLAME_CORE = 0xffe27a;
+const HAZE = 0x21472f;
+
+function drawTemple(g, o, rand, hangs, view) {
+  const style = TEMPLE_STYLES[o.variant ?? 0];
+  const [shrine, tierA, tierB, tierC, base] = OBSTACLE_HITBOXES.temple;
+  const floor = (FLOOR_Y + 20 - o.y) / o.scale;
+
+  // The tiers, from the base up: stone with a lit top edge, a shadow under it and courses
+  // of blocks (joints staggered course by course).
+  for (const r of [base, tierC, tierB, tierA]) {
+    const bottom = r === base ? floor : r.dy + r.h;
+    g.rect(r.dx, r.dy, r.w, bottom - r.dy).fill(style.stone);
+    g.rect(r.dx, r.dy, r.w, 6).fill(style.light);
+    g.rect(r.dx, r.dy + 6, r.w, 4).fill({ color: style.dark, alpha: 0.5 });
+    const course = 23;
+    for (let y = r.dy + course, row = 0; y < bottom; y += course, row++) {
+      g.moveTo(r.dx, y).lineTo(r.dx + r.w, y).stroke({ width: 1.2, color: style.dark, alpha: 0.45 });
+      for (let x = r.dx + (row % 2 ? 17 : 0) + 34; x < r.dx + r.w; x += 34) {
+        g.moveTo(x, y - course).lineTo(x, y).stroke({ width: 1.2, color: style.dark, alpha: 0.3 });
+      }
+    }
+  }
+  // The base is a platform of mouldings and recessed panels, a row each side of the stairs.
+  const half = -base.dx;
+  for (let y = base.dy + 40; y < floor - 20; y += 92) {
+    g.rect(base.dx, y, base.w, 7).fill(style.light).rect(base.dx, y + 7, base.w, 4).fill({ color: style.dark, alpha: 0.6 });
+    for (const side of [-1, 1]) {
+      const x = side < 0 ? base.dx + 18 : 44;
+      const w = half - 18 - 44;
+      g.rect(x, y + 26, w, 52).fill({ color: style.dark, alpha: 0.28 });
+      g.rect(x, y + 26, w, 3).fill({ color: style.dark, alpha: 0.5 }).rect(x, y + 75, w, 3).fill({ color: style.light, alpha: 0.35 });
+    }
+  }
+  // The staircase up the middle, with a low wall each side: wide enough for the monkey, its
+  // steps about a quarter of its height.
+  const stairs = { x: -30, y: tierA.dy, w: 60 };
+  g.rect(stairs.x - 8, stairs.y, 8, floor - stairs.y).fill(style.dark);
+  g.rect(stairs.x + stairs.w, stairs.y, 8, floor - stairs.y).fill(style.dark);
+  g.rect(stairs.x, stairs.y, stairs.w, floor - stairs.y).fill(style.dark);
+  for (let y = stairs.y; y < floor; y += 12) g.rect(stairs.x, y, stairs.w, 7).fill(style.light);
+
+  // The shrine: the walls, a corbelled doorway taller than the monkey and a dark roof slab.
+  g.rect(shrine.dx, shrine.dy, shrine.w, shrine.h).fill(style.stone);
+  g.rect(shrine.dx - 4, shrine.dy, shrine.w + 8, 9).fill(style.dark);
+  g.rect(shrine.dx - 4, shrine.dy, shrine.w + 8, 3).fill(style.light);
+  const comb = o.variant === 1;
+  const doorTop = comb ? 26 : 18;
+  g.poly([-22, shrine.h, -22, doorTop + 10, -17, doorTop + 10, -17, doorTop + 5, -11, doorTop + 5, -11, doorTop, 11, doorTop, 11, doorTop + 5, 17, doorTop + 5, 17, doorTop + 10, 22, doorTop + 10, 22, shrine.h]).fill(style.deep);
+  g.rect(-26, doorTop - 4, 52, 4).fill(style.light);
+  g.rect(shrine.dx, shrine.dy + shrine.h - 5, shrine.w, 5).fill(style.dark);
+
+  let animate = null;
+  if (o.variant === 0) {
+    // A stepped fret, a row of little squares, across the top of the shrine.
+    for (let x = shrine.dx + 7; x < shrine.dx + shrine.w - 9; x += 14) g.rect(x, 12, 8, 6).fill(style.dark).rect(x + 2, 14, 4, 2).fill(style.stone);
+  } else if (comb) {
+    // A tall roof comb: a wall over the shrine, with three square windows.
+    g.rect(-32, shrine.dy, 64, 18).fill(style.dark);
+    g.rect(-32, shrine.dy, 64, 4).fill(style.light);
+    for (const x of [-22, -6, 10]) g.rect(x, 7, 12, 9).fill(style.deep);
+  } else if (o.variant === 2) {
+    // Serpent heads on the stair walls, looking out, and moss and ferns on the tiers.
+    for (const side of [-1, 1]) {
+      const x = side * (stairs.w / 2 + 4);
+      g.ellipse(x, tierA.dy - 2, 11, 8.5).fill(style.stone).stroke({ width: 1.5, color: style.dark });
+      g.circle(x + side * 3, tierA.dy - 4.5, 2.4).fill(0xffe27a).circle(x + side * 3, tierA.dy - 4.5, 1).fill(style.deep);
+      g.poly([x + side * 9, tierA.dy + 1, x + side * 15, tierA.dy + 6, x + side * 7, tierA.dy + 5]).fill(0xf1ead8);
+    }
+    for (const r of [tierA, tierB, tierC]) {
+      g.poly(leafPoints(r.dx + 10, r.dy + 5, -1.1, 22, 7)).fill(MOSS).poly(leafPoints(r.dx + r.w - 10, r.dy + 5, -2.0, 22, 7)).fill(MOSS_LIGHT);
+    }
+  } else {
+    // Gold inlay: a band across the middle tier and a frame round the doorway, and a
+    // brazier on each end of the first tier, its flame flickering.
+    g.rect(tierB.dx, tierB.dy + 16, tierB.w, 6).fill(GOLD);
+    for (let x = tierB.dx + 10; x < tierB.dx + tierB.w - 10; x += 22) g.rect(x, tierB.dy + 26, 10, 5).fill(GOLD);
+    g.rect(-26, doorTop - 4, 52, 3).fill(GOLD).rect(-24, doorTop - 1, 3, shrine.h - doorTop - 1).fill(GOLD).rect(21, doorTop - 1, 3, shrine.h - doorTop - 1).fill(GOLD);
+    const spots = [-66, 66];
+    for (const x of spots) {
+      g.poly([x - 11, tierA.dy, x - 7, tierA.dy - 12, x + 7, tierA.dy - 12, x + 11, tierA.dy]).fill(style.deep).rect(x - 13, tierA.dy - 16, 26, 5).fill(GOLD);
+    }
+    const flames = new Graphics();
+    view.addChild(flames);
+    const phase = rand() * 6.3;
+    animate = (t) => {
+      flames.clear();
+      spots.forEach((x, i) => {
+        const k = 0.5 + 0.5 * Math.sin(t * 9 + phase + i * 2.1);
+        const sway = 3 * Math.sin(t * 6 + phase + i);
+        const top = tierA.dy - 16 - 20 - 9 * k;
+        flames.poly([x - 8, tierA.dy - 16, x - 5 + sway * 0.3, top + 13, x + sway, top, x + 5 + sway * 0.3, top + 13, x + 8, tierA.dy - 16]).fill(FLAME);
+        flames.poly([x - 4, tierA.dy - 16, x + sway * 0.5, top + 12, x + 4, tierA.dy - 16]).fill(FLAME_CORE);
+      });
+    };
+  }
+
+  // Overgrowth, on every look: moss along the tiers, vines hanging from their edges, ferns
+  // on the corners.
+  for (const r of [tierA, tierB, tierC]) {
+    for (let i = 0; i < 3; i++) {
+      const x = r.dx + 14 + rand() * (r.w - 28);
+      if (Math.abs(x) < stairs.w / 2 + 12) continue;
+      g.ellipse(x, r.dy + 5, 10 + rand() * 12, 4.5).fill({ color: i % 2 ? MOSS : MOSS_LIGHT, alpha: o.variant === 2 ? 1 : 0.8 });
+      if (rand() < 0.7) g.moveTo(x, r.dy + 8).quadraticCurveTo(x + (rand() - 0.5) * 8, r.dy + 22, x + (rand() - 0.5) * 6, r.dy + 28 + rand() * 14).stroke({ width: 2, color: MOSS });
+    }
+    g.poly(leafPoints(r.dx + 4, r.dy + 6, -0.9, 26, 8)).fill(LEAF_DARK).poly(leafPoints(r.dx + r.w - 4, r.dy + 6, -2.2, 26, 8)).fill(LEAF);
+  }
+
+  // The rest is buried: a haze rising from the ground, thickest at the bottom, and a thick
+  // fringe of ferns and leaves across the foot of the temple, wider than the temple itself,
+  // as if it carried on down into the jungle.
+  const hazeTop = floor - 250;
+  for (let i = 0; i < 10; i++) {
+    const y = hazeTop + (i * (floor + 30 - hazeTop)) / 10;
+    g.rect(-330, y, 660, (floor + 30 - hazeTop) / 10 + 1).fill({ color: HAZE, alpha: 0.06 + 0.07 * i });
+  }
+  for (let x = -300; x <= 300; x += 15 + rand() * 9) {
+    const length = 45 + rand() * 40;
+    for (const a of [-Math.PI / 2 - 0.45 - rand() * 0.3, -Math.PI / 2 + 0.45 + rand() * 0.3]) {
+      g.poly(leafPoints(x, floor + 14, a, length, 11 + rand() * 6)).fill(rand() < 0.5 ? LEAF_DARK : BUSH);
+    }
+    g.poly(leafPoints(x + 6, floor + 14, -Math.PI / 2 + (rand() - 0.5) * 0.5, length * 0.8, 10)).fill(rand() < 0.5 ? LEAF : BUSH_LIGHT);
+  }
+  return animate;
+}
+
+const DRAW = { branch: drawBranch, thornBush: drawThornBush, rock: drawRock, beehive: drawBeehive, temple: drawTemple };
 
 // Moving obstacles: a body that follows the obstacle, with parts animated from its
 // time, plus scenery that stays put (the snake's vine) or stretches (the spider's

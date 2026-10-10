@@ -95,6 +95,21 @@ export const OBSTACLE_HITBOXES = {
   // The bat takes the bird's place at night: the same hitbox, so the same patrols.
   bat: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
   blueBird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
+  // A stepped pyramid with a shrine on top, drawn from the top centre of the shrine
+  // down: the shrine, three tiers each wider than the last, and a base tall enough to
+  // reach the floor whatever the height (the obstacle is picked high enough in the lower
+  // region that a flight passes over it, not under it). It is big: a door taller than the
+  // monkey, a staircase wider than it. What shows is the top of a temple far bigger than
+  // the gap, the rest lost in the undergrowth (see drawTemple). The shrine's width at the
+  // top is what limits how high it can stand: the base can be as wide as it likes, below
+  // where the swings reach. Every variant has this hitbox.
+  temple: [
+    { kind: 'rect', dx: -50, dy: 0, w: 100, h: 64 },
+    { kind: 'rect', dx: -90, dy: 64, w: 180, h: 46 },
+    { kind: 'rect', dx: -136, dy: 110, w: 272, h: 46 },
+    { kind: 'rect', dx: -184, dy: 156, w: 368, h: 46 },
+    { kind: 'rect', dx: -236, dy: 202, w: 472, h: 420 },
+  ],
   // A skep-shaped hive: three stacked circles, about as wide as a thorn bush and a
   // little taller than a rock.
   beehive: [
@@ -122,6 +137,13 @@ export const SNAKE_TRAVEL_RANGE = [90, 160];
 // widest that stay clear of the swings.
 export const BIRD_Y_RANGE = [330, 390];
 export const BIRD_BOB = 8;
+
+// A Mayan-style temple: rare, a static obstacle in the lower region. Each day/night cycle
+// (the five stages from day to dawn, see stages.js) has at most one, at a random gap in it
+// but not among the first TEMPLE_MIN_GAP, in one of TEMPLE_VARIANTS looks (the hitbox is
+// the same for all).
+export const TEMPLE_MIN_GAP = 6;
+export const TEMPLE_VARIANTS = 4;
 
 // The share of the static gaps that get a beehive; the other three static types split
 // the rest equally. A hive is a bigger thing to meet than a rock.

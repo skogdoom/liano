@@ -9,6 +9,7 @@ export const ObstacleType = Object.freeze({
   THORN_BUSH: 'thornBush',
   ROCK: 'rock',
   BEEHIVE: 'beehive',
+  TEMPLE: 'temple',
   SPIDER: 'spider',
   SNAKE: 'snake',
   BIRD: 'bird',
@@ -16,7 +17,15 @@ export const ObstacleType = Object.freeze({
   BLUE_BIRD: 'blueBird',
 });
 
-export const STATIC_TYPES = [ObstacleType.BRANCH, ObstacleType.THORN_BUSH, ObstacleType.ROCK, ObstacleType.BEEHIVE];
+// Every static type. (The generator picks among all but the temple, which has its own
+// rule: see templeGapFor in generator.js.)
+export const STATIC_TYPES = [
+  ObstacleType.BRANCH,
+  ObstacleType.THORN_BUSH,
+  ObstacleType.ROCK,
+  ObstacleType.BEEHIVE,
+  ObstacleType.TEMPLE,
+];
 // Every moving type; which of them a gap gets depends on its time of day (see
 // movingTypesFor in generator.js).
 export const MOVING_TYPES = [
@@ -81,9 +90,10 @@ export function scaledHitbox(type, scale) {
 // horizontally with a bob.
 // The world sets the time every step (setTime); the solver asks positionAt(t).
 //
-// A branch may carry an `decoration` (a BranchDecoration, or null): only the view uses it.
+// A branch may carry a `decoration` (a BranchDecoration, or null), and a temple has a
+// `variant` (0 to TEMPLE_VARIANTS - 1): only the view uses them.
 export class Obstacle {
-  constructor(gap, type, x, y, motion = null, scale = 1, decoration = null) {
+  constructor(gap, type, x, y, motion = null, scale = 1, decoration = null, variant = null) {
     this.gap = gap;
     this.type = type;
     this.baseX = x;
@@ -94,6 +104,7 @@ export class Obstacle {
     this.time = 0;
     this.scale = scale;
     this.decoration = decoration;
+    this.variant = variant;
     this.hitbox = scaledHitbox(type, scale);
     if (motion) this.setTime(0);
   }
@@ -108,11 +119,12 @@ export class Obstacle {
       motion: this.motion,
       scale: this.scale,
       decoration: this.decoration,
+      variant: this.variant,
     };
   }
 
   static fromData(d) {
-    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale, d.decoration ?? null);
+    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale, d.decoration ?? null, d.variant ?? null);
   }
 
   // The same obstacle moved to gap `gap` (the solver works in gap 0).
@@ -125,6 +137,7 @@ export class Obstacle {
       this.motion,
       this.scale,
       this.decoration,
+      this.variant,
     );
   }
 

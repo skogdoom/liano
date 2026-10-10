@@ -21,6 +21,8 @@ import {
   BRANCH_DECORATION_CHANCE_NIGHT,
   NIGHT_DECORATION_SHARE,
   BEEHIVE_SHARE,
+  TEMPLE_MIN_GAP,
+  TEMPLE_VARIANTS,
   ENTRY_RADII,
 } from '../config.js';
 import { Banana } from './banana.js';
@@ -35,7 +37,7 @@ import {
   windowSteps,
 } from './feasibility.js';
 import { mixSeed, mulberry32 } from './rng.js';
-import { movingShareFor, stageFor, timeOfDayFor, TimeOfDay } from './stages.js';
+import { dayCycleFor, dayCycleRange, movingShareFor, stageFor, timeOfDayFor, TimeOfDay } from './stages.js';
 import { isPassable } from './windowTable.js';
 
 // Gaps on both sides of the start liana stay empty: the first forward gap lets the
@@ -122,10 +124,28 @@ function staticObstacle(seed, gap, type, y, scale) {
 
 // The type of a static gap: a beehive for BEEHIVE_SHARE of them, else one of the other
 // types, equally likely. Draws from `rand` in a fixed order (the share first).
-const PLAIN_STATIC_TYPES = STATIC_TYPES.filter((t) => t !== ObstacleType.BEEHIVE);
+const PLAIN_STATIC_TYPES = STATIC_TYPES.filter((t) => t !== ObstacleType.BEEHIVE && t !== ObstacleType.TEMPLE);
 export function staticTypeFor(rand) {
   if (rand() < BEEHIVE_SHARE) return ObstacleType.BEEHIVE;
   return PLAIN_STATIC_TYPES[Math.floor(rand() * PLAIN_STATIC_TYPES.length)];
+}
+
+// The temple: each day/night cycle has at most one, at a random gap in it (from
+// TEMPLE_MIN_GAP on), the same for a seed whenever it is asked. Its height and look are
+// drawn from their own random stream.
+const TEMPLE_SALT = 0x7e3b;
+
+export function templeGapFor(seed, cycle) {
+  const [first, last] = dayCycleRange(cycle);
+  const from = Math.max(first, TEMPLE_MIN_GAP);
+  return from + Math.floor(mulberry32(mixSeed(seed ^ TEMPLE_SALT, cycle))() * (last - from + 1));
+}
+
+function templeObstacle(seed, gap, rules) {
+  const rand = mulberry32(mixSeed(seed ^ TEMPLE_SALT ^ 0x51, gap));
+  const variant = Math.floor(rand() * TEMPLE_VARIANTS);
+  const y = pickHeight(ObstacleType.TEMPLE, rand, rules);
+  return new Obstacle(gap, ObstacleType.TEMPLE, (gap + 0.5) * LIANA_SPACING, y, null, rules.scale, null, variant);
 }
 
 const MOVING_TRIES = 20;
@@ -217,6 +237,7 @@ export function movingCandidate(type, gap, rand, scale = 1) {
 export function createObstacle(seed, gap) {
   if (EMPTY_GAPS.has(gap)) return null;
   const rules = rulesFor(gap);
+  if (gap === templeGapFor(seed, dayCycleFor(gap))) return templeObstacle(seed, gap, rules);
   const movingShare = movingShareFor(gap);
   if (movingShare > 0) {
     const rand = mulberry32(mixSeed(seed ^ MOVING_SALT, gap));

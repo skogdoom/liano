@@ -37,6 +37,22 @@ export function timeOfDayFor(gap) {
   return (stageFor(gap).number - 1) % TIMES_OF_DAY;
 }
 
+// The first obstacle (gap) of stage `number`.
+function firstGapOfStage(number) {
+  return number <= STAGES.length ? STAGES[number - 1].first : STAGES.at(-1).first + (number - STAGES.length) * STAGE_LENGTH_AFTER;
+}
+
+// A day/night cycle is the stages from day to dawn (TIMES_OF_DAY of them), counted from
+// 0: the first has the obstacles 1 to 90, the second 91 to 190, and so on.
+export function dayCycleFor(gap) {
+  return Math.floor((stageFor(gap).number - 1) / TIMES_OF_DAY);
+}
+
+// The first and last obstacle (gap) of cycle `cycle`.
+export function dayCycleRange(cycle) {
+  return [firstGapOfStage(cycle * TIMES_OF_DAY + 1), firstGapOfStage((cycle + 1) * TIMES_OF_DAY + 1) - 1];
+}
+
 // The share of moving obstacles for the obstacle in `gap`: none before MOVING_FROM,
 // then the stage's share.
 export function movingShareFor(gap) {

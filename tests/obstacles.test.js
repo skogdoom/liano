@@ -13,6 +13,7 @@ import {
   WORLD_HEIGHT,
   DEATH_BOUNCE,
   DEATH_POP,
+  OBSTACLE_HITBOXES,
 } from '../src/config.js';
 import { FORWARD_RELEASE_STEP, emptyWorld, worldWith, stepN, releaseAfter, flyUntilGrab, throwMonkey } from './helpers.js';
 
@@ -77,9 +78,11 @@ describe('a branch decoration', () => {
   });
 });
 
+const hitsAt = (o, x, y) => o.hitsCircle(x, y, MONKEY_RADIUS);
+
 describe('obstacle hitboxes', () => {
   it('has a hitbox for every type', () => {
-    expect([...STATIC_TYPES].sort()).toEqual(['beehive', 'branch', 'rock', 'thornBush']);
+    expect([...STATIC_TYPES].sort()).toEqual(['beehive', 'branch', 'rock', 'temple', 'thornBush']);
     for (const type of STATIC_TYPES) expect(new Obstacle(0, type, 0, 0).hitbox.length).toBeGreaterThan(0);
   });
 
@@ -96,6 +99,36 @@ describe('obstacle hitboxes', () => {
     expect(hits(0, 22 + 18 + MONKEY_RADIUS + 0.1)).toBe(false);
     // A gap between the top circle and the middle one's shoulder at the far side.
     expect(hits(40 + MONKEY_RADIUS, -30)).toBe(false);
+  });
+
+  it('temple is a stepped pyramid: a shrine and tiers, each wider than the one above, down to the floor', () => {
+    const [shrine, tierA, tierB, tierC, base] = OBSTACLE_HITBOXES.temple;
+    // Each tier is wider than the one above, centred, and they stack without gaps.
+    const tiers = [shrine, tierA, tierB, tierC, base];
+    tiers.forEach((t, i) => {
+      expect(t.dx + t.w / 2).toBe(0);
+      if (i === 0) return;
+      expect(t.w).toBeGreaterThan(tiers[i - 1].w);
+      expect(t.dy).toBe(tiers[i - 1].dy + tiers[i - 1].h);
+    });
+    // Big: a door and a staircase bigger than the monkey fit in the shrine.
+    expect(shrine.w).toBeGreaterThan(2 * 2 * MONKEY_RADIUS);
+    expect(shrine.h).toBeGreaterThan(2 * MONKEY_RADIUS);
+    const top = 300;
+    const temple = new Obstacle(0, ObstacleType.TEMPLE, 0, top);
+    const hits = (x, y) => temple.hitsCircle(x, y, MONKEY_RADIUS);
+    const half = shrine.w / 2;
+    // Over the shrine, beside it above the first tier, and down the base.
+    expect(hits(0, top - MONKEY_RADIUS + 1)).toBe(true);
+    expect(hits(0, top - MONKEY_RADIUS - 0.1)).toBe(false);
+    expect(hits(half + MONKEY_RADIUS - 1, top + 5)).toBe(true);
+    expect(hits(half + MONKEY_RADIUS + 0.1, top + 5)).toBe(false);
+    const baseHalf = base.w / 2;
+    expect(hits(baseHalf + MONKEY_RADIUS - 1, top + base.dy + 200)).toBe(true);
+    expect(hits(baseHalf + MONKEY_RADIUS + 0.1, top + base.dy + 200)).toBe(false);
+    // It reaches the bottom of the world from the lowest height a temple takes.
+    const lowest = new Obstacle(0, ObstacleType.TEMPLE, 0, 375, null, 1);
+    expect(hitsAt(lowest, 0, 720 + MONKEY_RADIUS - 1)).toBe(true);
   });
 
   it('rock is a circle', () => {

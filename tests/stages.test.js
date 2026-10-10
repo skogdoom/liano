@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { stageFor, movingShareFor, timeOfDayFor, TimeOfDay } from '../src/sim/stages.js';
+import { stageFor, movingShareFor, timeOfDayFor, TimeOfDay, dayCycleFor, dayCycleRange } from '../src/sim/stages.js';
 import { World } from '../src/sim/world.js';
 import { Game } from '../src/sim/game.js';
 import { MonkeyState } from '../src/sim/monkey.js';
@@ -47,6 +47,22 @@ describe('stages', () => {
       TimeOfDay.DAWN,
     ]);
     expect(timeOfDayFor(-3)).toBe(TimeOfDay.DAY);
+  });
+
+  it('splits the obstacles into day/night cycles, five stages each', () => {
+    expect(dayCycleRange(0)).toEqual([1, 90]);
+    expect(dayCycleRange(1)).toEqual([91, 190]);
+    expect(dayCycleRange(2)).toEqual([191, 290]);
+    let next = 1;
+    for (let cycle = 0; cycle < 30; cycle++) {
+      const [first, last] = dayCycleRange(cycle);
+      expect(first).toBe(next);
+      for (const gap of [first, Math.floor((first + last) / 2), last]) expect(dayCycleFor(gap)).toBe(cycle);
+      // A cycle runs from a day stage to a dawn stage.
+      expect(timeOfDayFor(first)).toBe(TimeOfDay.DAY);
+      expect(timeOfDayFor(last)).toBe(TimeOfDay.DAWN);
+      next = last + 1;
+    }
   });
 
   it('keeps the first five obstacles static', () => {
