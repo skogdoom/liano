@@ -339,11 +339,74 @@ function drawNest(rand) {
   return { part: nest, animate, state };
 }
 
+const PANTHER = 0x1d1d27;
+const PANTHER_SHEEN = 0x3a3a4d;
+const PANTHER_EYE = 0xd9e34a;
+const PANTHER_NOSE = 0x5a4a52;
+
+// A black panther lying along the top of the branch with its head up, watching: its
+// flanks rise and fall as it breathes, its tail hangs down off the end and swishes, its
+// ears twitch now and then and it blinks. Faces left or right at random.
+function drawPanther(rand) {
+  const panther = new Container();
+  panther.scale.x = rand() < 0.5 ? 1 : -1;
+  const cx = -28 + rand() * 24;
+  panther.position.set(cx, branchTop(cx));
+  const phase = rand() * 6.3;
+
+  const tail = new Graphics();
+  const body = new Container();
+  const g = new Graphics();
+  // Haunch, a long heavy body and the front legs stretched out ahead, a paw on each.
+  g.ellipse(-22, -8.5, 14, 10).fill(PANTHER);
+  g.ellipse(-3, -10.5, 27, 10.5).fill(PANTHER);
+  g.ellipse(23, -3.5, 12, 4).fill(PANTHER).ellipse(21, -6.8, 11, 3.6).fill(PANTHER_SHEEN);
+  g.ellipse(-13, -2.6, 9, 3.4).fill(PANTHER);
+  g.ellipse(-3, -17.5, 24, 2.2).fill({ color: PANTHER_SHEEN, alpha: 0.9 });
+  // The head, raised at the front: small round ears, a broad flat skull and a short muzzle.
+  g.circle(24.5, -23, 3.3).fill(PANTHER).circle(35.5, -22, 3.3).fill(PANTHER);
+  g.ellipse(31, -16.5, 10.5, 7.4).fill(PANTHER);
+  g.ellipse(39.5, -13.5, 5.6, 3.7).fill(PANTHER_SHEEN);
+  g.ellipse(43, -14.6, 1.8, 1.3).fill(PANTHER_NOSE);
+  for (const dy of [-1.5, 0.8]) g.moveTo(40.5, -12 + dy).lineTo(48, -13 + dy * 2.4).stroke({ width: 0.7, color: 0xc9c4d4, alpha: 0.7 });
+  const eye = new Graphics();
+  const ear = new Graphics();
+  ear.circle(0, 0, 2).fill(PANTHER_SHEEN);
+  ear.position.set(35.5, -22);
+  body.addChild(g, ear, eye);
+  panther.addChild(tail, body);
+
+  const animate = (t) => {
+    // Breathing: the body swells and settles.
+    body.scale.y = 1 + 0.03 * Math.sin(t * 1.7 + phase);
+    // The tail hangs from the rump over the end of the limb and swishes at its tip.
+    const swish = 6 * Math.sin(t * 1.9 + phase);
+    tail.clear();
+    tail
+      .moveTo(-32, -9)
+      .bezierCurveTo(-44, -8, -48 + swish * 0.3, 4, -44 + swish, 14)
+      .stroke({ width: 5, color: PANTHER, cap: 'round' });
+    tail.moveTo(-44 + swish, 14).quadraticCurveTo(-42 + swish * 1.3, 19.5, -36 + swish * 1.4, 18.5).stroke({ width: 4.4, color: PANTHER, cap: 'round' });
+    // Eyes: slit pupils in yellow, shut for a moment every few seconds.
+    const blink = (t * 0.28 + phase) % 1 < 0.035;
+    eye.clear();
+    if (blink) eye.moveTo(26.5, -17.6).lineTo(31, -18).moveTo(33, -17.8).lineTo(37.5, -17.2).stroke({ width: 1, color: PANTHER_SHEEN });
+    else {
+      eye.ellipse(28.8, -18, 2.4, 1.9).fill(PANTHER_EYE).ellipse(35.4, -17.6, 2.4, 1.9).fill(PANTHER_EYE);
+      eye.ellipse(28.8, -18, 0.6, 1.6).fill(PANTHER).ellipse(35.4, -17.6, 0.6, 1.6).fill(PANTHER);
+    }
+    // One ear flicks now and then.
+    ear.scale.y = 1 - 0.55 * Math.max(0, Math.sin(t * 1.3 + phase * 2)) ** 14;
+  };
+  return { part: panther, animate };
+}
+
 export const DECORATIONS = {
   bird: drawPerchedBird,
   snake: drawPerchedSnake,
   monkey: drawHangingMonkey,
   nest: drawNest,
+  panther: drawPanther,
 };
 
 // Adds the decoration the branch carries to `view`; returns its animation.
