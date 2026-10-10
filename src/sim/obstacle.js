@@ -30,8 +30,9 @@ export const MOVING_TYPES = [
 // The animals a branch can carry, for show (a decoration: not part of the hitbox).
 export const BranchAnimal = Object.freeze({
   BIRD: 'bird',
+  SNAKE: 'snake',
 });
-export const BRANCH_ANIMALS = [BranchAnimal.BIRD];
+export const BRANCH_ANIMALS = [BranchAnimal.BIRD, BranchAnimal.SNAKE];
 
 const scaledHitboxes = new Map();
 

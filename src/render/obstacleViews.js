@@ -122,7 +122,62 @@ function drawPerchedBird(rand) {
   return { part: bird, animate };
 }
 
-const ANIMALS = { bird: drawPerchedBird };
+const SMOOTH = (a, b, x) => {
+  const u = Math.min(Math.max((x - a) / (b - a), 0), 1);
+  return u * u * (3 - 2 * u);
+};
+
+// A snake lying along the top of the branch in lazy S-curves, its head reared up: the
+// neck sways, and now and then the tongue flicks. Faces left or right at random.
+function drawPerchedSnake(rand) {
+  const snake = new Container();
+  const dir = rand() < 0.5 ? 1 : -1;
+  snake.scale.x = dir;
+  const cx = -40 + rand() * 40;
+  snake.position.set(cx, branchTop(cx));
+  const phase = rand() * 6.3;
+  const g = new Graphics();
+  snake.addChild(g);
+  const SEGMENTS = 26;
+  const animate = (t) => {
+    const sway = Math.sin(t * 1.5 + phase);
+    const points = [];
+    for (let i = 0; i <= SEGMENTS; i++) {
+      const u = i / SEGMENTS;
+      const rise = 25 * SMOOTH(0.55, 1, u) ** 1.3;
+      const x = -28 + 50 * u + 5 * sway * SMOOTH(0.6, 1, u) ** 2;
+      const y = -4 - 4.5 * Math.sin(u * 11) * (1 - u) * (1 - SMOOTH(0.6, 0.9, u)) - rise;
+      points.push([x, y]);
+    }
+    g.clear();
+    for (let i = 0; i < SEGMENTS; i++) {
+      const u = i / SEGMENTS;
+      const width = 3 + 5 * Math.min(1, u * 2.2) - 1.5 * SMOOTH(0.8, 1, u);
+      const [a, b] = [points[i], points[i + 1]];
+      g.moveTo(a[0], a[1]).lineTo(b[0], b[1]).stroke({ width, color: Math.floor(i / 3) % 2 ? SNAKE_DARK : SNAKE, cap: 'round' });
+    }
+    const [hx, hy] = points[SEGMENTS];
+    const [px, py] = points[SEGMENTS - 3];
+    const angle = Math.atan2(hy - py, hx - px);
+    g.ellipse(hx, hy, 7, 4.8).fill(SNAKE);
+    // Eye and, flicking, the tongue, in the head's own frame.
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const at = (x, y) => [hx + x * cos - y * sin, hy + x * sin + y * cos];
+    const [ex, ey] = at(2, -1.8);
+    g.circle(ex, ey, 1.4).fill(PUPIL);
+    if ((t * 0.9 + phase) % 1 < 0.14) {
+      const [x0, y0] = at(7, 0);
+      const [x1, y1] = at(13, 0);
+      const [x2, y2] = at(16, -2.5);
+      const [x3, y3] = at(16, 2.5);
+      g.moveTo(x0, y0).lineTo(x1, y1).lineTo(x2, y2).moveTo(x1, y1).lineTo(x3, y3).stroke({ width: 1.2, color: TONGUE });
+    }
+  };
+  return { part: snake, animate };
+}
+
+export const ANIMALS = { bird: drawPerchedBird, snake: drawPerchedSnake };
 
 // Adds the animal the branch carries to `view`; returns its animation.
 function addAnimal(view, o) {
