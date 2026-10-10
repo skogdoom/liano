@@ -260,8 +260,8 @@ function syncPanes() {
     const players = game.worlds.length > 1 ? [i] : world.monkeys.map((_, m) => m);
     panes[i].setWorld(world, players, game.sharedView?.camera);
   });
-  // The debug overlay draws over player 1's world.
-  panes[0].overlay.addChild(debugOverlay.worldView);
+  // The debug overlay draws over each pane's world.
+  debugOverlay.attach(panes);
   paneWorlds = [...game.worlds];
   if (relayout) layout();
 }

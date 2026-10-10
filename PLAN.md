@@ -27,7 +27,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 - **Other keys:**
   - `M` or the on-screen speaker mutes the sound.
   - `F` or the on-screen button toggles full screen.
-  - `D` toggles the debug overlay (frame rate and heap on its first line).
+  - `D` toggles the debug overlay (frame rate and heap on its first line). In split screen each pane gets its own hitboxes, flight path and release window, and its player's numbers (`P1`, `P2`) at the top of the pane; the first pane's text sits below the shared lines (frame rate, state, score, slipping, sound). In shared screen it follows player 1's monkey.
   - `G` turns slipping off and on (see Trying without slipping).
   - `H` (for hearts) turns lives on and off for 1P, on the title screen only (see Lives and hearts).
   - `S` (for shadow) turns the shadow monkey on and off for 1P, on the title screen only (see Shadow monkey).
