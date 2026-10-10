@@ -123,9 +123,9 @@ export const SNAKE_TRAVEL_RANGE = [90, 160];
 export const BIRD_Y_RANGE = [330, 390];
 export const BIRD_BOB = 8;
 
-// Some branches (this share of them) carry an animal, for show: see BRANCH_ANIMALS in
-// obstacle.js. The animal is not part of the hitbox.
-export const BRANCH_ANIMAL_CHANCE = 0.2;
+// Some branches (this share of them) carry a decoration, for show: see BRANCH_DECORATIONS in
+// obstacle.js. The decoration is not part of the hitbox.
+export const BRANCH_DECORATION_CHANCE = 0.2;
 
 // Blue bird: flies up and down at the gap centre, in free air: in the high band (its
 // lowest point in BLUE_BIRD_HIGH, over a flight of BLUE_BIRD_HIGH_TRAVEL) or the low band

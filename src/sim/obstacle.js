@@ -27,13 +27,13 @@ export const MOVING_TYPES = [
   ObstacleType.BLUE_BIRD,
 ];
 
-// The animals a branch can carry, for show (a decoration: not part of the hitbox).
-export const BranchAnimal = Object.freeze({
+// The decorations a branch can carry, for show: animals now, and not part of the hitbox.
+export const BranchDecoration = Object.freeze({
   BIRD: 'bird',
   SNAKE: 'snake',
   MONKEY: 'monkey',
 });
-export const BRANCH_ANIMALS = [BranchAnimal.BIRD, BranchAnimal.SNAKE, BranchAnimal.MONKEY];
+export const BRANCH_DECORATIONS = [BranchDecoration.BIRD, BranchDecoration.SNAKE, BranchDecoration.MONKEY];
 
 const scaledHitboxes = new Map();
 
@@ -62,9 +62,9 @@ export function scaledHitbox(type, scale) {
 // horizontally with a bob.
 // The world sets the time every step (setTime); the solver asks positionAt(t).
 //
-// A branch may carry an `animal` (a BranchAnimal, or null): only the view uses it.
+// A branch may carry an `decoration` (a BranchDecoration, or null): only the view uses it.
 export class Obstacle {
-  constructor(gap, type, x, y, motion = null, scale = 1, animal = null) {
+  constructor(gap, type, x, y, motion = null, scale = 1, decoration = null) {
     this.gap = gap;
     this.type = type;
     this.baseX = x;
@@ -74,7 +74,7 @@ export class Obstacle {
     this.motion = motion;
     this.time = 0;
     this.scale = scale;
-    this.animal = animal;
+    this.decoration = decoration;
     this.hitbox = scaledHitbox(type, scale);
     if (motion) this.setTime(0);
   }
@@ -88,12 +88,12 @@ export class Obstacle {
       y: this.baseY,
       motion: this.motion,
       scale: this.scale,
-      animal: this.animal,
+      decoration: this.decoration,
     };
   }
 
   static fromData(d) {
-    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale, d.animal ?? null);
+    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale, d.decoration ?? null);
   }
 
   // The same obstacle moved to gap `gap` (the solver works in gap 0).
@@ -105,7 +105,7 @@ export class Obstacle {
       this.baseY,
       this.motion,
       this.scale,
-      this.animal,
+      this.decoration,
     );
   }
 

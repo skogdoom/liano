@@ -17,12 +17,12 @@ import {
   BLUE_BIRD_LOW_TRAVEL,
   BLUE_BIRD_BOB,
   BANANA_CHANCE,
-  BRANCH_ANIMAL_CHANCE,
+  BRANCH_DECORATION_CHANCE,
   ENTRY_RADII,
 } from '../config.js';
 import { Banana } from './banana.js';
 import { Liana } from './liana.js';
-import { BRANCH_ANIMALS, Obstacle, ObstacleType, STATIC_TYPES } from './obstacle.js';
+import { BRANCH_DECORATIONS, Obstacle, ObstacleType, STATIC_TYPES } from './obstacle.js';
 import {
   emptyGapFlights,
   flightHits,
@@ -97,20 +97,20 @@ export function pickHeight(type, rand, rules = STAGE_ONE) {
   return fallbackHeight(type, rules);
 }
 
-// Some branches carry an animal, for show. Whether one does, and which, depends only on
+// Some branches carry a decoration, for show. Whether one does, and which, depends only on
 // (seed, gap), with its own random stream: the obstacle is the same with or without it.
-const ANIMAL_SALT = 0xa91a;
+const DECORATION_SALT = 0xa91a;
 
-export function branchAnimalFor(seed, gap) {
-  const rand = mulberry32(mixSeed(seed ^ ANIMAL_SALT, gap));
-  if (rand() >= BRANCH_ANIMAL_CHANCE) return null;
-  return BRANCH_ANIMALS[Math.floor(rand() * BRANCH_ANIMALS.length)];
+export function branchDecorationFor(seed, gap) {
+  const rand = mulberry32(mixSeed(seed ^ DECORATION_SALT, gap));
+  if (rand() >= BRANCH_DECORATION_CHANCE) return null;
+  return BRANCH_DECORATIONS[Math.floor(rand() * BRANCH_DECORATIONS.length)];
 }
 
 // A static obstacle of `type` at height `y`, centred in gap `gap`.
 function staticObstacle(seed, gap, type, y, scale) {
-  const animal = type === ObstacleType.BRANCH ? branchAnimalFor(seed, gap) : null;
-  return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, y, null, scale, animal);
+  const decoration = type === ObstacleType.BRANCH ? branchDecorationFor(seed, gap) : null;
+  return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, y, null, scale, decoration);
 }
 
 const MOVING_TRIES = 20;

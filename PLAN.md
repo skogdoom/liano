@@ -78,7 +78,7 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 
 **Static:** branch, thorn bush, rock, beehive (all four equally likely). A random height in OBSTACLE_Y_RANGE, horizontally centred, rerolled until the gap is passable and clear of both neighbouring lianas' swept areas.
 
-**Branch animals.** About one branch in five (BRANCH_ANIMAL_CHANCE, 0.2) carries an animal: a bird, a snake or a hanging monkey, picked at random. It is scenery: the obstacle is the same branch with the same hitbox, so nothing about passability or difficulty changes, and a flight can pass through the animal unharmed. Whether a branch has one, and which, depends only on (seed, gap) with its own random stream, and rides along with the obstacle's data to the worker and back. A branch is about one gap in thirty, so an animal shows about once or twice in a run.
+**Branch decorations.** About one branch in five (BRANCH_DECORATION_CHANCE, 0.2) carries a decoration: a bird, a snake or a hanging monkey, picked at random. It is scenery: the obstacle is the same branch with the same hitbox, so nothing about passability or difficulty changes, and a flight can pass through the decoration unharmed. Whether a branch has one, and which, depends only on (seed, gap) with its own random stream, and rides along with the obstacle's data to the worker and back. A branch is about one gap in thirty, so a decoration shows about once or twice in a run.
 
 **Moving** (from obstacle MOVING_FROM, in each stage's share). Each has a deterministic position with period P (MOVING_PERIOD_RANGE), driven by world time (counted in whole sim steps) plus a seeded phase, so the solver matches the world exactly. It stays in its own gap and its whole path stays clear of both swings, so a hanging monkey is never hit:
 - **Spider:** drops and climbs on a thread from the canopy at the gap centre.
@@ -343,7 +343,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
   - Poses: hanging, airborne spread, dead tumble. A respawned monkey blinks while invulnerable.
 - **Lianas.** A green polyline with leaves (P2's in shared screen golden), which bends slightly while settling. The grip slide is visible, and the lower vine blinks yellow near the forced release.
 - **Static obstacles.**
-  - Branch: brown limb with a leaf tuft, and sometimes an animal (see Branch animals):
+  - Branch: brown limb with a leaf tuft, and sometimes a decoration (see Branch decorations):
     - Perched bird: a small brown sparrow with a cream belly, on top of the limb, facing left or right at random; every couple of seconds it dips its head to peck, and its tail flicks.
     - Snake: a green snake with darker bands lying along the top of the limb in lazy S-curves, its head reared up; the neck sways and now and then the tongue flicks.
     - Hanging monkey: a small grey monkey hanging from the underside of the limb by its hands, swaying like a pendulum, with its legs swinging, its tail curling out to one side and an occasional blink. It hangs below the limb, clear of the vines it hangs from.

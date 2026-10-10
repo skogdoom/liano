@@ -47,8 +47,8 @@ function trunk(g, o, x, topY, width) {
 }
 
 // Hitbox: rect 160 × 24 centred. A limb tapering from a cut trunk stub on the left,
-// with a leaf tuft near the tip, and the animal it carries, if any (see addAnimal).
-// Returns the animal's animation.
+// with a leaf tuft near the tip, and the decoration it carries, if any (see addDecoration).
+// Returns the decoration's animation.
 function drawBranch(g, o, rand, hangs, view) {
   const [box] = OBSTACLE_HITBOXES.branch;
   const left = box.dx;
@@ -73,10 +73,10 @@ function drawBranch(g, o, rand, hangs, view) {
     const a = -Math.PI / 2 + (i - 2) * 0.45;
     g.poly(leafPoints(right - 30 + i * 4, top + 4, a, 16, 8)).fill(i % 2 ? LEAF_DARK : LEAF);
   }
-  return o.animal ? addAnimal(view, o) : null;
+  return o.decoration ? addDecoration(view, o) : null;
 }
 
-// The animals on a branch are scenery: not part of the hitbox. Each is placed (and, where
+// The decorations on a branch (animals) are scenery: not part of the hitbox. Each is placed (and, where
 // it matters, turned) at random for its gap, away from the cut stub and the leaf tuft.
 const SPARROW = 0x9a6b3c;
 const SPARROW_DARK = 0x6e4623;
@@ -234,11 +234,11 @@ function drawHangingMonkey(rand) {
   return { part: monkey, animate };
 }
 
-export const ANIMALS = { bird: drawPerchedBird, snake: drawPerchedSnake, monkey: drawHangingMonkey };
+export const DECORATIONS = { bird: drawPerchedBird, snake: drawPerchedSnake, monkey: drawHangingMonkey };
 
-// Adds the animal the branch carries to `view`; returns its animation.
-function addAnimal(view, o) {
-  const { part, animate } = ANIMALS[o.animal](mulberry32(mixSeed(0xa11a, o.gap)));
+// Adds the decoration the branch carries to `view`; returns its animation.
+function addDecoration(view, o) {
+  const { part, animate } = DECORATIONS[o.decoration](mulberry32(mixSeed(0xa11a, o.gap)));
   view.addChild(part);
   return animate;
 }
