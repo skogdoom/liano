@@ -17,23 +17,42 @@ const COLORS = {
   banana: 0xffd23f,
 };
 
+const TEXT_STYLE = { fontFamily: 'monospace', fontSize: 16, fill: 0xffffff, lineHeight: 20 };
+const LINE_HEIGHT = 20;
+const TEXT_TOP = 96; // below the mute button
+const HEADER_LINES = 2;
+
 // Toggled with D. Draws hitboxes, the flight the monkey would take if released now,
 // and the valid release steps for the gap ahead of the current swing, from the grab
-// (or the run start) up to the forced release at the tip.
+// (or the run start) up to the forced release at the tip. In split screen each pane
+// gets its own, with its player's text at the top of the pane.
 export class DebugOverlay {
   constructor() {
-    this.worldView = new Graphics(); // add to the camera-scrolled layer
     this.screenView = new Container();
-    this.text = new Text({
-      text: '',
-      style: { fontFamily: 'monospace', fontSize: 16, fill: 0xffffff, lineHeight: 20 },
-    });
-    this.text.position.set(16, 96); // below the mute button
-    this.screenView.addChild(this.text);
+    this.views = []; // a WorldDebug per pane
+    this.panes = [];
+    this.header = new Text({ text: '', style: TEXT_STYLE }); // the lines every pane shares
+    this.header.position.set(16, TEXT_TOP);
+    this.screenView.addChild(this.header);
     this.visible = false;
     this.#applyVisibility();
-    this.cacheKey = null;
-    this.window = null;
+  }
+
+  // Draws over each of `panes` (the panes of the current worlds): in their camera-scrolled
+  // overlay layer, with the text in the corner of the pane.
+  attach(panes) {
+    while (this.views.length < panes.length) {
+      const view = new WorldDebug();
+      this.views.push(view);
+      this.screenView.addChild(view.text);
+    }
+    for (const view of this.views.splice(panes.length)) {
+      view.worldView.destroy();
+      view.text.destroy();
+    }
+    this.panes = panes;
+    panes.forEach((pane, i) => pane.overlay.addChild(this.views[i].worldView));
+    this.#applyVisibility();
   }
 
   toggle() {
@@ -44,7 +63,42 @@ export class DebugOverlay {
   // `fps` is an FpsMeter (the frame rate and times) and `sound` the SoundPlayer, for their lines.
   update(game, sound = null, fps = null) {
     if (!this.visible) return;
-    const { world } = game;
+    const heap = heapMB();
+    this.header.text = [
+      fps ? `${fps.describe()}${heap === null ? '' : `  heap ${heap.toFixed(0)} MB`}` : '',
+      `${game.state}  stage ${game.stage}  score ${game.score}  slipping ${game.slip ? 'on' : 'off'} (G)${sound ? `  sound ${sound.details}` : ''}`,
+    ].join('\n');
+    game.worlds.forEach((world, i) => {
+      const view = this.views[i];
+      if (!view) return;
+      const lines = view.update(world, game.worlds.length > 1 ? `P${i + 1}` : null);
+      view.text.text = lines.join('\n');
+      // The first pane's text goes below the header; the others' at the top of their pane.
+      const layout = this.panes[i]?.layout;
+      view.text.position.set(16, i === 0 ? TEXT_TOP + HEADER_LINES * LINE_HEIGHT : (layout?.y ?? 0) + 8);
+    });
+  }
+
+  #applyVisibility() {
+    this.header.visible = this.visible;
+    this.screenView.visible = this.visible;
+    for (const view of this.views) view.worldView.visible = this.visible;
+  }
+}
+
+// What the debug view draws for one world: its hitboxes and flight in `worldView`, its
+// numbers in `text`.
+class WorldDebug {
+  constructor() {
+    this.worldView = new Graphics(); // add to the camera-scrolled layer
+    this.text = new Text({ text: '', style: TEXT_STYLE });
+    this.cacheKey = null;
+    this.cacheWorld = null;
+    this.window = null;
+  }
+
+  // Draws `world`; returns the lines of text. `label` names the player in split screen.
+  update(world, label = null) {
     const { monkey } = world;
     const g = this.worldView.clear();
 
@@ -74,12 +128,7 @@ export class DebugOverlay {
 
     g.circle(monkey.x, monkey.y, MONKEY_RADIUS).stroke({ width: 2, color: COLORS.monkeyHitbox });
 
-    const heap = heapMB();
-    const lines = [
-      fps ? `${fps.describe()}${heap === null ? '' : `  heap ${heap.toFixed(0)} MB`}` : '',
-      `${game.state}  stage ${game.stage}  score ${game.score}  lianas ${world.lianas.size}  obstacles ${world.obstacles.size}`,
-      `slipping ${game.slip ? 'on' : 'off'} (G)${sound ? `  sound ${sound.details}` : ''}`,
-    ];
+    const lines = [`${label ? `${label}  ` : ''}lianas ${world.lianas.size}  obstacles ${world.obstacles.size}`];
 
     if (monkey.state === MonkeyState.HANGING) {
       const { liana } = monkey;
@@ -118,8 +167,7 @@ export class DebugOverlay {
       g.stroke({ width: 2, color: prediction.outcome === 'grab' ? COLORS.pathGrab : COLORS.pathMiss });
       lines.push(`${monkey.state === MonkeyState.HANGING ? 'release now' : 'flight'}: ${prediction.outcome}`);
     }
-
-    this.text.text = lines.join('\n');
+    return lines;
   }
 
   // Valid release steps for the actual entry, swing direction and phase, recomputed
@@ -144,10 +192,5 @@ export class DebugOverlay {
       this.cacheWorld = world;
     }
     return this.window;
-  }
-
-  #applyVisibility() {
-    this.worldView.visible = this.visible;
-    this.screenView.visible = this.visible;
   }
 }

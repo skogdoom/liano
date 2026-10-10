@@ -155,10 +155,11 @@ describe('obstacle generation', () => {
   it('uses all types, roughly evenly', () => {
     const counts = Object.fromEntries([...STATIC_TYPES, ...MOVING_TYPES].map((t) => [t, 0]));
     for (let gap = 1; gap <= 3000; gap++) counts[createObstacle(SEED, gap).type]++;
-    // Late stages are 90 % moving; beehives are rarer than the rest, and temples much rarer
-    // (one a day/night cycle: see below).
+    // Late stages are 80 % moving and half their static gaps aim for the hardest grade, which
+    // the branch (mostly an easy obstacle) seldom has; beehives are rarer than the rest, and
+    // temples much rarer (one a day/night cycle: see below).
     const rare = [ObstacleType.BEEHIVE, ObstacleType.TEMPLE];
-    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(rare.includes(t) ? 10 : 50);
+    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(rare.includes(t) ? 10 : 25);
     const statics = STATIC_TYPES.reduce((sum, t) => sum + counts[t], 0) - counts[ObstacleType.TEMPLE];
     // The grade a gap aims for favours the beehive a little (it is mostly a hard obstacle),
     // but it stays one of the rarest.
@@ -468,7 +469,9 @@ describe('obstacle generation', () => {
     for (const stage of STAGES) {
       const first = Math.max(stage.first, MOVING_FROM);
       const s = share(first, first + 9);
-      expect(s).toBeGreaterThan(stage.movingShare - 0.12);
+      // A little under the stage's share is normal: a gap aiming for the hardest grade seldom
+      // finds a moving obstacle that hard, and takes a static one.
+      expect(s).toBeGreaterThan(stage.movingShare - 0.2);
       expect(s).toBeLessThan(stage.movingShare + 0.12);
     }
     // Obstacles behind the start stay static.

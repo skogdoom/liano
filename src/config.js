@@ -40,9 +40,19 @@ export const HOLD_GRIP = 350;
 // at most HOLD_SLIDE_TIME (faster if the monkey came in falling fast enough).
 export const HOLD_SLIDE_TIME = 0.25; // s
 // When the forced release comes: this fraction of the swing period after the bottom, on
-// the upswing to the right. Mid-way through the forward release window (about 0.05 to
-// 0.165), so the forced release is a hop to the next liana unless an obstacle is in the way.
-export const SLIP_OFF_PHASE = 0.11;
+// the upswing to the right. Near the start of the forward release window (which opens at
+// about 0.04 to 0.07, by the grip, and closes at about 0.165), so the forced release is a
+// hop to the next liana over an empty gap, but one an obstacle blocks far oftener than
+// one from the middle of the window (0.11): there only the hardest obstacles (grade 4, all
+// low) stop it. A player who only lets the monkey slip off gets a median of 13 obstacles
+// at 0.08 (measured over 60 seeds, before the stages were made steeper), 31 at 0.09, 41 at
+// 0.10 and 53 at 0.11; a later release only gets easier (97 at 0.15).
+export const SLIP_OFF_PHASE = 0.08;
+// The same for a held grip (slipping turned off, see Monkey.holds), which hangs at
+// HOLD_GRIP instead of slipping down. There the middle of the window (0.11) is already
+// the one an obstacle blocks: the earlier phase lets such a monkey get far (a median of
+// 113 obstacles against 16), so it keeps the middle.
+export const HOLD_OFF_PHASE = 0.11;
 // A catch lower on the rope than this grips here instead, so a monkey that catches the
 // very tip still gets a swing before it is forced off.
 export const MAX_ENTRY_RADIUS = 0.95 * LIANA_LENGTH;
@@ -189,9 +199,9 @@ export const MIN_RELEASE_WINDOW_MS = 90;
 // obstacle scale.
 export const STAGES = [
   { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.12, scale: 1.0, grades: [0.65, 0.35, 0, 0], high: 0.5 },
-  { first: 16, minWindowMs: 80, movingShare: 0.2, scale: 1.1, grades: [0.4, 0.4, 0.2, 0], high: 0.5 },
-  { first: 31, minWindowMs: 70, movingShare: 0.4, scale: 1.2, grades: [0.25, 0.35, 0.4, 0], high: 0.5 },
-  { first: 51, minWindowMs: 60, movingShare: 0.55, scale: 1.3, grades: [0.2, 0.3, 0.3, 0.2], high: null },
+  { first: 16, minWindowMs: 76, movingShare: 0.26, scale: 1.1, grades: [0.25, 0.35, 0.4, 0], high: 0.5 },
+  { first: 31, minWindowMs: 64, movingShare: 0.46, scale: 1.2, grades: [0.1, 0.25, 0.65, 0], high: 0.5 },
+  { first: 51, minWindowMs: 54, movingShare: 0.6, scale: 1.3, grades: [0.12, 0.25, 0.33, 0.3], high: null },
 ];
 
 // Obstacles above this height hang from the canopy ("high"); lower ones stand on the
@@ -205,14 +215,14 @@ export const HIGH_BELOW_Y = 255;
 // release timing it takes away: the share of release steps whose flight it blocks, over
 // an empty gap's, averaged over the entry radii (and, for a moving obstacle, over sampled
 // arrival times). GRADE_BOUNDS are the shares from which the grades 2, 3 and 4 start.
-export const GRADE_BOUNDS = [0.12, 0.19, 0.27];
+export const GRADE_BOUNDS = [0.15, 0.23, 0.28];
 // Each stage's `grades` are the odds (they need not sum to 1) of a gap aiming for grade
 // 1, 2, 3 and 4. A grade with no odds in a stage never appears in it, so the hardest
 // obstacles wait for the stage that lists them. The stages after the last move on
 // from its odds towards LATER_GRADE_ODDS, over LATER_GRADE_STAGES stages: all four grades
 // stay in play, the harder ones get likelier.
-export const LATER_GRADE_ODDS = [0.1, 0.2, 0.3, 0.4];
-export const LATER_GRADE_STAGES = 8;
+export const LATER_GRADE_ODDS = [0.08, 0.2, 0.32, 0.4];
+export const LATER_GRADE_STAGES = 6;
 // A moving obstacle is accepted with a grade within one of the one a gap aims for, else
 // the gap gets a static one. Only the first MOVING_GRADED_TRIES candidates that clear the
 // solver are graded (grading a moving obstacle costs a few ms), the closest wins.
@@ -225,13 +235,13 @@ export const GRADE_ARRIVAL_STEP = 4;
 export const GRADE_RADIUS_STEP = 2;
 // From the last stage's first obstacle on, the stage number (and the time of day) counts
 // on every STAGE_LENGTH_AFTER obstacles. Each stage after the last then keeps the last
-// one's obstacle scale but asks a little more: a shortest release window 2 ms shorter
-// (down to 40 ms, about 5 sim steps) and 4 points more moving obstacles (up to 75 %).
+// one's obstacle scale but asks a little more: a shortest release window 3 ms shorter
+// (down to 40 ms, about 5 sim steps) and 5 points more moving obstacles (up to 80 %).
 export const STAGE_LENGTH_AFTER = 20;
-export const LATER_WINDOW_STEP_MS = 2;
+export const LATER_WINDOW_STEP_MS = 3;
 export const LATER_MIN_WINDOW_MS = 40;
-export const LATER_MOVING_STEP = 0.04;
-export const LATER_MOVING_MAX = 0.75;
+export const LATER_MOVING_STEP = 0.05;
+export const LATER_MOVING_MAX = 0.8;
 // The first obstacles are always static: moving ones start at this obstacle index.
 export const MOVING_FROM = 6;
 

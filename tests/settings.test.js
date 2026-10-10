@@ -11,11 +11,13 @@ import {
   ENTRY_RADII,
   FLOW_GRIP,
   HOLD_GRIP,
+  HOLD_OFF_PHASE,
   HOLD_SLIDE_TIME,
   LIANA_LENGTH,
   MAX_ENTRY_RADIUS,
   SIM_DT,
   START_GRIP,
+  SWING_PERIOD,
 } from '../src/config.js';
 import { FORWARD_RELEASE_STEP, flyUntilGrab, stepN } from './helpers.js';
 
@@ -106,7 +108,7 @@ describe('slipping off (G)', () => {
 
   it('lets go, tired, when a slip from the catch (or from FLOW_GRIP below it) would reach the tip', () => {
     for (const r of [60, ...ENTRY_RADII, LIANA_LENGTH]) {
-      const expected = slipSteps(Math.min(r, MAX_ENTRY_RADIUS, FLOW_GRIP));
+      const expected = slipSteps(Math.min(r, MAX_ENTRY_RADIUS, FLOW_GRIP), 0, 1, SWING_PERIOD, HOLD_OFF_PHASE);
       expect(holdUntilOff(r).steps).toBe(expected);
       expect(forcedReleaseStep(r, 1, 0, true)).toBe(expected);
     }
@@ -116,7 +118,7 @@ describe('slipping off (G)', () => {
     const w = world({ slip: false });
     w.start();
     const { monkey } = w;
-    const steps = slipSteps(START_GRIP);
+    const steps = slipSteps(START_GRIP, 0, 1, SWING_PERIOD, HOLD_OFF_PHASE);
     stepN(w, 60);
     expect(monkey.gripRadius).toBe(HOLD_GRIP);
     expect(monkey.tipTime).toBeCloseTo((steps - 60) * SIM_DT, 9);

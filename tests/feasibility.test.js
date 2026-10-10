@@ -58,8 +58,8 @@ describe('release window solver', () => {
   });
 
   it('checks each entry radius up to its forced release at the tip', () => {
-    // 40 px at most 40 px/s: the first upswing after 1 s, at step 34 of the next period.
-    expect(forcedReleaseStep(LIANA_LENGTH - MAX_SLIP_SPEED)).toBe(34 + 312);
+    // 40 px at most 40 px/s: the first upswing after 1 s, at step 25 of the next period.
+    expect(forcedReleaseStep(LIANA_LENGTH - MAX_SLIP_SPEED)).toBe(25 + 312);
     // Entries below MAX_ENTRY_RADIUS count as MAX_ENTRY_RADIUS.
     expect(forcedReleaseStep(LIANA_LENGTH)).toBe(forcedReleaseStep(MAX_ENTRY_RADIUS));
     for (const r of ENTRY_RADII) {

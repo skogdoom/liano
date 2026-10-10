@@ -11,7 +11,7 @@ describe('stages', () => {
   it('are keyed on the obstacle index (the gap)', () => {
     expect([1, 15, 16, 30, 31, 50, 51].map((gap) => stageFor(gap).number)).toEqual([1, 1, 2, 2, 3, 3, 4]);
     expect(stageFor(-3).number).toBe(1);
-    expect([1, 16, 31, 51].map((gap) => stageFor(gap).movingShare)).toEqual([0.12, 0.2, 0.4, 0.55]);
+    expect([1, 16, 31, 51].map((gap) => stageFor(gap).movingShare)).toEqual([0.12, 0.26, 0.46, 0.6]);
   });
 
   it('counts on every STAGE_LENGTH_AFTER obstacles after the last', () => {
@@ -21,12 +21,12 @@ describe('stages', () => {
   it('asks a little more each stage after the last, up to a limit, at the last stage\'s scale', () => {
     const last = STAGES.at(-1);
     const at = (stage) => stageFor(last.first + (stage - 4) * STAGE_LENGTH_AFTER);
-    expect([4, 5, 6, 9, 14].map((n) => at(n).minWindowMs)).toEqual([60, 58, 56, 50, 40]);
-    [4, 5, 6, 8, 9].forEach((n, i) => expect(at(n).movingShare).toBeCloseTo([0.55, 0.59, 0.63, 0.71, 0.75][i], 9));
+    expect([4, 5, 6, 8, 9, 14].map((n) => at(n).minWindowMs)).toEqual([54, 51, 48, 42, 40, 40]);
+    [4, 5, 6, 7, 8, 9].forEach((n, i) => expect(at(n).movingShare).toBeCloseTo([0.6, 0.65, 0.7, 0.75, 0.8, 0.8][i], 9));
     for (const n of [4, 5, 20, 200]) expect(at(n).scale).toBe(last.scale);
     // Levelled out.
-    for (const n of [14, 15, 200]) expect(at(n).minWindowMs).toBe(40);
-    for (const n of [9, 10, 200]) expect(at(n).movingShare).toBeCloseTo(0.75, 9);
+    for (const n of [9, 10, 200]) expect(at(n).minWindowMs).toBe(40);
+    for (const n of [8, 9, 200]) expect(at(n).movingShare).toBeCloseTo(0.8, 9);
     // Never easier than the stage before.
     for (let n = 5; n < 30; n++) {
       expect(at(n).minWindowMs).toBeLessThanOrEqual(at(n - 1).minWindowMs);
@@ -66,7 +66,7 @@ describe('stages', () => {
   });
 
   it('keeps the first five obstacles static', () => {
-    expect([-4, 1, 5, 6, 15, 16, 51].map(movingShareFor)).toEqual([0, 0, 0, 0.12, 0.12, 0.2, 0.55]);
+    expect([-4, 1, 5, 6, 15, 16, 51].map(movingShareFor)).toEqual([0, 0, 0, 0.12, 0.12, 0.26, 0.6]);
   });
 });
 
