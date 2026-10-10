@@ -82,13 +82,14 @@ export class Game {
   }
 
   // The frame of the shadow monkey to draw now (a monkey-like object for MonkeyView), or
-  // null when there is none: not playing, no shadow, or the shadow's run is over.
+  // null when there is none: no shadow, or it has left the screen. It plays on after the game
+  // is over, on the results screen, until it is out of the world (see ShadowRun.frame).
   shadowFrame() {
-    if (this.state !== GameState.PLAYING || !this.ghost) return null;
+    if ((this.state !== GameState.PLAYING && this.state !== GameState.RESULTS) || !this.ghost) return null;
     const index = this.world.stepCount - 1;
     const frame = this.ghost.frame(index, this.ghostMonkey);
     if (!frame) return null;
-    // The liana it swings on, swung again from its grabs and releases.
+    // The lianas it swings on, swung again from its grabs and releases.
     this.replay.advanceTo(index);
     frame.liana = this.replay.held;
     frame.lianas = this.replay.lianas;
@@ -264,6 +265,7 @@ export class Game {
     }
     // The best run under these settings is the next game's shadow.
     if (this.recording) {
+      this.recording.finish();
       this.recording.score = this.score;
       const best = this.shadows.get(this.recording.settings);
       if (!best || this.recording.score > best.score) this.shadows.set(this.recording.settings, this.recording);

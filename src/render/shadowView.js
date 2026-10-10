@@ -2,9 +2,9 @@ import { Container, Graphics } from 'pixi.js';
 import { MonkeyView } from './monkeyView.js';
 import { drawLiana, leafLayout } from './lianaView.js';
 
-// The shadow monkey (see Game.shadowFrame): a grey, see-through monkey on a liana of its
-// own, grey and see-through too, as it swung on it in the best earlier game. The liana is
-// there only while the shadow swings on it.
+// The shadow monkey (see Game.shadowFrame): a grey, see-through monkey on lianas of its
+// own, grey and see-through too, as it swung on them in the best earlier game. A liana fades
+// in before the shadow grabs it and out after it lets go (see ShadowReplay).
 export const SHADOW_FUR = { fur: 0xb8bfc4, furDark: 0x8b949a, skin: 0xd5dadd };
 export const SHADOW_LIANA = { ropeDark: 0x4d565b, rope: 0x929ca1, leaf: 0x7c868c, leafDark: 0x626c72 };
 export const SHADOW_ALPHA = 0.36;
@@ -14,7 +14,7 @@ export class ShadowView {
     this.view = new Container();
     this.view.alpha = SHADOW_ALPHA;
     this.view.visible = false;
-    // A layer for the liana behind the monkey (a Graphics for each liana to draw, which is one).
+    // A layer for the lianas behind the monkey: a Graphics for each liana to draw at once.
     this.lianaLayer = new Container();
     this.lianas = [];
     this.layouts = new Map(); // liana index -> leaf layout
@@ -36,11 +36,13 @@ export class ShadowView {
       this.lianaLayer.addChild(g);
     }
     this.lianas.forEach((g, i) => {
-      const liana = frame.lianas[i];
-      g.visible = liana !== undefined;
-      if (!liana) return;
+      const entry = frame.lianas[i];
+      g.visible = entry !== undefined;
+      if (!entry) return;
+      const { liana } = entry;
       if (!this.layouts.has(liana.index)) this.layouts.set(liana.index, leafLayout(liana.index));
       drawLiana(g.clear(), liana, this.layouts.get(liana.index), false, SHADOW_LIANA);
+      g.alpha = entry.alpha;
     });
   }
 
