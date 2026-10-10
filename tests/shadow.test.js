@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Game, GameState } from '../src/sim/game.js';
-import { ShadowRun, shadowMonkey } from '../src/sim/shadow.js';
+import { ShadowReplay, ShadowRun, shadowMonkey } from '../src/sim/shadow.js';
 import { Monkey, MonkeyState } from '../src/sim/monkey.js';
 import { Liana, LianaState } from '../src/sim/liana.js';
 import { createInput } from '../src/input.js';
@@ -40,53 +40,22 @@ describe('a recorded run', () => {
     expect(out.x).toBeCloseTo(monkey.x, 9);
     expect(out.y).toBeCloseTo(monkey.y, 9);
     expect(out.state).toBe(MonkeyState.HANGING);
-    expect(out.liana.swingDir).toBe(liana.swingDir);
-    expect(out.liana.angle).toBeCloseTo(liana.angle, 9);
-    expect(out.liana.angularVelocity).toBeCloseTo(liana.angularVelocity, 9);
+    // Velocity is kept at single precision: enough for facing and tilt.
+    expect(out.vx).toBeCloseTo(monkey.vx, 3);
+    expect(out.vy).toBeCloseTo(monkey.vy, 3);
     expect(run.frame(-1, out)).toBeNull();
     expect(run.frame(3000, out)).toBeNull();
   });
 
-  it('records the shadow’s lianas: the one it hangs on, then the one it let go of while it sways', () => {
+  it('keeps its size down: a frame is a few bytes, and the lianas are only their grabs and releases', () => {
     const run = new ShadowRun();
     const monkey = new Monkey();
-    const first = new Liana(3, 3 * LIANA_SPACING);
-    const second = new Liana(4, 4 * LIANA_SPACING);
-    monkey.grab(first, 250);
-    const out = shadowMonkey();
-    const step = () => {
-      first.step(SIM_DT);
-      second.step(SIM_DT);
-      monkey.step(SIM_DT);
-      run.add(monkey);
-    };
-    for (let i = 0; i < 20; i++) step();
-    run.frame(19, out);
-    expect(out.lianas[0]).toMatchObject({ active: true, index: 3, x: 3 * LIANA_SPACING, state: LianaState.SWINGING });
-    expect(out.lianas[0].angle).toBeCloseTo(first.angle, 9);
-    expect(out.lianas[1].active).toBe(false);
-    // Let go: the liana settles, and is the one that sways.
-    monkey.release();
-    for (let i = 0; i < 20; i++) step();
-    run.frame(39, out);
-    expect(out.lianas[0].active).toBe(false);
-    expect(out.lianas[1]).toMatchObject({ active: true, index: 3, state: LianaState.SETTLING });
-    expect(out.lianas[1].angle).toBeCloseTo(first.angle, 9);
-    expect(out.lianas[1].angularVelocity).toBeCloseTo(first.angularVelocity, 9);
-    // Grabbing the next one: the first still sways while it does.
-    Object.assign(monkey, { vx: 1, vy: 0 });
-    monkey.grab(second, 250);
-    for (let i = 0; i < 10; i++) step();
-    run.frame(49, out);
-    expect(out.lianas[0]).toMatchObject({ active: true, index: 4, state: LianaState.SWINGING });
-    expect(out.lianas[1]).toMatchObject({ active: true, index: 3 });
-    // And it is gone once it has settled.
-    for (let i = 0; i < 20000 && first.state !== LianaState.IDLE; i++) step();
-    expect(first.state).toBe(LianaState.IDLE);
-    step();
-    run.frame(run.count - 1, out);
-    expect(out.lianas[1].active).toBe(false);
-    expect(out.lianas[0].active).toBe(true);
+    monkey.grab(new Liana(0, 0), 200);
+    for (let i = 0; i < 1000; i++) run.add(monkey);
+    const bytes = run.position.BYTES_PER_ELEMENT * 2 + run.velocity.BYTES_PER_ELEMENT * 2 + run.state.BYTES_PER_ELEMENT;
+    expect(bytes).toBeLessThanOrEqual(25);
+    // One grab (before the first step) and nothing else, however long it hangs.
+    expect(run.events).toEqual([{ frame: -1, index: 0, dir: 1, early: false }]);
   });
 
   it('remembers flying and falling, without a liana', () => {
@@ -203,7 +172,10 @@ describe('the shadow monkey in the game', () => {
     expect(second).not.toBe(first);
     const n = Math.min(first.count, second.count);
     expect(n).toBeGreaterThan(100);
-    for (let k = 0; k < n * 8; k++) expect(second.data[k]).toBe(first.data[k]);
+    for (let k = 0; k < n * 2; k++) expect(second.position[k]).toBe(first.position[k]);
+    for (let k = 0; k < n * 2; k++) expect(second.velocity[k]).toBe(first.velocity[k]);
+    expect(Array.from(second.state.slice(0, n))).toEqual(Array.from(first.state.slice(0, n)));
+    expect(second.events.filter((e) => e.frame < n)).toEqual(first.events.filter((e) => e.frame < n));
   });
 
   it('records the run and makes the best one the next game’s shadow', () => {
@@ -321,6 +293,99 @@ describe('the shadow monkey in the game', () => {
   });
 });
 
+describe('the shadow’s lianas, swung again from the run', () => {
+  it('sway and settle exactly as the real ones did, frame by frame', () => {
+    const game = new Game({ shadow: true });
+    game.press();
+    // Every liana the world has after each step (it drops the ones far behind).
+    const truth = [];
+    for (let i = 0; i < 1500 && game.state === GameState.PLAYING; i++) {
+      const m = game.world.monkey;
+      // Let go 29 steps after each grab.
+      if (m.state === MonkeyState.HANGING && Math.round(m.gripTime / SIM_DT) === 29) game.press();
+      game.step(SIM_DT);
+      truth.push(
+        new Map([...game.world.lianas.values()].map((l) => [l.index, { state: l.state, angle: l.angle, angularVelocity: l.angularVelocity }])),
+      );
+    }
+    const run = game.recording;
+    // Several grabs and releases.
+    expect(run.events.filter((e) => e.dir !== 0).length).toBeGreaterThan(4);
+    expect(run.events.filter((e) => e.dir === 0).length).toBeGreaterThan(3);
+    expect(run.events.some((e) => e.dir === 0 && e.early)).toBe(true); // by the player
+    const replay = new ShadowReplay(run);
+    let compared = 0;
+    for (let k = 0; k < run.count; k++) {
+      replay.advanceTo(k);
+      const ghost = new Map(replay.swaying.map((l) => [l.index, l]));
+      for (const [index, t] of truth[k]) {
+        if (t.state === LianaState.IDLE) {
+          expect(ghost.has(index)).toBe(false);
+          continue;
+        }
+        expect(ghost.get(index).state).toBe(t.state);
+        expect(ghost.get(index).angle).toBe(t.angle);
+        expect(ghost.get(index).angularVelocity).toBe(t.angularVelocity);
+        compared++;
+      }
+    }
+    expect(compared).toBeGreaterThan(1000);
+  });
+
+  it('give the one the shadow hangs on, and none while it flies', () => {
+    const game = new Game({ shadow: true });
+    game.press();
+    const states = [];
+    for (let i = 0; i < 600 && game.state === GameState.PLAYING; i++) {
+      const m = game.world.monkey;
+      if (m.state === MonkeyState.HANGING && Math.round(m.gripTime / SIM_DT) === 29) game.press();
+      game.step(SIM_DT);
+      states.push([m.state, m.liana?.index ?? null]);
+    }
+    const replay = new ShadowReplay(game.recording);
+    for (let k = 0; k < states.length; k++) {
+      replay.advanceTo(k);
+      const [state, index] = states[k];
+      expect(replay.held?.index ?? null).toBe(index);
+      if (state === MonkeyState.HANGING) expect(replay.swaying).toContain(replay.held);
+    }
+  });
+
+  it('can be asked for any frame, in any order, and once past the run’s end', () => {
+    const game = new Game({ shadow: true });
+    game.press();
+    for (let i = 0; i < 400; i++) {
+      const m = game.world.monkey;
+      if (m.state === MonkeyState.HANGING && Math.round(m.gripTime / SIM_DT) === 29) game.press();
+      game.step(SIM_DT);
+    }
+    const replay = new ShadowReplay(game.recording);
+    replay.advanceTo(300);
+    const angle = replay.held?.angle;
+    replay.advanceTo(100);
+    replay.advanceTo(300);
+    expect(replay.held?.angle).toBe(angle);
+    replay.advanceTo(10000);
+    expect(replay.frame).toBe(10000);
+  });
+
+  it('are given to the game’s shadow frame for the monkey view', () => {
+    const game = new Game({ shadow: true });
+    game.press();
+    for (let i = 0; i < 200; i++) game.step(SIM_DT);
+    game.end();
+    game.step(0.5);
+    game.press();
+    expect(game.shadowFrame()).toBeNull();
+    for (let i = 0; i < 100; i++) game.step(SIM_DT);
+    const frame = game.shadowFrame();
+    expect(frame.state).toBe(MonkeyState.HANGING);
+    expect(frame.liana.index).toBe(0);
+    expect(frame.lianas).toContain(frame.liana);
+    expect(frame.liana.state).toBe(LianaState.SWINGING);
+  });
+});
+
 describe('the shadow key', () => {
   it('toggles on S, once per press, and is not a key of any other role', () => {
     const target = new EventTarget();
@@ -352,17 +417,25 @@ describe('the shadow drawn', () => {
       expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThan(24);
     }
     const frame = shadowMonkey();
-    Object.assign(frame, { x: 1000, y: 200, state: MonkeyState.HANGING });
-    Object.assign(frame.lianas[0], { active: true, index: 1, x: 700, state: LianaState.SWINGING, angle: 0.5 });
+    const held = new Liana(1, 700);
+    held.grab(1);
+    const swaying = new Liana(0, 0);
+    swaying.grab(1);
+    swaying.release();
+    Object.assign(frame, { x: 1000, y: 200, state: MonkeyState.HANGING, liana: held, lianas: [held] });
     view.update(frame, 0.016);
     expect(view.view.visible).toBe(true);
     expect(view.monkey.view.position.x).toBe(1000);
+    expect(view.lianas).toHaveLength(1);
     expect(view.lianas[0].visible).toBe(true);
-    expect(view.lianas[1].visible).toBe(false);
-    // The second liana sways on after the monkey lets go of the first.
-    Object.assign(frame.lianas[1], { active: true, index: 0, x: 0, state: LianaState.SETTLING, angle: -0.2, angularVelocity: 1 });
+    // A second liana sways on after the monkey lets go of the first, and is hidden once it settles.
+    frame.lianas = [held, swaying];
     view.update(frame, 0.016);
+    expect(view.lianas).toHaveLength(2);
     expect(view.lianas[1].visible).toBe(true);
+    frame.lianas = [held];
+    view.update(frame, 0.016);
+    expect(view.lianas[1].visible).toBe(false);
     view.update(null, 0.016);
     expect(view.view.visible).toBe(false);
   });

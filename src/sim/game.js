@@ -3,7 +3,7 @@ import { World } from './world.js';
 import { MODES, playerFor } from './match.js';
 import { randomSeed } from './rng.js';
 import { SharedView } from './sharedView.js';
-import { ShadowRun, shadowMonkey } from './shadow.js';
+import { ShadowReplay, ShadowRun, shadowMonkey } from './shadow.js';
 
 const MAX_PENDING_EVENTS = 64;
 
@@ -44,6 +44,7 @@ export class Game {
     this.shadows = new Map();
     this.recording = null;
     this.ghost = null;
+    this.replay = null;
     this.ghostMonkey = shadowMonkey();
     this.#newMatch();
     this.state = GameState.TITLE;
@@ -84,7 +85,14 @@ export class Game {
   // null when there is none: not playing, no shadow, or the shadow's run is over.
   shadowFrame() {
     if (this.state !== GameState.PLAYING || !this.ghost) return null;
-    return this.ghost.frame(this.world.stepCount - 1, this.ghostMonkey);
+    const index = this.world.stepCount - 1;
+    const frame = this.ghost.frame(index, this.ghostMonkey);
+    if (!frame) return null;
+    // The lianas it swings on, swung again from its grabs and releases.
+    this.replay.advanceTo(index);
+    frame.liana = this.replay.held;
+    frame.lianas = this.replay.swaying;
+    return frame;
   }
 
   // The best score of this page session for the current single-player setting.
@@ -229,7 +237,8 @@ export class Game {
         const player = playerFor(this.mode, role);
         if (player >= 0) {
           const { world, index } = this.slot(player);
-          world.release(index);
+          // The shadow's liana lets go before the lianas step, as this one does.
+          if (world.release(index) && this.recording) this.recording.inputRelease = true;
         }
         return false;
       }
@@ -305,6 +314,7 @@ export class Game {
     // screen, whose swing has been going for a while, that means a fresh world.
     if (this.shadowOn && this.state === GameState.TITLE) this.#newMatch();
     this.ghost = this.shadowOn ? (this.shadows.get(this.shadowSettings) ?? null) : null;
+    this.replay = this.ghost ? new ShadowReplay(this.ghost) : null;
     this.recording = this.shadowOn ? new ShadowRun(this.shadowSettings) : null;
     for (const world of this.worlds) world.start();
     this.score = 0;

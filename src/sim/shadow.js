@@ -1,114 +1,139 @@
-import { ANCHOR_Y, LIANA_LENGTH, LIANA_SPACING } from '../config.js';
-import { LianaState } from './liana.js';
+import { LIANA_SPACING, SIM_DT } from '../config.js';
+import { Liana, LianaState } from './liana.js';
 import { MonkeyState } from './monkey.js';
 
-// A recorded run of player 1's monkey, one frame per sim step, for the shadow monkey (see
-// Game). A frame is what the views need to draw it again: where the monkey is, how it
-// moves, whether it hangs, flies or is dead and, hanging, the liana's swing direction,
-// angle and angular velocity; and the shadow's own lianas: the one it hangs on and the
-// one it let go of, as long as that still sways (index, state, angle, angular velocity).
-const FIELDS = 14;
+// A recorded run of player 1's monkey for the shadow monkey (see Game): a frame per sim
+// step with where the monkey is, how it moves and whether it hangs, flies or is dead
+// (all its view needs, apart from the liana it hangs on), and the few times it grabbed or
+// let go of a liana. The shadow's lianas are not recorded: ShadowReplay swings them again
+// from those events, with the same physics, so they sway and settle exactly as they did.
 const STATES = [MonkeyState.HANGING, MonkeyState.AIRBORNE, MonkeyState.DEAD];
-const LIANA_STATES = [LianaState.IDLE, LianaState.SWINGING, LianaState.SETTLING];
-const NONE = -1;
 
 export class ShadowRun {
   constructor(settings = '') {
     // The settings (lives, slipping) of the run: a shadow only goes with runs under the same.
     this.settings = settings;
-    this.data = new Float64Array(FIELDS * 1024);
+    this.capacity = 1024;
+    this.position = new Float64Array(2 * this.capacity); // x, y
+    this.velocity = new Float32Array(2 * this.capacity); // vx, vy (only for facing and tilt)
+    this.state = new Uint8Array(this.capacity);
     this.count = 0;
     this.score = 0;
-    // The liana the monkey hangs on, and the one it let go of that still sways.
+    // { frame, index, dir, early }: the monkey grabs liana `index` (swinging in `dir`) in the
+    // step after frame `frame`, or lets go of it (dir 0). Frame -1 is the grab the run starts
+    // with. A release by the player comes between two steps, before the lianas step
+    // (`early`); a grab, or a release that comes with a step, after.
+    this.events = [];
     this.held = null;
-    this.released = null;
+    // Set by the game when the player lets go: the next release is early.
+    this.inputRelease = false;
+  }
+
+  #grow() {
+    this.capacity *= 2;
+    for (const [name, Type, width] of [['position', Float64Array, 2], ['velocity', Float32Array, 2], ['state', Uint8Array, 1]]) {
+      const bigger = new Type(width * this.capacity);
+      bigger.set(this[name]);
+      this[name] = bigger;
+    }
   }
 
   // Records the monkey as it is after a step.
   add(monkey) {
-    if ((this.count + 1) * FIELDS > this.data.length) {
-      const bigger = new Float64Array(this.data.length * 2);
-      bigger.set(this.data);
-      this.data = bigger;
-    }
-    // A liana the monkey left sways on until it settles.
+    if (this.count === this.capacity) this.#grow();
     const liana = monkey.liana;
-    if (this.held && this.held !== liana) this.released = this.held;
-    this.held = liana;
-    if (this.released && (this.released === liana || this.released.state === LianaState.IDLE)) this.released = null;
-    const sway = this.released;
-    this.data.set(
-      [
-        monkey.x,
-        monkey.y,
-        monkey.vx,
-        monkey.vy,
-        STATES.indexOf(monkey.state),
-        liana ? liana.swingDir : 1,
-        liana ? liana.angle : 0,
-        liana ? liana.angularVelocity : 0,
-        liana ? liana.index : NONE,
-        sway ? sway.index : NONE,
-        sway ? LIANA_STATES.indexOf(sway.state) : 0,
-        sway ? sway.angle : 0,
-        sway ? sway.angularVelocity : 0,
-        liana ? LIANA_STATES.indexOf(liana.state) : 0,
-      ],
-      this.count * FIELDS,
-    );
+    if (liana !== this.held) {
+      // The first liana was grabbed before the run's first step.
+      const frame = this.count === 0 ? -1 : this.count;
+      if (this.held) this.events.push({ frame, index: this.held.index, dir: 0, early: this.inputRelease });
+      this.inputRelease = false;
+      if (liana) this.events.push({ frame, index: liana.index, dir: liana.swingDir, early: false });
+      this.held = liana;
+    }
+    const at = this.count;
+    this.position[2 * at] = monkey.x;
+    this.position[2 * at + 1] = monkey.y;
+    this.velocity[2 * at] = monkey.vx;
+    this.velocity[2 * at + 1] = monkey.vy;
+    this.state[at] = STATES.indexOf(monkey.state);
     this.count++;
   }
 
   // Fills `out` (from shadowMonkey) with frame `index`, or returns null if the run has no
-  // such frame.
+  // such frame. The lianas are for ShadowReplay.
   frame(index, out) {
     if (index < 0 || index >= this.count) return null;
-    const d = this.data;
-    const at = index * FIELDS;
-    out.x = d[at];
-    out.y = d[at + 1];
-    out.vx = d[at + 2];
-    out.vy = d[at + 3];
-    out.state = STATES[d[at + 4]];
-    out.liana.swingDir = d[at + 5];
-    out.liana.angle = d[at + 6];
-    out.liana.angularVelocity = d[at + 7];
-    fillLiana(out.lianas[0], d[at + 8], d[at + 13], d[at + 6], d[at + 7]);
-    fillLiana(out.lianas[1], d[at + 9], d[at + 10], d[at + 11], d[at + 12]);
+    out.x = this.position[2 * index];
+    out.y = this.position[2 * index + 1];
+    out.vx = this.velocity[2 * index];
+    out.vy = this.velocity[2 * index + 1];
+    out.state = STATES[this.state[index]];
     return out;
   }
 }
 
-function fillLiana(liana, index, state, angle, angularVelocity) {
-  liana.active = index !== NONE;
-  liana.index = index;
-  liana.x = index * LIANA_SPACING;
-  liana.state = LIANA_STATES[state];
-  liana.angle = angle;
-  liana.angularVelocity = angularVelocity;
+// Swings the shadow's lianas again from a run's events: `advanceTo(frame)` steps them
+// (like the world steps its lianas, then the monkey grabs or lets go) up to frame `frame`.
+// `held` is the one the shadow hangs on, and `swaying` all that are not at rest: the
+// held one, and those it let go of that still sway.
+export class ShadowReplay {
+  constructor(run) {
+    this.run = run;
+    this.reset();
+  }
+
+  reset() {
+    this.frame = -2;
+    this.next = 0;
+    this.lianas = new Map();
+    this.held = null;
+    this.swaying = [];
+    this.advanceTo(-1);
+  }
+
+  #liana(index) {
+    if (!this.lianas.has(index)) this.lianas.set(index, new Liana(index, index * LIANA_SPACING));
+    return this.lianas.get(index);
+  }
+
+  // Applies the next events of frame `frame`: only the early ones (before the lianas step),
+  // or all that are left.
+  #apply(frame, earlyOnly) {
+    const { events } = this.run;
+    while (this.next < events.length && events[this.next].frame === frame && (!earlyOnly || events[this.next].early)) {
+      const { index, dir } = events[this.next++];
+      const liana = this.#liana(index);
+      if (dir === 0) {
+        liana.release();
+        if (this.held === liana) this.held = null;
+      } else {
+        liana.grab(dir);
+        this.held = liana;
+      }
+    }
+  }
+
+  advanceTo(frame) {
+    if (frame < this.frame) return this.reset() ?? this.advanceTo(frame);
+    if (this.frame === -2) this.#apply(-1, false);
+    while (this.frame < frame) {
+      this.frame++;
+      if (this.frame < 0) continue;
+      this.#apply(this.frame, true);
+      for (const liana of this.lianas.values()) liana.step(SIM_DT);
+      this.#apply(this.frame, false);
+    }
+    this.swaying = [];
+    for (const [index, liana] of this.lianas) {
+      if (liana.state === LianaState.IDLE && liana !== this.held) this.lianas.delete(index);
+      else this.swaying.push(liana);
+    }
+  }
 }
 
-const lianaProxy = () => ({
-  active: false,
-  index: 0,
-  x: 0,
-  anchorY: ANCHOR_Y,
-  length: LIANA_LENGTH,
-  state: LianaState.IDLE,
-  angle: 0,
-  angularVelocity: 0,
-});
-
-// An object that stands in for a monkey in MonkeyView.update, to be filled by frame(); it
-// also has the two lianas the shadow draws, `lianas`: [the one held, the one let go of].
+// An object that stands in for a monkey in MonkeyView.update, to be filled by
+// ShadowRun.frame; ShadowReplay then sets the liana it hangs on (`liana`) and the lianas to
+// draw (`lianas`).
 export function shadowMonkey() {
-  return {
-    x: 0,
-    y: 0,
-    vx: 0,
-    vy: 0,
-    state: MonkeyState.AIRBORNE,
-    liana: { swingDir: 1, angle: 0, angularVelocity: 0 },
-    lianas: [lianaProxy(), lianaProxy()],
-  };
+  return { x: 0, y: 0, vx: 0, vy: 0, state: MonkeyState.AIRBORNE, liana: null, lianas: [] };
 }
