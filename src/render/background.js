@@ -227,6 +227,8 @@ export class Background {
     this.back.addChild(skyGroup, this.far.view, this.mid.view, this.near.view);
     this.front.addChild(this.canopy.view, this.floor.view);
     this.tint = { world: null, from: STAGE_TINTS[0], to: STAGE_TINTS[0], t: 1 };
+    // The tint now, for the scenery that is drawn between the layers (the temple).
+    this.color = STAGE_TINTS[0];
   }
 
   // Shifts the tint towards the stage's; a new world starts at once from the first.
@@ -237,6 +239,7 @@ export class Background {
     else if (target !== tint.to) Object.assign(tint, { from: tintBetween(tint.from, tint.to, tint.t), to: target, t: 0 });
     tint.t = Math.min(tint.t + dt / TINT_TIME, 1);
     const color = tintBetween(tint.from, tint.to, tint.t);
+    this.color = color;
     this.back.tint = color;
     this.front.tint = color;
   }

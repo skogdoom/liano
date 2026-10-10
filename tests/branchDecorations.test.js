@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DECORATIONS, FLOWER_COLORS, NEST_STATES } from '../src/render/obstacleViews.js';
+import { BAT_LOOKS, DECORATIONS, FLOWER_COLORS, NEST_STATES } from '../src/render/obstacleViews.js';
 import { BRANCH_DECORATIONS } from '../src/sim/obstacle.js';
 import { mulberry32 } from '../src/sim/rng.js';
 
@@ -54,6 +54,18 @@ describe('branch decoration art', () => {
       const dirs = new Set();
       for (let seed = 1; seed <= 20; seed++) dirs.add(DECORATIONS[decoration](mulberry32(seed)).part.scale.x);
       expect(dirs).toEqual(new Set([-1, 1]));
+    }
+  });
+
+  it('gives bats slightly different looks, on the wing and hanging', () => {
+    expect(BAT_LOOKS.length).toBeGreaterThan(2);
+    expect(new Set(BAT_LOOKS.map((l) => l.fur)).size).toBe(BAT_LOOKS.length);
+    // Different but still bats: dark fur, a pointed ear, a wing a bit longer or shorter.
+    for (const look of BAT_LOOKS) {
+      expect(look.ear).toBeGreaterThan(0.7);
+      expect(look.ear).toBeLessThan(1.3);
+      expect(look.span).toBeGreaterThan(0.8);
+      expect(look.span).toBeLessThan(1.2);
     }
   });
 });

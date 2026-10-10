@@ -48,7 +48,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 | Layout | Lianas have identical length and identical horizontal spacing. |
 | Obstacles | One per gap (none in the first gap, nor in the gap behind the start liana). Static types: branch, thorn bush, rock, beehive, and a rare temple. Moving types (spider, snake, bird, bats at night, blue birds by day, and purple birds at any time) from obstacle 6. No liana ever sweeps over an obstacle: static and moving obstacles alike stay clear of the area either neighbouring liana can swing through, with the rope and a hanging monkey at any grip radius. |
 | Bananas | Collected on touch, and counted per player against the bananas passed. They change neither the score nor the swing. |
-| Difficulty | Stages keyed on obstacle index. Levers: shorter release windows, a larger share of moving obstacles, bigger obstacles. Swing speed and slip speed do not ramp. |
+| Difficulty | Stages keyed on obstacle index. Levers: shorter release windows, a larger share of moving obstacles, bigger obstacles, and the grade (1–4) of the obstacles a stage lets in. Swing speed and slip speed do not ramp. |
 | Death | Collision with an obstacle, falling below the world band (world y WORLD_HEIGHT; the visible bottom edge can be higher when the flexible frame crops), or (shared screen only) being left behind the left edge. Going above the top edge is not a death. |
 | Scoring | +1 per obstacle gap crossed: the gap scores when the monkey, moving forward, grabs the liana on its far side. Swinging or flying past without reaching that liana does not score. Each gap scores once per monkey (flying back and forth does not re-score). Plus banana points. |
 | HUD | Top-right. 1P shows the score and session best. 2P shows each player's score and hearts (OUT when none are left): in split screen at the top of each pane, in shared screen side by side. The speaker and fullscreen buttons sit top-left. All of these stay inside the safe area (notch). |
@@ -86,8 +86,8 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 - **Spider:** drops and climbs on a thread from the canopy at the gap centre.
 - **Snake:** climbs up and down a stalk standing in the gap centre.
 - **Bird:** patrols across the gap with a slight bob, between the widest bounds that stay clear of the swings (asserted by the generator).
-- **Bat:** at night (the Night time of day: Stage 4 and every fifth after, see Difficulty stages) bats replace the birds. A bat has a bird's hitbox and patrol, and takes its place in the list the generator picks from, so a night gap gets the obstacle a bird would have had and nothing about fairness changes.
-- **Purple bird:** at any time of day a moving type flies in a circle at the gap centre, either way round, with a radius of 42–72 (PURPLE_BIRD_RADIUS) and its highest point 322–345 (PURPLE_BIRD_TOP), once round in 2.4–3.6 s. Where it is when the monkey swings by decides what it is: high at the top of its circle, low at the bottom, wide at the sides. Motion is `ax = ±ay`, `bob = 0`. The solver checks it like every moving obstacle, and a candidate that fails is rerolled.
+- **Bat:** at night (the Night time of day: Stage 4 and every fifth after, see Difficulty stages) all the birds are replaced by bats: there is no bird at night, on the wing or perched on a branch (the blue bird is a day bird anyway). A bat has a bird's hitbox and patrol, and takes its place in the list the generator picks from, so a night gap gets the obstacle a bird would have had and nothing about fairness changes. The purple bird's place is taken by a *circling bat* (`circleBat`, the same hitbox, circle and period; bong 277 Hz). Bats come in four slightly different looks (BAT_LOOKS: purple-grey, brown with a golden collar and amber eyes, grey with a longer wing, black with yellow eyes; they differ in colour, ear size and wing span), picked at random for each gap, and the hanging bat decoration has them too.
+- **Purple bird:** by day, at dusk and at dawn (at night a circling bat takes its place) a moving type flies in a circle at the gap centre, either way round, with a radius of 42–72 (PURPLE_BIRD_RADIUS) and its highest point 322–345 (PURPLE_BIRD_TOP), once round in 2.4–3.6 s. Where it is when the monkey swings by decides what it is: high at the top of its circle, low at the bottom, wide at the sides. Motion is `ax = ±ay`, `bob = 0`. The solver checks it like every moving obstacle, and a candidate that fails is rerolled.
 - **Blue bird:** by day (Day, Late afternoon and Dawn; not at Dusk or Night) a fourth moving type flies up and down at the gap centre, without a thread or a stalk. Like the spider and snake it can only use the free air the swings leave: either the high band (its lowest point 165–200, over a flight of 70–130) or the low band (its highest point 296–322, over 80–140), picked at random, with a slight swoop (BLUE_BIRD_BOB). The solver checks it like every moving obstacle, and a candidate that fails is rerolled.
 - Room for them: at the gap centre a moving hitbox stays clear of the swings only above y ≈ 213 or below y ≈ 288, while valid flights cross the centre at y ≈ 189–361. So spiders work the high band (lowest point 175–212), snakes the low band (highest point 290–320), and birds patrol low (y 330–390, ±35 to ±117 px). They block about 10–20 % of otherwise valid releases.
 
@@ -113,6 +113,24 @@ The day goes on past Stage 4: the stage number and the time of day keep counting
 | 2 | 16–30 | 80 ms | 20% | 1.10 |
 | 3 | 31–50 | 70 ms | 40% | 1.20 |
 | 4 | 51+ | 60 ms | 55% | 1.30 |
+
+### Obstacle grades
+
+Every obstacle has a **grade** from 1 (easiest) to 4: how much of the release timing it takes away. It is measured, not set per type: the share of the empty gap's release steps (those whose flight reaches the next liana) that the obstacle blocks, averaged over the entry radii. A moving obstacle's share is also averaged over sampled arrival times (every GRADE_ARRIVAL_STEP-th of the solver's twelve, and every GRADE_RADIUS_STEP-th radius; grading it costs about 0.8 ms). GRADE_BOUNDS = [0.12, 0.19, 0.27] are the shares where grades 2, 3 and 4 start, roughly the quartiles of every obstacle the game made before grades. So a branch is mostly a 2, a spider or a purple bird a 1, a snake or a bird a 2, and a rock, thorn bush or beehive low in the gap a 3 or 4; the same type gets a different grade at a different height or scale. The grade is on `Obstacle.grade` (carried to and from the worker) and shown in the debug view for the gap the monkey is in. For static obstacles the shares are in the window table (`blocked`, per scale, type and height), so play still never runs the solver for them.
+
+Each stage lists the odds (`grades` in STAGES) of a gap *aiming* for each grade, drawn from a random stream of its own, so the same for a seed every time. A grade with no odds in a stage never appears in it, which keeps the hard obstacles out of the early stages:
+
+| Stage | Obstacles | Odds for grade 1 / 2 / 3 / 4 |
+|---|---|---|
+| 1 | 1–15 | 65 / 35 / 0 / 0 |
+| 2 | 16–30 | 40 / 40 / 20 / 0 |
+| 3 | 31–50 | 25 / 35 / 40 / 0 |
+| 4 | 51–70 | 20 / 30 / 30 / 20 |
+| 5 and on | 71+ | towards 10 / 20 / 30 / 40, reached after LATER_GRADE_STAGES (8) more stages (Stage 12) |
+
+**High and low.** Obstacles above HIGH_BELOW_Y (255) hang from the canopy ("high"), lower ones stand on the floor ("low"); swing clearance leaves no passable height around that line. The easy obstacles are mostly high (a low rock or beehive blocks far more flights), so with the grades alone Stage 1 came out about 70 % high, Stage 2 56 %, Stage 3 41 % and Stage 4 34 %. A stage's `high` (STAGES) is the share of its gaps that aim for a high obstacle, the rest for a low one, from a random stream of their own: 0.5 in Stages 1–3, so they come out about 47–49 % high, and null from Stage 4 on, which leaves the mix to the types and grades (about a third high: only the spider and the blue bird fly high). A static gap draws its height from the aimed side's part of the range, a moving gap its type from the ones that fly there (a high aim: spider or blue bird; a low aim: all but the spider), and the side counts before the grade when choosing between candidates.
+
+After Stage 4 the odds only move gradually, so even the late levels still hold all four grades: easy obstacles for variation, the hardest ones more and more often. The generator tries the kind of obstacle the moving share asks for (still the same lever as before); an obstacle that is passable under the stage's rules, at or below the stage's highest grade and with the aimed grade is taken at once, else the closest one within a grade of the aim (a moving one: from the first MOVING_GRADED_TRIES candidates the solver accepts; a static one: from STATIC_TRIES random type and height draws). If the kind cannot find one within a grade of the aim it tries the other: at the bigger late scales few static obstacles are easy (no grade 1 at scale 1.3 except the temple), so the aim for an easy obstacle there is mostly met by a moving one, and the aim for a hard one by a static one. Measured over many seeds: the mean grade per stage rises 1.4, 1.9, 2.1, 2.6, then 2.7 (Stage 5–8) and 2.9 (9–12); about two obstacles in three get the aimed grade exactly, nearly all are within one. The temple is under the same cap.
 
 Scaled obstacles must still pass the swing-clearance rule; heights that fail are rerolled. At scale 1.3 a branch fits only at y 371–375, so stage-4 branches almost always sit at the bottom. The tint multiplies the background only (sky, parallax, canopy and floor), so lianas, obstacles and the monkeys stay readable at night.
 
@@ -177,7 +195,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | "Crash" | `death` from a fall, or from being left behind | A low-passed noise burst plus a falling low sine thud, about 0.8 s. |
 
 - **Recipes and player:** each sound is a pure recipe function (data, unit-tested in Node). A thin player is the only code that touches `AudioContext`.
-- **When sound plays:** on by default from the first press. Mute is toggled with `M` or the speaker button, and kept in memory only. The `AudioContext` is suspended while paused.
+- **When sound plays:** on by default from the first press. Mute is toggled with `M` or the speaker button, and kept in memory only. The `AudioContext` is suspended while paused, and resumed whenever it is not running while it should be (also on its `statechange`, and every frame, so a window switch that lands while a suspend is still settling does not leave it silent). One that is still not running 1.5 s later, or whose clock stands still, is replaced by a new one at the next key press or tap; the debug view (D) shows the state (`sound running`, `sound locked`, `(rebuilt 1x)`).
 - **Sound set:** deaths, and a "pling" for a banana taken: two quick, soft sine notes a fifth apart (E6, then B6, 80 ms later), each with a faint octave, fading in about half a second, quieter than the deaths. Release sounds (a "swish", several "wheee"s) were tried and dropped; stages, respawns and results are silent.
 
 ## Touch, phones and tablets
@@ -252,6 +270,11 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a swept area, beyond MONKEY_RADIUS |
 | MIN_RELEASE_WINDOW_MS | 90 | Stage 1; later stages per STAGES |
 | STAGES | see Difficulty stages | First obstacle, shortest window, moving share and obstacle scale per stage |
+| HIGH_BELOW_Y, STAGES[].high | 255; 0.5 in Stages 1–3, null after | Obstacles above the line hang from the canopy (high); the share of a stage's gaps that aim for a high obstacle |
+| GRADE_BOUNDS | 0.12, 0.19, 0.27 | Blocked shares where grades 2, 3 and 4 start |
+| STAGES[].grades, LATER_GRADE_ODDS, LATER_GRADE_STAGES | see Obstacle grades | Odds of aiming for each grade per stage, and where they head after the last stage over 8 stages |
+| MOVING_GRADED_TRIES, STATIC_TRIES | 3, 40 | Moving candidates graded, and static draws, per gap |
+| GRADE_ARRIVAL_STEP, GRADE_RADIUS_STEP | 4, 2 | A moving obstacle's grade samples every 4th arrival and every 2nd entry radius |
 | STAGE_LENGTH_AFTER | 20 obstacles | After the last stage, the stage number (the time of day) counts on this often |
 | LATER_WINDOW_STEP_MS, LATER_MIN_WINDOW_MS | 2 ms per stage, down to 40 ms | The shortest release window of the stages after the last: 60 ms at Stage 4, 40 ms from Stage 14 (about 5 steps) |
 | LATER_MOVING_STEP, LATER_MOVING_MAX | +4 points per stage, up to 75 % | The moving share of those stages: 55 % at Stage 4, 75 % from Stage 9 |
@@ -348,18 +371,18 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
 - **Lianas.** A green polyline with leaves (P2's in shared screen golden), which bends slightly while settling. The grip slide is visible, and the lower vine blinks yellow near the forced release.
 - **Static obstacles.**
   - Branch: brown limb with a leaf tuft, and sometimes a decoration (see Branch decorations):
-    - Perched bird: a small bird in the colours of one of the flying birds (red, blue or purple, at random; not the owl), on top of the limb, facing left or right at random; every couple of seconds it dips its head to peck, and its tail flicks.
+    - Perched bird: a small bird in the colours of one of the flying birds (red, blue or purple, at random; not the owl; none at night), on top of the limb, facing left or right at random; every couple of seconds it dips its head to peck, and its tail flicks.
     - Snake: a green snake wrapped around the limb in three or four coils (on a standing branch, in about half the cases, vertically around the trunk it stands on instead), its tail hanging off one end and its head rising from the other, facing left or right at random; the neck sways and now and then the tongue flicks.
     - Bird's nest (a decoration, not an animal): a woven bowl of twigs on top of the limb, facing either way. What it holds is picked at random, in equal shares: nothing (a dry leaf), a speckled blue egg that rocks now and then, or a hatched egg: a yellow chick peeping from its cracked shell, bobbing, with the cap of the shell beside it.
     - Panther: a black panther lying along the top of the limb with its head up, watching, with yellow slit eyes. Its flanks rise and fall as it breathes, its tail hangs down off the end of the limb and swishes, an ear flicks now and then and it blinks. Faces either way.
-    - Hanging bat (night only): a small purple bat roosting upside down from the underside of the limb, wrapped in its wings like a cloak with scalloped edges. It sways a little, an ear twitches now and then, and it opens its red eyes for a moment every few seconds.
+    - Hanging bat (night only): a small bat (one of the BAT_LOOKS) roosting upside down from the underside of the limb, wrapped in its wings like a cloak with scalloped edges. It sways a little, an ear twitches now and then, and it opens its red eyes for a moment every few seconds.
     - Owl (night only): a round brown owl perched on top of the limb, with ear tufts, big yellow eyes in a pale face and a chevroned belly. Its face slides slowly from side to side as if the head were turning, the pupils lead the turn, its eyes close for a moment now and then, and it puffs a little as it breathes.
     - Flowers: a small cluster of three to five on stems with a leaf or two, growing from the top of the limb, each in a colour of its own (red, pink, yellow, purple, white, orange or blue), swaying in the breeze, each out of step with the others.
     - Coconuts: a bunch of two or three brown, hairy coconuts, each with its three dark "eyes", hanging from the underside of the limb on short stems under a small green frond, swaying a little, each out of step with the others.
     - Hanging monkey: a small grey monkey hanging from the underside of the limb by its hands, swaying like a pendulum, with its legs swinging, its tail curling out to one side and an occasional blink. It hangs below the limb, clear of the vines it hangs from.
   - Thorn bush: dark blob with thorns.
   - Rock: grey polygon on a small ledge.
-  - Temple: a stepped pyramid with a shrine on top and a staircase up the middle of its front, on a platform of mouldings and recessed panels, drawn big (a door taller than the monkey) and buried: only the top shows, the lower part lost in a green haze that thickens toward the ground and a thick fringe of ferns and leaves wider than the temple, with moss, vines and ferns on every tier. Four looks, one of which each temple has: limestone with a stepped-fret frieze round the shrine; sandstone with a roof comb over the shrine; mossy grey-green stone with serpent heads on the stairs, moss and ferns; and dark basalt with gold inlay and two braziers whose flames flicker.
+  - Temple: a stepped pyramid with a shrine on top and a staircase up the middle of its front, on a platform of mouldings and recessed panels, drawn big (a door taller than the monkey) and buried: only the top shows, the lower part lost in a soft dark-green mist that thickens toward the ground (nested ellipses, so there is no edge to see) and a thick fringe of ferns and leaves wider than the temple, with moss, vines and ferns on every tier. The temple takes the stage tint like the background (it stands between the layers it is tinted on), and its fern fringe is in deep greens, so neither stands out in the dark stages. Four looks, one of which each temple has: limestone with a stepped-fret frieze round the shrine; sandstone with a roof comb over the shrine; mossy grey-green stone with serpent heads on the stairs, moss and ferns; and dark basalt with gold inlay and two braziers whose flames flicker. The flames are not tinted with the stone: they stay bright in the dark stages and there light up the stone round each brazier with a warm glow (sixteen thin additive circles, so no rings; strength from the stage's tint: none by day, a little in the late afternoon and at dawn, about half at dusk, full at night; it flickers with the flame).
   - Beehive: a teardrop paper nest in gold bands with a dark entrance, hanging from a vine, or from an arm off a trunk when it is low (its hitbox is three stacked circles, widest in the middle). A handful of bees buzz around it; they are scenery, and the animation takes the world time, so they stop while the game is paused.
   - High ones hang from the canopy on vines; low ones stand on a trunk or pole (the beehive hangs from an arm off the trunk).
 - **Moving obstacles.**
@@ -533,6 +556,13 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] No points: the score is one per gap crossed; a "+1" pops where a banana is taken
 - [x] A tally per player, "taken / passed", on the results (the HUD shows just the taken count under each score); in shared screen passed is the same for both and a banana goes to the first to reach it (unit tested)
 - [x] B and the bananas-off setting are gone; the debug text shows the slipping setting
+
+**28. Difficulty grades.** Every obstacle is graded 1–4 by how much release timing it blocks, each stage aims for grades by its own odds, no grade appears before its stage, and the late levels keep all four (see Obstacle grades).
+- [x] The window table holds each static obstacle's blocked share; `Obstacle.grade` is carried to the worker and shown in the debug view
+- [x] `createObstacle` aims for a grade per gap (own random stream), caps it by the stage, and falls back to the other kind of obstacle, then the closest static one
+- [x] Tests: the grades match the solver; none above the stage's highest; grade 4 only from Stage 4; the mean grade rises stage by stage; all four stay in the late levels
+- [x] High and low are about even in Stages 1–3 (`high` per stage; the aimed side picks the height range or the moving types)
+- [x] The whole jungle changes for every seed (static types and heights are drawn by grade)
 
 ## Design decisions
 

@@ -40,7 +40,7 @@ export class DebugOverlay {
     this.#applyVisibility();
   }
 
-  update(game) {
+  update(game, sound = null) {
     if (!this.visible) return;
     const { world } = game;
     const { monkey } = world;
@@ -74,9 +74,15 @@ export class DebugOverlay {
 
     const lines = [
       `${game.state}  stage ${game.stage}  score ${game.score}  lianas ${world.lianas.size}  obstacles ${world.obstacles.size}`,
-      `slipping ${game.slip ? 'on' : 'off'} (G)`,
+      `slipping ${game.slip ? 'on' : 'off'} (G)${sound ? `  sound ${sound.details}` : ''}`,
     ];
 
+    if (monkey.state === MonkeyState.HANGING) {
+      const { liana } = monkey;
+      const gap = liana.swingDir > 0 ? liana.index : liana.index - 1;
+      const o = world.obstacles.get(gap);
+      lines.push(o ? `obstacle #${gap}  ${o.type}  grade ${o.grade ?? '?'}` : `obstacle #${gap}  none`);
+    }
     if (monkey.state === MonkeyState.HANGING && !monkey.slipping) {
       lines.push(`liana #${monkey.liana.index}  grip ${Math.round(monkey.gripRadius)}  no slip until the run starts`);
     } else if (monkey.state === MonkeyState.HANGING) {

@@ -3,7 +3,6 @@ import {
   createLiana,
   createObstacle,
   templeGapFor,
-  staticTypeFor,
   branchDecorationFor,
   rulesFor,
   birdPatrolBounds,
@@ -161,10 +160,14 @@ describe('obstacle generation', () => {
     const rare = [ObstacleType.BEEHIVE, ObstacleType.TEMPLE];
     for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(rare.includes(t) ? 10 : 50);
     const statics = STATIC_TYPES.reduce((sum, t) => sum + counts[t], 0) - counts[ObstacleType.TEMPLE];
-    expect(counts[ObstacleType.BEEHIVE] / statics).toBeGreaterThan(BEEHIVE_SHARE - 0.05);
-    expect(counts[ObstacleType.BEEHIVE] / statics).toBeLessThan(BEEHIVE_SHARE + 0.05);
+    // The grade a gap aims for favours the beehive a little (it is mostly a hard obstacle),
+    // but it stays one of the rarest.
+    expect(counts[ObstacleType.BEEHIVE] / statics).toBeGreaterThan(BEEHIVE_SHARE / 2);
+    expect(counts[ObstacleType.BEEHIVE] / statics).toBeLessThan(BEEHIVE_SHARE * 2.5);
     // The bat only flies at night, one stage in five.
-    for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BAT ? 80 : 250);
+    // The aimed grade favours some types a little (blue birds, the easiest to dodge, come least).
+    const nightOnly = [ObstacleType.BAT, ObstacleType.CIRCLE_BAT];
+    for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(nightOnly.includes(t) ? 50 : 150);
   });
 
   it('carries a decoration on some branches, for show, and never on anything else', () => {
@@ -289,7 +292,8 @@ describe('obstacle generation', () => {
     expect(Math.abs(decorated.day / total.day - BRANCH_DECORATION_CHANCE)).toBeLessThan(0.02);
     expect(Math.abs(decorated.night / total.night - BRANCH_DECORATION_CHANCE_NIGHT)).toBeLessThan(0.04);
     expect(Math.abs(nightKind / decorated.night - NIGHT_DECORATION_SHARE)).toBeLessThan(0.05);
-    expect([...seen.night].sort()).toEqual([...BRANCH_DECORATIONS].sort());
+    // All of them at night, but the perched bird: there are no birds then.
+    expect([...seen.night].sort()).toEqual(BRANCH_DECORATIONS.filter((d) => d !== 'bird').sort());
     expect([...seen.day].sort()).toEqual([...DAY_DECORATIONS].sort());
   });
 
@@ -303,6 +307,34 @@ describe('obstacle generation', () => {
       expect(isPassable(o.type, o.y, o.scale, rulesFor(gap).minSteps)).toBe(true);
     }
     expect(hives).toBeGreaterThan(8);
+  });
+
+  it('has no birds at night: bats instead, the circling one for the purple bird', () => {
+    const birds = [ObstacleType.BIRD, ObstacleType.BLUE_BIRD, ObstacleType.PURPLE_BIRD];
+    const seen = new Set();
+    for (let gap = 1; gap <= 900; gap++) {
+      const night = timeOfDayFor(gap) === TimeOfDay.NIGHT;
+      const types = movingTypesFor(gap);
+      for (const bird of birds) expect(types.includes(bird)).toBe(!night && (bird !== ObstacleType.BLUE_BIRD || timeOfDayFor(gap) !== TimeOfDay.DUSK));
+      expect(types.includes(ObstacleType.CIRCLE_BAT)).toBe(night);
+      const o = createObstacle(SEED, gap);
+      if (night && o.moving) seen.add(o.type);
+      if (night) expect(birds).not.toContain(o.type);
+      // And no perched bird on a branch at night.
+      if (night) expect(o.decoration).not.toBe('bird');
+    }
+    expect(seen).toEqual(new Set([ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BAT, ObstacleType.CIRCLE_BAT]));
+  });
+
+  it('flies the circling bat as the purple bird does, in the same place and way', () => {
+    expect(OBSTACLE_HITBOXES.circleBat).toEqual(OBSTACLE_HITBOXES.purpleBird);
+    for (let seed = 1; seed <= 20; seed++) {
+      const rand = () => mulberry32(seed);
+      const bat = movingCandidate(ObstacleType.CIRCLE_BAT, 60, rand());
+      const bird = movingCandidate(ObstacleType.PURPLE_BIRD, 60, rand());
+      expect({ ...bat.toData(), type: 'purpleBird' }).toEqual(bird.toData());
+      expect(Math.abs(bat.motion.ax)).toBe(bat.motion.ay);
+    }
   });
 
   it('replaces the bird with a bat at night, and only then', () => {
@@ -339,14 +371,16 @@ describe('obstacle generation', () => {
     expect(phases).toEqual(new Set([TimeOfDay.DAY, TimeOfDay.LATE_AFTERNOON, TimeOfDay.DAWN]));
   });
 
-  it('flies purple birds at any time of day', () => {
+  it('flies purple birds at any time of day but night', () => {
     const phases = new Set();
     for (let gap = 1; gap <= 600; gap++) {
-      expect(movingTypesFor(gap)).toContain(ObstacleType.PURPLE_BIRD);
+      const night = timeOfDayFor(gap) === TimeOfDay.NIGHT;
+      expect(movingTypesFor(gap).includes(ObstacleType.PURPLE_BIRD)).toBe(!night);
       const o = createObstacle(SEED, gap);
       if (o?.type === ObstacleType.PURPLE_BIRD) phases.add(timeOfDayFor(gap));
     }
-    expect(phases.size).toBe(5);
+    // Every time of day but night (when a bat takes its place).
+    expect(phases).toEqual(new Set([TimeOfDay.DAY, TimeOfDay.LATE_AFTERNOON, TimeOfDay.DUSK, TimeOfDay.DAWN]));
   });
 
   it('flies a purple bird in a circle in the middle, either way round', () => {
@@ -439,17 +473,6 @@ describe('obstacle generation', () => {
     }
     // Obstacles behind the start stay static.
     for (let gap = -200; gap < 0; gap++) if (gap !== -1) expect(createObstacle(SEED, gap).moving).toBe(false);
-  });
-
-  it('keeps the static obstacles of every stage as they were', () => {
-    // Moving choices use their own random stream: a gap that stays static gets the
-    // obstacle it would have had without moving obstacles.
-    for (let gap = MOVING_FROM; gap < 200; gap++) {
-      const o = createObstacle(SEED, gap);
-      if (o.moving || o.type === ObstacleType.TEMPLE) continue;
-      const rand = mulberry32(mixSeed(SEED, gap));
-      expect(o.type).toBe(staticTypeFor(rand));
-    }
   });
 
   it('sets bird patrols to the widest range clear of the swings', () => {

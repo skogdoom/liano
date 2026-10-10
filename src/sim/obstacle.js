@@ -16,6 +16,7 @@ export const ObstacleType = Object.freeze({
   BAT: 'bat',
   BLUE_BIRD: 'blueBird',
   PURPLE_BIRD: 'purpleBird',
+  CIRCLE_BAT: 'circleBat',
 });
 
 // Every static type. (The generator picks among all but the temple, which has its own
@@ -36,6 +37,7 @@ export const MOVING_TYPES = [
   ObstacleType.BAT,
   ObstacleType.BLUE_BIRD,
   ObstacleType.PURPLE_BIRD,
+  ObstacleType.CIRCLE_BAT,
 ];
 
 // The decorations a branch can carry, for show: animals now, and not part of the hitbox.
@@ -94,9 +96,10 @@ export function scaledHitbox(type, scale) {
 // The world sets the time every step (setTime); the solver asks positionAt(t).
 //
 // A branch may carry a `decoration` (a BranchDecoration, or null), and a temple has a
-// `variant` (0 to TEMPLE_VARIANTS - 1): only the view uses them.
+// `variant` (0 to TEMPLE_VARIANTS - 1): only the view uses them. The generator sets its
+// `grade` (1 to 4, see GRADE_BOUNDS); null for one that was not graded.
 export class Obstacle {
-  constructor(gap, type, x, y, motion = null, scale = 1, decoration = null, variant = null) {
+  constructor(gap, type, x, y, motion = null, scale = 1, decoration = null, variant = null, grade = null) {
     this.gap = gap;
     this.type = type;
     this.baseX = x;
@@ -108,6 +111,7 @@ export class Obstacle {
     this.scale = scale;
     this.decoration = decoration;
     this.variant = variant;
+    this.grade = grade;
     this.hitbox = scaledHitbox(type, scale);
     if (motion) this.setTime(0);
   }
@@ -123,11 +127,12 @@ export class Obstacle {
       scale: this.scale,
       decoration: this.decoration,
       variant: this.variant,
+      grade: this.grade,
     };
   }
 
   static fromData(d) {
-    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale, d.decoration ?? null, d.variant ?? null);
+    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale, d.decoration ?? null, d.variant ?? null, d.grade ?? null);
   }
 
   // The same obstacle moved to gap `gap` (the solver works in gap 0).
@@ -141,6 +146,7 @@ export class Obstacle {
       this.scale,
       this.decoration,
       this.variant,
+      this.grade,
     );
   }
 

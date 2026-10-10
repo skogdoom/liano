@@ -107,6 +107,11 @@ export class FakeAudioContext {
     const data = new Float32Array(length);
     return { getChannelData: () => data };
   }
+  close() {
+    this.log.push('close');
+    this.state = 'closed';
+    return Promise.resolve();
+  }
   resume() {
     this.log.push('resume');
     return this.setState('running');

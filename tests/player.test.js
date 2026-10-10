@@ -164,6 +164,96 @@ describe('sound player', () => {
     expect(contexts[0].log).toEqual([]);
   });
 
+  describe('a context that does not come back', () => {
+    function stuckSetup() {
+      let time = 0;
+      const contexts = [];
+      const player = new SoundPlayer({
+        now: () => time,
+        createContext: () => {
+          const ctx = new FakeAudioContext();
+          contexts.push(ctx);
+          return ctx;
+        },
+      });
+      // One frame: the clock of a context that runs advances.
+      const frame = (ms = 16) => {
+        time += ms;
+        if (contexts.at(-1)?.state === 'running') contexts.at(-1).currentTime += ms / 1000;
+        player.setPaused(false);
+      };
+      return { player, contexts, frame, advance: (ms) => (time += ms) };
+    }
+
+    it('is replaced at the next gesture once it has been stuck for a while', () => {
+      const { player, contexts, frame } = stuckSetup();
+      player.unlock();
+      for (let i = 0; i < 10; i++) frame();
+      // The window switch leaves it suspended, and the browser will not resume it.
+      contexts[0].resume = () => Promise.reject(new Error('not allowed'));
+      contexts[0].state = 'suspended';
+      for (let i = 0; i < 30; i++) frame(100);
+      // Frames alone do not replace it (a new context needs a gesture) ...
+      expect(contexts).toHaveLength(1);
+      expect(player.play(crash())).toBe(true);
+      // ... the next key press does.
+      player.unlock();
+      expect(contexts).toHaveLength(2);
+      expect(contexts[0].log).toContain('close');
+      expect(contexts[1].state).toBe('running');
+      expect(player.rebuilds).toBe(1);
+      expect(player.status).toBe('running (rebuilt 1x)');
+      expect(player.play(crash())).toBe(true);
+      expect(contexts[1].sources().length).toBeGreaterThan(0);
+    });
+
+    it('is replaced when it says it runs but its clock stands still', () => {
+      const { player, contexts, advance } = stuckSetup();
+      player.unlock();
+      for (let i = 0; i < 40; i++) {
+        advance(100);
+        player.setPaused(false); // the clock never moves
+      }
+      player.unlock();
+      expect(contexts).toHaveLength(2);
+    });
+
+    it('keeps a context that comes back in time, and one that is paused or muted', () => {
+      const { player, contexts, frame, advance } = stuckSetup();
+      player.unlock();
+      for (let i = 0; i < 10; i++) frame();
+      contexts[0].state = 'suspended';
+      frame(1000); // not stuck for long yet
+      frame(); // resume() brings it back
+      expect(contexts[0].state).toBe('running');
+      for (let i = 0; i < 20; i++) frame(200);
+      player.unlock();
+      expect(contexts).toHaveLength(1);
+      // Paused: a suspended context is what is wanted, however long it lasts.
+      player.setPaused(true);
+      for (let i = 0; i < 40; i++) {
+        advance(500);
+        player.setPaused(true);
+      }
+      player.unlock();
+      player.setMuted(true);
+      advance(60000);
+      player.unlock();
+      expect(contexts).toHaveLength(1);
+    });
+  });
+
+  it('describes itself for the debug view: locked, then running with its clock and plays', () => {
+    const { player } = setup();
+    expect(player.details).toBe('locked');
+    player.unlock();
+    expect(player.details).toMatch(/^running, clock 0\.0 s, 0 played, gain 0\.6, 8000 Hz/);
+    player.play(crash());
+    player.setPaused(true);
+    player.play(crash()); // refused while paused: not counted
+    expect(player.details).toMatch(/1 played/);
+  });
+
   it('fades out playing sounds when muted', () => {
     const { player, contexts } = setup();
     player.unlock();
