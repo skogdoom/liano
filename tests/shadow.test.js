@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { Game, GameState } from '../src/sim/game.js';
 import { ShadowRun, shadowMonkey } from '../src/sim/shadow.js';
 import { Monkey, MonkeyState } from '../src/sim/monkey.js';
-import { Liana } from '../src/sim/liana.js';
+import { Liana, LianaState } from '../src/sim/liana.js';
 import { createInput } from '../src/input.js';
-import { SIM_DT } from '../src/config.js';
+import { LIANA_SPACING, SIM_DT } from '../src/config.js';
 
 const stepGame = (game, n) => {
   for (let i = 0; i < n; i++) game.step(SIM_DT);
@@ -45,6 +45,48 @@ describe('a recorded run', () => {
     expect(out.liana.angularVelocity).toBeCloseTo(liana.angularVelocity, 9);
     expect(run.frame(-1, out)).toBeNull();
     expect(run.frame(3000, out)).toBeNull();
+  });
+
+  it('records the shadow’s lianas: the one it hangs on, then the one it let go of while it sways', () => {
+    const run = new ShadowRun();
+    const monkey = new Monkey();
+    const first = new Liana(3, 3 * LIANA_SPACING);
+    const second = new Liana(4, 4 * LIANA_SPACING);
+    monkey.grab(first, 250);
+    const out = shadowMonkey();
+    const step = () => {
+      first.step(SIM_DT);
+      second.step(SIM_DT);
+      monkey.step(SIM_DT);
+      run.add(monkey);
+    };
+    for (let i = 0; i < 20; i++) step();
+    run.frame(19, out);
+    expect(out.lianas[0]).toMatchObject({ active: true, index: 3, x: 3 * LIANA_SPACING, state: LianaState.SWINGING });
+    expect(out.lianas[0].angle).toBeCloseTo(first.angle, 9);
+    expect(out.lianas[1].active).toBe(false);
+    // Let go: the liana settles, and is the one that sways.
+    monkey.release();
+    for (let i = 0; i < 20; i++) step();
+    run.frame(39, out);
+    expect(out.lianas[0].active).toBe(false);
+    expect(out.lianas[1]).toMatchObject({ active: true, index: 3, state: LianaState.SETTLING });
+    expect(out.lianas[1].angle).toBeCloseTo(first.angle, 9);
+    expect(out.lianas[1].angularVelocity).toBeCloseTo(first.angularVelocity, 9);
+    // Grabbing the next one: the first still sways while it does.
+    Object.assign(monkey, { vx: 1, vy: 0 });
+    monkey.grab(second, 250);
+    for (let i = 0; i < 10; i++) step();
+    run.frame(49, out);
+    expect(out.lianas[0]).toMatchObject({ active: true, index: 4, state: LianaState.SWINGING });
+    expect(out.lianas[1]).toMatchObject({ active: true, index: 3 });
+    // And it is gone once it has settled.
+    for (let i = 0; i < 20000 && first.state !== LianaState.IDLE; i++) step();
+    expect(first.state).toBe(LianaState.IDLE);
+    step();
+    run.frame(run.count - 1, out);
+    expect(out.lianas[1].active).toBe(false);
+    expect(out.lianas[0].active).toBe(true);
   });
 
   it('remembers flying and falling, without a liana', () => {
@@ -294,5 +336,34 @@ describe('the shadow key', () => {
     expect(input.consumeShadowToggle()).toBe(false);
     expect(input.consumeLivesToggle()).toBe(false);
     expect(input.consumePress('primary')).toBe(false);
+  });
+});
+
+describe('the shadow drawn', () => {
+  it('shows grey, see-through lianas of its own with the shadow, and nothing without', async () => {
+    const { ShadowView, SHADOW_ALPHA, SHADOW_FUR } = await import('../src/render/shadowView.js');
+    const view = new ShadowView();
+    expect(view.view.visible).toBe(false);
+    expect(view.view.alpha).toBe(SHADOW_ALPHA);
+    expect(SHADOW_ALPHA).toBeLessThan(0.5);
+    // Grey: the three channels of every fur colour are close.
+    for (const color of Object.values(SHADOW_FUR)) {
+      const [r, g, b] = [(color >> 16) & 255, (color >> 8) & 255, color & 255];
+      expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThan(24);
+    }
+    const frame = shadowMonkey();
+    Object.assign(frame, { x: 1000, y: 200, state: MonkeyState.HANGING });
+    Object.assign(frame.lianas[0], { active: true, index: 1, x: 700, state: LianaState.SWINGING, angle: 0.5 });
+    view.update(frame, 0.016);
+    expect(view.view.visible).toBe(true);
+    expect(view.monkey.view.position.x).toBe(1000);
+    expect(view.lianas[0].visible).toBe(true);
+    expect(view.lianas[1].visible).toBe(false);
+    // The second liana sways on after the monkey lets go of the first.
+    Object.assign(frame.lianas[1], { active: true, index: 0, x: 0, state: LianaState.SETTLING, angle: -0.2, angularVelocity: 1 });
+    view.update(frame, 0.016);
+    expect(view.lianas[1].visible).toBe(true);
+    view.update(null, 0.016);
+    expect(view.view.visible).toBe(false);
   });
 });

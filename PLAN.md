@@ -113,12 +113,12 @@ Lives are always on in the two-player modes (3 each, see Two-player rules). In s
 
 ## Shadow monkey
 
-A setting for single player (`S` on the title screen, off by default, desktop only like lives; always off in the 2P modes): the best previous game is replayed as a shadow beside the monkey, a dark, half see-through monkey drawn behind it, so you can race it. It needs every game to be on the same level.
+A setting for single player (`S` on the title screen, off by default, desktop only like lives; always off in the 2P modes): the best previous game is replayed as a shadow beside the monkey, a grey, see-through monkey drawn behind it (SHADOW_ALPHA 0.36, grey fur), on grey, see-through lianas of its own, so you can race it. It needs every game to be on the same level.
 
 - **The level.** With the shadow on, every game uses one seed: picked at random the first time the shadow is turned on and kept until the page is reloaded (also across turning it off and on again, and a visit to a 2P mode). With it off the seed is random for every game, as before. Obstacles, bananas and decorations are generated from the seed, so the level is the same; nothing about generation changes.
 - **The same start.** The run's moving obstacles and swings follow the world's time, so a run starts from a fresh world at time zero (from the title screen, whose swing has been going for a while, the world is rebuilt as the run starts; after a results screen it already is). The same inputs then give the same run, step for step (a test plays one twice).
-- **Recording.** Every sim step of a run with the shadow on records player 1's monkey (position, velocity, hanging, flying or dead, and the liana's swing direction, angle and angular velocity: what its view needs). When the run ends (a death, or Esc) it becomes the shadow if its score beats the one before it (a tie does not). Shadows are kept in memory for the page session, one per setting of lives and slipping (like the session bests), since the same level plays differently under other rules.
-- **Replay.** In the next game the shadow's frame for the step the run is at is drawn (so it follows pause); when its run is over, it disappears. It is only drawn: it touches nothing, picks up nothing and does not affect the sim. The first game has no shadow.
+- **Recording.** Every sim step of a run with the shadow on records player 1's monkey (position, velocity, hanging, flying or dead, and the liana's swing direction, angle and angular velocity: what its view needs) and the shadow's lianas: the one it hangs on and the one it let go of, as long as that still sways (index, state, angle, angular velocity). When the run ends (a death, or Esc) it becomes the shadow if its score beats the one before it (a tie does not). Shadows are kept in memory for the page session, one per setting of lives and slipping (like the session bests), since the same level plays differently under other rules.
+- **Replay.** In the next game the shadow's frame for the step the run is at is drawn, with its two lianas drawn as the real ones are but in grey (the real lianas, which nobody swings on in the shadow's game, hang still beneath) (so it follows pause); when its run is over, it disappears. It is only drawn: it touches nothing, picks up nothing and does not affect the sim. The first game has no shadow.
 
 ## Difficulty stages
 
@@ -595,7 +595,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] `S` toggle on the title screen (`Game.toggleShadow`, 1P only, off by default), shown on the settings line
 - [x] A fixed seed while it is on, and a fresh world at the start of each run, so the same inputs give the same run
 - [x] `ShadowRun` records the monkey every sim step; the best run per setting of lives and slipping is the next game's shadow
-- [x] The pane draws the shadow behind the monkey (dark, half see-through)
+- [x] The pane draws the shadow behind the monkey: grey and see-through, on grey lianas of its own (`ShadowView`)
 
 ## Design decisions
 
