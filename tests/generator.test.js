@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createLiana,
   createObstacle,
+  staticTypeFor,
   branchDecorationFor,
   rulesFor,
   birdPatrolBounds,
@@ -33,6 +34,7 @@ import {
   BLUE_BIRD_LOW,
   BLUE_BIRD_BOB,
   BRANCH_DECORATION_CHANCE,
+  BEEHIVE_SHARE,
 } from '../src/config.js';
 
 describe('liana generation', () => {
@@ -139,7 +141,11 @@ describe('obstacle generation', () => {
   it('uses all types, roughly evenly', () => {
     const counts = Object.fromEntries([...STATIC_TYPES, ...MOVING_TYPES].map((t) => [t, 0]));
     for (let gap = 1; gap <= 3000; gap++) counts[createObstacle(SEED, gap).type]++;
-    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(50); // late stages are 90 % moving
+    // Late stages are 90 % moving; beehives are rarer than the rest.
+    for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BEEHIVE ? 10 : 50);
+    const statics = STATIC_TYPES.reduce((sum, t) => sum + counts[t], 0);
+    expect(counts[ObstacleType.BEEHIVE] / statics).toBeGreaterThan(BEEHIVE_SHARE - 0.05);
+    expect(counts[ObstacleType.BEEHIVE] / statics).toBeLessThan(BEEHIVE_SHARE + 0.05);
     // The bat only flies at night, one stage in five.
     for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BAT ? 100 : 400);
   });
@@ -171,14 +177,14 @@ describe('obstacle generation', () => {
 
   it('hangs beehives among the static obstacles, at heights that can be passed', () => {
     let hives = 0;
-    for (let gap = 1; gap <= 400; gap++) {
+    for (let gap = 1; gap <= 800; gap++) {
       const o = createObstacle(SEED, gap);
       if (o.type !== ObstacleType.BEEHIVE) continue;
       hives++;
       expect(o.moving).toBe(false);
       expect(isPassable(o.type, o.y, o.scale, rulesFor(gap).minSteps)).toBe(true);
     }
-    expect(hives).toBeGreaterThan(10);
+    expect(hives).toBeGreaterThan(8);
   });
 
   it('replaces the bird with a bat at night, and only then', () => {
@@ -285,7 +291,7 @@ describe('obstacle generation', () => {
       const o = createObstacle(SEED, gap);
       if (o.moving) continue;
       const rand = mulberry32(mixSeed(SEED, gap));
-      expect(o.type).toBe(STATIC_TYPES[Math.floor(rand() * STATIC_TYPES.length)]);
+      expect(o.type).toBe(staticTypeFor(rand));
     }
   });
 

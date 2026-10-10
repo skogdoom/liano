@@ -76,7 +76,7 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 
 ## Obstacles
 
-**Static:** branch, thorn bush, rock, beehive (all four equally likely). A random height in OBSTACLE_Y_RANGE, horizontally centred, rerolled until the gap is passable and clear of both neighbouring lianas' swept areas.
+**Static:** branch, thorn bush, rock, beehive (BEEHIVE_SHARE, 8 % of the static gaps; the other three equally likely). A random height in OBSTACLE_Y_RANGE, horizontally centred, rerolled until the gap is passable and clear of both neighbouring lianas' swept areas.
 
 **Branch decorations.** About one branch in five (BRANCH_DECORATION_CHANCE, 0.2) carries a decoration: a bird, a snake or a hanging monkey, picked at random. It is scenery: the obstacle is the same branch with the same hitbox, so nothing about passability or difficulty changes, and a flight can pass through the decoration unharmed. Whether a branch has one, and which, depends only on (seed, gap) with its own random stream, and rides along with the obstacle's data to the worker and back. A branch is about one gap in thirty, so a decoration shows about once or twice in a run.
 

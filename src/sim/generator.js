@@ -18,6 +18,7 @@ import {
   BLUE_BIRD_BOB,
   BANANA_CHANCE,
   BRANCH_DECORATION_CHANCE,
+  BEEHIVE_SHARE,
   ENTRY_RADII,
 } from '../config.js';
 import { Banana } from './banana.js';
@@ -111,6 +112,14 @@ export function branchDecorationFor(seed, gap) {
 function staticObstacle(seed, gap, type, y, scale) {
   const decoration = type === ObstacleType.BRANCH ? branchDecorationFor(seed, gap) : null;
   return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, y, null, scale, decoration);
+}
+
+// The type of a static gap: a beehive for BEEHIVE_SHARE of them, else one of the other
+// types, equally likely. Draws from `rand` in a fixed order (the share first).
+const PLAIN_STATIC_TYPES = STATIC_TYPES.filter((t) => t !== ObstacleType.BEEHIVE);
+export function staticTypeFor(rand) {
+  if (rand() < BEEHIVE_SHARE) return ObstacleType.BEEHIVE;
+  return PLAIN_STATIC_TYPES[Math.floor(rand() * PLAIN_STATIC_TYPES.length)];
 }
 
 const MOVING_TRIES = 20;
@@ -210,12 +219,12 @@ export function createObstacle(seed, gap) {
         const o = movingCandidate(pick(movingTypesFor(gap), rand), gap, rand, rules.scale);
         if (o && isMovingFeasible(o.inGap(0), rules.minSteps)) return o;
       }
-      const type = pick(STATIC_TYPES, rand);
+      const type = staticTypeFor(rand);
       return staticObstacle(seed, gap, type, fallbackHeight(type, rules), rules.scale);
     }
   }
   const rand = mulberry32(mixSeed(seed, gap));
-  const type = STATIC_TYPES[Math.floor(rand() * STATIC_TYPES.length)];
+  const type = staticTypeFor(rand);
   return staticObstacle(seed, gap, type, pickHeight(type, rand, rules), rules.scale);
 }
 

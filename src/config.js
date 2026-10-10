@@ -123,6 +123,10 @@ export const SNAKE_TRAVEL_RANGE = [90, 160];
 export const BIRD_Y_RANGE = [330, 390];
 export const BIRD_BOB = 8;
 
+// The share of the static gaps that get a beehive; the other three static types split
+// the rest equally. A hive is a bigger thing to meet than a rock.
+export const BEEHIVE_SHARE = 0.08;
+
 // Some branches (this share of them) carry a decoration, for show: see BRANCH_DECORATIONS in
 // obstacle.js. The decoration is not part of the hitbox.
 export const BRANCH_DECORATION_CHANCE = 0.2;
