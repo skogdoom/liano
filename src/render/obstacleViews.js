@@ -493,6 +493,55 @@ function drawFlowers(rand) {
   return { part: flowers, animate, colors };
 }
 
+const COCONUT = 0x6b4a2b;
+const COCONUT_DARK = 0x3f2a15;
+const COCONUT_LIGHT = 0x9a7448;
+
+// A bunch of two or three coconuts hanging from the underside of the branch on short
+// stems, under a small green frond: brown and hairy, each with the three dark "eyes" at
+// the top. They sway a little, each out of step with the others.
+function drawCoconuts(rand) {
+  const bunch = new Container();
+  const [box] = OBSTACLE_HITBOXES.branch;
+  const cx = -34 + rand() * 40;
+  bunch.position.set(cx, box.dy + box.h - 1);
+  bunch.scale.x = rand() < 0.5 ? 1 : -1;
+  // The frond the stems spring from, tucked against the limb.
+  const frond = new Graphics();
+  frond.poly(leafPoints(0, 1, Math.PI * 0.5 + 0.9, 20, 5)).fill(LEAF_DARK);
+  frond.poly(leafPoints(0, 1, Math.PI * 0.5 - 0.9, 20, 5)).fill(LEAF);
+  frond.poly(leafPoints(0, 1, Math.PI * 0.5 + 0.2, 14, 4)).fill(LEAF);
+  bunch.addChild(frond);
+  const count = 2 + Math.floor(rand() * 2);
+  const nuts = [];
+  for (let i = 0; i < count; i++) {
+    const side = count === 2 ? (i ? 1 : -1) : i - 1;
+    const x = side * 12.5 + (rand() - 0.5) * 2;
+    const drop = 8 + rand() * 6 + (side === 0 ? 8 : 0);
+    const r = 6.4 + rand() * 1.2;
+    const nut = new Container();
+    nut.position.set(x * 0.4, 1);
+    const g = new Graphics();
+    // The stem, then the nut with a few hairs on its outline, a highlight and the eyes.
+    g.moveTo(0, 0).lineTo((x - x * 0.4) * 0.5, drop * 0.6).lineTo(x - x * 0.4, drop).stroke({ width: 1.8, color: COCONUT_DARK, cap: 'round' });
+    const nx = x - x * 0.4;
+    for (let a = rand() * 0.3; a < Math.PI * 2; a += 0.28 + rand() * 0.14) {
+      g.moveTo(nx + Math.cos(a) * r * 0.95, drop + r + Math.sin(a) * r * 0.95)
+        .lineTo(nx + Math.cos(a) * (r + 1.1), drop + r + Math.sin(a) * (r + 1.1)).stroke({ width: 0.7, color: COCONUT_DARK, alpha: 0.8 });
+    }
+    g.circle(nx, drop + r, r).fill(COCONUT);
+    g.ellipse(nx - r * 0.35, drop + r - r * 0.4, r * 0.28, r * 0.42).fill({ color: COCONUT_LIGHT, alpha: 0.85 });
+    for (const [ex, ey] of [[-0.28, 0.18], [0.28, 0.18], [0, 0.5]]) g.circle(nx + ex * r, drop + r * 0.35 + ey * r * 0.5, r * 0.13).fill(COCONUT_DARK);
+    nut.addChild(g);
+    bunch.addChild(nut);
+    nuts.push({ nut, phase: rand() * 6.3, speed: 1.1 + rand() * 0.7 });
+  }
+  const animate = (t) => {
+    for (const n of nuts) n.nut.rotation = 0.09 * Math.sin(t * n.speed + n.phase);
+  };
+  return { part: bunch, animate, count };
+}
+
 const OWL = 0x8a6a48;
 const OWL_DARK = 0x5a432c;
 const OWL_BELLY = 0xe8d7b5;
@@ -565,6 +614,7 @@ export const DECORATIONS = {
   hangingBat: drawHangingBat,
   owl: drawOwl,
   flowers: drawFlowers,
+  coconuts: drawCoconuts,
 };
 
 // Adds the decoration the branch carries to `view`; returns its animation.
