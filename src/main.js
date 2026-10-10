@@ -18,6 +18,7 @@ import { Overlays } from './render/overlays.js';
 import { Pane } from './render/pane.js';
 import { Hud } from './render/hud.js';
 import { DebugOverlay } from './render/debugOverlay.js';
+import { FpsMeter } from './render/fpsMeter.js';
 import { MuteButton } from './render/muteButton.js';
 import { FullscreenButton } from './render/fullscreenButton.js';
 import { SoundPlayer } from './audio/player.js';
@@ -293,7 +294,11 @@ const loop = createFixedStepLoop({
   },
 });
 
+// Frame rate and times, for the debug view (D): fed every frame, whether it is shown or not.
+const fpsMeter = new FpsMeter();
+
 function frame(ticker) {
+  fpsMeter.tick(performance.now());
   if (input.consumeDebugToggle()) debugOverlay.toggle();
   if (input.consumeMuteToggle()) toggleMute();
   // G turns slipping on and off, anywhere (paused too).
@@ -317,7 +322,7 @@ function frame(ticker) {
   panes.forEach((pane, i) => pane.update(events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches, i === 0 ? ghost : null));
   hud.update(game);
   overlays.update(game, panes[0].camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
-  debugOverlay.update(game, sound);
+  debugOverlay.update(game, sound, fpsMeter);
 }
 
 // Stop at the first error rather than failing every frame.
