@@ -312,7 +312,7 @@ function frame(ticker) {
   panes.forEach((pane, i) => pane.update(events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches));
   hud.update(game);
   overlays.update(game, panes[0].camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
-  debugOverlay.update(game);
+  debugOverlay.update(game, sound);
 }
 
 // Stop at the first error rather than failing every frame.

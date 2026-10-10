@@ -40,7 +40,7 @@ export class DebugOverlay {
     this.#applyVisibility();
   }
 
-  update(game) {
+  update(game, sound = null) {
     if (!this.visible) return;
     const { world } = game;
     const { monkey } = world;
@@ -74,7 +74,7 @@ export class DebugOverlay {
 
     const lines = [
       `${game.state}  stage ${game.stage}  score ${game.score}  lianas ${world.lianas.size}  obstacles ${world.obstacles.size}`,
-      `slipping ${game.slip ? 'on' : 'off'} (G)`,
+      `slipping ${game.slip ? 'on' : 'off'} (G)${sound ? `  sound ${sound.status}` : ''}`,
     ];
 
     if (monkey.state === MonkeyState.HANGING) {

@@ -3,15 +3,27 @@
 //
 // Browsers only allow audio after a user gesture, so the context is created by
 // unlock(), called from input handlers; nothing plays before that. The context is
-// suspended while the game is paused or muted.
+// suspended while the game is paused or muted. A context that then does not come back
+// (the browser or the audio device left it stuck after a window switch) is replaced at
+// the next gesture.
 
 const MASTER_GAIN = 0.6;
 const STOP_FADE = 0.05; // s
+// A context that should be running but is not (or whose clock stands still) for this long
+// is replaced.
+const STUCK_MS = 1500;
 
 export class SoundPlayer {
-  constructor({ createContext = () => new (globalThis.AudioContext || globalThis.webkitAudioContext)() } = {}) {
+  constructor({
+    createContext = () => new (globalThis.AudioContext || globalThis.webkitAudioContext)(),
+    now = () => performance.now(),
+  } = {}) {
     this.createContext = createContext;
+    this.now = now;
     this.ctx = null;
+    this.rebuilds = 0;
+    this.stuckSince = null;
+    this.lastTime = null;
     this.muted = false;
     this.paused = false;
     // Sounds still playing: { name, outputs, sources }.
@@ -25,20 +37,45 @@ export class SoundPlayer {
   // Call from a user gesture. Creates the context the first time, and resumes it if
   // the browser suspended it (e.g. iOS after a phone call).
   unlock() {
-    if (!this.ctx) {
-      const ctx = this.createContext();
-      this.master = ctx.createGain();
-      this.master.gain.value = this.muted ? 0 : MASTER_GAIN;
-      const compressor = ctx.createDynamicsCompressor();
-      this.master.connect(compressor);
-      compressor.connect(ctx.destination);
-      this.noise = whiteNoise(ctx);
-      this.ctx = ctx;
-      // A suspend or resume takes a moment to settle, and the browser can also change the
-      // state on its own: whenever it does, bring it back to what the game wants.
-      ctx.onstatechange = () => this.#sync();
+    if (!this.ctx) this.#create();
+    this.#sync(true);
+  }
+
+  #create() {
+    const ctx = this.createContext();
+    this.master = ctx.createGain();
+    this.master.gain.value = this.muted ? 0 : MASTER_GAIN;
+    const compressor = ctx.createDynamicsCompressor();
+    this.master.connect(compressor);
+    compressor.connect(ctx.destination);
+    this.noise = whiteNoise(ctx);
+    this.ctx = ctx;
+    this.stuckSince = null;
+    this.lastTime = null;
+    // A suspend or resume takes a moment to settle, and the browser can also change the
+    // state on its own: whenever it does, bring it back to what the game wants.
+    ctx.onstatechange = () => this.#sync();
+  }
+
+  // Throws the context away for a new one, and the sounds playing on it.
+  #rebuild() {
+    const old = this.ctx;
+    old.onstatechange = null;
+    try {
+      old.close?.()?.catch?.(() => {});
+    } catch {
+      // Already closed.
     }
-    this.#sync();
+    this.active.clear();
+    this.rebuilds++;
+    this.#create();
+  }
+
+  // What the sound is doing, for the debug view.
+  get status() {
+    if (!this.ctx) return 'locked';
+    const { state } = this.ctx;
+    return this.rebuilds ? `${state} (rebuilt ${this.rebuilds}x)` : state;
   }
 
   setMuted(muted) {
@@ -118,13 +155,37 @@ export class SoundPlayer {
     return osc;
   }
 
+  // Whether the context has been stuck for STUCK_MS while it should be running: not in the
+  // 'running' state, or running with its clock standing still.
+  #stuck(ctx) {
+    const idle = ctx.state !== 'running' || ctx.currentTime === this.lastTime;
+    this.lastTime = ctx.currentTime;
+    if (!idle) {
+      this.stuckSince = null;
+      return false;
+    }
+    const now = this.now();
+    this.stuckSince ??= now;
+    return now - this.stuckSince >= STUCK_MS;
+  }
+
   // Runs the context only while unmuted and unpaused. Anything but 'running' (also
   // 'interrupted', which Safari reports) is brought back; a suspend still settling when
   // the game resumes is caught by the state change it ends in.
-  #sync() {
+  #sync(gesture = false) {
     const { ctx } = this;
     if (!ctx) return;
     const run = !this.muted && !this.paused;
+    if (!run) {
+      this.stuckSince = null;
+      this.lastTime = null;
+    }
+    // A new context is only allowed to start from a gesture, so a stuck one is replaced
+    // by the next.
+    if (run && this.#stuck(ctx) && gesture) {
+      this.#rebuild();
+      return this.#sync();
+    }
     // Both can reject (e.g. audio still not allowed); the next frame or gesture tries again.
     if (run && ctx.state !== 'running') ctx.resume()?.catch?.(() => {});
     else if (!run && ctx.state === 'running') ctx.suspend()?.catch?.(() => {});
