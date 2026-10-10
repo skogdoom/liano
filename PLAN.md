@@ -21,7 +21,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 | 2P Shared screen | P1 `A`, P2 `L` | 3 each | Higher total score after both are out of lives; equal = draw |
 | 2P Split screen | P1 `A`, P2 `L` | 3 each | Same as shared |
 
-- **Title screen.** A mode picker: keys `1` / `2` / `3` select a mode, and Space or Enter starts it. On a touch device the picker is hidden and a tap starts 1P: the 2P modes are keyboard-only. The title shows the controls for the selected mode ("SPACE · let go", or "P1 A · P2 L · let go") and "P pause · Esc menu" with a keyboard, and between them one line with the two settings, "H · Lives: off" and "G · Slipping: off" (gold when on; in the 2P modes "Lives: on" dimmed). The panel has as much room below its last line as above its first (35 px).
+- **Title screen.** A mode picker: keys `1` / `2` / `3` select a mode, and Space or Enter starts it. On a touch device the picker is hidden and a tap starts 1P: the 2P modes are keyboard-only. The title shows the controls for the selected mode ("SPACE · let go", or "P1 A · P2 L · let go") and "P pause · Esc menu" with a keyboard, and between them one line with the three settings, "H · Lives: off", "G · Slipping: off" and "S · Shadow: off" (gold when on; in the 2P modes "Lives: on" and "Shadow: off" dimmed). The panel has as much room below its last line as above its first (35 px).
 - **During a run:** `P` pauses and resumes; `Esc` ends the run and goes back to the title screen (in 1P the run's score still counts for the best).
 - **Results:** after a 400 ms input lock, Space or Enter plays again in the same mode, `Esc` goes to the title screen, and `1` / `2` / `3` go to it with that mode selected.
 - **Other keys:**
@@ -30,6 +30,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
   - `D` toggles the debug overlay.
   - `G` turns slipping off and on (see Trying without slipping).
   - `H` (for hearts) turns lives on and off for 1P, on the title screen only (see Lives and hearts).
+  - `S` (for shadow) turns the shadow monkey on and off for 1P, on the title screen only (see Shadow monkey).
   - None of these ever counts as a game press.
 - **Key rules.** Keys are defined in `config.js` (`KEYS`). Shift is avoided: on Windows, pressing it five times opens the Sticky Keys dialog. Key auto-repeat (`event.repeat`) is ignored for every key.
 - **Presses and pause.** Presses while paused, or within 250 ms of resuming, are ignored.
@@ -109,6 +110,15 @@ Lives are always on in the two-player modes (3 each, see Two-player rules). In s
 **Hearts.** In every game with lives, each BANANAS_PER_HEART (5) bananas a player takes turn the next banana in the game into a heart, the first banana after the one just taken that is still there (or, with none generated yet, the next one generated). Taking the heart gives that player an extra life, up to MAX_LIVES (99); it counts as no banana: not in the taken count, nor in the bananas passed on the results, and it does not count towards the next heart. In shared screen the bananas are shared, so the heart goes to whoever takes it. Hearts are runtime state of the world (like the bananas taken): generation does not change, so a seed gives the same bananas with or without lives. A heart has its own sound (a rising four-note arpeggio) and a "+1 ♥" pops where it was taken.
 
 **HUD.** Under the banana count each player has a row of hearts: filled for the lives left, outlined for the lives lost of the three they start with (a player with 2 lives has two filled and one outlined). With more than five lives it shows five filled hearts and a small number at the top left of the leftmost heart with how many lives there are. A player who is out shows "OUT" and no hearts.
+
+## Shadow monkey
+
+A setting for single player (`S` on the title screen, off by default, desktop only like lives; always off in the 2P modes): the best previous game is replayed as a shadow beside the monkey, a dark, half see-through monkey drawn behind it, so you can race it. It needs every game to be on the same level.
+
+- **The level.** With the shadow on, every game uses one seed: picked at random the first time the shadow is turned on and kept until the page is reloaded (also across turning it off and on again, and a visit to a 2P mode). With it off the seed is random for every game, as before. Obstacles, bananas and decorations are generated from the seed, so the level is the same; nothing about generation changes.
+- **The same start.** The run's moving obstacles and swings follow the world's time, so a run starts from a fresh world at time zero (from the title screen, whose swing has been going for a while, the world is rebuilt as the run starts; after a results screen it already is). The same inputs then give the same run, step for step (a test plays one twice).
+- **Recording.** Every sim step of a run with the shadow on records player 1's monkey (position, velocity, hanging, flying or dead, and the liana's swing direction, angle and angular velocity: what its view needs). When the run ends (a death, or Esc) it becomes the shadow if its score beats the one before it (a tie does not). Shadows are kept in memory for the page session, one per setting of lives and slipping (like the session bests), since the same level plays differently under other rules.
+- **Replay.** In the next game the shadow's frame for the step the run is at is drawn (so it follows pause); when its run is over, it disappears. It is only drawn: it touches nothing, picks up nothing and does not affect the sim. The first game has no shadow.
 
 ## Difficulty stages
 
@@ -295,6 +305,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | BANANA_CHANCE | 0.25 per gap, as a candidate | About 14 % of gaps get a banana, at least 3 apart |
 | BANANA_RADIUS | 14 | Drawn at 1.4× |
 | LIVES_2P | 3 | Lives each player starts with in the 2P modes, and in 1P with lives on |
+| KEYS.shadow | S | The shadow monkey toggle (see Shadow monkey) |
 | BANANAS_PER_HEART, MAX_LIVES | 5, 99 | Bananas taken per heart; the most lives a player can have |
 | RESPAWN_GRIP | 0.7 × L | |
 | RESPAWN_DELAY_MS | 1000 | The dead monkey tumbles this long before respawning |
@@ -579,6 +590,12 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] `World` turns the next banana into a heart every BANANAS_PER_HEART bananas (pending when none is generated yet) and gives the life on pickup, capped at MAX_LIVES; hearts count as no banana
 - [x] A heart row in the HUD (filled, outlined, five plus a count), the heart on the field, a "+1 ♥" pop and a sound of its own
 - [x] The title shows the setting; `H` is a toggle key that never counts as a press
+
+**30. Shadow monkey.** The best previous game replayed as a shadow, on a level fixed for the session (see Shadow monkey).
+- [x] `S` toggle on the title screen (`Game.toggleShadow`, 1P only, off by default), shown on the settings line
+- [x] A fixed seed while it is on, and a fresh world at the start of each run, so the same inputs give the same run
+- [x] `ShadowRun` records the monkey every sim step; the best run per setting of lives and slipping is the next game's shadow
+- [x] The pane draws the shadow behind the monkey (dark, half see-through)
 
 ## Design decisions
 

@@ -13,6 +13,9 @@ import { ObstacleViews } from './obstacleViews.js';
 // (scrolled by the camera), the canopy strip and floor band, then `overlay` (the debug
 // view). `scene` is what the death shake moves: each pane shakes when a monkey in it
 // dies (a lost life in the two-player modes, the end of the run in single player).
+const GHOST_ALPHA = 0.5;
+const GHOST_TINT = 0x0b1410;
+
 export class Pane {
   constructor() {
     this.view = new Container();
@@ -26,6 +29,14 @@ export class Pane {
     this.bananaViews = new BananaViews();
     this.monkeyLayer = new Container();
     this.monkeyViews = [];
+    // The shadow monkey, behind the real ones: a dark, see-through monkey.
+    this.ghostLayer = new Container();
+    this.ghostLayer.alpha = GHOST_ALPHA;
+    this.ghostLayer.tint = GHOST_TINT;
+    this.ghostLayer.visible = false;
+    this.ghostView = new MonkeyView(PALETTES[0]);
+    this.ghostLayer.addChild(this.ghostView.view);
+    this.monkeyLayer.addChild(this.ghostLayer);
     this.worldLayer.addChild(
       this.obstacleViews.view,
       this.lianaLayer,
@@ -109,7 +120,8 @@ export class Pane {
 
   // `events`: this frame's events from this pane's world.
   // `shakes`: whether deaths shake the view (not with reduced motion).
-  update(events, dt, shakes = true) {
+  // `ghost` is the shadow monkey to draw (see Game.shadowFrame), or null.
+  update(events, dt, shakes = true, ghost = null) {
     const { world, camera, shake } = this;
     if (shakes && events.some((e) => e.type === 'death')) shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
     shake.update(dt);
@@ -124,5 +136,9 @@ export class Pane {
     this.obstacleViews.update(world.obstacles.values(), world.time, this.background.color);
     this.bananaViews.update(world, events, dt);
     world.monkeys.forEach((m, i) => this.monkeyViews[i].update(m, dt, world.isInvulnerable(i)));
+    // A new shadow run starts from where the monkey is, not easing from the last one.
+    if (ghost && !this.ghostLayer.visible) this.ghostView.monkey = null;
+    this.ghostLayer.visible = ghost !== null;
+    if (ghost) this.ghostView.update(ghost, dt);
   }
 }
