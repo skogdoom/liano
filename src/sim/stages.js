@@ -27,6 +27,16 @@ export function stageFor(gap) {
   };
 }
 
+// The times of day the stages go through (see stageFor: the stage number counts on past
+// the last row of STAGES, and the sky starts its day over after dawn).
+export const TimeOfDay = Object.freeze({ DAY: 0, LATE_AFTERNOON: 1, DUSK: 2, NIGHT: 3, DAWN: 4 });
+const TIMES_OF_DAY = Object.keys(TimeOfDay).length;
+
+// The time of day for the obstacle in `gap` (a TimeOfDay).
+export function timeOfDayFor(gap) {
+  return (stageFor(gap).number - 1) % TIMES_OF_DAY;
+}
+
 // The share of moving obstacles for the obstacle in `gap`: none before MOVING_FROM,
 // then the stage's share.
 export function movingShareFor(gap) {

@@ -92,6 +92,8 @@ export const OBSTACLE_HITBOXES = {
   spider: [{ kind: 'circle', dx: 0, dy: 0, r: 18 }],
   snake: [{ kind: 'circle', dx: 0, dy: 0, r: 18 }],
   bird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
+  // The bat takes the bird's place at night: the same hitbox, so the same patrols.
+  bat: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
 };
 
 // Moving obstacles (see obstacle.js). Their whole path stays clear of both
@@ -107,8 +109,9 @@ export const SPIDER_TRAVEL_RANGE = [80, 150];
 // slides down below that.
 export const SNAKE_HIGH_RANGE = [290, 320];
 export const SNAKE_TRAVEL_RANGE = [90, 160];
-// Bird: patrols across the gap, low where flights come in over the far liana, with a
-// slight bob. Its patrol bounds are the widest that stay clear of the swings.
+// Bird (and the bat that replaces it at night): patrols across the gap, low where
+// flights come in over the far liana, with a slight bob. Its patrol bounds are the
+// widest that stay clear of the swings.
 export const BIRD_Y_RANGE = [330, 390];
 export const BIRD_BOB = 8;
 

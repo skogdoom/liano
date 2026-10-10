@@ -16,7 +16,7 @@ import {
 } from '../config.js';
 import { Banana } from './banana.js';
 import { Liana } from './liana.js';
-import { Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from './obstacle.js';
+import { Obstacle, ObstacleType, STATIC_TYPES } from './obstacle.js';
 import {
   emptyGapFlights,
   flightHits,
@@ -26,7 +26,7 @@ import {
   windowSteps,
 } from './feasibility.js';
 import { mixSeed, mulberry32 } from './rng.js';
-import { movingShareFor, stageFor } from './stages.js';
+import { movingShareFor, stageFor, timeOfDayFor, TimeOfDay } from './stages.js';
 import { isPassable } from './windowTable.js';
 
 // Gaps on both sides of the start liana stay empty: the first forward gap lets the
@@ -99,13 +99,23 @@ const MOVING_SALT = 0x6d0e;
 const lerp = ([a, b], t) => a + (b - a) * t;
 const pick = (list, rand) => list[Math.floor(rand() * list.length)];
 
-// Bird patrol bounds (gap-0 x) at height y: the widest range around the gap centre
-// where the bird (at `scale`), anywhere in its bob, stays clear of both swings. Null if
-// there is no room at all.
-export function birdPatrolBounds(y, scale = 1) {
+// The moving types a gap can get: spiders, snakes and birds, with the birds giving way
+// to bats at night. A bat has a bird's hitbox and patrol, so it takes a bird's place in
+// the list and the gap gets the obstacle it would have had with a bird.
+export function movingTypesFor(gap) {
+  const night = timeOfDayFor(gap) === TimeOfDay.NIGHT;
+  return [ObstacleType.SPIDER, ObstacleType.SNAKE, night ? ObstacleType.BAT : ObstacleType.BIRD];
+}
+
+const PATROLLERS = new Set([ObstacleType.BIRD, ObstacleType.BAT]);
+
+// Bird (or bat) patrol bounds (gap-0 x) at height y: the widest range around the gap
+// centre where the bird (at `scale`), anywhere in its bob, stays clear of both swings.
+// Null if there is no room at all.
+export function birdPatrolBounds(y, scale = 1, type = ObstacleType.BIRD) {
   const clear = (x) => {
     for (let dy = -BIRD_BOB; dy <= BIRD_BOB; dy += 1) {
-      if (!isClearOfLianas(new Obstacle(0, ObstacleType.BIRD, x, y + dy, null, scale), 0)) return false;
+      if (!isClearOfLianas(new Obstacle(0, type, x, y + dy, null, scale), 0)) return false;
     }
     return true;
   };
@@ -118,14 +128,14 @@ export function birdPatrolBounds(y, scale = 1) {
   return [lo + 1, hi - 1];
 }
 
-// A random moving obstacle of `type` and `scale` for gap `gap`, or null if a bird has
-// no room at the height drawn.
+// A random moving obstacle of `type` and `scale` for gap `gap`, or null if a bird (or
+// bat) has no room at the height drawn.
 export function movingCandidate(type, gap, rand, scale = 1) {
   const offset = gap * LIANA_SPACING;
   const motion = { period: lerp(MOVING_PERIOD_RANGE, rand()), phase: rand() * 2 * Math.PI, ax: 0, ay: 0, bob: 0 };
-  if (type === ObstacleType.BIRD) {
+  if (PATROLLERS.has(type)) {
     const y = Math.round(lerp(BIRD_Y_RANGE, rand()));
-    const bounds = birdPatrolBounds(y, scale);
+    const bounds = birdPatrolBounds(y, scale, type);
     if (!bounds) return null;
     const [lo, hi] = bounds;
     motion.ax = (hi - lo) / 2;
@@ -160,7 +170,7 @@ export function createObstacle(seed, gap) {
     const rand = mulberry32(mixSeed(seed ^ MOVING_SALT, gap));
     if (rand() < movingShare) {
       for (let i = 0; i < MOVING_TRIES; i++) {
-        const o = movingCandidate(pick(MOVING_TYPES, rand), gap, rand, rules.scale);
+        const o = movingCandidate(pick(movingTypesFor(gap), rand), gap, rand, rules.scale);
         if (o && isMovingFeasible(o.inGap(0), rules.minSteps)) return o;
       }
       const type = pick(STATIC_TYPES, rand);

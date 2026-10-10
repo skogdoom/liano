@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { bannerAlpha, STAGE_NAMES } from '../src/render/overlays.js';
 import { Background, tintBetween, STAGE_TINTS } from '../src/render/background.js';
 import { STAGES } from '../src/config.js';
+import { TimeOfDay } from '../src/sim/stages.js';
 
 describe('stage banner and tint', () => {
   it('fades the banner in, holds it and fades it out', () => {
@@ -33,6 +34,12 @@ describe('stage banner and tint', () => {
       tints.push(background.back.tint);
     }
     expect(tints).toEqual([STAGE_TINTS[3], STAGE_TINTS[4], STAGE_TINTS[0], STAGE_TINTS[3], STAGE_TINTS[4]]);
+  });
+
+  it('names the times of day in the order the simulation counts them', () => {
+    for (const [name, index] of Object.entries(TimeOfDay)) {
+      expect(STAGE_NAMES[index].toUpperCase().replace(' ', '_')).toBe(name);
+    }
   });
 
   it('eases the tint from one stage to the next', () => {

@@ -8,6 +8,7 @@ const recipes = {
   'bong (spider)': bong('spider'),
   'bong (snake)': bong('snake'),
   'bong (bird)': bong('bird'),
+  'bong (bat)': bong('bat'),
   crash: crash(),
   pling: pling(),
 };
@@ -89,7 +90,7 @@ describe('sound recipes', () => {
     expect(base('branch')).toBeLessThan(base('thornBush'));
     expect(base('unknown')).toBe(BONG_PITCH.rock);
     // Every obstacle type has its own pitch.
-    const types = ['rock', 'branch', 'thornBush', 'spider', 'snake', 'bird'];
+    const types = ['rock', 'branch', 'thornBush', 'spider', 'snake', 'bird', 'bat'];
     expect(new Set(types.map(base)).size).toBe(types.length);
   });
 });

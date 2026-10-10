@@ -3,6 +3,8 @@ import {
   createLiana,
   createObstacle,
   birdPatrolBounds,
+  movingCandidate,
+  movingTypesFor,
   gapIndexRange,
   lianaIndexRange,
   updateLianas,
@@ -10,6 +12,7 @@ import {
 } from '../src/sim/generator.js';
 import { mulberry32, mixSeed } from '../src/sim/rng.js';
 import { Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from '../src/sim/obstacle.js';
+import { timeOfDayFor, TimeOfDay } from '../src/sim/stages.js';
 import { isPathClearOfLianas } from '../src/sim/feasibility.js';
 import { World } from '../src/sim/world.js';
 import {
@@ -18,6 +21,7 @@ import {
   CAMERA_TARGET_X,
   WORLD_MARGIN,
   OBSTACLE_Y_RANGE,
+  OBSTACLE_HITBOXES,
   STAGES,
   MOVING_FROM,
   BIRD_Y_RANGE,
@@ -129,7 +133,47 @@ describe('obstacle generation', () => {
     const counts = Object.fromEntries([...STATIC_TYPES, ...MOVING_TYPES].map((t) => [t, 0]));
     for (let gap = 1; gap <= 3000; gap++) counts[createObstacle(SEED, gap).type]++;
     for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(80); // late stages are 90 % moving
-    for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(550);
+    // The bat only flies at night, one stage in five.
+    for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BAT ? 100 : 400);
+  });
+
+  it('replaces the bird with a bat at night, and only then', () => {
+    let night = 0;
+    let other = 0;
+    for (let gap = 1; gap <= 600; gap++) {
+      const phase = timeOfDayFor(gap);
+      const types = movingTypesFor(gap);
+      expect(types).toHaveLength(3);
+      expect(types.includes(ObstacleType.BAT)).toBe(phase === TimeOfDay.NIGHT);
+      expect(types.includes(ObstacleType.BIRD)).toBe(phase !== TimeOfDay.NIGHT);
+      const o = createObstacle(SEED, gap);
+      if (!o.moving) continue;
+      if (phase === TimeOfDay.NIGHT) {
+        night++;
+        expect(o.type).not.toBe(ObstacleType.BIRD);
+      } else {
+        other++;
+        expect(o.type).not.toBe(ObstacleType.BAT);
+      }
+    }
+    expect(night).toBeGreaterThan(50);
+    expect(other).toBeGreaterThan(100);
+  });
+
+  it('gives a night gap the obstacle a bird would have had, with a bat patrolling instead', () => {
+    // Same hitbox and the same random stream, so a bat's patrol is a bird's.
+    expect(OBSTACLE_HITBOXES.bat).toEqual(OBSTACLE_HITBOXES.bird);
+    for (const y of [BIRD_Y_RANGE[0], 360, BIRD_Y_RANGE[1]]) {
+      expect(birdPatrolBounds(y, 1, ObstacleType.BAT)).toEqual(birdPatrolBounds(y, 1, ObstacleType.BIRD));
+      expect(birdPatrolBounds(y, 1.3, ObstacleType.BAT)).toEqual(birdPatrolBounds(y, 1.3, ObstacleType.BIRD));
+    }
+    const rand = (seed) => mulberry32(seed);
+    for (let seed = 1; seed <= 20; seed++) {
+      const bat = movingCandidate(ObstacleType.BAT, 60, rand(seed));
+      const bird = movingCandidate(ObstacleType.BIRD, 60, rand(seed));
+      expect(bat === null).toBe(bird === null);
+      if (bat) expect({ ...bat.toData(), type: 'bird' }).toEqual(bird.toData());
+    }
   });
 
   it('adds moving obstacles from obstacle MOVING_FROM, in each stage’s share', () => {

@@ -140,6 +140,10 @@ const BIRD = 0xd64541;
 const BIRD_DARK = 0xa3322f;
 const BIRD_BELLY = 0xf2c14e;
 const BEAK = 0xf39c12;
+const BAT = 0x4a3a5c;
+const BAT_DARK = 0x2a2036;
+const BAT_WING = 0x5d4a75;
+const BAT_EYE = 0xff5a4a;
 const EYE = 0xffffff;
 const PUPIL = 0x111111;
 
@@ -221,7 +225,41 @@ function buildBird(o) {
   return { parts: [body], body, animate };
 }
 
-const BUILD_MOVING = { spider: buildSpider, snake: buildSnake, bird: buildBird };
+// Hitbox: circle r 16. A bat: a furry body with pointed ears and red eyes, and a
+// membrane wing that flutters fast. It faces the way it patrols, like the bird.
+function buildBat(o) {
+  const body = new Container();
+  const g = new Graphics();
+  g.ellipse(-2, 1, 10, 7.5).fill(BAT);
+  g.circle(9, -2, 6).fill(BAT);
+  g.poly([5, -6, 6, -14, 10, -7]).fill(BAT_DARK).poly([9, -6, 12, -13, 14, -4]).fill(BAT_DARK);
+  g.poly([14, -1, 19, 1, 14, 3]).fill(BAT_DARK);
+  g.circle(11, -3, 1.8).fill(BAT_EYE);
+  g.poly([-11, 1, -18, 5, -12, 5]).fill(BAT_DARK);
+  const wing = new Graphics();
+  body.addChild(wing, g);
+  const animate = (t) => {
+    body.scale.set(o.vxAt(t) >= 0 ? o.scale : -o.scale, o.scale);
+    // One wing seen from the side: an arm out to a tip, and a scalloped membrane from
+    // the tip back to the body.
+    const lift = Math.sin(t * 22);
+    const root = [-3, 4];
+    const tip = [-23 - 3 * Math.abs(lift), -5 - 22 * lift];
+    const elbow = [-7, -4 - 11 * lift];
+    const along = (f, dx, dy) => [tip[0] + (root[0] - tip[0]) * f + dx, tip[1] + (root[1] - tip[1]) * f + dy];
+    const edge = [along(0.22, 3, 1), along(0.4, -1, 7), along(0.58, 3, 4), along(0.78, -1, 6)];
+    wing
+      .clear()
+      .poly([0, -3, ...elbow, ...tip, ...edge.flat(), ...root])
+      .fill(BAT_WING)
+      .poly([0, -3, ...elbow, ...tip])
+      .stroke({ width: 2.4, color: BAT_DARK, cap: 'round', join: 'round' });
+    for (const e of [edge[1], edge[3]]) wing.moveTo(0, -3).lineTo(e[0], e[1]).stroke({ width: 1, color: BAT_DARK, alpha: 0.7 });
+  };
+  return { parts: [body], body, animate };
+}
+
+const BUILD_MOVING = { spider: buildSpider, snake: buildSnake, bird: buildBird, bat: buildBat };
 
 // A view: `view` to add to the layer, and `update()` each frame.
 function buildObstacle(o) {
