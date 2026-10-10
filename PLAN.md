@@ -348,7 +348,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
 - **Lianas.** A green polyline with leaves (P2's in shared screen golden), which bends slightly while settling. The grip slide is visible, and the lower vine blinks yellow near the forced release.
 - **Static obstacles.**
   - Branch: brown limb with a leaf tuft, and sometimes a decoration (see Branch decorations):
-    - Perched bird: a small brown sparrow with a cream belly, on top of the limb, facing left or right at random; every couple of seconds it dips its head to peck, and its tail flicks.
+    - Perched bird: a small bird in the colours of one of the flying birds (red, blue or purple, at random; not the owl), on top of the limb, facing left or right at random; every couple of seconds it dips its head to peck, and its tail flicks.
     - Snake: a green snake with darker bands lying along the top of the limb in lazy S-curves, its head reared up; the neck sways and now and then the tongue flicks.
     - Bird's nest (a decoration, not an animal): a woven bowl of twigs on top of the limb, facing either way. What it holds is picked at random, in equal shares: nothing (a dry leaf), a speckled blue egg that rocks now and then, or a hatched egg: a yellow chick peeping from its cracked shell, bobbing, with the cap of the shell beside it.
     - Panther: a black panther lying along the top of the limb with its head up, watching, with yellow slit eyes. Its flanks rise and fall as it breathes, its tail hangs down off the end of the limb and swishes, an ear flicks now and then and it blinks. Faces either way.

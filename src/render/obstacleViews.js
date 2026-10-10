@@ -78,9 +78,6 @@ function drawBranch(g, o, rand, hangs, view) {
 
 // The decorations on a branch (animals) are scenery: not part of the hitbox. Each is placed (and, where
 // it matters, turned) at random for its gap, away from the cut stub and the leaf tuft.
-const SPARROW = 0x9a6b3c;
-const SPARROW_DARK = 0x6e4623;
-const SPARROW_BELLY = 0xf1dfb4;
 const SPARROW_BEAK = 0x3a2a1c;
 
 // Where along the branch's top edge x lies: the limb tapers from y = top at the stub to
@@ -90,24 +87,26 @@ function branchTop(x) {
   return box.dy + (5 * (x - box.dx)) / (box.w - 18);
 }
 
-// A small sparrow perched on top of the branch: now and then it pecks at the bark, and its
-// tail flicks. Faces left or right at random.
+// A small bird perched on top of the branch, in the colours of one of the flying birds
+// picked at random: now and then it pecks at the bark, and its tail flicks. Faces left or
+// right at random.
 function drawPerchedBird(rand) {
   const bird = new Container();
+  const [fur, dark, belly] = BIRD_COLORS[Math.floor(rand() * BIRD_COLORS.length)];
   const dir = rand() < 0.5 ? 1 : -1;
   bird.scale.x = dir;
   bird.position.set(-52 + rand() * 56, branchTop(0));
   const phase = rand() * 6.3;
   const body = new Graphics();
-  body.ellipse(0, -9, 10, 8).fill(SPARROW);
-  body.ellipse(1.5, -6.5, 6, 5).fill(SPARROW_BELLY);
-  body.ellipse(-2, -10, 7, 4.5).fill(SPARROW_DARK);
+  body.ellipse(0, -9, 10, 8).fill(fur);
+  body.ellipse(1.5, -6.5, 6, 5).fill(belly);
+  body.ellipse(-2, -10, 7, 4.5).fill(dark);
   body.moveTo(-1, -1).lineTo(-1, 0).moveTo(3, -1).lineTo(3, 0).stroke({ width: 1.5, color: SPARROW_BEAK });
   const tail = new Graphics();
-  tail.poly([0, 0, -11, -3, -10, 3]).fill(SPARROW_DARK);
+  tail.poly([0, 0, -11, -3, -10, 3]).fill(dark);
   tail.position.set(-7, -10);
   const head = new Graphics();
-  head.circle(0, 0, 6).fill(SPARROW);
+  head.circle(0, 0, 6).fill(fur);
   head.poly([5, -1.5, 11, 0.5, 5, 2.5]).fill(SPARROW_BEAK);
   head.circle(2, -1.5, 1.5).fill(EYE).circle(2.5, -1.5, 0.8).fill(PUPIL);
   head.position.set(6, -16);
@@ -915,6 +914,13 @@ const BLUE_BELLY = 0xd6e9ff;
 const PURPLE = 0x8e4fc4;
 const PURPLE_DARK = 0x5e2f8f;
 const PURPLE_BELLY = 0xe9d8f7;
+
+// The colours of the flying birds (body, wing and tail, belly): red, blue and purple.
+const BIRD_COLORS = [
+  [BIRD, BIRD_DARK, BIRD_BELLY],
+  [BLUE, BLUE_DARK, BLUE_BELLY],
+  [PURPLE, PURPLE_DARK, PURPLE_BELLY],
+];
 const BAT = 0x4a3a5c;
 const BAT_DARK = 0x2a2036;
 const BAT_WING = 0x5d4a75;
