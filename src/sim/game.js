@@ -1,4 +1,4 @@
-import { GAMEOVER_INPUT_LOCK_MS } from '../config.js';
+import { GAMEOVER_INPUT_LOCK_MS, LIVES_2P } from '../config.js';
 import { World } from './world.js';
 import { MODES, playerFor } from './match.js';
 import { randomSeed } from './rng.js';
@@ -22,18 +22,21 @@ export const GameState = Object.freeze({
 // has one world per player, all with the same seed. Events carry the index of the
 // world they come from (`pane`) and the match-wide `player`.
 export class Game {
-  // `createWorld({ players, lives, seed })` can be replaced in tests. `slip` is the
-  // setting the game starts with (see toggleSlip).
-  constructor({ createWorld = (options) => new World(options), slip = true } = {}) {
+  // `createWorld({ players, lives, hearts, seed })` can be replaced in tests. `slip` and
+  // `lives` are the settings the game starts with (see toggleSlip, toggleLives).
+  constructor({ createWorld = (options) => new World(options), slip = true, lives = false } = {}) {
     this.createWorld = createWorld;
     this.mode = 'solo';
     // Slipping (G), for every world and match until the page is reloaded.
     this.slip = slip;
+    // Lives for single player (H on the title screen); the two-player modes always have them.
+    this.lives = lives;
+    // The session's best single-player score, without and with lives.
+    this.bests = { off: 0, on: 0 };
     this.#newMatch();
     this.state = GameState.TITLE;
     this.stateTime = 0;
     this.score = 0;
-    this.best = 0;
     // Whether the run that just ended beat the previous best.
     this.newBest = false;
     // World events since the last takeEvents(), for sound and other per-frame consumers.
@@ -47,6 +50,17 @@ export class Game {
 
   get players() {
     return MODES[this.mode].players;
+  }
+
+  // Whether the match has lives (and hearts): always in the two-player modes, in single
+  // player if turned on.
+  get livesOn() {
+    return this.players > 1 || this.lives;
+  }
+
+  // The best score of this page session for the current single-player setting.
+  get best() {
+    return this.bests[this.lives ? 'on' : 'off'];
   }
 
   // Where player `p` is: their world and their monkey's index in it.
@@ -145,6 +159,16 @@ export class Game {
     for (const world of this.worlds) world.setSlip(this.slip);
   }
 
+  // Turns lives on or off for single player (see livesOn), on the title screen only. A
+  // new match: the worlds are the title screen's, so nothing is lost. Returns whether it
+  // changed anything.
+  toggleLives() {
+    if (this.state !== GameState.TITLE || this.mode !== 'solo') return false;
+    this.lives = !this.lives;
+    for (const world of this.worlds) world.setLives(this.lives ? LIVES_2P : 1, this.lives);
+    return true;
+  }
+
   // Handles a press of an input role (see KEYS): `primary` is Space or a tap, `start`
   // is Enter, `p1`/`p2` the two-player keys, `menu` (Esc) goes back to the title screen
   // (ending a run in progress, which still counts for the best). Returns true if the
@@ -188,7 +212,7 @@ export class Game {
     // The session best is for single player.
     if (this.mode === 'solo') {
       this.newBest = this.score > this.best;
-      this.best = Math.max(this.best, this.score);
+      this.bests[this.lives ? 'on' : 'off'] = Math.max(this.best, this.score);
     }
     this.#enter(GameState.RESULTS);
   }
@@ -205,14 +229,16 @@ export class Game {
 
   // New worlds for the selected mode, all from one new seed.
   #newMatch() {
-    const { players, lives, id } = MODES[this.mode];
+    const { players, lives: modeLives, id } = MODES[this.mode];
+    // Single player has one life, unless lives are on.
+    const lives = id === 'solo' && this.lives ? LIVES_2P : modeLives;
     const seed = randomSeed();
     const panes = id === 'split' ? players : 1;
     // In shared screen each monkey has its own lianas.
     const own = id === 'shared' ? { ownLianas: true } : {};
     const settings = { slip: this.slip };
     this.worlds = Array.from({ length: panes }, () =>
-      this.createWorld({ players: players / panes, lives, seed, ...own, ...settings }),
+      this.createWorld({ players: players / panes, lives, hearts: lives > 1, seed, ...own, ...settings }),
     );
     // Shared screen's view is part of the rules: it leaves trailing monkeys behind.
     this.sharedView = id === 'shared' ? new SharedView(this.worlds[0]) : null;

@@ -12,6 +12,13 @@ const GOLD = 0xffcf4a;
 const PANEL = 0x0b1a10;
 const SHADOW = { color: 0x000000, alpha: 0.5, distance: 3, blur: 2, angle: Math.PI / 4 };
 const FADE_IN = 0.25; // s
+// The title panel runs from TITLE_TOP to the bottom of the last line plus TITLE_PADDING,
+// the room there is above the first line (the version), measured from its centre.
+const TITLE_PADDING = 35;
+const TITLE_TOP = -192;
+const TITLE_LAST_LINE = 196;
+const TITLE_BOTTOM = TITLE_LAST_LINE + TITLE_PADDING;
+const TITLE_HEIGHT = TITLE_BOTTOM - TITLE_TOP;
 
 function text(content, size, { color = CREAM, weight = 'normal' } = {}) {
   const t = new Text({
@@ -22,13 +29,14 @@ function text(content, size, { color = CREAM, weight = 'normal' } = {}) {
   return t;
 }
 
-// A rounded panel centred at (cx, cy), with children placed relative to its centre.
-function panel(cx, cy, width, height) {
+// A rounded panel centred at (cx, cy), with children placed relative to its centre. The
+// rectangle can sit `shiftY` lower than the centre, to grow the panel at the bottom only.
+function panel(cx, cy, width, height, shiftY = 0) {
   const view = new Container();
   view.position.set(cx, cy);
   view.addChild(
     new Graphics()
-      .roundRect(-width / 2, -height / 2, width, height, 18)
+      .roundRect(-width / 2, -height / 2 + shiftY, width, height, 18)
       .fill({ color: PANEL, alpha: 0.72 })
       .stroke({ width: 2, color: CREAM, alpha: 0.25 }),
   );
@@ -158,15 +166,19 @@ export class Overlays {
     this.time = 0;
 
     // Right of the title-screen swing, so the monkey stays in view.
-    this.title = panel(0, 0, 440, 330);
+    this.title = panel(0, 0, 440, TITLE_HEIGHT, (TITLE_TOP + TITLE_BOTTOM) / 2);
     place(this.title, text('LIANO', 104, { weight: 'bold' }), -90);
     this.tagline = place(this.title, text('Swing from vine to vine.\nLet go to fly to the next one.', 22), 10);
     this.titleControl = place(this.title, text('', 22, { color: GOLD, weight: 'bold' }), 70);
     this.titlePrompt = place(this.title, text('', 28), 125);
     this.modePicker = new ModePicker();
     place(this.title, this.modePicker.view, 92);
+    // The settings, side by side: lives ("H · Lives: off" in single player, "Lives: on" in the
+    // two-player modes) and slipping ("G · Slipping: off").
+    this.livesLine = place(this.title, text('', 17, { weight: 'bold' }), 120);
+    this.slipLine = place(this.title, text('', 17, { weight: 'bold' }), 120);
     // The pause, menu and setting keys, under the prompt (with a keyboard).
-    this.keysHint = place(this.title, text('P  pause  ·  Esc  menu  ·  G  slipping', 15, { color: CREAM }), 153);
+    this.keysHint = place(this.title, text('P  pause  ·  Esc  menu', 15, { color: CREAM }), 188);
     this.keysHint.alpha = 0.7;
     const versionText = place(this.title, text(`v${version}`, 13, { color: CREAM }), -150);
     versionText.anchor.set(1, 0.5);
@@ -226,7 +238,7 @@ export class Overlays {
 
     this.title.visible = game.state === GameState.TITLE && !paused;
     this.titlePrompt.alpha = pulse;
-    if (this.title.visible) this.#updateTitle(game.mode, inputType !== 'touch');
+    if (this.title.visible) this.#updateTitle(game, inputType !== 'touch');
 
     this.gameOver.visible = game.state === GameState.RESULTS && !paused;
     if (this.gameOver.visible) {
@@ -305,15 +317,31 @@ export class Overlays {
     });
   }
 
-  // The mode picker and the keys hint show only with a keyboard (the two-player modes need one); the
-  // lines above it move up to make room.
-  #updateTitle(mode, showModes) {
+  // The mode picker, the lives setting and the keys hint show only with a keyboard (the
+  // two-player modes need one, and lives are for the desktop); the lines above them move up
+  // to make room.
+  #updateTitle(game, showModes) {
     this.modePicker.view.visible = showModes;
+    this.livesLine.visible = showModes;
+    this.slipLine.visible = showModes;
     this.keysHint.visible = showModes;
-    this.modePicker.update(mode);
+    this.modePicker.update(game.mode);
+    // Single player: the setting, to toggle with H. The two-player modes always have lives.
+    const solo = game.mode === 'solo';
+    this.livesLine.text = solo ? `H · Lives: ${game.lives ? 'on' : 'off'}` : 'Lives: on';
+    this.livesLine.style.fill = solo && game.lives ? GOLD : CREAM;
+    this.livesLine.alpha = solo ? (game.lives ? 1 : 0.8) : 0.55;
+    this.slipLine.text = `G · Slipping: ${game.slip ? 'on' : 'off'}`;
+    this.slipLine.style.fill = game.slip ? GOLD : CREAM;
+    this.slipLine.alpha = game.slip ? 1 : 0.8;
+    // Centred together.
+    const gap = 30;
+    const left = -(this.livesLine.width + gap + this.slipLine.width) / 2;
+    this.livesLine.x = left + this.livesLine.width / 2;
+    this.slipLine.x = left + this.livesLine.width + gap + this.slipLine.width / 2;
     this.tagline.y = showModes ? 0 : 10;
     this.titleControl.y = showModes ? 58 : 70;
-    this.titlePrompt.y = showModes ? 128 : 125;
+    this.titlePrompt.y = showModes ? 156 : 125;
   }
 
   // Prompts for the input in use; the control hint also names each player's key.

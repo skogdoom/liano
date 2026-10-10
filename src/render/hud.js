@@ -1,8 +1,8 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { LIVES_2P } from '../config.js';
 import { paneLayouts } from '../layout.js';
 import { GameState } from '../sim/game.js';
 import { drawBanana } from './bananaView.js';
+import { HeartRow } from './heartView.js';
 
 // Label colours per player, matching their monkeys' fur.
 export const PLAYER_COLORS = [0xf4e7c5, 0xffb061];
@@ -22,11 +22,10 @@ function label(size, color) {
   return t;
 }
 
-// The text for player `p` in two-player modes: their score and lives left.
+// The text for player `p` in two-player modes: their score, and OUT once they have no lives
+// left (the hearts are drawn under it, see HeartRow).
 export function playerLine(game, p) {
-  const lives = game.playerLives(p);
-  const hearts = game.playerOut(p) ? 'OUT' : '♥'.repeat(lives) + '♡'.repeat(Math.max(LIVES_2P - lives, 0));
-  return `P${p + 1}  ${game.playerScore(p)}  ${hearts}`;
+  return `P${p + 1}  ${game.playerScore(p)}${game.playerOut(p) ? '  OUT' : ''}`;
 }
 
 // Player `p`'s bananas, for the results: taken out of passed.
@@ -53,16 +52,17 @@ class BananaTally {
 }
 
 // Top-right. Single player: the score and the best score of this page session. Split
-// screen: each player's score and lives at the top right of their pane; shared
-// screen: both players' side by side. Under each score, how many bananas that player
-// has taken (out of how many passed only shows on the results).
+// screen: each player's score at the top right of their pane; shared screen: both
+// players' side by side. Under each score, how many bananas that player has taken (out of
+// how many passed only shows on the results), and in games with lives, their hearts.
 export class Hud {
   constructor() {
     this.view = new Container();
     this.solo = label(36, PLAYER_COLORS[0]);
     this.players = PLAYER_COLORS.map((color) => label(28, color));
     this.tallies = PLAYER_COLORS.map((color) => new BananaTally(color));
-    this.view.addChild(this.solo, ...this.players, ...this.tallies.map((t) => t.view));
+    this.heartRows = PLAYER_COLORS.map(() => new HeartRow());
+    this.view.addChild(this.solo, ...this.players, ...this.tallies.map((t) => t.view), ...this.heartRows.map((r) => r.view));
     this.shown = [];
   }
 
@@ -94,6 +94,13 @@ export class Hud {
         else tally.view.position.set(this.players[p].x, this.players[p].y + 36);
         tally.view.scale.set(solo ? layout.ui : 1);
       });
+      this.heartRows.forEach((row, p) => {
+        // The last heart's right edge in line with the text above it.
+        const edge = row.size * 1.05;
+        if (solo) row.view.position.set(right - edge * layout.ui, top + 86 * layout.ui);
+        else row.view.position.set(this.players[p].x - edge, this.players[p].y + 72);
+        row.view.scale.set(solo ? layout.ui : 1);
+      });
     }
     const texts = solo
       ? [`${game.score}  BEST ${Math.max(game.best, game.score)}`] // best tracks the live score
@@ -107,6 +114,11 @@ export class Hud {
     this.tallies.forEach((tally, p) => {
       tally.view.visible = p < game.players;
       if (tally.view.visible) tally.update(String(game.playerBananas(p).taken));
+    });
+    // The hearts, in the games with lives; none once a player is out.
+    this.heartRows.forEach((row, p) => {
+      row.view.visible = p < game.players && game.livesOn && !game.playerOut(p);
+      if (row.view.visible) row.update(game.playerLives(p));
     });
   }
 }

@@ -141,15 +141,15 @@ describe('split screen', () => {
 });
 
 describe('two-player HUD', () => {
-  it('shows each player’s score and lives, and OUT when they have none', async () => {
+  it('shows each player’s score, and OUT when they have no lives (the hearts are drawn, see hearts.test.js)', async () => {
     const { playerLine } = await import('../src/render/hud.js');
     const game = splitGame();
     game.press('start');
     game.worlds[1].scores[0] = 7;
-    expect(playerLine(game, 0)).toBe('P1  0  ♥♥♥');
+    expect(playerLine(game, 0)).toBe('P1  0');
     drop(game, 1);
     stepN(game, 3);
-    expect(playerLine(game, 1)).toBe('P2  7  ♥♥♡');
+    expect(playerLine(game, 1)).toBe('P2  7');
     game.worlds[1].lives[0] = 1;
     game.worlds[1].respawnStep[0] = null;
     expect(playerLine(game, 1)).toBe('P2  7  OUT');

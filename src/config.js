@@ -263,7 +263,8 @@ export const GAMEOVER_INPUT_LOCK_MS = 400;
 // Keys by role (KeyboardEvent.code). `primary` is 1P's action key (a tap does the same),
 // `p1`/`p2` are the two-player action keys (not Shift: five presses open Windows' Sticky
 // Keys dialog), `mode` picks the mode on the title screen (1, 2, 3) and `start` starts it
-// (as does `primary`). `slip` (G, for grip) turns slipping on and off.
+// (as does `primary`). `slip` (G, for grip) turns slipping on and off, `lives` (H, for
+// hearts) turns lives on and off for single player, on the title screen.
 export const KEYS = Object.freeze({
   primary: ['Space'],
   start: ['Enter', 'NumpadEnter'],
@@ -275,8 +276,15 @@ export const KEYS = Object.freeze({
   mute: ['KeyM'],
   pause: ['KeyP'],
   slip: ['KeyG'],
+  lives: ['KeyH'],
 });
+// The lives each player starts with in the two-player modes, and in single player with
+// lives turned on.
 export const LIVES_2P = 3;
+// With lives, every BANANAS_PER_HEART bananas a player takes turn the next banana in the
+// game into a heart: an extra life, not counted as a banana. No one has more than MAX_LIVES.
+export const BANANAS_PER_HEART = 5;
+export const MAX_LIVES = 99;
 // Shared screen draws the world at this scale in the 16:9 frame, a wider view
 // (SCREEN_WIDTH / SHARED_ZOOM of world), and keeps the leading monkey this far across
 // it: the next liana is in view ahead, and the other monkey can be over a liana behind.
