@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Game, GameState } from '../src/sim/game.js';
+import { World } from '../src/sim/world.js';
 import { ShadowReplay, ShadowRun, shadowMonkey } from '../src/sim/shadow.js';
 import { Monkey, MonkeyState } from '../src/sim/monkey.js';
 import { Liana, LianaState } from '../src/sim/liana.js';
@@ -47,7 +48,7 @@ describe('a recorded run', () => {
     expect(run.frame(3000, out)).toBeNull();
   });
 
-  it('keeps its size down: a frame is a few bytes, and the lianas are only their grabs and releases', () => {
+  it('keeps its size down: a frame is a few bytes, and the liana is only its grabs and releases', () => {
     const run = new ShadowRun();
     const monkey = new Monkey();
     monkey.grab(new Liana(0, 0), 200);
@@ -55,7 +56,7 @@ describe('a recorded run', () => {
     const bytes = run.position.BYTES_PER_ELEMENT * 2 + run.velocity.BYTES_PER_ELEMENT * 2 + run.state.BYTES_PER_ELEMENT;
     expect(bytes).toBeLessThanOrEqual(25);
     // One grab (before the first step) and nothing else, however long it hangs.
-    expect(run.events).toEqual([{ frame: -1, index: 0, dir: 1, early: false }]);
+    expect(run.events).toEqual([{ frame: -1, index: 0, dir: 1 }]);
   });
 
   it('remembers flying and falling, without a liana', () => {
@@ -293,47 +294,51 @@ describe('the shadow monkey in the game', () => {
   });
 });
 
-describe('the shadow’s lianas, swung again from the run', () => {
-  it('sway and settle exactly as the real ones did, frame by frame', () => {
-    const game = new Game({ shadow: true });
+// A game on a level of its own, so the runs below are always the same.
+const seededGame = () =>
+  new Game({ shadow: true, createWorld: (options) => new World({ ...options, seed: 20240 }) });
+
+describe('the shadow’s liana, swung again from the run', () => {
+  it('swings exactly as the real one did, frame by frame, while the shadow hangs on it', () => {
+    const game = seededGame();
     game.press();
-    // Every liana the world has after each step (it drops the ones far behind).
+    // What the monkey hangs on after each step.
     const truth = [];
     for (let i = 0; i < 1500 && game.state === GameState.PLAYING; i++) {
       const m = game.world.monkey;
       // Let go 29 steps after each grab.
       if (m.state === MonkeyState.HANGING && Math.round(m.gripTime / SIM_DT) === 29) game.press();
       game.step(SIM_DT);
-      truth.push(
-        new Map([...game.world.lianas.values()].map((l) => [l.index, { state: l.state, angle: l.angle, angularVelocity: l.angularVelocity }])),
-      );
+      const l = m.liana;
+      truth.push(l ? { index: l.index, angle: l.angle, angularVelocity: l.angularVelocity, swingDir: l.swingDir } : null);
     }
     const run = game.recording;
     // Several grabs and releases.
     expect(run.events.filter((e) => e.dir !== 0).length).toBeGreaterThan(4);
     expect(run.events.filter((e) => e.dir === 0).length).toBeGreaterThan(3);
-    expect(run.events.some((e) => e.dir === 0 && e.early)).toBe(true); // by the player
     const replay = new ShadowReplay(run);
-    let compared = 0;
+    let hanging = 0;
     for (let k = 0; k < run.count; k++) {
       replay.advanceTo(k);
-      const ghost = new Map(replay.swaying.map((l) => [l.index, l]));
-      for (const [index, t] of truth[k]) {
-        if (t.state === LianaState.IDLE) {
-          expect(ghost.has(index)).toBe(false);
-          continue;
-        }
-        expect(ghost.get(index).state).toBe(t.state);
-        expect(ghost.get(index).angle).toBe(t.angle);
-        expect(ghost.get(index).angularVelocity).toBe(t.angularVelocity);
-        compared++;
+      const t = truth[k];
+      if (!t) {
+        // Flying: no liana to draw.
+        expect(replay.held).toBeNull();
+        expect(replay.lianas).toEqual([]);
+        continue;
       }
+      expect(replay.lianas).toEqual([replay.held]);
+      expect(replay.held.index).toBe(t.index);
+      expect(replay.held.swingDir).toBe(t.swingDir);
+      expect(replay.held.angle).toBe(t.angle);
+      expect(replay.held.angularVelocity).toBe(t.angularVelocity);
+      hanging++;
     }
-    expect(compared).toBeGreaterThan(1000);
+    expect(hanging).toBeGreaterThan(250);
   });
 
   it('give the one the shadow hangs on, and none while it flies', () => {
-    const game = new Game({ shadow: true });
+    const game = seededGame();
     game.press();
     const states = [];
     for (let i = 0; i < 600 && game.state === GameState.PLAYING; i++) {
@@ -347,19 +352,21 @@ describe('the shadow’s lianas, swung again from the run', () => {
       replay.advanceTo(k);
       const [state, index] = states[k];
       expect(replay.held?.index ?? null).toBe(index);
-      if (state === MonkeyState.HANGING) expect(replay.swaying).toContain(replay.held);
+      if (state === MonkeyState.HANGING) expect(replay.lianas).toContain(replay.held);
+      else expect(replay.lianas).toEqual([]);
     }
   });
 
   it('can be asked for any frame, in any order, and once past the run’s end', () => {
-    const game = new Game({ shadow: true });
+    const game = seededGame();
     game.press();
+    const run = game.recording;
     for (let i = 0; i < 400; i++) {
       const m = game.world.monkey;
       if (m.state === MonkeyState.HANGING && Math.round(m.gripTime / SIM_DT) === 29) game.press();
       game.step(SIM_DT);
     }
-    const replay = new ShadowReplay(game.recording);
+    const replay = new ShadowReplay(run);
     replay.advanceTo(300);
     const angle = replay.held?.angle;
     replay.advanceTo(100);
@@ -370,7 +377,7 @@ describe('the shadow’s lianas, swung again from the run', () => {
   });
 
   it('are given to the game’s shadow frame for the monkey view', () => {
-    const game = new Game({ shadow: true });
+    const game = seededGame();
     game.press();
     for (let i = 0; i < 200; i++) game.step(SIM_DT);
     game.end();
@@ -405,7 +412,7 @@ describe('the shadow key', () => {
 });
 
 describe('the shadow drawn', () => {
-  it('shows grey, see-through lianas of its own with the shadow, and nothing without', async () => {
+  it('shows a grey, see-through liana of its own while the shadow hangs on it, and nothing without', async () => {
     const { ShadowView, SHADOW_ALPHA, SHADOW_FUR } = await import('../src/render/shadowView.js');
     const view = new ShadowView();
     expect(view.view.visible).toBe(false);
@@ -419,23 +426,16 @@ describe('the shadow drawn', () => {
     const frame = shadowMonkey();
     const held = new Liana(1, 700);
     held.grab(1);
-    const swaying = new Liana(0, 0);
-    swaying.grab(1);
-    swaying.release();
     Object.assign(frame, { x: 1000, y: 200, state: MonkeyState.HANGING, liana: held, lianas: [held] });
     view.update(frame, 0.016);
     expect(view.view.visible).toBe(true);
     expect(view.monkey.view.position.x).toBe(1000);
     expect(view.lianas).toHaveLength(1);
     expect(view.lianas[0].visible).toBe(true);
-    // A second liana sways on after the monkey lets go of the first, and is hidden once it settles.
-    frame.lianas = [held, swaying];
+    // Flying: no liana, not even one that still sways.
+    Object.assign(frame, { state: MonkeyState.AIRBORNE, liana: null, lianas: [] });
     view.update(frame, 0.016);
-    expect(view.lianas).toHaveLength(2);
-    expect(view.lianas[1].visible).toBe(true);
-    frame.lianas = [held];
-    view.update(frame, 0.016);
-    expect(view.lianas[1].visible).toBe(false);
+    expect(view.lianas[0].visible).toBe(false);
     view.update(null, 0.016);
     expect(view.view.visible).toBe(false);
   });

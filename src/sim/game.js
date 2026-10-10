@@ -88,10 +88,10 @@ export class Game {
     const index = this.world.stepCount - 1;
     const frame = this.ghost.frame(index, this.ghostMonkey);
     if (!frame) return null;
-    // The lianas it swings on, swung again from its grabs and releases.
+    // The liana it swings on, swung again from its grabs and releases.
     this.replay.advanceTo(index);
     frame.liana = this.replay.held;
-    frame.lianas = this.replay.swaying;
+    frame.lianas = this.replay.lianas;
     return frame;
   }
 
@@ -237,8 +237,7 @@ export class Game {
         const player = playerFor(this.mode, role);
         if (player >= 0) {
           const { world, index } = this.slot(player);
-          // The shadow's liana lets go before the lianas step, as this one does.
-          if (world.release(index) && this.recording) this.recording.inputRelease = true;
+          world.release(index);
         }
         return false;
       }
