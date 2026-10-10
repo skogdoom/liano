@@ -298,6 +298,8 @@ function frame(ticker) {
   if (input.consumeMuteToggle()) toggleMute();
   // G turns slipping on and off, anywhere (paused too).
   if (input.consumeSlipToggle()) game.toggleSlip();
+  // H turns lives on and off for single player, on the title screen.
+  if (input.consumeLivesToggle()) game.toggleLives();
   // P pauses a run, and resumes whatever it paused.
   if (input.consumePauseToggle() && (game.pausable || pause.reason === 'manual')) pause.toggle('manual');
   // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.

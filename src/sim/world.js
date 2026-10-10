@@ -13,6 +13,8 @@ import {
   DEATH_POP,
   LIANA_LENGTH,
   SWING_AMPLITUDE,
+  BANANAS_PER_HEART,
+  MAX_LIVES,
 } from '../config.js';
 import { ballisticStep, closestPointOnSegment } from './physics.js';
 import { createBanana, createObstacle, updateBananas, updateLianas, updateObstacles } from './generator.js';
@@ -27,6 +29,10 @@ import { stageFor } from './stages.js';
 // with none left it is out. `makeObstacle(seed, gap)` and `makeBanana(seed, gap,
 // obstacle)` can be replaced in tests.
 //
+// With `hearts` (the games with lives) every BANANAS_PER_HEART bananas a monkey takes turn
+// the next banana ahead into a heart: taking it gives that monkey a life (up to MAX_LIVES),
+// and it counts as no banana (see bananaTally).
+//
 // `slip` (on by default) turns slipping off for trying the game without it (see
 // setSlip). Generation does not depend on it: a seed gives the same jungle either way.
 export class World {
@@ -36,16 +42,24 @@ export class World {
     makeBanana = createBanana,
     players = 1,
     lives = 1,
+    hearts = false,
     ownLianas = false,
     slip = true,
   } = {}) {
     this.seed = seed;
     this.slip = slip;
+    this.hearts = hearts;
     this.makeObstacle = (gap) => makeObstacle(seed, gap);
     this.makeBanana = (gap) => {
       const obstacle = this.obstacles.has(gap) ? this.obstacles.get(gap) : this.makeObstacle(gap);
       const banana = makeBanana(seed, gap, obstacle);
-      if (banana) this.bananaGaps.add(gap);
+      if (!banana) return banana;
+      if (this.heartGaps.has(gap)) banana.heart = true;
+      else if (this.pendingHearts > 0) {
+        // A heart due when no banana was left ahead goes to the first one generated.
+        this.pendingHearts--;
+        this.#makeHeart(banana);
+      } else this.bananaGaps.add(gap);
       return banana;
     };
     // One set of lianas for all monkeys, or with `ownLianas` (shared screen) one set per
@@ -58,6 +72,10 @@ export class World {
     // outside the bananas so culling cannot forget or bring one back.
     this.bananaGaps = new Set();
     this.takenBananas = new Set();
+    // The gaps whose banana is a heart (kept here for the same reason), and the hearts due
+    // that found no banana to turn yet.
+    this.heartGaps = new Set();
+    this.pendingHearts = 0;
     // Whole steps since the world was created; moving obstacles follow `time`.
     this.stepCount = 0;
     this.monkeys = Array.from({ length: players }, () => new Monkey());
@@ -220,15 +238,46 @@ export class World {
   }
 
   // A banana the monkey touches (hanging or flying) is taken, by the first monkey to
-  // reach it, and counts for its player. It changes neither the score nor the swing.
+  // reach it, and counts for its player. It changes neither the score nor the swing. A
+  // heart is a life for the monkey instead, and counts as no banana.
   #takeBanana(player) {
     const m = this.monkeys[player];
     for (const banana of this.bananas.values()) {
       if (!banana || this.takenBananas.has(banana.gap) || !banana.touches(m.x, m.y, MONKEY_RADIUS)) continue;
       this.takenBananas.add(banana.gap);
+      if (banana.heart) {
+        this.lives[player] = Math.min(this.lives[player] + 1, MAX_LIVES);
+        this.events.push({ type: 'heart', gap: banana.gap, lives: this.lives[player], player });
+        continue;
+      }
       this.bananasTaken[player]++;
       this.events.push({ type: 'banana', gap: banana.gap, taken: this.bananasTaken[player], player });
+      if (this.hearts && this.bananasTaken[player] % BANANAS_PER_HEART === 0) this.#nextBananaToHeart(banana.gap);
     }
+  }
+
+  // Turns the first banana after gap `gap` that is still there into a heart, or, with none
+  // generated yet, the next one generated.
+  #nextBananaToHeart(gap) {
+    let next = null;
+    for (const banana of this.bananas.values()) {
+      if (!banana || banana.heart || banana.gap <= gap || this.takenBananas.has(banana.gap)) continue;
+      if (!next || banana.gap < next.gap) next = banana;
+    }
+    if (next) this.#makeHeart(next);
+    else this.pendingHearts++;
+  }
+
+  #makeHeart(banana) {
+    banana.heart = true;
+    this.heartGaps.add(banana.gap);
+    this.bananaGaps.delete(banana.gap);
+  }
+
+  // Gives every monkey `lives` lives, with or without hearts (a new match before the run).
+  setLives(lives, hearts) {
+    this.lives = this.monkeys.map(() => lives);
+    this.hearts = hearts;
   }
 
   // The banana in `gap` if it is there to take.

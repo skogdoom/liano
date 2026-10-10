@@ -17,7 +17,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 
 | Mode | Keys | Lives | Result |
 |---|---|---|---|
-| 1 Player | Space, or a tap/click on the game | 1 | Score; session best shown |
+| 1 Player | Space, or a tap/click on the game | 1, or 3 with lives on (`H`) | Score; session best shown (one best with lives on, one with them off) |
 | 2P Shared screen | P1 `A`, P2 `L` | 3 each | Higher total score after both are out of lives; equal = draw |
 | 2P Split screen | P1 `A`, P2 `L` | 3 each | Same as shared |
 
@@ -29,6 +29,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
   - `F` or the on-screen button toggles full screen.
   - `D` toggles the debug overlay.
   - `G` turns slipping off and on (see Trying without slipping).
+  - `H` (for hearts) turns lives on and off for 1P, on the title screen only (see Lives and hearts).
   - None of these ever counts as a game press.
 - **Key rules.** Keys are defined in `config.js` (`KEYS`). Shift is avoided: on Windows, pressing it five times opens the Sticky Keys dialog. Key auto-repeat (`event.repeat`) is ignored for every key.
 - **Presses and pause.** Presses while paused, or within 250 ms of resuming, are ignored.
@@ -100,6 +101,14 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 - The tally is "taken / passed". Passed is the most there was to take: the bananas in the gaps passed so far (scored by any monkey of the world), plus any taken. In shared screen it is the same for both players; in split screen each world counts its own. Deaths don't reset it.
 - The HUD shows only how many each player has taken, under their score (a banana icon and "3"). The results show the tally after a banana icon: "3 / 5", or "P1 3 / 5 · P2 2 / 5" in two-player.
 - Feedback: a "+1" rises where a banana was taken, with a "pling" (see Sound).
+
+## Lives and hearts
+
+Lives are always on in the two-player modes (3 each, see Two-player rules). In single player they are off by default and `H` turns them on and off on the title screen (the title panel shows "H · Lives: off" or "on", and "Lives: on" in the 2P modes). It is for the desktop: with touch only the line is not shown, so single player stays at one life. It applies to the next run and is kept until the page is reloaded; with lives on single player has LIVES_2P lives and works as a 2P game does (a lost life tumbles, then respawns, invulnerable for a moment; the run ends with the last). The session best is kept apart for the two settings, since a run with lives can score much more.
+
+**Hearts.** In every game with lives, each BANANAS_PER_HEART (5) bananas a player takes turn the next banana in the game into a heart, the first banana after the one just taken that is still there (or, with none generated yet, the next one generated). Taking the heart gives that player an extra life, up to MAX_LIVES (99); it counts as no banana: not in the taken count, nor in the bananas passed on the results, and it does not count towards the next heart. In shared screen the bananas are shared, so the heart goes to whoever takes it. Hearts are runtime state of the world (like the bananas taken): generation does not change, so a seed gives the same bananas with or without lives. A heart has its own sound (a rising four-note arpeggio) and a "+1 ♥" pops where it was taken.
+
+**HUD.** Under the banana count each player has a row of hearts: filled for the lives left, outlined for the lives lost of the three they start with (a player with 2 lives has two filled and one outlined). With more than five lives it shows five filled hearts and a small number at the top left of the leftmost heart with how many lives there are. A player who is out shows "OUT" and no hearts.
 
 ## Difficulty stages
 
@@ -196,7 +205,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 
 - **Recipes and player:** each sound is a pure recipe function (data, unit-tested in Node). A thin player is the only code that touches `AudioContext`.
 - **When sound plays:** on by default from the first press. Mute is toggled with `M` or the speaker button, and kept in memory only. The `AudioContext` is suspended while paused, and resumed whenever it is not running while it should be (also on its `statechange`, and every frame, so a window switch that lands while a suspend is still settling does not leave it silent). One that is still not running 1.5 s later, or whose clock stands still, is replaced by a new one at the next key press or tap; the debug view (D) shows the state (`sound running`, `sound locked`, `(rebuilt 1x)`).
-- **Sound set:** deaths, and a "pling" for a banana taken: two quick, soft sine notes a fifth apart (E6, then B6, 80 ms later), each with a faint octave, fading in about half a second, quieter than the deaths. Release sounds (a "swish", several "wheee"s) were tried and dropped; stages, respawns and results are silent.
+- **Sound set:** deaths, a rising four-note arpeggio (A5, D6, G6, C7, 70 ms apart, the pling's soft sine voice) for a heart taken, and a "pling" for a banana taken: two quick, soft sine notes a fifth apart (E6, then B6, 80 ms later), each with a faint octave, fading in about half a second, quieter than the deaths. Release sounds (a "swish", several "wheee"s) were tried and dropped; stages, respawns and results are silent.
 
 ## Touch, phones and tablets
 
@@ -285,7 +294,8 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | BIRD_Y_RANGE, BIRD_BOB | 330–390, 8 px | Patrol bounds are derived from the swings |
 | BANANA_CHANCE | 0.25 per gap, as a candidate | About 14 % of gaps get a banana, at least 3 apart |
 | BANANA_RADIUS | 14 | Drawn at 1.4× |
-| LIVES_2P | 3 | |
+| LIVES_2P | 3 | Lives each player starts with in the 2P modes, and in 1P with lives on |
+| BANANAS_PER_HEART, MAX_LIVES | 5, 99 | Bananas taken per heart; the most lives a player can have |
 | RESPAWN_GRIP | 0.7 × L | |
 | RESPAWN_DELAY_MS | 1000 | The dead monkey tumbles this long before respawning |
 | RESPAWN_INVULN_MS | 1500 | |
@@ -564,6 +574,12 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] High and low are about even in Stages 1–3 (`high` per stage; the aimed side picks the height range or the moving types)
 - [x] The whole jungle changes for every seed (static types and heights are drawn by grade)
 
+**29. Extra lives.** A lives toggle for single player (`H`) and hearts in every game with lives: see Lives and hearts.
+- [x] `Game.toggleLives()` (title screen, 1P only), `World.setLives`, a best score per setting
+- [x] `World` turns the next banana into a heart every BANANAS_PER_HEART bananas (pending when none is generated yet) and gives the life on pickup, capped at MAX_LIVES; hearts count as no banana
+- [x] A heart row in the HUD (filled, outlined, five plus a count), the heart on the field, a "+1 ♥" pop and a sound of its own
+- [x] The title shows the setting; `H` is a toggle key that never counts as a press
+
 ## Design decisions
 
 1. **Swing starts at vertical, in the direction of travel.** Released lianas settle back to vertical with a damped cosmetic sway.
@@ -582,7 +598,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 14. **Scoring per gap crossed,** on a forward grab of its far liana (a bird's x isn't fixed, so "passing an obstacle" is measured at the gap boundary). Flying past without reaching the liana doesn't score.
 15. **Difficulty keyed on obstacle index**, not score, in four stages. The day cycle goes on after them (dawn, then day again), and the difficulty keeps rising a little each stage up to a limit (shorter windows, more moving obstacles).
 16. **Moving obstacles never reach into a swing,** which confines them to the few bands the swings leave free.
-17. **Single player has 1 life.** Lives exist only in 2P.
+17. **Single player has 1 life,** unless lives are turned on (`H` on the title screen, off by default and not available on touch devices). The 2P modes always have them.
 18. **2P keys A and L**, avoiding Shift because of Windows Sticky Keys. They don't clash with `M`, `F`, `D` or `P`.
 19. **2P modes are keyboard-only and use the 16:9 frame.** Portrait and the flexible frame are for 1P.
 20. **Bananas are a side challenge,** counted per player against the bananas passed, without points or a boost, so they never change the pacing or the score.

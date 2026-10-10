@@ -1,12 +1,14 @@
 import { BANANA_RADIUS } from '../config.js';
 import { circleIntersectsCircle } from './physics.js';
 
-// A banana at (x, y) in gap `gap`. It stays put (the bob is only drawn).
+// A banana at (x, y) in gap `gap`. It stays put (the bob is only drawn). With lives the
+// world turns some into hearts (`heart`): an extra life when taken (see World).
 export class Banana {
   constructor(gap, x, y) {
     this.gap = gap;
     this.x = x;
     this.y = y;
+    this.heart = false;
   }
 
   touches(cx, cy, radius) {

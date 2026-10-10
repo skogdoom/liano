@@ -1,5 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { BANANA_RADIUS } from '../config.js';
+import { drawHeart } from './heartView.js';
 
 const PEEL = 0xffd23f;
 const RIDGE = 0xfff3a0;
@@ -65,8 +66,11 @@ function drawGlint(g, size) {
   g.poly([0, -size, s, -s, size, 0, s, s, 0, size, -s, s, -size, 0, -s, -s]).fill(GLINT);
 }
 
+const HEART_POP = 0xff7a90;
+const HEART_POP_EDGE = 0x7a1426;
+
 // The bananas still to take, bobbing gently and glinting (only drawn), and a "+1"
-// rising where one was taken.
+// rising where one was taken. A banana that the world turned into a heart is drawn as one.
 export class BananaViews {
   constructor() {
     this.view = new Container();
@@ -82,15 +86,22 @@ export class BananaViews {
       if (!banana || !world.bananaAt(banana.gap)) continue;
       seen.add(banana);
       let entry = this.views.get(banana);
+      // Turned into a heart since it was drawn.
+      if (entry && entry.heart !== banana.heart) {
+        entry.view.destroy({ children: true });
+        this.views.delete(banana);
+        entry = null;
+      }
       if (!entry) {
         const view = new Container();
         const body = new Graphics();
-        const spot = drawBanana(body);
+        const spot = banana.heart ? { x: -5, y: -5 } : drawBanana(body);
+        if (banana.heart) drawHeart(body, 17);
         const glint = new Graphics();
         drawGlint(glint, 8);
         glint.position.set(spot.x, spot.y);
         view.addChild(body, glint);
-        entry = { view, glint, phase: banana.gap * 1.7 };
+        entry = { view, glint, phase: banana.gap * 1.7, heart: banana.heart };
         this.views.set(banana, entry);
         this.view.addChild(view);
       }
@@ -106,12 +117,19 @@ export class BananaViews {
     }
 
     for (const e of events) {
-      if (e.type !== 'banana') continue;
+      if (e.type !== 'banana' && e.type !== 'heart') continue;
       const banana = world.bananas.get(e.gap);
       if (!banana) continue;
+      const heart = e.type === 'heart';
       const text = new Text({
-        text: '+1',
-        style: { fontFamily: 'sans-serif', fontSize: 26, fontWeight: 'bold', fill: PEEL, stroke: { color: TIP, width: 4 } },
+        text: heart ? '+1 ♥' : '+1',
+        style: {
+          fontFamily: 'sans-serif',
+          fontSize: 26,
+          fontWeight: 'bold',
+          fill: heart ? HEART_POP : PEEL,
+          stroke: { color: heart ? HEART_POP_EDGE : TIP, width: 4 },
+        },
       });
       text.anchor.set(0.5);
       text.position.set(banana.x, banana.y - 10);

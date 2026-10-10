@@ -158,15 +158,17 @@ export class Overlays {
     this.time = 0;
 
     // Right of the title-screen swing, so the monkey stays in view.
-    this.title = panel(0, 0, 440, 330);
+    this.title = panel(0, 0, 440, 384);
     place(this.title, text('LIANO', 104, { weight: 'bold' }), -90);
     this.tagline = place(this.title, text('Swing from vine to vine.\nLet go to fly to the next one.', 22), 10);
     this.titleControl = place(this.title, text('', 22, { color: GOLD, weight: 'bold' }), 70);
     this.titlePrompt = place(this.title, text('', 28), 125);
     this.modePicker = new ModePicker();
     place(this.title, this.modePicker.view, 92);
+    // The lives setting: "H · Lives: off" in single player, "Lives: on" in the two-player modes.
+    this.livesLine = place(this.title, text('', 17, { weight: 'bold' }), 120);
     // The pause, menu and setting keys, under the prompt (with a keyboard).
-    this.keysHint = place(this.title, text('P  pause  ·  Esc  menu  ·  G  slipping', 15, { color: CREAM }), 153);
+    this.keysHint = place(this.title, text('P  pause  ·  Esc  menu  ·  G  slipping', 15, { color: CREAM }), 182);
     this.keysHint.alpha = 0.7;
     const versionText = place(this.title, text(`v${version}`, 13, { color: CREAM }), -150);
     versionText.anchor.set(1, 0.5);
@@ -226,7 +228,7 @@ export class Overlays {
 
     this.title.visible = game.state === GameState.TITLE && !paused;
     this.titlePrompt.alpha = pulse;
-    if (this.title.visible) this.#updateTitle(game.mode, inputType !== 'touch');
+    if (this.title.visible) this.#updateTitle(game, inputType !== 'touch');
 
     this.gameOver.visible = game.state === GameState.RESULTS && !paused;
     if (this.gameOver.visible) {
@@ -305,15 +307,22 @@ export class Overlays {
     });
   }
 
-  // The mode picker and the keys hint show only with a keyboard (the two-player modes need one); the
-  // lines above it move up to make room.
-  #updateTitle(mode, showModes) {
+  // The mode picker, the lives setting and the keys hint show only with a keyboard (the
+  // two-player modes need one, and lives are for the desktop); the lines above them move up
+  // to make room.
+  #updateTitle(game, showModes) {
     this.modePicker.view.visible = showModes;
+    this.livesLine.visible = showModes;
     this.keysHint.visible = showModes;
-    this.modePicker.update(mode);
+    this.modePicker.update(game.mode);
+    // Single player: the setting, to toggle with H. The two-player modes always have lives.
+    const solo = game.mode === 'solo';
+    this.livesLine.text = solo ? `H · Lives: ${game.lives ? 'on' : 'off'}` : 'Lives: on';
+    this.livesLine.style.fill = solo && game.lives ? GOLD : CREAM;
+    this.livesLine.alpha = solo ? (game.lives ? 1 : 0.8) : 0.55;
     this.tagline.y = showModes ? 0 : 10;
     this.titleControl.y = showModes ? 58 : 70;
-    this.titlePrompt.y = showModes ? 128 : 125;
+    this.titlePrompt.y = showModes ? 150 : 125;
   }
 
   // Prompts for the input in use; the control hint also names each player's key.
