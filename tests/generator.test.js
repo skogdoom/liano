@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createLiana,
   createObstacle,
+  branchAnimalFor,
   rulesFor,
   birdPatrolBounds,
   movingCandidate,
@@ -12,7 +13,7 @@ import {
   updateObstacles,
 } from '../src/sim/generator.js';
 import { mulberry32, mixSeed } from '../src/sim/rng.js';
-import { Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from '../src/sim/obstacle.js';
+import { BRANCH_ANIMALS, Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from '../src/sim/obstacle.js';
 import { timeOfDayFor, TimeOfDay } from '../src/sim/stages.js';
 import { isPassable } from '../src/sim/windowTable.js';
 import { isPathClearOfLianas } from '../src/sim/feasibility.js';
@@ -31,6 +32,7 @@ import {
   BLUE_BIRD_HIGH,
   BLUE_BIRD_LOW,
   BLUE_BIRD_BOB,
+  BRANCH_ANIMAL_CHANCE,
 } from '../src/config.js';
 
 describe('liana generation', () => {
@@ -140,6 +142,31 @@ describe('obstacle generation', () => {
     for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(50); // late stages are 90 % moving
     // The bat only flies at night, one stage in five.
     for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BAT ? 100 : 400);
+  });
+
+  it('carries an animal on some branches, for show, and never on anything else', () => {
+    let branches = 0;
+    let animals = 0;
+    for (const seed of [1, 2, 3, 12345]) {
+      for (let gap = 1; gap <= 1000; gap++) {
+        const o = createObstacle(seed, gap);
+        if (o.type !== ObstacleType.BRANCH) {
+          expect(o.animal).toBeNull();
+          continue;
+        }
+        expect(o.animal).toBe(branchAnimalFor(seed, gap)); // deterministic in (seed, gap)
+        branches++;
+        if (!o.animal) continue;
+        animals++;
+        expect(BRANCH_ANIMALS).toContain(o.animal);
+        // Not part of the hitbox: the branch is the branch.
+        expect(o.hitbox).toBe(new Obstacle(gap, ObstacleType.BRANCH, o.baseX, o.baseY, null, o.scale).hitbox);
+        expect(isPassable(o.type, o.y, o.scale, rulesFor(gap).minSteps)).toBe(true);
+      }
+    }
+    expect(branches).toBeGreaterThan(100);
+    expect(animals / branches).toBeGreaterThan(BRANCH_ANIMAL_CHANCE - 0.1);
+    expect(animals / branches).toBeLessThan(BRANCH_ANIMAL_CHANCE + 0.1);
   });
 
   it('hangs beehives among the static obstacles, at heights that can be passed', () => {

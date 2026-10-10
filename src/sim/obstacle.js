@@ -27,6 +27,12 @@ export const MOVING_TYPES = [
   ObstacleType.BLUE_BIRD,
 ];
 
+// The animals a branch can carry, for show (a decoration: not part of the hitbox).
+export const BranchAnimal = Object.freeze({
+  BIRD: 'bird',
+});
+export const BRANCH_ANIMALS = [BranchAnimal.BIRD];
+
 const scaledHitboxes = new Map();
 
 // OBSTACLE_HITBOXES[type] scaled about the obstacle centre (shared, do not modify).
@@ -53,8 +59,10 @@ export function scaledHitbox(type, scale) {
 // Spiders, snakes and blue birds move vertically (ax = 0), birds and bats patrol
 // horizontally with a bob.
 // The world sets the time every step (setTime); the solver asks positionAt(t).
+//
+// A branch may carry an `animal` (a BranchAnimal, or null): only the view uses it.
 export class Obstacle {
-  constructor(gap, type, x, y, motion = null, scale = 1) {
+  constructor(gap, type, x, y, motion = null, scale = 1, animal = null) {
     this.gap = gap;
     this.type = type;
     this.baseX = x;
@@ -64,22 +72,39 @@ export class Obstacle {
     this.motion = motion;
     this.time = 0;
     this.scale = scale;
+    this.animal = animal;
     this.hitbox = scaledHitbox(type, scale);
     if (motion) this.setTime(0);
   }
 
   // Plain data for passing between threads; fromData rebuilds the obstacle.
   toData() {
-    return { gap: this.gap, type: this.type, x: this.baseX, y: this.baseY, motion: this.motion, scale: this.scale };
+    return {
+      gap: this.gap,
+      type: this.type,
+      x: this.baseX,
+      y: this.baseY,
+      motion: this.motion,
+      scale: this.scale,
+      animal: this.animal,
+    };
   }
 
   static fromData(d) {
-    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale);
+    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale, d.animal ?? null);
   }
 
   // The same obstacle moved to gap `gap` (the solver works in gap 0).
   inGap(gap) {
-    return new Obstacle(gap, this.type, this.baseX + (gap - this.gap) * LIANA_SPACING, this.baseY, this.motion, this.scale);
+    return new Obstacle(
+      gap,
+      this.type,
+      this.baseX + (gap - this.gap) * LIANA_SPACING,
+      this.baseY,
+      this.motion,
+      this.scale,
+      this.animal,
+    );
   }
 
   get moving() {

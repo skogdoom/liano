@@ -47,8 +47,9 @@ function trunk(g, o, x, topY, width) {
 }
 
 // Hitbox: rect 160 × 24 centred. A limb tapering from a cut trunk stub on the left,
-// with a leaf tuft near the tip.
-function drawBranch(g, o, rand, hangs) {
+// with a leaf tuft near the tip, and the animal it carries, if any (see addAnimal).
+// Returns the animal's animation.
+function drawBranch(g, o, rand, hangs, view) {
   const [box] = OBSTACLE_HITBOXES.branch;
   const left = box.dx;
   const right = box.dx + box.w;
@@ -72,6 +73,62 @@ function drawBranch(g, o, rand, hangs) {
     const a = -Math.PI / 2 + (i - 2) * 0.45;
     g.poly(leafPoints(right - 30 + i * 4, top + 4, a, 16, 8)).fill(i % 2 ? LEAF_DARK : LEAF);
   }
+  return o.animal ? addAnimal(view, o) : null;
+}
+
+// The animals on a branch are scenery: not part of the hitbox. Each is placed (and, where
+// it matters, turned) at random for its gap, away from the cut stub and the leaf tuft.
+const SPARROW = 0x9a6b3c;
+const SPARROW_DARK = 0x6e4623;
+const SPARROW_BELLY = 0xf1dfb4;
+const SPARROW_BEAK = 0x3a2a1c;
+
+// Where along the branch's top edge x lies: the limb tapers from y = top at the stub to
+// 5 px lower at its end.
+function branchTop(x) {
+  const [box] = OBSTACLE_HITBOXES.branch;
+  return box.dy + (5 * (x - box.dx)) / (box.w - 18);
+}
+
+// A small sparrow perched on top of the branch: now and then it pecks at the bark, and its
+// tail flicks. Faces left or right at random.
+function drawPerchedBird(rand) {
+  const bird = new Container();
+  const dir = rand() < 0.5 ? 1 : -1;
+  bird.scale.x = dir;
+  bird.position.set(-52 + rand() * 56, branchTop(0));
+  const phase = rand() * 6.3;
+  const body = new Graphics();
+  body.ellipse(0, -9, 10, 8).fill(SPARROW);
+  body.ellipse(1.5, -6.5, 6, 5).fill(SPARROW_BELLY);
+  body.ellipse(-2, -10, 7, 4.5).fill(SPARROW_DARK);
+  body.moveTo(-1, -1).lineTo(-1, 0).moveTo(3, -1).lineTo(3, 0).stroke({ width: 1.5, color: SPARROW_BEAK });
+  const tail = new Graphics();
+  tail.poly([0, 0, -11, -3, -10, 3]).fill(SPARROW_DARK);
+  tail.position.set(-7, -10);
+  const head = new Graphics();
+  head.circle(0, 0, 6).fill(SPARROW);
+  head.poly([5, -1.5, 11, 0.5, 5, 2.5]).fill(SPARROW_BEAK);
+  head.circle(2, -1.5, 1.5).fill(EYE).circle(2.5, -1.5, 0.8).fill(PUPIL);
+  head.position.set(6, -16);
+  bird.addChild(tail, body, head);
+  const animate = (t) => {
+    // A peck every couple of seconds: the head dips forward and comes back up.
+    const peck = Math.max(0, Math.sin(t * 2.1 + phase)) ** 10;
+    head.rotation = peck * 0.9;
+    head.y = -16 + peck * 3;
+    tail.rotation = 0.14 * Math.sin(t * 3.3 + phase);
+  };
+  return { part: bird, animate };
+}
+
+const ANIMALS = { bird: drawPerchedBird };
+
+// Adds the animal the branch carries to `view`; returns its animation.
+function addAnimal(view, o) {
+  const { part, animate } = ANIMALS[o.animal](mulberry32(mixSeed(0xa11a, o.gap)));
+  view.addChild(part);
+  return animate;
 }
 
 // Hitbox: three circles. A dark blob with a few highlights and thorns on its outline.

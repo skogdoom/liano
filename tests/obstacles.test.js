@@ -67,6 +67,16 @@ describe('moving obstacles', () => {
   });
 });
 
+describe('a branch animal', () => {
+  it('goes with the obstacle to the worker and back, and to the solver’s gap', () => {
+    const branch = new Obstacle(12, ObstacleType.BRANCH, 8750, 373, null, 1.3, 'bird');
+    expect(Obstacle.fromData(JSON.parse(JSON.stringify(branch.toData()))).animal).toBe('bird');
+    expect(branch.inGap(0).animal).toBe('bird');
+    expect(Obstacle.fromData({ gap: 1, type: 'rock', x: 1, y: 2, motion: null, scale: 1 }).animal).toBeNull();
+    expect(new Obstacle(0, ObstacleType.ROCK, 0, 0).animal).toBeNull();
+  });
+});
+
 describe('obstacle hitboxes', () => {
   it('has a hitbox for every type', () => {
     expect([...STATIC_TYPES].sort()).toEqual(['beehive', 'branch', 'rock', 'thornBush']);

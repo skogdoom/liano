@@ -17,11 +17,12 @@ import {
   BLUE_BIRD_LOW_TRAVEL,
   BLUE_BIRD_BOB,
   BANANA_CHANCE,
+  BRANCH_ANIMAL_CHANCE,
   ENTRY_RADII,
 } from '../config.js';
 import { Banana } from './banana.js';
 import { Liana } from './liana.js';
-import { Obstacle, ObstacleType, STATIC_TYPES } from './obstacle.js';
+import { BRANCH_ANIMALS, Obstacle, ObstacleType, STATIC_TYPES } from './obstacle.js';
 import {
   emptyGapFlights,
   flightHits,
@@ -94,6 +95,22 @@ export function pickHeight(type, rand, rules = STAGE_ONE) {
     if (isPassable(type, y, rules.scale, rules.minSteps)) return y;
   }
   return fallbackHeight(type, rules);
+}
+
+// Some branches carry an animal, for show. Whether one does, and which, depends only on
+// (seed, gap), with its own random stream: the obstacle is the same with or without it.
+const ANIMAL_SALT = 0xa91a;
+
+export function branchAnimalFor(seed, gap) {
+  const rand = mulberry32(mixSeed(seed ^ ANIMAL_SALT, gap));
+  if (rand() >= BRANCH_ANIMAL_CHANCE) return null;
+  return BRANCH_ANIMALS[Math.floor(rand() * BRANCH_ANIMALS.length)];
+}
+
+// A static obstacle of `type` at height `y`, centred in gap `gap`.
+function staticObstacle(seed, gap, type, y, scale) {
+  const animal = type === ObstacleType.BRANCH ? branchAnimalFor(seed, gap) : null;
+  return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, y, null, scale, animal);
 }
 
 const MOVING_TRIES = 20;
@@ -194,12 +211,12 @@ export function createObstacle(seed, gap) {
         if (o && isMovingFeasible(o.inGap(0), rules.minSteps)) return o;
       }
       const type = pick(STATIC_TYPES, rand);
-      return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, fallbackHeight(type, rules), null, rules.scale);
+      return staticObstacle(seed, gap, type, fallbackHeight(type, rules), rules.scale);
     }
   }
   const rand = mulberry32(mixSeed(seed, gap));
   const type = STATIC_TYPES[Math.floor(rand() * STATIC_TYPES.length)];
-  return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, pickHeight(type, rand, rules), null, rules.scale);
+  return staticObstacle(seed, gap, type, pickHeight(type, rand, rules), rules.scale);
 }
 
 // The banana for gap `gap` (with `obstacle`, as generated), or null. It lies on a flight

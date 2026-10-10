@@ -78,6 +78,8 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 
 **Static:** branch, thorn bush, rock, beehive (all four equally likely). A random height in OBSTACLE_Y_RANGE, horizontally centred, rerolled until the gap is passable and clear of both neighbouring lianas' swept areas.
 
+**Branch animals.** About one branch in five (BRANCH_ANIMAL_CHANCE, 0.2) carries an animal: a bird, a snake or a hanging monkey, picked at random. It is scenery: the obstacle is the same branch with the same hitbox, so nothing about passability or difficulty changes, and a flight can pass through the animal unharmed. Whether a branch has one, and which, depends only on (seed, gap) with its own random stream, and rides along with the obstacle's data to the worker and back. A branch is about one gap in thirty, so an animal shows about once or twice in a run.
+
 **Moving** (from obstacle MOVING_FROM, in each stage's share). Each has a deterministic position with period P (MOVING_PERIOD_RANGE), driven by world time (counted in whole sim steps) plus a seeded phase, so the solver matches the world exactly. It stays in its own gap and its whole path stays clear of both swings, so a hanging monkey is never hit:
 - **Spider:** drops and climbs on a thread from the canopy at the gap centre.
 - **Snake:** climbs up and down a stalk standing in the gap centre.
@@ -341,7 +343,8 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
   - Poses: hanging, airborne spread, dead tumble. A respawned monkey blinks while invulnerable.
 - **Lianas.** A green polyline with leaves (P2's in shared screen golden), which bends slightly while settling. The grip slide is visible, and the lower vine blinks yellow near the forced release.
 - **Static obstacles.**
-  - Branch: brown limb with a leaf tuft.
+  - Branch: brown limb with a leaf tuft, and sometimes an animal (see Branch animals):
+    - Perched bird: a small brown sparrow with a cream belly, on top of the limb, facing left or right at random; every couple of seconds it dips its head to peck, and its tail flicks.
   - Thorn bush: dark blob with thorns.
   - Rock: grey polygon on a small ledge.
   - Beehive: a teardrop paper nest in gold bands with a dark entrance, hanging from a vine, or from an arm off a trunk when it is low (its hitbox is three stacked circles, widest in the middle). A handful of bees buzz around it; they are scenery, and the animation takes the world time, so they stop while the game is paused.
