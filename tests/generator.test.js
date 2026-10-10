@@ -26,6 +26,9 @@ import {
   MOVING_FROM,
   BIRD_Y_RANGE,
   BIRD_BOB,
+  BLUE_BIRD_HIGH,
+  BLUE_BIRD_LOW,
+  BLUE_BIRD_BOB,
 } from '../src/config.js';
 
 describe('liana generation', () => {
@@ -143,7 +146,6 @@ describe('obstacle generation', () => {
     for (let gap = 1; gap <= 600; gap++) {
       const phase = timeOfDayFor(gap);
       const types = movingTypesFor(gap);
-      expect(types).toHaveLength(3);
       expect(types.includes(ObstacleType.BAT)).toBe(phase === TimeOfDay.NIGHT);
       expect(types.includes(ObstacleType.BIRD)).toBe(phase !== TimeOfDay.NIGHT);
       const o = createObstacle(SEED, gap);
@@ -158,6 +160,44 @@ describe('obstacle generation', () => {
     }
     expect(night).toBeGreaterThan(50);
     expect(other).toBeGreaterThan(100);
+  });
+
+  it('flies blue birds by day only, not at dusk or night', () => {
+    const phases = new Set();
+    for (let gap = 1; gap <= 600; gap++) {
+      const phase = timeOfDayFor(gap);
+      const day = phase !== TimeOfDay.DUSK && phase !== TimeOfDay.NIGHT;
+      expect(movingTypesFor(gap).includes(ObstacleType.BLUE_BIRD)).toBe(day);
+      const o = createObstacle(SEED, gap);
+      if (o.type === ObstacleType.BLUE_BIRD) phases.add(phase);
+    }
+    expect(phases).toEqual(new Set([TimeOfDay.DAY, TimeOfDay.LATE_AFTERNOON, TimeOfDay.DAWN]));
+  });
+
+  it('flies a blue bird up and down in the free air above or below the gap centre', () => {
+    const rand = mulberry32(5);
+    const seen = { high: 0, low: 0 };
+    for (let i = 0; i < 200; i++) {
+      const o = movingCandidate(ObstacleType.BLUE_BIRD, 5, rand, 1 + (i % 4) * 0.1);
+      expect(o.motion).toMatchObject({ ax: 0, bob: BLUE_BIRD_BOB });
+      expect(o.baseX).toBe(5 * LIANA_SPACING + LIANA_SPACING / 2);
+      const ys = o.pathPoints(72).map((p) => p.y);
+      const [top, bottom] = [Math.min(...ys), Math.max(...ys)];
+      if (bottom < 250) {
+        seen.high++;
+        // The swoop can keep it up to BLUE_BIRD_BOB short of its nominal lowest point.
+        expect(bottom).toBeLessThanOrEqual(BLUE_BIRD_HIGH[1] + 1e-9);
+        expect(bottom).toBeGreaterThanOrEqual(BLUE_BIRD_HIGH[0] - BLUE_BIRD_BOB - 1e-9);
+      } else {
+        seen.low++;
+        expect(top).toBeGreaterThanOrEqual(BLUE_BIRD_LOW[0] - 1e-9);
+        expect(top).toBeLessThanOrEqual(BLUE_BIRD_LOW[1] + BLUE_BIRD_BOB + 1e-9);
+      }
+      // A real flight up and down, not a hover.
+      expect(bottom - top).toBeGreaterThan(60);
+    }
+    expect(seen.high).toBeGreaterThan(50);
+    expect(seen.low).toBeGreaterThan(50);
   });
 
   it('gives a night gap the obstacle a bird would have had, with a bat patrolling instead', () => {

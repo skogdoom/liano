@@ -19,6 +19,17 @@ import { FORWARD_RELEASE_STEP, emptyWorld, worldWith, stepN, releaseAfter, flyUn
 describe('moving obstacles', () => {
   const motion = { period: 2, phase: 0.5, ax: 30, ay: 40, bob: 5 };
 
+  it('have a vertical velocity that matches their flight', () => {
+    const flight = { period: 2.4, phase: 0.7, ax: 0, ay: 60, bob: 6 };
+    const o = new Obstacle(3, ObstacleType.BLUE_BIRD, 100, 200, flight);
+    for (const t of [0, 0.3, 1.1, 1.9]) {
+      const h = 1e-5;
+      const numeric = (o.positionAt(t + h).y - o.positionAt(t - h).y) / (2 * h);
+      expect(o.vyAt(t)).toBeCloseTo(numeric, 3);
+    }
+    expect(new Obstacle(0, ObstacleType.ROCK, 0, 0).vyAt(1)).toBe(0);
+  });
+
   it('follow (baseX + ax·sin u, baseY + ay·cos u + bob·sin 2u) with u = 2πt/period + phase', () => {
     const o = new Obstacle(3, ObstacleType.BIRD, 100, 200, motion);
     for (const t of [0, 0.3, 1.7, 5]) {

@@ -11,6 +11,11 @@ import {
   SNAKE_TRAVEL_RANGE,
   BIRD_Y_RANGE,
   BIRD_BOB,
+  BLUE_BIRD_HIGH,
+  BLUE_BIRD_HIGH_TRAVEL,
+  BLUE_BIRD_LOW,
+  BLUE_BIRD_LOW_TRAVEL,
+  BLUE_BIRD_BOB,
   BANANA_CHANCE,
   ENTRY_RADII,
 } from '../config.js';
@@ -101,10 +106,14 @@ const pick = (list, rand) => list[Math.floor(rand() * list.length)];
 
 // The moving types a gap can get: spiders, snakes and birds, with the birds giving way
 // to bats at night. A bat has a bird's hitbox and patrol, so it takes a bird's place in
-// the list and the gap gets the obstacle it would have had with a bird.
+// the list and the gap gets the obstacle it would have had with a bird. By day (not at
+// dusk or night) blue birds fly up and down as well.
 export function movingTypesFor(gap) {
-  const night = timeOfDayFor(gap) === TimeOfDay.NIGHT;
-  return [ObstacleType.SPIDER, ObstacleType.SNAKE, night ? ObstacleType.BAT : ObstacleType.BIRD];
+  const phase = timeOfDayFor(gap);
+  if (phase === TimeOfDay.NIGHT) return [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BAT];
+  const types = [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BIRD];
+  if (phase !== TimeOfDay.DUSK) types.push(ObstacleType.BLUE_BIRD);
+  return types;
 }
 
 const PATROLLERS = new Set([ObstacleType.BIRD, ObstacleType.BAT]);
@@ -129,7 +138,8 @@ export function birdPatrolBounds(y, scale = 1, type = ObstacleType.BIRD) {
 }
 
 // A random moving obstacle of `type` and `scale` for gap `gap`, or null if a bird (or
-// bat) has no room at the height drawn.
+// bat) has no room at the height drawn. (Whether it clears the swings and leaves a long
+// enough window is for isMovingFeasible.)
 export function movingCandidate(type, gap, rand, scale = 1) {
   const offset = gap * LIANA_SPACING;
   const motion = { period: lerp(MOVING_PERIOD_RANGE, rand()), phase: rand() * 2 * Math.PI, ax: 0, ay: 0, bob: 0 };
@@ -144,6 +154,16 @@ export function movingCandidate(type, gap, rand, scale = 1) {
     // The patrol must never reach into a swing.
     if (!isPathClearOfLianas(bird, offset)) throw new Error(`Bird patrol in gap ${gap} reaches a swing`);
     return bird;
+  }
+  if (type === ObstacleType.BLUE_BIRD) {
+    // High or low in the free air; the swoop never takes it past the end of its flight.
+    const high = rand() < 0.5;
+    const travel = lerp(high ? BLUE_BIRD_HIGH_TRAVEL : BLUE_BIRD_LOW_TRAVEL, rand());
+    const end = lerp(high ? BLUE_BIRD_HIGH : BLUE_BIRD_LOW, rand());
+    motion.ay = travel / 2;
+    motion.bob = BLUE_BIRD_BOB;
+    const y = high ? end - motion.ay - motion.bob : end + motion.ay + motion.bob;
+    return new Obstacle(gap, type, offset + LIANA_SPACING / 2, y, motion, scale);
   }
   const travel = lerp(type === ObstacleType.SPIDER ? SPIDER_TRAVEL_RANGE : SNAKE_TRAVEL_RANGE, rand());
   motion.ay = travel / 2;

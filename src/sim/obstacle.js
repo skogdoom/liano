@@ -12,12 +12,19 @@ export const ObstacleType = Object.freeze({
   SNAKE: 'snake',
   BIRD: 'bird',
   BAT: 'bat',
+  BLUE_BIRD: 'blueBird',
 });
 
 export const STATIC_TYPES = [ObstacleType.BRANCH, ObstacleType.THORN_BUSH, ObstacleType.ROCK];
 // Every moving type; which of them a gap gets depends on its time of day (see
 // movingTypesFor in generator.js).
-export const MOVING_TYPES = [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BIRD, ObstacleType.BAT];
+export const MOVING_TYPES = [
+  ObstacleType.SPIDER,
+  ObstacleType.SNAKE,
+  ObstacleType.BIRD,
+  ObstacleType.BAT,
+  ObstacleType.BLUE_BIRD,
+];
 
 const scaledHitboxes = new Map();
 
@@ -42,8 +49,8 @@ export function scaledHitbox(type, scale) {
 // A moving one has a `motion` { period (s), phase (rad), ax, ay, bob }: at world time t,
 // with u = 2π·t / period + phase, it is at
 //   (x, y) = (baseX + ax·sin u, baseY + ay·cos u + bob·sin 2u).
-// Spiders and snakes move vertically (ax = 0), birds and bats patrol horizontally with a
-// bob.
+// Spiders, snakes and blue birds move vertically (ax = 0), birds and bats patrol
+// horizontally with a bob.
 // The world sets the time every step (setTime); the solver asks positionAt(t).
 export class Obstacle {
   constructor(gap, type, x, y, motion = null, scale = 1) {
@@ -91,6 +98,16 @@ export class Obstacle {
     if (!m) return 0;
     const w = (2 * Math.PI) / m.period;
     return m.ax * w * Math.cos(w * t + m.phase);
+  }
+
+  // Vertical velocity at time t (px/s, down positive), for pitching a bird that flies up
+  // and down.
+  vyAt(t) {
+    const m = this.motion;
+    if (!m) return 0;
+    const w = (2 * Math.PI) / m.period;
+    const u = w * t + m.phase;
+    return -m.ay * w * Math.sin(u) + 2 * m.bob * w * Math.cos(2 * u);
   }
 
   setTime(t) {

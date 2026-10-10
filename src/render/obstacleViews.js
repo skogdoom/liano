@@ -140,6 +140,9 @@ const BIRD = 0xd64541;
 const BIRD_DARK = 0xa3322f;
 const BIRD_BELLY = 0xf2c14e;
 const BEAK = 0xf39c12;
+const BLUE = 0x3f86d6;
+const BLUE_DARK = 0x2a5fa3;
+const BLUE_BELLY = 0xd6e9ff;
 const BAT = 0x4a3a5c;
 const BAT_DARK = 0x2a2036;
 const BAT_WING = 0x5d4a75;
@@ -225,6 +228,32 @@ function buildBird(o) {
   return { parts: [body], body, animate };
 }
 
+// Hitbox: circle r 16. A blue bird with a pale belly and a small crest. It flies up and
+// down with its nose pitched along the climb or the dive, and faces left or right by
+// gap, flapping as it goes.
+function buildBlueBird(o) {
+  const facing = o.gap % 2 === 0 ? 1 : -1;
+  const body = new Container();
+  const g = new Graphics();
+  g.poly([-12, -1, -23, -7, -22, 3, -12, 4]).fill(BLUE_DARK);
+  g.ellipse(-1, 0, 13, 10).fill(BLUE);
+  g.ellipse(1, 4, 9, 5).fill(BLUE_BELLY);
+  g.circle(9, -5, 7).fill(BLUE);
+  g.poly([5, -11, 4, -18, 9, -12]).fill(BLUE_DARK);
+  g.poly([14, -7, 22, -4, 14, -2]).fill(BEAK);
+  g.circle(10, -7, 2.4).fill(EYE).circle(10.8, -7, 1.2).fill(PUPIL);
+  const wing = new Graphics();
+  body.addChild(g, wing);
+  const animate = (t) => {
+    body.scale.set(facing * o.scale, o.scale);
+    // Nose up while climbing (y decreasing), down while diving.
+    body.rotation = facing * Math.max(-0.6, Math.min(0.6, o.vyAt(t) / 320));
+    const lift = Math.sin(t * 13);
+    wing.clear().poly([-8, -3, 5, -3, -2 - 7 * lift, -3 - 16 * lift]).fill(BLUE_DARK);
+  };
+  return { parts: [body], body, animate };
+}
+
 // Hitbox: circle r 16. A bat: a furry body with pointed ears and red eyes, and a
 // membrane wing that flutters fast. It faces the way it patrols, like the bird.
 function buildBat(o) {
@@ -259,7 +288,7 @@ function buildBat(o) {
   return { parts: [body], body, animate };
 }
 
-const BUILD_MOVING = { spider: buildSpider, snake: buildSnake, bird: buildBird, bat: buildBat };
+const BUILD_MOVING = { spider: buildSpider, snake: buildSnake, bird: buildBird, bat: buildBat, blueBird: buildBlueBird };
 
 // A view: `view` to add to the layer, and `update()` each frame.
 function buildObstacle(o) {

@@ -94,6 +94,7 @@ export const OBSTACLE_HITBOXES = {
   bird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
   // The bat takes the bird's place at night: the same hitbox, so the same patrols.
   bat: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
+  blueBird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
 };
 
 // Moving obstacles (see obstacle.js). Their whole path stays clear of both
@@ -114,6 +115,16 @@ export const SNAKE_TRAVEL_RANGE = [90, 160];
 // widest that stay clear of the swings.
 export const BIRD_Y_RANGE = [330, 390];
 export const BIRD_BOB = 8;
+
+// Blue bird: flies up and down at the gap centre, in free air: in the high band (its
+// lowest point in BLUE_BIRD_HIGH, over a flight of BLUE_BIRD_HIGH_TRAVEL) or the low band
+// (its highest point in BLUE_BIRD_LOW, over BLUE_BIRD_LOW_TRAVEL), with a slight
+// swoop (BLUE_BIRD_BOB). By day only: not at dusk or at night.
+export const BLUE_BIRD_HIGH = [165, 200];
+export const BLUE_BIRD_HIGH_TRAVEL = [70, 130];
+export const BLUE_BIRD_LOW = [296, 322];
+export const BLUE_BIRD_LOW_TRAVEL = [80, 140];
+export const BLUE_BIRD_BOB = 6;
 
 // The shortest release window a gap may have in stage 1 (later stages: STAGES).
 export const MIN_RELEASE_WINDOW_MS = 90;
