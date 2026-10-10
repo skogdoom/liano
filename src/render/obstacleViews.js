@@ -804,7 +804,7 @@ const MOSS = 0x4f8a3a;
 const MOSS_LIGHT = 0x73ad4c;
 const FLAME = 0xff9a2e;
 const FLAME_CORE = 0xffe27a;
-const HAZE = 0x21472f;
+const HAZE = 0x183222;
 
 function drawTemple(g, o, rand, hangs, view) {
   const style = TEMPLE_STYLES[o.variant ?? 0];
@@ -915,10 +915,13 @@ function drawTemple(g, o, rand, hangs, view) {
   // The rest is buried: a haze rising from the ground, thickest at the bottom, and a thick
   // fringe of ferns and leaves across the foot of the temple, wider than the temple itself,
   // as if it carried on down into the jungle.
+  // Soft on every side (nested ellipses, no edges to see), so it reads as mist and not as a
+  // box round the temple.
   const hazeTop = floor - 250;
-  for (let i = 0; i < 10; i++) {
-    const y = hazeTop + (i * (floor + 30 - hazeTop)) / 10;
-    g.rect(-330, y, 660, (floor + 30 - hazeTop) / 10 + 1).fill({ color: HAZE, alpha: 0.06 + 0.07 * i });
+  const HAZE_STEPS = 16;
+  for (let i = 0; i < HAZE_STEPS; i++) {
+    const u = 1 - i / HAZE_STEPS;
+    g.ellipse(0, floor + 30, 90 + 240 * u, 30 + (floor + 30 - hazeTop - 30) * u).fill({ color: HAZE, alpha: 0.04 });
   }
   for (let x = -300; x <= 300; x += 15 + rand() * 9) {
     const length = 45 + rand() * 40;
