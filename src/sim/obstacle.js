@@ -15,6 +15,7 @@ export const ObstacleType = Object.freeze({
   BIRD: 'bird',
   BAT: 'bat',
   BLUE_BIRD: 'blueBird',
+  PURPLE_BIRD: 'purpleBird',
 });
 
 // Every static type. (The generator picks among all but the temple, which has its own
@@ -34,6 +35,7 @@ export const MOVING_TYPES = [
   ObstacleType.BIRD,
   ObstacleType.BAT,
   ObstacleType.BLUE_BIRD,
+  ObstacleType.PURPLE_BIRD,
 ];
 
 // The decorations a branch can carry, for show: animals now, and not part of the hitbox.
@@ -87,7 +89,8 @@ export function scaledHitbox(type, scale) {
 // with u = 2π·t / period + phase, it is at
 //   (x, y) = (baseX + ax·sin u, baseY + ay·cos u + bob·sin 2u).
 // Spiders, snakes and blue birds move vertically (ax = 0), birds and bats patrol
-// horizontally with a bob.
+// horizontally with a bob, and a purple bird flies in a circle (ax = ±ay: the sign is
+// which way round).
 // The world sets the time every step (setTime); the solver asks positionAt(t).
 //
 // A branch may carry a `decoration` (a BranchDecoration, or null), and a temple has a
@@ -201,10 +204,11 @@ export class Obstacle {
     for (const s of this.hitbox) {
       const [w, h] = s.kind === 'rect' ? [s.w, s.h] : [0, 0];
       const r = s.kind === 'rect' ? 0 : s.r;
-      minX = Math.min(minX, this.baseX + s.dx - r - m.ax);
-      maxX = Math.max(maxX, this.baseX + s.dx + w + r + m.ax);
-      minY = Math.min(minY, this.baseY + s.dy - r - m.ay - m.bob);
-      maxY = Math.max(maxY, this.baseY + s.dy + h + r + m.ay + m.bob);
+      const [ax, ay] = [Math.abs(m.ax), Math.abs(m.ay)];
+      minX = Math.min(minX, this.baseX + s.dx - r - ax);
+      maxX = Math.max(maxX, this.baseX + s.dx + w + r + ax);
+      minY = Math.min(minY, this.baseY + s.dy - r - ay - m.bob);
+      maxY = Math.max(maxY, this.baseY + s.dy + h + r + ay + m.bob);
     }
     return { minX, minY, maxX, maxY };
   }

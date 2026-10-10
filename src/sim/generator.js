@@ -16,6 +16,9 @@ import {
   BLUE_BIRD_LOW,
   BLUE_BIRD_LOW_TRAVEL,
   BLUE_BIRD_BOB,
+  PURPLE_BIRD_TOP,
+  PURPLE_BIRD_RADIUS,
+  PURPLE_BIRD_PERIOD,
   BANANA_CHANCE,
   BRANCH_DECORATION_CHANCE,
   BRANCH_DECORATION_CHANCE_NIGHT,
@@ -159,12 +162,14 @@ const pick = (list, rand) => list[Math.floor(rand() * list.length)];
 // The moving types a gap can get: spiders, snakes and birds, with the birds giving way
 // to bats at night. A bat has a bird's hitbox and patrol, so it takes a bird's place in
 // the list and the gap gets the obstacle it would have had with a bird. By day (not at
-// dusk or night) blue birds fly up and down as well.
+// dusk or night) blue birds fly up and down as well. Purple birds, which fly in circles,
+// come at any time.
 export function movingTypesFor(gap) {
   const phase = timeOfDayFor(gap);
-  if (phase === TimeOfDay.NIGHT) return [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BAT];
+  if (phase === TimeOfDay.NIGHT) return [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BAT, ObstacleType.PURPLE_BIRD];
   const types = [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BIRD];
   if (phase !== TimeOfDay.DUSK) types.push(ObstacleType.BLUE_BIRD);
+  types.push(ObstacleType.PURPLE_BIRD);
   return types;
 }
 
@@ -206,6 +211,16 @@ export function movingCandidate(type, gap, rand, scale = 1) {
     // The patrol must never reach into a swing.
     if (!isPathClearOfLianas(bird, offset)) throw new Error(`Bird patrol in gap ${gap} reaches a swing`);
     return bird;
+  }
+  if (type === ObstacleType.PURPLE_BIRD) {
+    // A circle at the gap centre, either way round: the motion is (ax sin u, ay cos u)
+    // with ax = ±ay.
+    const radius = lerp(PURPLE_BIRD_RADIUS, rand());
+    const top = lerp(PURPLE_BIRD_TOP, rand());
+    motion.period = lerp(PURPLE_BIRD_PERIOD, rand());
+    motion.ay = radius;
+    motion.ax = rand() < 0.5 ? radius : -radius;
+    return new Obstacle(gap, type, offset + LIANA_SPACING / 2, top + radius, motion, scale);
   }
   if (type === ObstacleType.BLUE_BIRD) {
     // High or low in the free air; the swoop never takes it past the end of its flight.

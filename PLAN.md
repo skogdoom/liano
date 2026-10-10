@@ -46,7 +46,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 | Regrab | The liana just released cannot be regrabbed until a different liana has been grabbed. |
 | Backward | Releasing on the backswing is allowed. The monkey may fly backward and grab the previous liana. |
 | Layout | Lianas have identical length and identical horizontal spacing. |
-| Obstacles | One per gap (none in the first gap, nor in the gap behind the start liana). Static types: branch, thorn bush, rock, beehive, and a rare temple. Moving types (spider, snake, bird, bats at night, and blue birds by day) from obstacle 6. No liana ever sweeps over an obstacle: static and moving obstacles alike stay clear of the area either neighbouring liana can swing through, with the rope and a hanging monkey at any grip radius. |
+| Obstacles | One per gap (none in the first gap, nor in the gap behind the start liana). Static types: branch, thorn bush, rock, beehive, and a rare temple. Moving types (spider, snake, bird, bats at night, blue birds by day, and purple birds at any time) from obstacle 6. No liana ever sweeps over an obstacle: static and moving obstacles alike stay clear of the area either neighbouring liana can swing through, with the rope and a hanging monkey at any grip radius. |
 | Bananas | Collected on touch, and counted per player against the bananas passed. They change neither the score nor the swing. |
 | Difficulty | Stages keyed on obstacle index. Levers: shorter release windows, a larger share of moving obstacles, bigger obstacles. Swing speed and slip speed do not ramp. |
 | Death | Collision with an obstacle, falling below the world band (world y WORLD_HEIGHT; the visible bottom edge can be higher when the flexible frame crops), or (shared screen only) being left behind the left edge. Going above the top edge is not a death. |
@@ -87,6 +87,7 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 - **Snake:** climbs up and down a stalk standing in the gap centre.
 - **Bird:** patrols across the gap with a slight bob, between the widest bounds that stay clear of the swings (asserted by the generator).
 - **Bat:** at night (the Night time of day: Stage 4 and every fifth after, see Difficulty stages) bats replace the birds. A bat has a bird's hitbox and patrol, and takes its place in the list the generator picks from, so a night gap gets the obstacle a bird would have had and nothing about fairness changes.
+- **Purple bird:** at any time of day a moving type flies in a circle at the gap centre, either way round, with a radius of 42–72 (PURPLE_BIRD_RADIUS) and its highest point 322–345 (PURPLE_BIRD_TOP), once round in 2.4–3.6 s. Where it is when the monkey swings by decides what it is: high at the top of its circle, low at the bottom, wide at the sides. Motion is `ax = ±ay`, `bob = 0`. The solver checks it like every moving obstacle, and a candidate that fails is rerolled.
 - **Blue bird:** by day (Day, Late afternoon and Dawn; not at Dusk or Night) a fourth moving type flies up and down at the gap centre, without a thread or a stalk. Like the spider and snake it can only use the free air the swings leave: either the high band (its lowest point 165–200, over a flight of 70–130) or the low band (its highest point 296–322, over 80–140), picked at random, with a slight swoop (BLUE_BIRD_BOB). The solver checks it like every moving obstacle, and a candidate that fails is rerolled.
 - Room for them: at the gap centre a moving hitbox stays clear of the swings only above y ≈ 213 or below y ≈ 288, while valid flights cross the centre at y ≈ 189–361. So spiders work the high band (lowest point 175–212), snakes the low band (highest point 290–320), and birds patrol low (y 330–390, ±35 to ±117 px). They block about 10–20 % of otherwise valid releases.
 
@@ -172,7 +173,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 
 | Event | Sim trigger | Synthesis |
 |---|---|---|
-| "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock 110 Hz, snake 131, branch 165, thorn bush 247, spider 294, blue bird 349, bird 392, bat 466; beehive 196, temple 98. |
+| "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock 110 Hz, snake 131, branch 165, thorn bush 247, spider 294, purple bird 311, blue bird 349, bird 392, bat 466; beehive 196, temple 98. |
 | "Crash" | `death` from a fall, or from being left behind | A low-passed noise burst plus a falling low sine thud, about 0.8 s. |
 
 - **Recipes and player:** each sound is a pure recipe function (data, unit-tested in Node). A thin player is the only code that touches `AudioContext`.
@@ -323,7 +324,7 @@ liano/
       background.js         # parallax layers, taller views, stage tint
       lianaView.js          # vine, leaves, tip warning; green or golden
       monkeyView.js         # per-player palette, invulnerable blink
-      obstacleViews.js      # static art, animated spider, snake, bird, bat and blue bird
+      obstacleViews.js      # static art, animated spider, snake, bird, bat, blue bird and purple bird
       bananaView.js         # bananas, "+1" pops
       camera.js             # easing camera, portrait anchor
       hud.js                # 1P and 2P variants
@@ -365,6 +366,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
   - Spider: dark body with a red mark and wriggling legs, on a thin thread.
   - Snake: green coils on a leafy stalk, its head pointing the way it climbs.
   - Bird: red body with a yellow belly and flapping wings, facing the way it flies.
+  - Purple bird: a purple body with a pale belly, a crest and a tail feather, flapping, facing the way it is flying and pitched along the circle.
   - Blue bird: a blue body with a pale belly and a small crest, flapping and pitched along its climb or dive, facing left or right by gap.
   - Bat: a purple furry body with pointed ears and red eyes, and a scalloped membrane wing that flutters fast, facing the way it flies.
 - **Banana.** A single tilted banana, tapering to both ends, with a lighter ridge, a stem and a dark tip, a gentle bob, and a glint near the stem that fades in and out while it waits to be taken. The same drawing is the icon in the HUD and on the results.

@@ -42,6 +42,8 @@ import {
   BLUE_BIRD_HIGH,
   BLUE_BIRD_LOW,
   BLUE_BIRD_BOB,
+  PURPLE_BIRD_RADIUS,
+  PURPLE_BIRD_TOP,
   BRANCH_DECORATION_CHANCE,
   BRANCH_DECORATION_CHANCE_NIGHT,
   NIGHT_DECORATION_SHARE,
@@ -335,6 +337,45 @@ describe('obstacle generation', () => {
       if (o.type === ObstacleType.BLUE_BIRD) phases.add(phase);
     }
     expect(phases).toEqual(new Set([TimeOfDay.DAY, TimeOfDay.LATE_AFTERNOON, TimeOfDay.DAWN]));
+  });
+
+  it('flies purple birds at any time of day', () => {
+    const phases = new Set();
+    for (let gap = 1; gap <= 600; gap++) {
+      expect(movingTypesFor(gap)).toContain(ObstacleType.PURPLE_BIRD);
+      const o = createObstacle(SEED, gap);
+      if (o?.type === ObstacleType.PURPLE_BIRD) phases.add(timeOfDayFor(gap));
+    }
+    expect(phases.size).toBe(5);
+  });
+
+  it('flies a purple bird in a circle in the middle, either way round', () => {
+    const rand = mulberry32(8);
+    const ways = { cw: 0, ccw: 0 };
+    for (let i = 0; i < 200; i++) {
+      const o = movingCandidate(ObstacleType.PURPLE_BIRD, 5, rand, 1 + (i % 4) * 0.1);
+      const { ax, ay, bob } = o.motion;
+      expect(Math.abs(ax)).toBe(ay);
+      expect(bob).toBe(0);
+      expect(ay).toBeGreaterThanOrEqual(PURPLE_BIRD_RADIUS[0]);
+      expect(ay).toBeLessThanOrEqual(PURPLE_BIRD_RADIUS[1]);
+      expect(o.baseY - ay).toBeGreaterThanOrEqual(PURPLE_BIRD_TOP[0] - 1e-9);
+      expect(o.baseY - ay).toBeLessThanOrEqual(PURPLE_BIRD_TOP[1] + 1e-9);
+      expect(o.baseX).toBe(5 * LIANA_SPACING + LIANA_SPACING / 2);
+      // A true circle: constant distance from the centre.
+      for (const t of [0, 0.4, 1.3, 2.9]) {
+        const p = o.positionAt(t);
+        expect(Math.hypot(p.x - o.baseX, p.y - o.baseY)).toBeCloseTo(ay, 6);
+      }
+      // Bounds cover the circle whichever way round it goes.
+      const b = o.bounds;
+      expect(b.minX).toBeLessThanOrEqual(o.baseX - ay);
+      expect(b.maxX).toBeGreaterThanOrEqual(o.baseX + ay);
+      if (ax > 0) ways.cw++;
+      else ways.ccw++;
+    }
+    expect(ways.cw).toBeGreaterThan(50);
+    expect(ways.ccw).toBeGreaterThan(50);
   });
 
   it('flies a blue bird up and down in the free air above or below the gap centre', () => {

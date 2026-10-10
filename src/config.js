@@ -95,6 +95,7 @@ export const OBSTACLE_HITBOXES = {
   // The bat takes the bird's place at night: the same hitbox, so the same patrols.
   bat: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
   blueBird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
+  purpleBird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
   // A stepped pyramid with a shrine on top, drawn from the top centre of the shrine
   // down: the shrine, three tiers each wider than the last, and a base tall enough to
   // reach the floor whatever the height (the obstacle is picked high enough in the lower
@@ -168,6 +169,16 @@ export const BLUE_BIRD_HIGH_TRAVEL = [70, 130];
 export const BLUE_BIRD_LOW = [296, 322];
 export const BLUE_BIRD_LOW_TRAVEL = [80, 140];
 export const BLUE_BIRD_BOB = 6;
+
+// Purple bird: flies in a circle at the gap centre, either way round, in the open space
+// the swings leave in the lower region, between the highest point of the circle
+// (PURPLE_BIRD_TOP) and a radius (PURPLE_BIRD_RADIUS), once round in PURPLE_BIRD_PERIOD
+// seconds. So it is a high obstacle at the top of its circle, a low one at the bottom and
+// a wide one at the sides, depending on where it is when the monkey swings by. At any
+// time of day.
+export const PURPLE_BIRD_TOP = [322, 345];
+export const PURPLE_BIRD_RADIUS = [42, 72];
+export const PURPLE_BIRD_PERIOD = [2.4, 3.6];
 
 // The shortest release window a gap may have in stage 1 (later stages: STAGES).
 export const MIN_RELEASE_WINDOW_MS = 90;
