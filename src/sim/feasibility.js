@@ -4,6 +4,7 @@ import {
   ANCHOR_Y,
   MAX_SLIP_SPEED,
   SLIP_OFF_PHASE,
+  HOLD_OFF_PHASE,
   MAX_ENTRY_RADIUS,
   ENTRY_RADII,
   LIANA_LENGTH,
@@ -57,7 +58,7 @@ export const STAGE_SCALES = [...new Set(STAGES.map((s) => s.scale))];
 // it, would have reached the tip. Generation does not check held grips (a seed gives
 // the same jungle either way); tests measure how they fare in it.
 export function forcedReleaseStep(entryRadius, dir = 1, phaseSteps = 0, hold = false) {
-  return slipSteps(Math.min(entryRadius, hold ? FLOW_GRIP : MAX_ENTRY_RADIUS), phaseSteps, dir, SWING_PERIOD);
+  return slipSteps(Math.min(entryRadius, hold ? FLOW_GRIP : MAX_ENTRY_RADIUS), phaseSteps, dir, SWING_PERIOD, hold ? HOLD_OFF_PHASE : SLIP_OFF_PHASE);
 }
 
 // True if the obstacle keeps LIANA_CLEARANCE away from everything the lianas on both
@@ -361,6 +362,7 @@ export function windowInputs() {
     ANCHOR_Y,
     MAX_SLIP_SPEED,
     SLIP_OFF_PHASE,
+    HOLD_OFF_PHASE,
     MAX_ENTRY_RADIUS,
     LIANA_LENGTH,
     LIANA_SPACING,

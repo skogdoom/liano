@@ -60,8 +60,8 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 - On grab the liana is vertical (θ = 0). The swing starts in the direction of the monkey's horizontal velocity: θ(t) = dir · A · sin(ω·t), where ω = 2π / period.
 - The grip starts at the contact radius r₀ (at most MAX_ENTRY_RADIUS, so catching the very tip still leaves a forward swing).
 - A release reaches the next liana only from about 290–310 px down the rope. So a catch higher than FLOW_GRIP first slides quickly down to it at QUICK_SLIP_SPEED. Every catch then has a release window on its first forward swing (about 0.2 s after the grab). The quick slide does not add to the release velocity.
-- Then the grip slips at a steady speed s: r(t) = min(r_flow + s·t, L). Each grip gets its own s, so that it reaches the tip at SLIP_OFF_PHASE: on the upswing to the right, mid-way through the forward release window. s is the fastest speed up to MAX_SLIP_SPEED that lands on that phase, so it varies with where the liana was caught (about 7–38 px/s).
-- The forced release is therefore a hop to the next liana unless an obstacle is in the way. An idle player is carried forward over clear gaps.
+- Then the grip slips at a steady speed s: r(t) = min(r_flow + s·t, L). Each grip gets its own s, so that it reaches the tip at SLIP_OFF_PHASE (0.08 of a period after the bottom): on the upswing to the right, near the start of the forward release window (which opens at 0.04–0.07 and closes at about 0.165). A held grip (slipping off, G) is forced off at HOLD_OFF_PHASE (0.11), the middle of the window. s is the fastest speed up to MAX_SLIP_SPEED that lands on that phase, so it varies with where the liana was caught (about 7–38 px/s).
+- The forced release is therefore a hop to the next liana over a clear gap, and an obstacle in the way stops it. An idle player is carried forward over clear gaps, but not far: at SLIP_OFF_PHASE 0.08 a player who never presses falls after a median of 15 obstacles (at most 30 in 100 seeds). At the middle of the window (0.11, as it was) it was a median of 53 and up to 82, because the flights released there all cross the gap at much the same height and only the hardest obstacles (grade 4, all of them low, from Stage 4) stop them; at 0.09, 0.10, 0.13 and 0.15 the median was 31, 41, 69 and 97. Held, a passive monkey falls after a median of 12, at the middle phase; at 0.08 it got 113, so a held grip keeps HOLD_OFF_PHASE. About one seed in eight ends within the first three obstacles for such a player; the first gaps are not kept safe for it.
 - Hanging position = anchor + r·(sin θ, cos θ).
 - Release velocity combines the tangential and radial components: v = r·θ'·(cos θ, −sin θ) + r'·(sin θ, cos θ). A forced release at r = L uses the same formula.
 - Time on a liana is bounded: at most (L − r₀) / MAX_SLIP_SPEED plus one swing period. This bound keeps moving obstacles fair (see Feasibility).
@@ -133,19 +133,21 @@ The day goes on past Stage 4: the stage number and the time of day keep counting
 | 3 | 31–50 | 64 ms | 46% | 1.20 |
 | 4 | 51+ | 54 ms | 60% | 1.30 |
 
+**Steeper.** Stages 2 to 4 ask a little more than they did (shortest window 80 / 70 / 60 ms became 76 / 64 / 54, moving share 20 / 40 / 55 % became 26 / 46 / 60 %, harder grade odds), and the stages after the last climb faster (3 ms and 5 points a stage instead of 2 and 4; the hardest grades likelier sooner). What a player meets (40 seeds, the mean grade of the obstacles made, after the grade bounds were recalibrated): gaps 16–30 1.96 → 2.13, 31–50 2.13 → 2.27, 51–70 2.48 → 2.73, 71–130 2.5–2.6 → 2.75–2.8, 151–210 2.7 → 2.8. The moving share that is actually made follows the stage's a little below, and in the last stages less so than before (about 58 % against 65 %): a gap aiming for grade 4 seldom finds a moving obstacle that hard and takes a static one. The odds for grade 4 stay at 0 until Stage 4.
+
 ### Obstacle grades
 
-Every obstacle has a **grade** from 1 (easiest) to 4: how much of the release timing it takes away. It is measured, not set per type: the share of the empty gap's release steps (those whose flight reaches the next liana) that the obstacle blocks, averaged over the entry radii. A moving obstacle's share is also averaged over sampled arrival times (every GRADE_ARRIVAL_STEP-th of the solver's twelve, and every GRADE_RADIUS_STEP-th radius; grading it costs about 0.8 ms). GRADE_BOUNDS = [0.12, 0.19, 0.27] are the shares where grades 2, 3 and 4 start, roughly the quartiles of every obstacle the game made before grades. So a branch is mostly a 2, a spider or a purple bird a 1, a snake or a bird a 2, and a rock, thorn bush or beehive low in the gap a 3 or 4; the same type gets a different grade at a different height or scale. The grade is on `Obstacle.grade` (carried to and from the worker) and shown in the debug view for the gap the monkey is in. For static obstacles the shares are in the window table (`blocked`, per scale, type and height), so play still never runs the solver for them.
+Every obstacle has a **grade** from 1 (easiest) to 4: how much of the release timing it takes away. It is measured, not set per type: the share of the empty gap's release steps (those whose flight reaches the next liana) that the obstacle blocks, averaged over the entry radii. A moving obstacle's share is also averaged over sampled arrival times (every GRADE_ARRIVAL_STEP-th of the solver's twelve, and every GRADE_RADIUS_STEP-th radius; grading it costs about 0.8 ms). GRADE_BOUNDS = [0.15, 0.23, 0.28] are the shares where grades 2, 3 and 4 start. They were [0.12, 0.19, 0.27] before the forced release moved from phase 0.11 to 0.08: the share counts the release steps up to the forced one, so the earlier release shifted every obstacle's share, and the bounds were moved to keep each grade's share of the legal placements as it was (9 / 11 / 19 / 61 % for grades 1 / 2 / 3 / 4). So a branch is mostly a 2, a spider or a purple bird a 1, a snake or a bird a 2, and a rock, thorn bush or beehive low in the gap a 3 or 4; the same type gets a different grade at a different height or scale. The grade is on `Obstacle.grade` (carried to and from the worker) and shown in the debug view for the gap the monkey is in. For static obstacles the shares are in the window table (`blocked`, per scale, type and height), so play still never runs the solver for them.
 
 Each stage lists the odds (`grades` in STAGES) of a gap *aiming* for each grade, drawn from a random stream of its own, so the same for a seed every time. A grade with no odds in a stage never appears in it, which keeps the hard obstacles out of the early stages:
 
 | Stage | Obstacles | Odds for grade 1 / 2 / 3 / 4 |
 |---|---|---|
 | 1 | 1–15 | 65 / 35 / 0 / 0 |
-| 2 | 16–30 | 30 / 40 / 30 / 0 |
-| 3 | 31–50 | 15 / 30 / 55 / 0 |
-| 4 | 51–70 | 10 / 25 / 30 / 35 |
-| 5 and on | 71+ | towards 5 / 15 / 30 / 50, reached after LATER_GRADE_STAGES (6) more stages (Stage 10) |
+| 2 | 16–30 | 25 / 35 / 40 / 0 |
+| 3 | 31–50 | 10 / 25 / 65 / 0 |
+| 4 | 51–70 | 12 / 25 / 33 / 30 |
+| 5 and on | 71+ | towards 8 / 20 / 32 / 40, reached after LATER_GRADE_STAGES (6) more stages (Stage 10) |
 
 **High and low.** Obstacles above HIGH_BELOW_Y (255) hang from the canopy ("high"), lower ones stand on the floor ("low"); swing clearance leaves no passable height around that line. The easy obstacles are mostly high (a low rock or beehive blocks far more flights), so with the grades alone Stage 1 came out about 70 % high, Stage 2 56 %, Stage 3 41 % and Stage 4 34 %. A stage's `high` (STAGES) is the share of its gaps that aim for a high obstacle, the rest for a low one, from a random stream of their own: 0.5 in Stages 1–3, so they come out about 47–49 % high, and null from Stage 4 on, which leaves the mix to the types and grades (about a third high: only the spider and the blue bird fly high). A static gap draws its height from the aimed side's part of the range, a moving gap its type from the ones that fly there (a high aim: spider or blue bird; a low aim: all but the spider), and the side counts before the grade when choosing between candidates.
 
@@ -290,7 +292,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | HOLD_GRIP | 350 px (about 0.83 × L) | With slipping off (G) the grip holds where it catches but no higher; the shallowest grip that keeps every sampled gap's window |
 | HOLD_SLIDE_TIME | 0.25 s | Longest slide down to HOLD_GRIP; it starts at the catch speed along the rope and brakes evenly |
 | TEMPLE_MIN_GAP, TEMPLE_VARIANTS | 6, 4 | The temple (one a day/night cycle, see Obstacles) is never among the first 6 obstacles, and has 4 looks |
-| SLIP_OFF_PHASE | 0.11 × P after the bottom, swinging right | The forced release comes mid-way through the forward window (about 0.05–0.165 × P) |
+| SLIP_OFF_PHASE, HOLD_OFF_PHASE | 0.08 and 0.11 × P after the bottom, swinging right | The forced release comes near the start of the forward window (about 0.04–0.165 × P) when slipping, and in the middle of it when held |
 | ENTRY_RADII | [0.35, 0.5, 0.65, 0.8, 0.95] × L | The entry radii the solver checks |
 | MAX_ENTRY_RADIUS | 0.95 × L | Lower catches grip here |
 | START_GRIP | 0.7 × L | The grip at the start of a run |
@@ -301,7 +303,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | MIN_RELEASE_WINDOW_MS | 90 | Stage 1; later stages per STAGES |
 | STAGES | see Difficulty stages | First obstacle, shortest window, moving share and obstacle scale per stage |
 | HIGH_BELOW_Y, STAGES[].high | 255; 0.5 in Stages 1–3, null after | Obstacles above the line hang from the canopy (high); the share of a stage's gaps that aim for a high obstacle |
-| GRADE_BOUNDS | 0.12, 0.19, 0.27 | Blocked shares where grades 2, 3 and 4 start |
+| GRADE_BOUNDS | 0.15, 0.23, 0.28 | Blocked shares where grades 2, 3 and 4 start |
 | STAGES[].grades, LATER_GRADE_ODDS, LATER_GRADE_STAGES | see Obstacle grades | Odds of aiming for each grade per stage, and where they head after the last stage over 6 stages |
 | MOVING_GRADED_TRIES, STATIC_TRIES | 3, 40 | Moving candidates graded, and static draws, per gap |
 | GRADE_ARRIVAL_STEP, GRADE_RADIUS_STEP | 4, 2 | A moving obstacle's grade samples every 4th arrival and every 2nd entry radius |

@@ -9,6 +9,7 @@ import {
   MAX_SLIP_SPEED,
   SIM_DT,
   SLIP_OFF_PHASE,
+  HOLD_OFF_PHASE,
   SWING_PERIOD,
 } from '../config.js';
 import { ballisticStep, pendulumPosition, hangingVelocity } from './physics.js';
@@ -24,13 +25,14 @@ export const periodSteps = (period) => Math.round(period / SIM_DT);
 
 // Steps from the start of a slip from `gripFrom` until the grip reaches the tip, when
 // the liana swings in `dir` with `period` and is `swingSteps` steps into its swing: the
-// first step at SLIP_OFF_PHASE that does not need more than MAX_SLIP_SPEED. There,
-// θ = dir · A · sin(ωt) is on the upswing to the right (for dir −1, half a period later).
-export function slipSteps(gripFrom, swingSteps = 0, dir = 1, period = SWING_PERIOD) {
+// first step at `phase` (SLIP_OFF_PHASE; a held grip: HOLD_OFF_PHASE) that does not need
+// more than MAX_SLIP_SPEED. There, θ = dir · A · sin(ωt) is on the upswing to the right
+// (for dir −1, half a period later).
+export function slipSteps(gripFrom, swingSteps = 0, dir = 1, period = SWING_PERIOD, phase = SLIP_OFF_PHASE) {
   const steps = periodSteps(period);
   const { quickTo, quickTime } = quickSlide(gripFrom);
   const minSteps = Math.ceil((quickTime + (LIANA_LENGTH - quickTo) / MAX_SLIP_SPEED) / SIM_DT - 1e-9);
-  const offStep = Math.round(SLIP_OFF_PHASE * steps) + (dir > 0 ? 0 : steps / 2);
+  const offStep = Math.round(phase * steps) + (dir > 0 ? 0 : steps / 2);
   const first = offStep - swingSteps + steps * Math.ceil((swingSteps + minSteps - offStep) / steps);
   return Math.max(first, 1);
 }
@@ -141,7 +143,7 @@ export class Monkey {
     const swingSteps = Math.round(liana.swingTime / SIM_DT);
     this.gripTime = 0;
     if (this.holds) {
-      const steps = slipSteps(Math.min(this.gripFrom, FLOW_GRIP), swingSteps, liana.swingDir, liana.period);
+      const steps = slipSteps(Math.min(this.gripFrom, FLOW_GRIP), swingSteps, liana.swingDir, liana.period, HOLD_OFF_PHASE);
       const distance = Math.max(HOLD_GRIP - this.gripFrom, 0);
       this.quickTo = this.gripFrom + distance;
       this.quickTime = distance > 0 ? Math.min((2 * distance) / Math.max(this.catchSpeed, 0), HOLD_SLIDE_TIME) : 0;

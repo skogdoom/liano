@@ -469,7 +469,9 @@ describe('obstacle generation', () => {
     for (const stage of STAGES) {
       const first = Math.max(stage.first, MOVING_FROM);
       const s = share(first, first + 9);
-      expect(s).toBeGreaterThan(stage.movingShare - 0.12);
+      // A little under the stage's share is normal: a gap aiming for the hardest grade seldom
+      // finds a moving obstacle that hard, and takes a static one.
+      expect(s).toBeGreaterThan(stage.movingShare - 0.2);
       expect(s).toBeLessThan(stage.movingShare + 0.12);
     }
     // Obstacles behind the start stay static.
