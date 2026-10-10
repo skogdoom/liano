@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DECORATIONS } from '../src/render/obstacleViews.js';
+import { DECORATIONS, NEST_STATES } from '../src/render/obstacleViews.js';
 import { BRANCH_DECORATIONS } from '../src/sim/obstacle.js';
 import { mulberry32 } from '../src/sim/rng.js';
 
@@ -18,6 +18,17 @@ describe('branch decoration art', () => {
       }
     });
   }
+
+  it('holds nothing, an egg or a hatched egg in a nest, in about equal shares', () => {
+    const counts = Object.fromEntries(NEST_STATES.map((s) => [s, 0]));
+    for (let seed = 1; seed <= 300; seed++) {
+      const { state, animate } = DECORATIONS.nest(mulberry32(seed));
+      counts[state]++;
+      for (const t of [0, 0.7, 3.1, 9.9]) animate(t);
+    }
+    expect(NEST_STATES).toEqual(['empty', 'egg', 'hatched']);
+    for (const state of NEST_STATES) expect(counts[state]).toBeGreaterThan(60);
+  });
 
   it('turns some of each decoration left and some right', () => {
     for (const decoration of BRANCH_DECORATIONS) {

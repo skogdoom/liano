@@ -32,8 +32,14 @@ export const BranchDecoration = Object.freeze({
   BIRD: 'bird',
   SNAKE: 'snake',
   MONKEY: 'monkey',
+  NEST: 'nest',
 });
-export const BRANCH_DECORATIONS = [BranchDecoration.BIRD, BranchDecoration.SNAKE, BranchDecoration.MONKEY];
+export const BRANCH_DECORATIONS = [
+  BranchDecoration.BIRD,
+  BranchDecoration.SNAKE,
+  BranchDecoration.MONKEY,
+  BranchDecoration.NEST,
+];
 
 const scaledHitboxes = new Map();
 

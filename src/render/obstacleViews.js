@@ -234,7 +234,117 @@ function drawHangingMonkey(rand) {
   return { part: monkey, animate };
 }
 
-export const DECORATIONS = { bird: drawPerchedBird, snake: drawPerchedSnake, monkey: drawHangingMonkey };
+const TWIG = 0x8b6a3d;
+const TWIG_DARK = 0x5e4524;
+const TWIG_LIGHT = 0xb48a52;
+const NEST_INSIDE = 0x34261a;
+const EGG = 0xc4e6ee;
+const EGG_SPECK = 0x7a6a4a;
+const SHELL = 0xf6f2e8;
+const CHICK = 0xffd84a;
+const CHICK_DARK = 0xe8b52c;
+
+// What a nest holds: nothing, an egg, or a hatched egg (a chick in its cracked shell).
+export const NEST_STATES = ['empty', 'egg', 'hatched'];
+
+// A woven nest of twigs on top of the branch, empty, with an egg in it, or with a hatched
+// egg: a chick peeping from its cracked shell. Which, and which way it faces, is random.
+// Returns the state too.
+function drawNest(rand) {
+  const nest = new Container();
+  nest.scale.x = rand() < 0.5 ? 1 : -1;
+  const cx = -46 + rand() * 50;
+  nest.position.set(cx, branchTop(cx));
+  const state = NEST_STATES[Math.floor(rand() * NEST_STATES.length)];
+  const phase = rand() * 6.3;
+
+  // The back of the bowl and its dark inside, the contents, then the front wall, so the
+  // contents sit in the nest.
+  const back = new Graphics();
+  back.ellipse(0, -9, 19, 7.5).fill(TWIG_DARK).ellipse(0, -9.5, 15, 5.5).fill(NEST_INSIDE);
+  const contents = new Container();
+  const front = new Graphics();
+  front
+    .moveTo(-19, -9)
+    .quadraticCurveTo(-21, 3, 0, 4)
+    .quadraticCurveTo(21, 3, 19, -9)
+    .quadraticCurveTo(0, -3, -19, -9)
+    .fill(TWIG);
+  // Twigs woven across the front, and a few stuck out of the rim.
+  for (let i = 0; i < 7; i++) {
+    const x = -14 + rand() * 28;
+    const y = -4 + rand() * 6;
+    const len = 8 + rand() * 7;
+    const tilt = (rand() - 0.5) * 0.5;
+    front
+      .moveTo(x - len / 2, y - tilt * len)
+      .lineTo(x + len / 2, y + tilt * len)
+      .stroke({ width: 1.2, color: i % 3 ? TWIG_DARK : TWIG_LIGHT, cap: 'round' });
+  }
+  // (The ones that stick out of the rim go behind the contents.)
+  for (let i = 0; i < 4; i++) {
+    const x = -17 + rand() * 34;
+    const lean = (rand() - 0.5) * 7;
+    back.moveTo(x, -8).lineTo(x + lean, -13 - rand() * 3).stroke({ width: 1.4, color: TWIG_DARK, cap: 'round' });
+  }
+  front.moveTo(-19, -9).quadraticCurveTo(0, -3, 19, -9).stroke({ width: 2, color: TWIG_DARK, cap: 'round' });
+  nest.addChild(back, contents, front);
+
+  let animate = () => {};
+  if (state === 'egg') {
+    const egg = new Graphics();
+    egg.ellipse(0, 0, 5.8, 7.4).fill(EGG);
+    egg.ellipse(-1.8, -2.4, 1.8, 2.8).fill({ color: 0xffffff, alpha: 0.65 });
+    for (const [x, y] of [[2, 1.5], [-2, 3], [3, -2.5], [0, -4.5]]) egg.circle(x, y, 0.8).fill(EGG_SPECK);
+    egg.position.set(0, -11);
+    contents.addChild(egg);
+    // It rocks a little now and then.
+    animate = (t) => {
+      const rock = Math.max(0, Math.sin(t * 0.8 + phase)) ** 14;
+      egg.rotation = rock * 0.12 * Math.sin(t * 24);
+    };
+  } else if (state === 'hatched') {
+    const shell = new Graphics();
+    shell.poly([-6, -2, -6, 3, 0, 6, 6, 3, 6, -2, 4, -4, 2, -1, 0, -4, -2, -1, -4, -4]).fill(SHELL);
+    shell.position.set(0, -9);
+    const chick = new Container();
+    const body = new Graphics();
+    body.circle(0, 0, 6.6).fill(CHICK);
+    body.ellipse(-4.5, 1.5, 2.4, 3.2).fill(CHICK_DARK);
+    body.poly([-1.5, -6, 0, -10, 1.5, -6.2]).fill(CHICK);
+    body.circle(2.4, -1.6, 1.3).fill(PUPIL);
+    const beak = new Graphics();
+    chick.addChild(body, beak);
+    chick.position.set(0, -15);
+    const cap = new Graphics();
+    cap.poly([-6, 0, -4, -4, -2, -1, 0, -5, 2, -1, 4, -4, 6, 0, 5, 3, -5, 3]).fill(SHELL);
+    cap.position.set(10.5, -9.5);
+    cap.rotation = 0.5;
+    contents.addChild(shell, chick, cap);
+    animate = (t) => {
+      // Bobbing up and down, and peeping: the beak opens and closes in bursts.
+      chick.y = -15 + 1.2 * Math.sin(t * 3.4 + phase);
+      chick.rotation = 0.1 * Math.sin(t * 2.3 + phase);
+      const open = (t * 0.6 + phase) % 1 < 0.35 ? 0.5 + 0.5 * Math.sin(t * 16) : 0;
+      beak.clear();
+      beak.poly([5.5, -2.5 - open * 2, 11, -1 - open * 2.5, 5.5, -0.8]).fill(BEAK);
+      beak.poly([5.5, -0.4, 10, 1 + open * 2.5, 5.5, 1.6]).fill(BEAK);
+    };
+  } else {
+    // Empty: a dry leaf curled in the bottom.
+    const leaf = new Graphics();
+    leaf.poly(leafPoints(-3, -8, -0.3, 10, 4)).fill(LEAF_DARK);
+    contents.addChild(leaf);
+  }
+  return { part: nest, animate, state };
+}
+
+export const DECORATIONS = {
+  bird: drawPerchedBird,
+  snake: drawPerchedSnake,
+  monkey: drawHangingMonkey,
+  nest: drawNest,
+};
 
 // Adds the decoration the branch carries to `view`; returns its animation.
 function addDecoration(view, o) {
