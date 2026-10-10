@@ -5,6 +5,8 @@ import {
   LATER_MIN_WINDOW_MS,
   LATER_MOVING_STEP,
   LATER_MOVING_MAX,
+  LATER_GRADE_ODDS,
+  LATER_GRADE_STAGES,
   MOVING_FROM,
 } from '../config.js';
 
@@ -24,6 +26,7 @@ export function stageFor(gap) {
     ...row,
     minWindowMs: Math.max(row.minWindowMs - beyond * LATER_WINDOW_STEP_MS, Math.min(LATER_MIN_WINDOW_MS, row.minWindowMs)),
     movingShare: Math.min(row.movingShare + beyond * LATER_MOVING_STEP, Math.max(LATER_MOVING_MAX, row.movingShare)),
+    grades: row.grades.map((odds, i) => odds + (LATER_GRADE_ODDS[i] - odds) * Math.min(beyond / LATER_GRADE_STAGES, 1)),
   };
 }
 

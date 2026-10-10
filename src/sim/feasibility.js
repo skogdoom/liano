@@ -18,6 +18,8 @@ import {
   OBSTACLE_HITBOXES,
   STAGES,
   FLOW_GRIP,
+  GRADE_ARRIVAL_STEP,
+  GRADE_RADIUS_STEP,
 } from '../config.js';
 import { Liana } from './liana.js';
 import { Monkey, slipSteps } from './monkey.js';
@@ -185,9 +187,20 @@ export function emptyGapFlights(entryRadius, hold = false) {
 // the obstacle. Flight point j comes k + 1 + j steps after the grab.
 export function flightHits(obstacle, flight, arrival, box = obstacle.bounds) {
   const reach = MONKEY_RADIUS;
-  for (let j = 0; j < flight.path.length; j++) {
-    const p = flight.path[j];
-    if (p.x < box.minX - reach || p.x > box.maxX + reach || p.y < box.minY - reach || p.y > box.maxY + reach) continue;
+  const { path } = flight;
+  // A flight only moves forward, so its points are in order of x: start at the first one
+  // within reach of the box and stop after the last.
+  let lo = 0;
+  let hi = path.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (path[mid].x < box.minX - reach) lo = mid + 1;
+    else hi = mid;
+  }
+  for (let j = lo; j < path.length; j++) {
+    const p = path[j];
+    if (p.x > box.maxX + reach) break;
+    if (p.y < box.minY - reach || p.y > box.maxY + reach) continue;
     if (obstacle.hitsCircleAt(arrival + (flight.k + 1 + j) * SIM_DT, p.x, p.y, MONKEY_RADIUS)) return true;
   }
   return false;
@@ -274,6 +287,32 @@ export function longestRun(valid) {
 
 const windows = new Map();
 
+const count = (valid) => valid.filter(Boolean).length;
+const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
+const emptyOpen = new Map();
+const emptyOpenSteps = (radius) => {
+  if (!emptyOpen.has(radius)) emptyOpen.set(radius, count(validReleaseSteps(null, radius).valid));
+  return emptyOpen.get(radius);
+};
+
+// The same for a moving obstacle in gap 0, averaged over every GRADE_RADIUS_STEP-th entry
+// radius and every GRADE_ARRIVAL_STEP-th arrival time the solver samples.
+export function movingBlockedShare(obstacle) {
+  const box = obstacle.bounds;
+  const arrivals = arrivalTimes(obstacle).filter((_, i) => i % GRADE_ARRIVAL_STEP === 0);
+  const radii = ENTRY_RADII.filter((_, i) => i % GRADE_RADIUS_STEP === 0);
+  let sum = 0;
+  for (const r of radii) {
+    const { flights } = emptyGapFlights(r);
+    for (const arrival of arrivals) {
+      let blocked = 0;
+      for (const flight of flights) if (flightHits(obstacle, flight, arrival, box)) blocked++;
+      sum += blocked / flights.length;
+    }
+  }
+  return sum / (radii.length * arrivals.length);
+}
+
 // The longest window for each entry radius, for an obstacle of `type` at height `y`
 // and `scale` (null type: empty gap); `length` is the shortest of them, the one that
 // counts. Memoized: a static gap is fully described by (type, y, scale).
@@ -283,11 +322,16 @@ export function releaseWindow(type, y, scale = 1) {
   let result = windows.get(key);
   if (!result) {
     const obstacle = type ? new Obstacle(0, type, LIANA_SPACING / 2, y, null, scale) : null;
-    const byRadius = ENTRY_RADII.map((r) => ({
-      radius: r,
-      ...longestRun(validReleaseSteps(obstacle, r).valid),
-    }));
-    result = { byRadius, length: Math.min(...byRadius.map((w) => w.length)) };
+    const valids = ENTRY_RADII.map((r) => validReleaseSteps(obstacle, r).valid);
+    const byRadius = ENTRY_RADII.map((r, i) => ({ radius: r, ...longestRun(valids[i]) }));
+    result = {
+      byRadius,
+      length: Math.min(...byRadius.map((w) => w.length)),
+      // The share of the empty gap's release steps (those whose flight reaches the next
+      // liana) this obstacle blocks, averaged over the entry radii: its difficulty (see
+      // GRADE_BOUNDS).
+      blocked: obstacle ? mean(valids.map((valid, i) => 1 - count(valid) / emptyOpenSteps(ENTRY_RADII[i]))) : 0,
+    };
     windows.set(key, result);
   }
   return result;
@@ -329,21 +373,29 @@ export function windowInputs() {
 }
 
 // Window length in steps for each stage scale, static type and whole-pixel height in
-// OBSTACLE_Y_RANGE, 0 where the obstacle would not be clear of the lianas. Built by
-// scripts/build-windows.mjs into windowTable.json. The stage's minimum window is
+// OBSTACLE_Y_RANGE, 0 where the obstacle would not be clear of the lianas, and in
+// `blocked` the share of release steps it blocks (see blockedShareOf), to three decimals.
+// Built by scripts/build-windows.mjs into windowTable.json. The stage's minimum window is
 // applied when looking it up.
 export function computeWindowTable() {
   const [minY, maxY] = OBSTACLE_Y_RANGE;
   const windows = {};
+  const blocked = {};
   for (const scale of STAGE_SCALES) {
     windows[scale] = {};
+    blocked[scale] = {};
     for (const type of STATIC_TYPES) {
       const row = (windows[scale][type] = []);
+      const shares = (blocked[scale][type] = []);
       for (let y = minY; y <= maxY; y++) {
         const clear = isClearOfLianas(new Obstacle(0, type, LIANA_SPACING / 2, y, null, scale), 0);
-        row.push(clear ? releaseWindow(type, y, scale).length : 0);
+        const window = clear ? releaseWindow(type, y, scale) : null;
+        row.push(window ? window.length : 0);
+        shares.push(window ? roundShare(window.blocked) : 0);
       }
     }
   }
-  return { inputs: windowInputs(), minY, maxY, windows };
+  return { inputs: windowInputs(), minY, maxY, windows, blocked };
 }
+
+export const roundShare = (share) => Math.round(share * 1000) / 1000;

@@ -186,11 +186,34 @@ export const MIN_RELEASE_WINDOW_MS = 90;
 // by score. Each has its shortest release window, share of moving obstacles and
 // obstacle scale.
 export const STAGES = [
-  { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.12, scale: 1.0 },
-  { first: 16, minWindowMs: 80, movingShare: 0.2, scale: 1.1 },
-  { first: 31, minWindowMs: 70, movingShare: 0.4, scale: 1.2 },
-  { first: 51, minWindowMs: 60, movingShare: 0.55, scale: 1.3 },
+  { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.12, scale: 1.0, grades: [0.65, 0.35, 0, 0] },
+  { first: 16, minWindowMs: 80, movingShare: 0.2, scale: 1.1, grades: [0.4, 0.4, 0.2, 0] },
+  { first: 31, minWindowMs: 70, movingShare: 0.4, scale: 1.2, grades: [0.25, 0.35, 0.4, 0] },
+  { first: 51, minWindowMs: 60, movingShare: 0.55, scale: 1.3, grades: [0.2, 0.3, 0.3, 0.2] },
 ];
+
+// Obstacle difficulty grades, 1 (easiest) to 4. An obstacle's grade is how much of the
+// release timing it takes away: the share of release steps whose flight it blocks, over
+// an empty gap's, averaged over the entry radii (and, for a moving obstacle, over sampled
+// arrival times). GRADE_BOUNDS are the shares from which the grades 2, 3 and 4 start.
+export const GRADE_BOUNDS = [0.12, 0.19, 0.27];
+// Each stage's `grades` are the odds (they need not sum to 1) of a gap aiming for grade
+// 1, 2, 3 and 4. A grade with no odds in a stage never appears in it, so the hardest
+// obstacles wait for the stage that lists them. The stages after the last move on
+// from its odds towards LATER_GRADE_ODDS, over LATER_GRADE_STAGES stages: all four grades
+// stay in play, the harder ones get likelier.
+export const LATER_GRADE_ODDS = [0.1, 0.2, 0.3, 0.4];
+export const LATER_GRADE_STAGES = 8;
+// A moving obstacle is accepted with a grade within one of the one a gap aims for, else
+// the gap gets a static one. Only the first MOVING_GRADED_TRIES candidates that clear the
+// solver are graded (grading a moving obstacle costs a few ms), the closest wins.
+export const MOVING_GRADED_TRIES = 3;
+// Static candidates (type and height) drawn per gap while looking for the aimed grade.
+export const STATIC_TRIES = 40;
+// A moving obstacle's grade samples every GRADE_ARRIVAL_STEP-th of the solver's arrival
+// times and every GRADE_RADIUS_STEP-th entry radius (grading it is the costly part).
+export const GRADE_ARRIVAL_STEP = 4;
+export const GRADE_RADIUS_STEP = 2;
 // From the last stage's first obstacle on, the stage number (and the time of day) counts
 // on every STAGE_LENGTH_AFTER obstacles. Each stage after the last then keeps the last
 // one's obstacle scale but asks a little more: a shortest release window 2 ms shorter

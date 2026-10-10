@@ -48,7 +48,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 | Layout | Lianas have identical length and identical horizontal spacing. |
 | Obstacles | One per gap (none in the first gap, nor in the gap behind the start liana). Static types: branch, thorn bush, rock, beehive, and a rare temple. Moving types (spider, snake, bird, bats at night, blue birds by day, and purple birds at any time) from obstacle 6. No liana ever sweeps over an obstacle: static and moving obstacles alike stay clear of the area either neighbouring liana can swing through, with the rope and a hanging monkey at any grip radius. |
 | Bananas | Collected on touch, and counted per player against the bananas passed. They change neither the score nor the swing. |
-| Difficulty | Stages keyed on obstacle index. Levers: shorter release windows, a larger share of moving obstacles, bigger obstacles. Swing speed and slip speed do not ramp. |
+| Difficulty | Stages keyed on obstacle index. Levers: shorter release windows, a larger share of moving obstacles, bigger obstacles, and the grade (1–4) of the obstacles a stage lets in. Swing speed and slip speed do not ramp. |
 | Death | Collision with an obstacle, falling below the world band (world y WORLD_HEIGHT; the visible bottom edge can be higher when the flexible frame crops), or (shared screen only) being left behind the left edge. Going above the top edge is not a death. |
 | Scoring | +1 per obstacle gap crossed: the gap scores when the monkey, moving forward, grabs the liana on its far side. Swinging or flying past without reaching that liana does not score. Each gap scores once per monkey (flying back and forth does not re-score). Plus banana points. |
 | HUD | Top-right. 1P shows the score and session best. 2P shows each player's score and hearts (OUT when none are left): in split screen at the top of each pane, in shared screen side by side. The speaker and fullscreen buttons sit top-left. All of these stay inside the safe area (notch). |
@@ -113,6 +113,22 @@ The day goes on past Stage 4: the stage number and the time of day keep counting
 | 2 | 16–30 | 80 ms | 20% | 1.10 |
 | 3 | 31–50 | 70 ms | 40% | 1.20 |
 | 4 | 51+ | 60 ms | 55% | 1.30 |
+
+### Obstacle grades
+
+Every obstacle has a **grade** from 1 (easiest) to 4: how much of the release timing it takes away. It is measured, not set per type: the share of the empty gap's release steps (those whose flight reaches the next liana) that the obstacle blocks, averaged over the entry radii. A moving obstacle's share is also averaged over sampled arrival times (every GRADE_ARRIVAL_STEP-th of the solver's twelve, and every GRADE_RADIUS_STEP-th radius; grading it costs about 0.8 ms). GRADE_BOUNDS = [0.12, 0.19, 0.27] are the shares where grades 2, 3 and 4 start, roughly the quartiles of every obstacle the game made before grades. So a branch is mostly a 2, a spider or a purple bird a 1, a snake or a bird a 2, and a rock, thorn bush or beehive low in the gap a 3 or 4; the same type gets a different grade at a different height or scale. The grade is on `Obstacle.grade` (carried to and from the worker) and shown in the debug view for the gap the monkey is in. For static obstacles the shares are in the window table (`blocked`, per scale, type and height), so play still never runs the solver for them.
+
+Each stage lists the odds (`grades` in STAGES) of a gap *aiming* for each grade, drawn from a random stream of its own, so the same for a seed every time. A grade with no odds in a stage never appears in it, which keeps the hard obstacles out of the early stages:
+
+| Stage | Obstacles | Odds for grade 1 / 2 / 3 / 4 |
+|---|---|---|
+| 1 | 1–15 | 65 / 35 / 0 / 0 |
+| 2 | 16–30 | 40 / 40 / 20 / 0 |
+| 3 | 31–50 | 25 / 35 / 40 / 0 |
+| 4 | 51–70 | 20 / 30 / 30 / 20 |
+| 5 and on | 71+ | towards 10 / 20 / 30 / 40, reached after LATER_GRADE_STAGES (8) more stages (Stage 12) |
+
+After Stage 4 the odds only move gradually, so even the late levels still hold all four grades: easy obstacles for variation, the hardest ones more and more often. The generator tries the kind of obstacle the moving share asks for (still the same lever as before); an obstacle that is passable under the stage's rules, at or below the stage's highest grade and with the aimed grade is taken at once, else the closest one within a grade of the aim (a moving one: from the first MOVING_GRADED_TRIES candidates the solver accepts; a static one: from STATIC_TRIES random type and height draws). If the kind cannot find one within a grade of the aim it tries the other: at the bigger late scales few static obstacles are easy (no grade 1 at scale 1.3 except the temple), so the aim for an easy obstacle there is mostly met by a moving one, and the aim for a hard one by a static one. Measured over many seeds: the mean grade per stage rises 1.4, 1.9, 2.1, 2.6, then 2.7 (Stage 5–8) and 2.9 (9–12); about two obstacles in three get the aimed grade exactly, nearly all are within one. The temple is under the same cap.
 
 Scaled obstacles must still pass the swing-clearance rule; heights that fail are rerolled. At scale 1.3 a branch fits only at y 371–375, so stage-4 branches almost always sit at the bottom. The tint multiplies the background only (sky, parallax, canopy and floor), so lianas, obstacles and the monkeys stay readable at night.
 
@@ -252,6 +268,10 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a swept area, beyond MONKEY_RADIUS |
 | MIN_RELEASE_WINDOW_MS | 90 | Stage 1; later stages per STAGES |
 | STAGES | see Difficulty stages | First obstacle, shortest window, moving share and obstacle scale per stage |
+| GRADE_BOUNDS | 0.12, 0.19, 0.27 | Blocked shares where grades 2, 3 and 4 start |
+| STAGES[].grades, LATER_GRADE_ODDS, LATER_GRADE_STAGES | see Obstacle grades | Odds of aiming for each grade per stage, and where they head after the last stage over 8 stages |
+| MOVING_GRADED_TRIES, STATIC_TRIES | 3, 40 | Moving candidates graded, and static draws, per gap |
+| GRADE_ARRIVAL_STEP, GRADE_RADIUS_STEP | 4, 2 | A moving obstacle's grade samples every 4th arrival and every 2nd entry radius |
 | STAGE_LENGTH_AFTER | 20 obstacles | After the last stage, the stage number (the time of day) counts on this often |
 | LATER_WINDOW_STEP_MS, LATER_MIN_WINDOW_MS | 2 ms per stage, down to 40 ms | The shortest release window of the stages after the last: 60 ms at Stage 4, 40 ms from Stage 14 (about 5 steps) |
 | LATER_MOVING_STEP, LATER_MOVING_MAX | +4 points per stage, up to 75 % | The moving share of those stages: 55 % at Stage 4, 75 % from Stage 9 |
@@ -533,6 +553,12 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] No points: the score is one per gap crossed; a "+1" pops where a banana is taken
 - [x] A tally per player, "taken / passed", on the results (the HUD shows just the taken count under each score); in shared screen passed is the same for both and a banana goes to the first to reach it (unit tested)
 - [x] B and the bananas-off setting are gone; the debug text shows the slipping setting
+
+**28. Difficulty grades.** Every obstacle is graded 1–4 by how much release timing it blocks, each stage aims for grades by its own odds, no grade appears before its stage, and the late levels keep all four (see Obstacle grades).
+- [x] The window table holds each static obstacle's blocked share; `Obstacle.grade` is carried to the worker and shown in the debug view
+- [x] `createObstacle` aims for a grade per gap (own random stream), caps it by the stage, and falls back to the other kind of obstacle, then the closest static one
+- [x] Tests: the grades match the solver; none above the stage's highest; grade 4 only from Stage 4; the mean grade rises stage by stage; all four stay in the late levels
+- [x] The whole jungle changes for every seed (static types and heights are drawn by grade)
 
 ## Design decisions
 

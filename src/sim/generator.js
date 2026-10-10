@@ -27,6 +27,8 @@ import {
   TEMPLE_MIN_GAP,
   TEMPLE_VARIANTS,
   ENTRY_RADII,
+  MOVING_GRADED_TRIES,
+  STATIC_TRIES,
 } from '../config.js';
 import { Banana } from './banana.js';
 import { Liana } from './liana.js';
@@ -37,11 +39,13 @@ import {
   isClearOfLianas,
   isMovingFeasible,
   isPathClearOfLianas,
+  movingBlockedShare,
   windowSteps,
 } from './feasibility.js';
+import { gradeOf, maxGradeFor, targetGradeFor } from './grades.js';
 import { mixSeed, mulberry32 } from './rng.js';
 import { dayCycleFor, dayCycleRange, movingShareFor, stageFor, timeOfDayFor, TimeOfDay } from './stages.js';
-import { isPassable } from './windowTable.js';
+import { blockedShare, isPassable } from './windowTable.js';
 
 // Gaps on both sides of the start liana stay empty: the first forward gap lets the
 // player learn the timing, and the title-screen swing passes over the one behind.
@@ -120,9 +124,61 @@ export function branchDecorationFor(seed, gap) {
 }
 
 // A static obstacle of `type` at height `y`, centred in gap `gap`.
-function staticObstacle(seed, gap, type, y, scale) {
+function staticObstacle(seed, gap, { type, y, grade }, scale) {
   const decoration = type === ObstacleType.BRANCH ? branchDecorationFor(seed, gap) : null;
-  return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, y, null, scale, decoration);
+  return new Obstacle(gap, type, (gap + 0.5) * LIANA_SPACING, y, null, scale, decoration, null, grade);
+}
+
+// Grades. A gap aims for a grade (targetGradeFor) and takes nothing above its stage's
+// highest (maxGradeFor); an obstacle within one grade of the aim will do.
+const closer = (a, b, target) => {
+  const [da, db] = [Math.abs(a.grade - target), Math.abs(b.grade - target)];
+  return da < db || (da === db && a.grade < b.grade);
+};
+const fits = (candidate, target) => Math.abs(candidate.grade - target) <= 1;
+
+// A static candidate { type, y, grade } for the gap, from up to STATIC_TRIES random draws
+// of type (`fixedType`, if given) and height that are passable under `rules`: the first
+// with the aimed grade, else the closest one. Null if none is passable and within the cap.
+function pickStatic(rand, rules, target, cap, fixedType = null) {
+  const [minY, maxY] = OBSTACLE_Y_RANGE;
+  let best = null;
+  for (let i = 0; i < STATIC_TRIES; i++) {
+    const type = fixedType ?? staticTypeFor(rand);
+    const y = Math.round(minY + rand() * (maxY - minY));
+    if (!isPassable(type, y, rules.scale, rules.minSteps)) continue;
+    const grade = gradeOf(blockedShare(type, y, rules.scale));
+    if (grade > cap) continue;
+    const candidate = { type, y, grade };
+    if (grade === target) return candidate;
+    if (!best || closer(candidate, best, target)) best = candidate;
+  }
+  return best;
+}
+
+const fallbackStatics = new Map();
+
+// What pickStatic falls back to when the draws find nothing: the closest grade to the aim
+// over every type and height, scanning from the bottom of the range up. (Some grade is
+// always there: the stage's lowest passable height has the cap's grade or below.)
+function fallbackStatic(rules, target, cap, fixedType = null) {
+  const key = `${fixedType}:${rules.scale}:${rules.minSteps}:${target}:${cap}`;
+  if (!fallbackStatics.has(key)) {
+    const [minY, maxY] = OBSTACLE_Y_RANGE;
+    let best = null;
+    for (const type of fixedType ? [fixedType] : PLAIN_STATIC_TYPES) {
+      for (let y = maxY; y >= minY; y--) {
+        if (!isPassable(type, y, rules.scale, rules.minSteps)) continue;
+        const grade = gradeOf(blockedShare(type, y, rules.scale));
+        if (grade > cap) continue;
+        const candidate = { type, y, grade };
+        if (!best || closer(candidate, best, target)) best = candidate;
+      }
+    }
+    if (!best) throw new Error(`No passable height for ${fixedType ?? 'a static type'} at scale ${rules.scale} within grade ${cap}`);
+    fallbackStatics.set(key, best);
+  }
+  return fallbackStatics.get(key);
 }
 
 // The type of a static gap: a beehive for BEEHIVE_SHARE of them, else one of the other
@@ -147,8 +203,10 @@ export function templeGapFor(seed, cycle) {
 function templeObstacle(seed, gap, rules) {
   const rand = mulberry32(mixSeed(seed ^ TEMPLE_SALT ^ 0x51, gap));
   const variant = Math.floor(rand() * TEMPLE_VARIANTS);
-  const y = pickHeight(ObstacleType.TEMPLE, rand, rules);
-  return new Obstacle(gap, ObstacleType.TEMPLE, (gap + 0.5) * LIANA_SPACING, y, null, rules.scale, null, variant);
+  const [target, cap] = [targetGradeFor(seed, gap), maxGradeFor(gap)];
+  const { y, grade } =
+    pickStatic(rand, rules, target, cap, ObstacleType.TEMPLE) ?? fallbackStatic(rules, target, cap, ObstacleType.TEMPLE);
+  return new Obstacle(gap, ObstacleType.TEMPLE, (gap + 0.5) * LIANA_SPACING, y, null, rules.scale, null, variant, grade);
 }
 
 const MOVING_TRIES = 20;
@@ -243,31 +301,52 @@ export function movingCandidate(type, gap, rand, scale = 1) {
   return new Obstacle(gap, type, offset + LIANA_SPACING / 2, y, motion, scale);
 }
 
+// A moving obstacle for the gap that the solver accepts and whose grade is within one of
+// the aim and within the cap, or null: from up to MOVING_TRIES random candidates, of
+// which the first MOVING_GRADED_TRIES the solver accepts are graded; the first with the
+// aimed grade, else the closest.
+function gradedMoving(gap, rand, rules, target, cap) {
+  let best = null;
+  let graded = 0;
+  for (let i = 0; i < MOVING_TRIES && graded < MOVING_GRADED_TRIES; i++) {
+    const o = movingCandidate(pick(movingTypesFor(gap), rand), gap, rand, rules.scale);
+    if (!o || !isMovingFeasible(o.inGap(0), rules.minSteps)) continue;
+    graded++;
+    const grade = gradeOf(movingBlockedShare(o.inGap(0)));
+    if (grade > cap) continue;
+    o.grade = grade;
+    if (grade === target) return o;
+    if (fits(o, target) && (!best || closer(o, best, target))) best = o;
+  }
+  return best;
+}
+
 // Obstacle for gap i (between lianas i and i + 1), or null. Deterministic in (seed, gap),
-// so a culled gap regenerates identically. Its stage sets its scale and shortest
-// release window. From
-// MOVING_FROM a share of the gaps get a moving obstacle, rerolled up to MOVING_TRIES
-// times until the solver accepts it, else a static one at its lowest-risk passable
-// height.
+// so a culled gap regenerates identically. Its stage sets its scale, its shortest
+// release window and the grades it aims for (see GRADE_BOUNDS). From MOVING_FROM a share
+// of the gaps try a moving obstacle first, the others a static one; one that cannot find
+// an obstacle within a grade of its aim tries the other kind, and takes the closest
+// static one if neither does.
 export function createObstacle(seed, gap) {
   if (EMPTY_GAPS.has(gap)) return null;
   const rules = rulesFor(gap);
   if (gap === templeGapFor(seed, dayCycleFor(gap))) return templeObstacle(seed, gap, rules);
+  const [target, cap] = [targetGradeFor(seed, gap), maxGradeFor(gap)];
   const movingShare = movingShareFor(gap);
-  if (movingShare > 0) {
-    const rand = mulberry32(mixSeed(seed ^ MOVING_SALT, gap));
-    if (rand() < movingShare) {
-      for (let i = 0; i < MOVING_TRIES; i++) {
-        const o = movingCandidate(pick(movingTypesFor(gap), rand), gap, rand, rules.scale);
-        if (o && isMovingFeasible(o.inGap(0), rules.minSteps)) return o;
-      }
-      const type = staticTypeFor(rand);
-      return staticObstacle(seed, gap, type, fallbackHeight(type, rules), rules.scale);
-    }
+  const movingRand = mulberry32(mixSeed(seed ^ MOVING_SALT, gap));
+  const triesMoving = movingShare > 0 && movingRand() < movingShare;
+  if (triesMoving) {
+    const o = gradedMoving(gap, movingRand, rules, target, cap);
+    if (o) return o;
   }
   const rand = mulberry32(mixSeed(seed, gap));
-  const type = staticTypeFor(rand);
-  return staticObstacle(seed, gap, type, pickHeight(type, rand, rules), rules.scale);
+  const found = pickStatic(rand, rules, target, cap);
+  if (found && fits(found, target)) return staticObstacle(seed, gap, found, rules.scale);
+  if (movingShare > 0 && !triesMoving) {
+    const o = gradedMoving(gap, movingRand, rules, target, cap);
+    if (o) return o;
+  }
+  return staticObstacle(seed, gap, found ?? fallbackStatic(rules, target, cap), rules.scale);
 }
 
 // The banana for gap `gap` (with `obstacle`, as generated), or null. It lies on a flight

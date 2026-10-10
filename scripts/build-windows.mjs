@@ -9,18 +9,20 @@ const table = computeWindowTable();
 // One line per scale and type keeps the file small and diffs readable.
 const block = (indent, entries, inner) =>
   entries.map(([key, value]) => `${indent}${JSON.stringify(key)}: ${inner(value, indent)}`).join(',\n');
-const lines = [
-  block('    ', Object.entries(table.windows), (types, indent) => {
+const rows = (byScale) =>
+  block('    ', Object.entries(byScale), (types, indent) => {
     const typeRows = block(`${indent}  `, Object.entries(types), (w) => JSON.stringify(w));
     return `{\n${typeRows}\n${indent}}`;
-  }),
-];
+  });
 const json = `{
   "inputs": ${JSON.stringify(table.inputs)},
   "minY": ${table.minY},
   "maxY": ${table.maxY},
   "windows": {
-${lines.join(',\n')}
+${rows(table.windows)}
+  },
+  "blocked": {
+${rows(table.blocked)}
   }
 }
 `;

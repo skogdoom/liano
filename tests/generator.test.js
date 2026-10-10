@@ -3,7 +3,6 @@ import {
   createLiana,
   createObstacle,
   templeGapFor,
-  staticTypeFor,
   branchDecorationFor,
   rulesFor,
   birdPatrolBounds,
@@ -161,10 +160,13 @@ describe('obstacle generation', () => {
     const rare = [ObstacleType.BEEHIVE, ObstacleType.TEMPLE];
     for (const t of STATIC_TYPES) expect(counts[t]).toBeGreaterThan(rare.includes(t) ? 10 : 50);
     const statics = STATIC_TYPES.reduce((sum, t) => sum + counts[t], 0) - counts[ObstacleType.TEMPLE];
-    expect(counts[ObstacleType.BEEHIVE] / statics).toBeGreaterThan(BEEHIVE_SHARE - 0.05);
-    expect(counts[ObstacleType.BEEHIVE] / statics).toBeLessThan(BEEHIVE_SHARE + 0.05);
+    // The grade a gap aims for favours the beehive a little (it is mostly a hard obstacle),
+    // but it stays one of the rarest.
+    expect(counts[ObstacleType.BEEHIVE] / statics).toBeGreaterThan(BEEHIVE_SHARE / 2);
+    expect(counts[ObstacleType.BEEHIVE] / statics).toBeLessThan(BEEHIVE_SHARE * 2.5);
     // The bat only flies at night, one stage in five.
-    for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BAT ? 80 : 250);
+    // The aimed grade favours some types a little (blue birds, the easiest to dodge, come least).
+    for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BAT ? 80 : 150);
   });
 
   it('carries a decoration on some branches, for show, and never on anything else', () => {
@@ -439,17 +441,6 @@ describe('obstacle generation', () => {
     }
     // Obstacles behind the start stay static.
     for (let gap = -200; gap < 0; gap++) if (gap !== -1) expect(createObstacle(SEED, gap).moving).toBe(false);
-  });
-
-  it('keeps the static obstacles of every stage as they were', () => {
-    // Moving choices use their own random stream: a gap that stays static gets the
-    // obstacle it would have had without moving obstacles.
-    for (let gap = MOVING_FROM; gap < 200; gap++) {
-      const o = createObstacle(SEED, gap);
-      if (o.moving || o.type === ObstacleType.TEMPLE) continue;
-      const rand = mulberry32(mixSeed(SEED, gap));
-      expect(o.type).toBe(staticTypeFor(rand));
-    }
   });
 
   it('sets bird patrols to the widest range clear of the swings', () => {

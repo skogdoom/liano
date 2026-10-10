@@ -1,5 +1,5 @@
 import table from './windowTable.json';
-import { isFeasible, windowInputs, MIN_WINDOW_STEPS } from './feasibility.js';
+import { isFeasible, releaseWindow, roundShare, windowInputs, MIN_WINDOW_STEPS } from './feasibility.js';
 
 // Passability lookups from the table built by scripts/build-windows.mjs, so play
 // never runs the solver. If the table was built from different tunables (a config
@@ -14,4 +14,12 @@ export function isPassable(type, y, scale = 1, minSteps = MIN_WINDOW_STEPS) {
   const row = table.windows[scale]?.[type];
   if (fresh && row && Number.isInteger(y) && y >= table.minY && y <= table.maxY) return row[y - table.minY] >= minSteps;
   return isFeasible(type, y, scale, minSteps);
+}
+
+// The share of release steps a static obstacle of `type` at height `y` blocks (its
+// difficulty: see GRADE_BOUNDS), from the table when possible, else from the solver.
+export function blockedShare(type, y, scale = 1) {
+  const row = table.blocked?.[scale]?.[type];
+  if (fresh && row && Number.isInteger(y) && y >= table.minY && y <= table.maxY) return row[y - table.minY];
+  return roundShare(releaseWindow(type, y, scale).blocked);
 }

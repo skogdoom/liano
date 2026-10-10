@@ -77,6 +77,12 @@ export class DebugOverlay {
       `slipping ${game.slip ? 'on' : 'off'} (G)`,
     ];
 
+    if (monkey.state === MonkeyState.HANGING) {
+      const { liana } = monkey;
+      const gap = liana.swingDir > 0 ? liana.index : liana.index - 1;
+      const o = world.obstacles.get(gap);
+      lines.push(o ? `obstacle #${gap}  ${o.type}  grade ${o.grade ?? '?'}` : `obstacle #${gap}  none`);
+    }
     if (monkey.state === MonkeyState.HANGING && !monkey.slipping) {
       lines.push(`liana #${monkey.liana.index}  grip ${Math.round(monkey.gripRadius)}  no slip until the run starts`);
     } else if (monkey.state === MonkeyState.HANGING) {
