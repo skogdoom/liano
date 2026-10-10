@@ -1,4 +1,4 @@
-import { GRADE_BOUNDS } from '../config.js';
+import { GRADE_BOUNDS, HIGH_BELOW_Y } from '../config.js';
 import { mixSeed, mulberry32 } from './rng.js';
 import { stageFor } from './stages.js';
 
@@ -28,4 +28,17 @@ export function targetGradeFor(seed, gap) {
     if (x < 0 && grades[g - 1] > 0) return g;
   }
   return maxGradeFor(gap);
+}
+
+// Whether an obstacle at height `y` is high (hangs from the canopy) rather than low.
+export const isHigh = (y) => y < HIGH_BELOW_Y;
+
+const SIDE_SALT = 0x51de;
+
+// Whether the obstacle of `gap` aims to be high (true) or low (false), drawn from its
+// stage's `high` share from a random stream of its own; null when the stage has no
+// preference. Deterministic in (seed, gap).
+export function aimsHigh(seed, gap) {
+  const { high } = stageFor(gap);
+  return high === null ? null : mulberry32(mixSeed(seed ^ SIDE_SALT, gap))() < high;
 }

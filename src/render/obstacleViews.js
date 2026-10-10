@@ -1,15 +1,14 @@
 import { Container, Graphics } from 'pixi.js';
-import { OBSTACLE_HITBOXES } from '../config.js';
+import { HIGH_BELOW_Y, OBSTACLE_HITBOXES } from '../config.js';
 import { mixSeed, mulberry32 } from '../sim/rng.js';
 import { FLOOR_Y } from './background.js';
 import { leafPoints } from './shapes.js';
 
 // Obstacle art, built once per obstacle from its (unscaled) hitbox shapes so the two
 // match, then scaled like the hitbox.
-// Obstacles above this height hang from the canopy on vines; lower ones stand on a
+// Obstacles above HIGH_BELOW_Y hang from the canopy on vines; lower ones stand on a
 // trunk or pole from the floor. Supports are scenery: the gameplay hitbox is only
 // the obstacle itself. (Generated heights avoid the band around this line.)
-const HANGS_ABOVE_Y = 255;
 const CANOPY_Y = 26;
 
 const BARK = 0x6b4423;
@@ -1145,7 +1144,7 @@ function buildObstacle(o) {
   const view = new Container();
   const g = new Graphics();
   view.addChild(g);
-  const animate = DRAW[o.type](g, o, mulberry32(mixSeed(0x0b57, o.gap)), o.y < HANGS_ABOVE_Y, view);
+  const animate = DRAW[o.type](g, o, mulberry32(mixSeed(0x0b57, o.gap)), o.y < HIGH_BELOW_Y, view);
   view.position.set(o.x, o.y);
   view.scale.set(o.scale);
   if (!animate) return { view, update: null };

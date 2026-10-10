@@ -128,6 +128,8 @@ Each stage lists the odds (`grades` in STAGES) of a gap *aiming* for each grade,
 | 4 | 51–70 | 20 / 30 / 30 / 20 |
 | 5 and on | 71+ | towards 10 / 20 / 30 / 40, reached after LATER_GRADE_STAGES (8) more stages (Stage 12) |
 
+**High and low.** Obstacles above HIGH_BELOW_Y (255) hang from the canopy ("high"), lower ones stand on the floor ("low"); swing clearance leaves no passable height around that line. The easy obstacles are mostly high (a low rock or beehive blocks far more flights), so with the grades alone Stage 1 came out about 70 % high, Stage 2 56 %, Stage 3 41 % and Stage 4 34 %. A stage's `high` (STAGES) is the share of its gaps that aim for a high obstacle, the rest for a low one, from a random stream of their own: 0.5 in Stages 1–3, so they come out about 47–49 % high, and null from Stage 4 on, which leaves the mix to the types and grades (about a third high: only the spider and the blue bird fly high). A static gap draws its height from the aimed side's part of the range, a moving gap its type from the ones that fly there (a high aim: spider or blue bird; a low aim: all but the spider), and the side counts before the grade when choosing between candidates.
+
 After Stage 4 the odds only move gradually, so even the late levels still hold all four grades: easy obstacles for variation, the hardest ones more and more often. The generator tries the kind of obstacle the moving share asks for (still the same lever as before); an obstacle that is passable under the stage's rules, at or below the stage's highest grade and with the aimed grade is taken at once, else the closest one within a grade of the aim (a moving one: from the first MOVING_GRADED_TRIES candidates the solver accepts; a static one: from STATIC_TRIES random type and height draws). If the kind cannot find one within a grade of the aim it tries the other: at the bigger late scales few static obstacles are easy (no grade 1 at scale 1.3 except the temple), so the aim for an easy obstacle there is mostly met by a moving one, and the aim for a hard one by a static one. Measured over many seeds: the mean grade per stage rises 1.4, 1.9, 2.1, 2.6, then 2.7 (Stage 5–8) and 2.9 (9–12); about two obstacles in three get the aimed grade exactly, nearly all are within one. The temple is under the same cap.
 
 Scaled obstacles must still pass the swing-clearance rule; heights that fail are rerolled. At scale 1.3 a branch fits only at y 371–375, so stage-4 branches almost always sit at the bottom. The tint multiplies the background only (sky, parallax, canopy and floor), so lianas, obstacles and the monkeys stay readable at night.
@@ -268,6 +270,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | LIANA_CLEARANCE | 6 | Extra gap between an obstacle and a swept area, beyond MONKEY_RADIUS |
 | MIN_RELEASE_WINDOW_MS | 90 | Stage 1; later stages per STAGES |
 | STAGES | see Difficulty stages | First obstacle, shortest window, moving share and obstacle scale per stage |
+| HIGH_BELOW_Y, STAGES[].high | 255; 0.5 in Stages 1–3, null after | Obstacles above the line hang from the canopy (high); the share of a stage's gaps that aim for a high obstacle |
 | GRADE_BOUNDS | 0.12, 0.19, 0.27 | Blocked shares where grades 2, 3 and 4 start |
 | STAGES[].grades, LATER_GRADE_ODDS, LATER_GRADE_STAGES | see Obstacle grades | Odds of aiming for each grade per stage, and where they head after the last stage over 8 stages |
 | MOVING_GRADED_TRIES, STATIC_TRIES | 3, 40 | Moving candidates graded, and static draws, per gap |
@@ -558,6 +561,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] The window table holds each static obstacle's blocked share; `Obstacle.grade` is carried to the worker and shown in the debug view
 - [x] `createObstacle` aims for a grade per gap (own random stream), caps it by the stage, and falls back to the other kind of obstacle, then the closest static one
 - [x] Tests: the grades match the solver; none above the stage's highest; grade 4 only from Stage 4; the mean grade rises stage by stage; all four stay in the late levels
+- [x] High and low are about even in Stages 1–3 (`high` per stage; the aimed side picks the height range or the moving types)
 - [x] The whole jungle changes for every seed (static types and heights are drawn by grade)
 
 ## Design decisions

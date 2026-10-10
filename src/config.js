@@ -186,11 +186,18 @@ export const MIN_RELEASE_WINDOW_MS = 90;
 // by score. Each has its shortest release window, share of moving obstacles and
 // obstacle scale.
 export const STAGES = [
-  { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.12, scale: 1.0, grades: [0.65, 0.35, 0, 0] },
-  { first: 16, minWindowMs: 80, movingShare: 0.2, scale: 1.1, grades: [0.4, 0.4, 0.2, 0] },
-  { first: 31, minWindowMs: 70, movingShare: 0.4, scale: 1.2, grades: [0.25, 0.35, 0.4, 0] },
-  { first: 51, minWindowMs: 60, movingShare: 0.55, scale: 1.3, grades: [0.2, 0.3, 0.3, 0.2] },
+  { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.12, scale: 1.0, grades: [0.65, 0.35, 0, 0], high: 0.5 },
+  { first: 16, minWindowMs: 80, movingShare: 0.2, scale: 1.1, grades: [0.4, 0.4, 0.2, 0], high: 0.5 },
+  { first: 31, minWindowMs: 70, movingShare: 0.4, scale: 1.2, grades: [0.25, 0.35, 0.4, 0], high: 0.5 },
+  { first: 51, minWindowMs: 60, movingShare: 0.55, scale: 1.3, grades: [0.2, 0.3, 0.3, 0.2], high: null },
 ];
+
+// Obstacles above this height hang from the canopy ("high"); lower ones stand on the
+// floor ("low"). Swing clearance leaves no passable height around this line. A stage's
+// `high` is the share of its gaps that aim for a high obstacle (the rest for a low one),
+// to keep the two about even where the grades alone would not (the easy obstacles are
+// mostly high); null leaves the mix to the types and the grades.
+export const HIGH_BELOW_Y = 255;
 
 // Obstacle difficulty grades, 1 (easiest) to 4. An obstacle's grade is how much of the
 // release timing it takes away: the share of release steps whose flight it blocks, over

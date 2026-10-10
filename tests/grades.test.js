@@ -1,20 +1,21 @@
 import { describe, it, expect } from 'vitest';
-import { GRADES, gradeOf, maxGradeFor, targetGradeFor } from '../src/sim/grades.js';
+import { GRADES, aimsHigh, gradeOf, isHigh, maxGradeFor, targetGradeFor } from '../src/sim/grades.js';
 import { createObstacle } from '../src/sim/generator.js';
 import { stageFor } from '../src/sim/stages.js';
 import { blockedShare } from '../src/sim/windowTable.js';
 import table from '../src/sim/windowTable.json';
 import { isClearOfLianas, movingBlockedShare, releaseWindow } from '../src/sim/feasibility.js';
 import { Obstacle, ObstacleType } from '../src/sim/obstacle.js';
-import { GRADE_BOUNDS, LATER_GRADE_ODDS, LIANA_SPACING, LATER_GRADE_STAGES, STAGES, STAGE_LENGTH_AFTER } from '../src/config.js';
+import { GRADE_BOUNDS, HIGH_BELOW_Y, LATER_GRADE_ODDS, LIANA_SPACING, LATER_GRADE_STAGES, STAGES, STAGE_LENGTH_AFTER } from '../src/config.js';
 
 const SEEDS = [1, 2, 3, 4, 5, 6];
+const MANY_SEEDS = Array.from({ length: 40 }, (_, i) => i + 1);
 const firstOfStage = (n) => (n <= STAGES.length ? STAGES[n - 1].first : STAGES.at(-1).first + (n - STAGES.length) * STAGE_LENGTH_AFTER);
 
 // Every obstacle of the gaps from..to for each of SEEDS.
-function obstacles(from, to) {
+function obstacles(from, to, seeds = SEEDS) {
   const list = [];
-  for (const seed of SEEDS) {
+  for (const seed of seeds) {
     for (let gap = from; gap <= to; gap++) {
       const o = createObstacle(seed, gap);
       if (o) list.push({ seed, gap, o });
@@ -180,6 +181,52 @@ describe('grades by stage', () => {
   it('puts the temple under the same cap', () => {
     for (const { gap, o } of obstacles(1, 600).filter(({ o }) => o.type === ObstacleType.TEMPLE)) {
       expect(o.grade).toBeLessThanOrEqual(maxGradeFor(gap));
+    }
+  });
+});
+
+describe('high and low obstacles', () => {
+  const share = (list) => list.filter(({ o }) => isHigh(o.baseY)).length / list.length;
+
+  it('calls an obstacle high when it hangs from the canopy, above HIGH_BELOW_Y', () => {
+    expect(isHigh(HIGH_BELOW_Y - 1)).toBe(true);
+    expect(isHigh(HIGH_BELOW_Y)).toBe(false);
+  });
+
+  it('has the lower stages aim for high or low at their own share, the same for a seed every time', () => {
+    for (let gap = 1; gap < 400; gap++) {
+      const { high } = stageFor(gap);
+      for (const seed of SEEDS) {
+        const aim = aimsHigh(seed, gap);
+        expect(aim).toBe(high === null ? null : aim);
+        expect(aimsHigh(seed, gap)).toBe(aim);
+        if (high === null) expect(aim).toBeNull();
+      }
+    }
+    expect(STAGES.slice(0, 3).every((s) => s.high === 0.5)).toBe(true);
+    expect(STAGES.at(-1).high).toBeNull();
+    let highAims = 0;
+    for (let seed = 1; seed <= 600; seed++) if (aimsHigh(seed, 10)) highAims++;
+    expect(highAims / 600).toBeGreaterThan(0.44);
+    expect(highAims / 600).toBeLessThan(0.56);
+  });
+
+  it('keeps high and low about even in the lower stages, for all obstacles and for the static ones', () => {
+    for (let stage = 1; stage <= 3; stage++) {
+      const list = obstacles(firstOfStage(stage), firstOfStage(stage + 1) - 1, MANY_SEEDS);
+      expect(share(list)).toBeGreaterThan(0.42);
+      expect(share(list)).toBeLessThan(0.58);
+      const statics = list.filter(({ o }) => !o.moving);
+      expect(share(statics)).toBeGreaterThan(0.38);
+      expect(share(statics)).toBeLessThan(0.62);
+    }
+  });
+
+  it('still has both heights in every stage, whatever the aim', () => {
+    for (const { from, to } of [{ from: 6, to: 15 }, { from: 100, to: 400 }]) {
+      const list = obstacles(from, to);
+      expect(share(list)).toBeGreaterThan(0.2);
+      expect(share(list)).toBeLessThan(0.8);
     }
   });
 });
