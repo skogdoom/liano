@@ -22,6 +22,7 @@ export class SoundPlayer {
     this.now = now;
     this.ctx = null;
     this.rebuilds = 0;
+    this.played = 0;
     this.stuckSince = null;
     this.lastTime = null;
     this.muted = false;
@@ -69,6 +70,15 @@ export class SoundPlayer {
     this.active.clear();
     this.rebuilds++;
     this.#create();
+  }
+
+  // More for the debug view: whether the clock runs, how many sounds were started, and the
+  // output's rate and latency.
+  get details() {
+    if (!this.ctx) return this.status;
+    const { currentTime, sampleRate, outputLatency } = this.ctx;
+    const ms = outputLatency === undefined ? '' : `, ${Math.round(outputLatency * 1000)} ms out`;
+    return `${this.status}, clock ${currentTime.toFixed(1)} s, ${this.played} played, gain ${this.master.gain.value.toFixed(1)}, ${sampleRate} Hz${ms}`;
   }
 
   // What the sound is doing, for the debug view.
@@ -123,6 +133,7 @@ export class SoundPlayer {
       sound.sources.push(source);
     }
     this.active.add(sound);
+    this.played++;
     return true;
   }
 

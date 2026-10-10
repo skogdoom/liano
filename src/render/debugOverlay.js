@@ -74,7 +74,7 @@ export class DebugOverlay {
 
     const lines = [
       `${game.state}  stage ${game.stage}  score ${game.score}  lianas ${world.lianas.size}  obstacles ${world.obstacles.size}`,
-      `slipping ${game.slip ? 'on' : 'off'} (G)${sound ? `  sound ${sound.status}` : ''}`,
+      `slipping ${game.slip ? 'on' : 'off'} (G)${sound ? `  sound ${sound.details}` : ''}`,
     ];
 
     if (monkey.state === MonkeyState.HANGING) {

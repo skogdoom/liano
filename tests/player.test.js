@@ -243,6 +243,17 @@ describe('sound player', () => {
     });
   });
 
+  it('describes itself for the debug view: locked, then running with its clock and plays', () => {
+    const { player } = setup();
+    expect(player.details).toBe('locked');
+    player.unlock();
+    expect(player.details).toMatch(/^running, clock 0\.0 s, 0 played, gain 0\.6, 8000 Hz/);
+    player.play(crash());
+    player.setPaused(true);
+    player.play(crash()); // refused while paused: not counted
+    expect(player.details).toMatch(/1 played/);
+  });
+
   it('fades out playing sounds when muted', () => {
     const { player, contexts } = setup();
     player.unlock();
