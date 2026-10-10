@@ -389,3 +389,17 @@ describe('flight prediction', () => {
     expect(world.predictFlight().outcome).toBe('hit');
   });
 });
+
+describe('the flight cache', () => {
+  it('only keeps the radii the generator asks for, however many others are asked for', async () => {
+    const { emptyGapFlights, flightCacheSize } = await import('../src/sim/feasibility.js');
+    for (const r of ENTRY_RADII) emptyGapFlights(r);
+    const before = flightCacheSize();
+    expect(before).toBeLessThanOrEqual(ENTRY_RADII.length * 2);
+    // The debug view asks for the exact radius of every grab.
+    for (let i = 0; i < 100; i++) expect(emptyGapFlights(150.5 + i * 2.37).flights.length).toBeGreaterThan(0);
+    expect(flightCacheSize()).toBe(before);
+    // And the ones it keeps are the same list every time.
+    expect(emptyGapFlights(ENTRY_RADII[0])).toBe(emptyGapFlights(ENTRY_RADII[0]));
+  });
+});
