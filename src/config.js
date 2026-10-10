@@ -264,7 +264,8 @@ export const GAMEOVER_INPUT_LOCK_MS = 400;
 // `p1`/`p2` are the two-player action keys (not Shift: five presses open Windows' Sticky
 // Keys dialog), `mode` picks the mode on the title screen (1, 2, 3) and `start` starts it
 // (as does `primary`). `slip` (G, for grip) turns slipping on and off, `lives` (H, for
-// hearts) turns lives on and off for single player, on the title screen.
+// hearts) turns lives on and off for single player, on the title screen, and `shadow` (S)
+// the shadow monkey, the best previous run replayed on the same level.
 export const KEYS = Object.freeze({
   primary: ['Space'],
   start: ['Enter', 'NumpadEnter'],
@@ -277,6 +278,7 @@ export const KEYS = Object.freeze({
   pause: ['KeyP'],
   slip: ['KeyG'],
   lives: ['KeyH'],
+  shadow: ['KeyS'],
 });
 // The lives each player starts with in the two-player modes, and in single player with
 // lives turned on.

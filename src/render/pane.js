@@ -7,6 +7,7 @@ import { Camera, cameraTarget } from './camera.js';
 import { LIANA_PALETTES, LianaView } from './lianaView.js';
 import { MonkeyView, PALETTES } from './monkeyView.js';
 import { ObstacleViews } from './obstacleViews.js';
+import { ShadowView } from './shadowView.js';
 
 // One world drawn in one rect of the view: the whole view in single player, a strip
 // per player in split screen. Back to front: sky and parallax layers, the world
@@ -26,6 +27,9 @@ export class Pane {
     this.bananaViews = new BananaViews();
     this.monkeyLayer = new Container();
     this.monkeyViews = [];
+    // The shadow monkey and its lianas, behind the real monkeys.
+    this.shadowView = new ShadowView();
+    this.monkeyLayer.addChild(this.shadowView.view);
     this.worldLayer.addChild(
       this.obstacleViews.view,
       this.lianaLayer,
@@ -109,7 +113,8 @@ export class Pane {
 
   // `events`: this frame's events from this pane's world.
   // `shakes`: whether deaths shake the view (not with reduced motion).
-  update(events, dt, shakes = true) {
+  // `ghost` is the shadow monkey to draw (see Game.shadowFrame), or null.
+  update(events, dt, shakes = true, ghost = null) {
     const { world, camera, shake } = this;
     if (shakes && events.some((e) => e.type === 'death')) shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
     shake.update(dt);
@@ -124,5 +129,6 @@ export class Pane {
     this.obstacleViews.update(world.obstacles.values(), world.time, this.background.color);
     this.bananaViews.update(world, events, dt);
     world.monkeys.forEach((m, i) => this.monkeyViews[i].update(m, dt, world.isInvulnerable(i)));
+    this.shadowView.update(ghost, dt);
   }
 }

@@ -300,6 +300,8 @@ function frame(ticker) {
   if (input.consumeSlipToggle()) game.toggleSlip();
   // H turns lives on and off for single player, on the title screen.
   if (input.consumeLivesToggle()) game.toggleLives();
+  // S turns the shadow monkey on and off for single player, on the title screen.
+  if (input.consumeShadowToggle()) game.toggleShadow();
   // P pauses a run, and resumes whatever it paused.
   if (input.consumePauseToggle() && (game.pausable || pause.reason === 'manual')) pause.toggle('manual');
   // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
@@ -311,7 +313,8 @@ function frame(ticker) {
   sound.setPaused(paused);
   const events = game.takeEvents();
   for (const recipe of soundsFor(events)) sound.play(recipe);
-  panes.forEach((pane, i) => pane.update(events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches));
+  const ghost = game.shadowFrame();
+  panes.forEach((pane, i) => pane.update(events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches, i === 0 ? ghost : null));
   hud.update(game);
   overlays.update(game, panes[0].camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
   debugOverlay.update(game, sound);

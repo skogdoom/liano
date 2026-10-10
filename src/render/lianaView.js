@@ -23,7 +23,7 @@ const IDLE_CURVE = 5;
 
 // Per-liana leaf layout, derived from the index so it is stable across culling.
 // `bowSide` (−1 or 1) fixes the bow's side and size, for a pair of lianas.
-function leafLayout(index, bowSide = 0) {
+export function leafLayout(index, bowSide = 0) {
   const rand = mulberry32(mixSeed(0x11a4a, index));
   const leaves = [];
   let side = rand() < 0.5 ? -1 : 1;
@@ -70,7 +70,7 @@ export function tipFlashOn(tipTime) {
   return Math.floor(tipTime / blink + 1e-6) % 2 === 0;
 }
 
-function drawLiana(g, liana, layout, flash, palette) {
+export function drawLiana(g, liana, layout, flash, palette) {
   const points = ropePoints(liana, layout.bow);
   const path = (width, color) => {
     g.moveTo(points[0].x, points[0].y);

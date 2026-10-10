@@ -3,6 +3,7 @@ import { World } from './world.js';
 import { MODES, playerFor } from './match.js';
 import { randomSeed } from './rng.js';
 import { SharedView } from './sharedView.js';
+import { ShadowReplay, ShadowRun, shadowMonkey } from './shadow.js';
 
 const MAX_PENDING_EVENTS = 64;
 
@@ -22,9 +23,10 @@ export const GameState = Object.freeze({
 // has one world per player, all with the same seed. Events carry the index of the
 // world they come from (`pane`) and the match-wide `player`.
 export class Game {
-  // `createWorld({ players, lives, hearts, seed })` can be replaced in tests. `slip` and
-  // `lives` are the settings the game starts with (see toggleSlip, toggleLives).
-  constructor({ createWorld = (options) => new World(options), slip = true, lives = false } = {}) {
+  // `createWorld({ players, lives, hearts, seed })` can be replaced in tests. `slip`, `lives`
+  // and `shadow` are the settings the game starts with (see toggleSlip, toggleLives,
+  // toggleShadow).
+  constructor({ createWorld = (options) => new World(options), slip = true, lives = false, shadow = false } = {}) {
     this.createWorld = createWorld;
     this.mode = 'solo';
     // Slipping (G), for every world and match until the page is reloaded.
@@ -33,6 +35,17 @@ export class Game {
     this.lives = lives;
     // The session's best single-player score, without and with lives.
     this.bests = { off: 0, on: 0 };
+    // The shadow monkey (S on the title screen, single player only): every game is on the
+    // same level, picked when the shadow is first turned on and kept until the page is
+    // reloaded, and the best run so far (per setting of lives and slipping) is replayed as
+    // a shadow. `shadows` has those runs; `recording` is the one being played now.
+    this.shadow = shadow;
+    this.shadowSeed = null;
+    this.shadows = new Map();
+    this.recording = null;
+    this.ghost = null;
+    this.replay = null;
+    this.ghostMonkey = shadowMonkey();
     this.#newMatch();
     this.state = GameState.TITLE;
     this.stateTime = 0;
@@ -56,6 +69,31 @@ export class Game {
   // player if turned on.
   get livesOn() {
     return this.players > 1 || this.lives;
+  }
+
+  // Whether the shadow monkey is on: single player only, whatever the toggle says.
+  get shadowOn() {
+    return this.mode === 'solo' && this.shadow;
+  }
+
+  // The settings a shadow goes with: a run under other rules is not the same race.
+  get shadowSettings() {
+    return `${this.lives ? 'lives' : 'one'}:${this.slip ? 'slip' : 'hold'}`;
+  }
+
+  // The frame of the shadow monkey to draw now (a monkey-like object for MonkeyView), or
+  // null when there is none: no shadow, or it has left the screen. It plays on after the game
+  // is over, on the results screen, until it is out of the world (see ShadowRun.frame).
+  shadowFrame() {
+    if ((this.state !== GameState.PLAYING && this.state !== GameState.RESULTS) || !this.ghost) return null;
+    const index = this.world.stepCount - 1;
+    const frame = this.ghost.frame(index, this.ghostMonkey);
+    if (!frame) return null;
+    // The lianas it swings on, swung again from its grabs and releases.
+    this.replay.advanceTo(index);
+    frame.liana = this.replay.held;
+    frame.lianas = this.replay.lianas;
+    return frame;
   }
 
   // The best score of this page session for the current single-player setting.
@@ -106,6 +144,7 @@ export class Game {
     const events = [];
     this.worlds.forEach((world, pane) => {
       world.step(dt);
+      if (this.recording && this.state === GameState.PLAYING) this.recording.add(world.monkey);
       if (this.sharedView) this.sharedView.step(dt, this.state === GameState.PLAYING);
       // Drain events every step so they do not pile up in any state.
       for (const event of world.takeEvents()) {
@@ -169,6 +208,16 @@ export class Game {
     return true;
   }
 
+  // Turns the shadow monkey on or off for single player, on the title screen only (see
+  // shadowOn). The level changes with it: the shadow's level, or a random one. Returns
+  // whether it changed anything.
+  toggleShadow() {
+    if (this.state !== GameState.TITLE || this.mode !== 'solo') return false;
+    this.shadow = !this.shadow;
+    this.#newMatch();
+    return true;
+  }
+
   // Handles a press of an input role (see KEYS): `primary` is Space or a tap, `start`
   // is Enter, `p1`/`p2` the two-player keys, `menu` (Esc) goes back to the title screen
   // (ending a run in progress, which still counts for the best). Returns true if the
@@ -214,6 +263,14 @@ export class Game {
       this.newBest = this.score > this.best;
       this.bests[this.lives ? 'on' : 'off'] = Math.max(this.best, this.score);
     }
+    // The best run under these settings is the next game's shadow.
+    if (this.recording) {
+      this.recording.finish();
+      this.recording.score = this.score;
+      const best = this.shadows.get(this.recording.settings);
+      if (!best || this.recording.score > best.score) this.shadows.set(this.recording.settings, this.recording);
+      this.recording = null;
+    }
     this.#enter(GameState.RESULTS);
   }
 
@@ -232,7 +289,8 @@ export class Game {
     const { players, lives: modeLives, id } = MODES[this.mode];
     // Single player has one life, unless lives are on.
     const lives = id === 'solo' && this.lives ? LIVES_2P : modeLives;
-    const seed = randomSeed();
+    // With the shadow every game has the same level.
+    const seed = this.shadowOn ? (this.shadowSeed ??= randomSeed()) : randomSeed();
     const panes = id === 'split' ? players : 1;
     // In shared screen each monkey has its own lianas.
     const own = id === 'shared' ? { ownLianas: true } : {};
@@ -253,6 +311,12 @@ export class Game {
   }
 
   #startRun() {
+    // With the shadow every run starts from the same state, at time zero: from the title
+    // screen, whose swing has been going for a while, that means a fresh world.
+    if (this.shadowOn && this.state === GameState.TITLE) this.#newMatch();
+    this.ghost = this.shadowOn ? (this.shadows.get(this.shadowSettings) ?? null) : null;
+    this.replay = this.ghost ? new ShadowReplay(this.ghost) : null;
+    this.recording = this.shadowOn ? new ShadowRun(this.shadowSettings) : null;
     for (const world of this.worlds) world.start();
     this.score = 0;
     this.newBest = false;

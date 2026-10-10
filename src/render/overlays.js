@@ -174,9 +174,11 @@ export class Overlays {
     this.modePicker = new ModePicker();
     place(this.title, this.modePicker.view, 92);
     // The settings, side by side: lives ("H · Lives: off" in single player, "Lives: on" in the
-    // two-player modes) and slipping ("G · Slipping: off").
+    // two-player modes), slipping ("G · Slipping: off") and the shadow monkey ("S · Shadow: off",
+    // single player only).
     this.livesLine = place(this.title, text('', 17, { weight: 'bold' }), 120);
     this.slipLine = place(this.title, text('', 17, { weight: 'bold' }), 120);
+    this.shadowLine = place(this.title, text('', 17, { weight: 'bold' }), 120);
     // The pause, menu and setting keys, under the prompt (with a keyboard).
     this.keysHint = place(this.title, text('P  pause  ·  Esc  menu', 15, { color: CREAM }), 188);
     this.keysHint.alpha = 0.7;
@@ -324,6 +326,7 @@ export class Overlays {
     this.modePicker.view.visible = showModes;
     this.livesLine.visible = showModes;
     this.slipLine.visible = showModes;
+    this.shadowLine.visible = showModes;
     this.keysHint.visible = showModes;
     this.modePicker.update(game.mode);
     // Single player: the setting, to toggle with H. The two-player modes always have lives.
@@ -334,11 +337,17 @@ export class Overlays {
     this.slipLine.text = `G · Slipping: ${game.slip ? 'on' : 'off'}`;
     this.slipLine.style.fill = game.slip ? GOLD : CREAM;
     this.slipLine.alpha = game.slip ? 1 : 0.8;
+    this.shadowLine.text = solo ? `S · Shadow: ${game.shadow ? 'on' : 'off'}` : 'Shadow: off';
+    this.shadowLine.style.fill = solo && game.shadow ? GOLD : CREAM;
+    this.shadowLine.alpha = solo ? (game.shadow ? 1 : 0.8) : 0.55;
     // Centred together.
-    const gap = 30;
-    const left = -(this.livesLine.width + gap + this.slipLine.width) / 2;
-    this.livesLine.x = left + this.livesLine.width / 2;
-    this.slipLine.x = left + this.livesLine.width + gap + this.slipLine.width / 2;
+    const gap = 22;
+    const lines = [this.livesLine, this.slipLine, this.shadowLine];
+    let x = -(lines.reduce((sum, l) => sum + l.width, 0) + gap * (lines.length - 1)) / 2;
+    for (const line of lines) {
+      line.x = x + line.width / 2;
+      x += line.width + gap;
+    }
     this.tagline.y = showModes ? 0 : 10;
     this.titleControl.y = showModes ? 58 : 70;
     this.titlePrompt.y = showModes ? 156 : 125;
