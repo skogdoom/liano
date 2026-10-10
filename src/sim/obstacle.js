@@ -35,6 +35,7 @@ export const BranchDecoration = Object.freeze({
   NEST: 'nest',
   PANTHER: 'panther',
   HANGING_BAT: 'hangingBat',
+  OWL: 'owl',
 });
 export const BRANCH_DECORATIONS = [
   BranchDecoration.BIRD,
@@ -43,9 +44,10 @@ export const BRANCH_DECORATIONS = [
   BranchDecoration.NEST,
   BranchDecoration.PANTHER,
   BranchDecoration.HANGING_BAT,
+  BranchDecoration.OWL,
 ];
 // Some only come out at night.
-export const NIGHT_DECORATIONS = new Set([BranchDecoration.HANGING_BAT]);
+export const NIGHT_DECORATIONS = new Set([BranchDecoration.HANGING_BAT, BranchDecoration.OWL]);
 
 // What a branch can carry: everything at night, and by day all but the night ones.
 export function branchDecorationsFor(night) {

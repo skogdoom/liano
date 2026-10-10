@@ -444,6 +444,69 @@ function drawHangingBat(rand) {
   return { part: bat, animate };
 }
 
+const OWL = 0x8a6a48;
+const OWL_DARK = 0x5a432c;
+const OWL_BELLY = 0xe8d7b5;
+const OWL_FACE = 0xf0e2c2;
+const OWL_EYE = 0xffcf33;
+const OWL_BEAK = 0xe0993a;
+
+// An owl perched on top of the branch, round and brown with ear tufts and a pale
+// chevroned belly. Its face turns slowly from side to side, its big yellow eyes close for
+// a moment now and then, and it puffs a little as it breathes. For the night.
+function drawOwl(rand) {
+  const owl = new Container();
+  owl.scale.x = rand() < 0.5 ? 1 : -1;
+  const cx = -46 + rand() * 50;
+  owl.position.set(cx, branchTop(cx));
+  const phase = rand() * 6.3;
+
+  const body = new Graphics();
+  body.moveTo(-4.5, -1).lineTo(-4.5, 1.5).moveTo(-2, -1).lineTo(-2, 1.5).moveTo(2, -1).lineTo(2, 1.5).moveTo(4.5, -1).lineTo(4.5, 1.5);
+  body.stroke({ width: 1.6, color: OWL_BEAK, cap: 'round' });
+  body.ellipse(0, -14, 11.5, 14).fill(OWL);
+  body.ellipse(0, -12.5, 7.6, 10.8).fill(OWL_BELLY);
+  for (const [x, y] of [[-3, -19], [3, -19], [0, -14.5], [-4, -10], [4, -10], [0, -6.5]]) {
+    body.moveTo(x - 2, y - 1.4).lineTo(x, y + 0.8).lineTo(x + 2, y - 1.4).stroke({ width: 1, color: OWL, cap: 'round' });
+  }
+  // Folded wings down the sides, with a few pale flecks.
+  body.ellipse(-9.2, -13, 4.2, 10.5).fill(OWL_DARK).ellipse(9.2, -13, 4.2, 10.5).fill(OWL_DARK);
+  for (const [x, y] of [[-9.5, -17], [-8.5, -11], [9.5, -17], [8.5, -11]]) body.circle(x, y, 0.9).fill(OWL_BELLY);
+
+  const head = new Container();
+  head.position.set(0, -27);
+  const skull = new Graphics();
+  skull.circle(0, 0, 10.6).fill(OWL);
+  skull.poly([-9, -5, -9.5, -15, -3.5, -9]).fill(OWL_DARK).poly([9, -5, 9.5, -15, 3.5, -9]).fill(OWL_DARK);
+  const face = new Container();
+  const disc = new Graphics();
+  disc.circle(-4.6, 0.5, 6.3).fill(OWL_FACE).circle(4.6, 0.5, 6.3).fill(OWL_FACE);
+  disc.poly([-1.2, -2.5, 1.2, -2.5, 0, 0.2]).fill(OWL_DARK);
+  const eyes = new Graphics();
+  const beak = new Graphics();
+  beak.poly([-1.8, 1.2, 1.8, 1.2, 0, 5.2]).fill(OWL_BEAK);
+  face.addChild(disc, eyes, beak);
+  head.addChild(skull, face);
+  owl.addChild(body, head);
+
+  const animate = (t) => {
+    body.scale.y = 1 + 0.025 * Math.sin(t * 1.5 + phase);
+    // The face slides to one side and the other, as if the head were turning.
+    const turn = Math.sin(t * 0.55 + phase);
+    face.x = 3.4 * turn;
+    head.rotation = 0.06 * turn;
+    // Big yellow eyes with a pupil that leads the turn; a blink every few seconds.
+    const blink = (t * 0.27 + phase) % 1 < 0.04;
+    eyes.clear();
+    for (const side of [-1, 1]) {
+      const x = side * 4.6;
+      if (blink) eyes.moveTo(x - 3, 0.5).lineTo(x + 3, 0.5).stroke({ width: 1.2, color: OWL_DARK, cap: 'round' });
+      else eyes.circle(x, 0.5, 3.8).fill(OWL_EYE).circle(x + turn * 1.4, 0.5, 1.9).fill(PUPIL);
+    }
+  };
+  return { part: owl, animate };
+}
+
 export const DECORATIONS = {
   bird: drawPerchedBird,
   snake: drawPerchedSnake,
@@ -451,6 +514,7 @@ export const DECORATIONS = {
   nest: drawNest,
   panther: drawPanther,
   hangingBat: drawHangingBat,
+  owl: drawOwl,
 };
 
 // Adds the decoration the branch carries to `view`; returns its animation.
