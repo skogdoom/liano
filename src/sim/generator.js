@@ -23,7 +23,7 @@ import {
 } from '../config.js';
 import { Banana } from './banana.js';
 import { Liana } from './liana.js';
-import { BRANCH_DECORATIONS, Obstacle, ObstacleType, STATIC_TYPES } from './obstacle.js';
+import { Obstacle, ObstacleType, STATIC_TYPES, branchDecorationsFor } from './obstacle.js';
 import {
   emptyGapFlights,
   flightHits,
@@ -105,7 +105,9 @@ const DECORATION_SALT = 0xa91a;
 export function branchDecorationFor(seed, gap) {
   const rand = mulberry32(mixSeed(seed ^ DECORATION_SALT, gap));
   if (rand() >= BRANCH_DECORATION_CHANCE) return null;
-  return BRANCH_DECORATIONS[Math.floor(rand() * BRANCH_DECORATIONS.length)];
+  // Picked from what the gap's time of day allows (some decorations are for the night).
+  const choices = branchDecorationsFor(timeOfDayFor(gap) === TimeOfDay.NIGHT);
+  return choices[Math.floor(rand() * choices.length)];
 }
 
 // A static obstacle of `type` at height `y`, centred in gap `gap`.

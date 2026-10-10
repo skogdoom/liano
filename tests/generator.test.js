@@ -14,7 +14,15 @@ import {
   updateObstacles,
 } from '../src/sim/generator.js';
 import { mulberry32, mixSeed } from '../src/sim/rng.js';
-import { BRANCH_DECORATIONS, Obstacle, ObstacleType, STATIC_TYPES, MOVING_TYPES } from '../src/sim/obstacle.js';
+import {
+  BRANCH_DECORATIONS,
+  NIGHT_DECORATIONS,
+  Obstacle,
+  ObstacleType,
+  STATIC_TYPES,
+  MOVING_TYPES,
+  branchDecorationsFor,
+} from '../src/sim/obstacle.js';
 import { timeOfDayFor, TimeOfDay } from '../src/sim/stages.js';
 import { isPassable } from '../src/sim/windowTable.js';
 import { isPathClearOfLianas } from '../src/sim/feasibility.js';
@@ -173,6 +181,25 @@ describe('obstacle generation', () => {
     expect(branches).toBeGreaterThan(100);
     expect(decorated / branches).toBeGreaterThan(BRANCH_DECORATION_CHANCE - 0.1);
     expect(decorated / branches).toBeLessThan(BRANCH_DECORATION_CHANCE + 0.1);
+  });
+
+  it('keeps the night decorations for the night', () => {
+    expect(branchDecorationsFor(true)).toEqual(BRANCH_DECORATIONS);
+    expect(branchDecorationsFor(false)).toEqual(BRANCH_DECORATIONS.filter((d) => !NIGHT_DECORATIONS.has(d)));
+    expect(NIGHT_DECORATIONS.size).toBeGreaterThan(0);
+    const seen = { night: new Set(), day: new Set() };
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      for (let gap = 1; gap <= 1500; gap++) {
+        const d = branchDecorationFor(seed, gap);
+        if (!d) continue;
+        const night = timeOfDayFor(gap) === TimeOfDay.NIGHT;
+        seen[night ? 'night' : 'day'].add(d);
+        if (!night) expect(NIGHT_DECORATIONS.has(d)).toBe(false);
+      }
+    }
+    // By night they all turn up; by day only the others.
+    expect([...seen.night].sort()).toEqual([...BRANCH_DECORATIONS].sort());
+    expect([...seen.day].sort()).toEqual(branchDecorationsFor(false).slice().sort());
   });
 
   it('hangs beehives among the static obstacles, at heights that can be passed', () => {

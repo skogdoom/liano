@@ -34,6 +34,7 @@ export const BranchDecoration = Object.freeze({
   MONKEY: 'monkey',
   NEST: 'nest',
   PANTHER: 'panther',
+  HANGING_BAT: 'hangingBat',
 });
 export const BRANCH_DECORATIONS = [
   BranchDecoration.BIRD,
@@ -41,7 +42,15 @@ export const BRANCH_DECORATIONS = [
   BranchDecoration.MONKEY,
   BranchDecoration.NEST,
   BranchDecoration.PANTHER,
+  BranchDecoration.HANGING_BAT,
 ];
+// Some only come out at night.
+export const NIGHT_DECORATIONS = new Set([BranchDecoration.HANGING_BAT]);
+
+// What a branch can carry: everything at night, and by day all but the night ones.
+export function branchDecorationsFor(night) {
+  return night ? BRANCH_DECORATIONS : BRANCH_DECORATIONS.filter((d) => !NIGHT_DECORATIONS.has(d));
+}
 
 const scaledHitboxes = new Map();
 

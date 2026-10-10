@@ -401,12 +401,56 @@ function drawPanther(rand) {
   return { part: panther, animate };
 }
 
+// A bat roosting upside down from the underside of the branch, wrapped in its wings like a
+// cloak: it sways a little, its ears twitch and it opens a red eye now and then. For the
+// night.
+function drawHangingBat(rand) {
+  const bat = new Container();
+  const [box] = OBSTACLE_HITBOXES.branch;
+  const cx = -38 + rand() * 46;
+  bat.position.set(cx, box.dy + box.h - 1);
+  bat.scale.x = rand() < 0.5 ? 1 : -1;
+  const phase = rand() * 6.3;
+  // Everything hangs from the feet at (0, 0).
+  const swing = new Container();
+  bat.addChild(swing);
+  const g = new Graphics();
+  // Feet gripping the limb, a furry body, and the wings folded round it: a cloak with
+  // scalloped edges and a ridge down the middle.
+  g.moveTo(-3, 1).lineTo(-3.5, 6).moveTo(3, 1).lineTo(3.5, 6).stroke({ width: 2, color: BAT_DARK, cap: 'round' });
+  g.ellipse(0, 14, 7.6, 11).fill(BAT);
+  g.poly([-9, 7, -11, 20, -6, 28, -2, 24, 0, 29, 2, 24, 6, 28, 11, 20, 9, 7, 0, 3]).fill(BAT_WING);
+  g.moveTo(0, 5).lineTo(0, 26).stroke({ width: 1, color: BAT_DARK, alpha: 0.7 });
+  g.moveTo(-5, 9).quadraticCurveTo(-8, 18, -5.5, 25).moveTo(5, 9).quadraticCurveTo(8, 18, 5.5, 25).stroke({ width: 1.2, color: BAT_DARK, alpha: 0.6 });
+  // The head at the bottom, ears pointing down.
+  g.poly([-6.5, 29, -9, 38, -2.5, 33]).fill(BAT_DARK).poly([6.5, 29, 9, 38, 2.5, 33]).fill(BAT_DARK);
+  g.circle(0, 31, 6).fill(BAT);
+  g.poly([-1.5, 35, 0, 38.5, 1.5, 35]).fill(BAT_DARK);
+  const eyes = new Graphics();
+  const ears = new Graphics();
+  swing.addChild(g, ears, eyes);
+  const animate = (t) => {
+    swing.rotation = 0.07 * Math.sin(t * 1.3 + phase);
+    // Eyes: shut mostly, opening red for a moment every few seconds.
+    const open = (t * 0.22 + phase) % 1 < 0.12;
+    eyes.clear();
+    if (open) eyes.circle(-2.4, 30.5, 1.5).fill(BAT_EYE).circle(2.4, 30.5, 1.5).fill(BAT_EYE);
+    else eyes.moveTo(-3.8, 30.5).lineTo(-1.2, 30.5).moveTo(1.2, 30.5).lineTo(3.8, 30.5).stroke({ width: 0.9, color: BAT_DARK });
+    // An ear twitches now and then.
+    const twitch = Math.max(0, Math.sin(t * 1.7 + phase * 3)) ** 16;
+    ears.clear();
+    ears.poly([6.5, 29, 9 + 2 * twitch, 38 - 3 * twitch, 2.5, 33]).fill(BAT);
+  };
+  return { part: bat, animate };
+}
+
 export const DECORATIONS = {
   bird: drawPerchedBird,
   snake: drawPerchedSnake,
   monkey: drawHangingMonkey,
   nest: drawNest,
   panther: drawPanther,
+  hangingBat: drawHangingBat,
 };
 
 // Adds the decoration the branch carries to `view`; returns its animation.
