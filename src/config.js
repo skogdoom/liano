@@ -96,6 +96,7 @@ export const OBSTACLE_HITBOXES = {
   bat: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
   blueBird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
   purpleBird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
+  circleBat: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
   // A stepped pyramid with a shrine on top, drawn from the top centre of the shrine
   // down: the shrine, three tiers each wider than the last, and a base tall enough to
   // reach the floor whatever the height (the obstacle is picked high enough in the lower
@@ -170,7 +171,8 @@ export const BLUE_BIRD_LOW = [296, 322];
 export const BLUE_BIRD_LOW_TRAVEL = [80, 140];
 export const BLUE_BIRD_BOB = 6;
 
-// Purple bird: flies in a circle at the gap centre, either way round, in the open space
+// Purple bird (and, at night, its replacement the circling bat): flies in a circle at the
+// gap centre, either way round, in the open space
 // the swings leave in the lower region, between the highest point of the circle
 // (PURPLE_BIRD_TOP) and a radius (PURPLE_BIRD_RADIUS), once round in PURPLE_BIRD_PERIOD
 // seconds. So it is a high obstacle at the top of its circle, a low one at the bottom and

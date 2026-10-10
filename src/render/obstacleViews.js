@@ -3,6 +3,7 @@ import { HIGH_BELOW_Y, OBSTACLE_HITBOXES } from '../config.js';
 import { mixSeed, mulberry32 } from '../sim/rng.js';
 import { FLOOR_Y } from './background.js';
 import { leafPoints } from './shapes.js';
+import { ObstacleType } from '../sim/obstacle.js';
 
 // Obstacle art, built once per obstacle from its (unscaled) hitbox shapes so the two
 // match, then scaled like the hitbox.
@@ -442,21 +443,24 @@ function drawHangingBat(rand) {
   bat.position.set(cx, box.dy + box.h - 1);
   bat.scale.x = rand() < 0.5 ? 1 : -1;
   const phase = rand() * 6.3;
+  const look = batLook(rand);
   // Everything hangs from the feet at (0, 0).
   const swing = new Container();
   bat.addChild(swing);
   const g = new Graphics();
   // Feet gripping the limb, a furry body, and the wings folded round it: a cloak with
   // scalloped edges and a ridge down the middle.
-  g.moveTo(-3, 1).lineTo(-3.5, 6).moveTo(3, 1).lineTo(3.5, 6).stroke({ width: 2, color: BAT_DARK, cap: 'round' });
-  g.ellipse(0, 14, 7.6, 11).fill(BAT);
-  g.poly([-9, 7, -11, 20, -6, 28, -2, 24, 0, 29, 2, 24, 6, 28, 11, 20, 9, 7, 0, 3]).fill(BAT_WING);
-  g.moveTo(0, 5).lineTo(0, 26).stroke({ width: 1, color: BAT_DARK, alpha: 0.7 });
-  g.moveTo(-5, 9).quadraticCurveTo(-8, 18, -5.5, 25).moveTo(5, 9).quadraticCurveTo(8, 18, 5.5, 25).stroke({ width: 1.2, color: BAT_DARK, alpha: 0.6 });
+  const earLength = 9 * look.ear;
+  g.moveTo(-3, 1).lineTo(-3.5, 6).moveTo(3, 1).lineTo(3.5, 6).stroke({ width: 2, color: look.dark, cap: 'round' });
+  g.ellipse(0, 14, 7.6, 11).fill(look.fur);
+  g.poly([-9, 7, -11, 20, -6, 28, -2, 24, 0, 29, 2, 24, 6, 28, 11, 20, 9, 7, 0, 3]).fill(look.wing);
+  g.moveTo(0, 5).lineTo(0, 26).stroke({ width: 1, color: look.dark, alpha: 0.7 });
+  g.moveTo(-5, 9).quadraticCurveTo(-8, 18, -5.5, 25).moveTo(5, 9).quadraticCurveTo(8, 18, 5.5, 25).stroke({ width: 1.2, color: look.dark, alpha: 0.6 });
   // The head at the bottom, ears pointing down.
-  g.poly([-6.5, 29, -9, 38, -2.5, 33]).fill(BAT_DARK).poly([6.5, 29, 9, 38, 2.5, 33]).fill(BAT_DARK);
-  g.circle(0, 31, 6).fill(BAT);
-  g.poly([-1.5, 35, 0, 38.5, 1.5, 35]).fill(BAT_DARK);
+  if (look.collar !== null) g.ellipse(0, 27, 6.5, 3.5).fill(look.collar);
+  g.poly([-6.5, 29, -9, 29 + earLength, -2.5, 33]).fill(look.dark).poly([6.5, 29, 9, 29 + earLength, 2.5, 33]).fill(look.dark);
+  g.circle(0, 31, 6).fill(look.fur);
+  g.poly([-1.5, 35, 0, 38.5, 1.5, 35]).fill(look.dark);
   const eyes = new Graphics();
   const ears = new Graphics();
   swing.addChild(g, ears, eyes);
@@ -465,12 +469,12 @@ function drawHangingBat(rand) {
     // Eyes: shut mostly, opening red for a moment every few seconds.
     const open = (t * 0.22 + phase) % 1 < 0.12;
     eyes.clear();
-    if (open) eyes.circle(-2.4, 30.5, 1.5).fill(BAT_EYE).circle(2.4, 30.5, 1.5).fill(BAT_EYE);
-    else eyes.moveTo(-3.8, 30.5).lineTo(-1.2, 30.5).moveTo(1.2, 30.5).lineTo(3.8, 30.5).stroke({ width: 0.9, color: BAT_DARK });
+    if (open) eyes.circle(-2.4, 30.5, 1.5).fill(look.eye).circle(2.4, 30.5, 1.5).fill(look.eye);
+    else eyes.moveTo(-3.8, 30.5).lineTo(-1.2, 30.5).moveTo(1.2, 30.5).lineTo(3.8, 30.5).stroke({ width: 0.9, color: look.dark });
     // An ear twitches now and then.
     const twitch = Math.max(0, Math.sin(t * 1.7 + phase * 3)) ** 16;
     ears.clear();
-    ears.poly([6.5, 29, 9 + 2 * twitch, 38 - 3 * twitch, 2.5, 33]).fill(BAT);
+    ears.poly([6.5, 29, 9 + 2 * twitch, 29 + earLength - 3 * twitch, 2.5, 33]).fill(look.fur);
   };
   return { part: bat, animate };
 }
@@ -792,6 +796,10 @@ const TEMPLE_STYLES = [
   { stone: 0x676a77, light: 0x888b99, dark: 0x484a56, deep: 0x1d1e25 },
 ];
 const GOLD = 0xdcab3e;
+// The fringe of ferns at the foot of a temple: deeper greens than the leaves elsewhere, so
+// they blend into the undergrowth, which stays dark whatever the time of day.
+const FRINGE = 0x2c5a2e;
+const FRINGE_DEEP = 0x1d4423;
 const MOSS = 0x4f8a3a;
 const MOSS_LIGHT = 0x73ad4c;
 const FLAME = 0xff9a2e;
@@ -915,9 +923,9 @@ function drawTemple(g, o, rand, hangs, view) {
   for (let x = -300; x <= 300; x += 15 + rand() * 9) {
     const length = 45 + rand() * 40;
     for (const a of [-Math.PI / 2 - 0.45 - rand() * 0.3, -Math.PI / 2 + 0.45 + rand() * 0.3]) {
-      g.poly(leafPoints(x, floor + 14, a, length, 11 + rand() * 6)).fill(rand() < 0.5 ? LEAF_DARK : BUSH);
+      g.poly(leafPoints(x, floor + 14, a, length, 11 + rand() * 6)).fill(rand() < 0.5 ? FRINGE_DEEP : BUSH);
     }
-    g.poly(leafPoints(x + 6, floor + 14, -Math.PI / 2 + (rand() - 0.5) * 0.5, length * 0.8, 10)).fill(rand() < 0.5 ? LEAF : BUSH_LIGHT);
+    g.poly(leafPoints(x + 6, floor + 14, -Math.PI / 2 + (rand() - 0.5) * 0.5, length * 0.8, 10)).fill(rand() < 0.5 ? FRINGE : BUSH_LIGHT);
   }
   return animate;
 }
@@ -953,10 +961,15 @@ const BIRD_COLORS = [
   [BLUE, BLUE_DARK, BLUE_BELLY],
   [PURPLE, PURPLE_DARK, PURPLE_BELLY],
 ];
-const BAT = 0x4a3a5c;
-const BAT_DARK = 0x2a2036;
-const BAT_WING = 0x5d4a75;
-const BAT_EYE = 0xff5a4a;
+// The looks bats come in: slight differences in colour, ears, wing span and a pale collar,
+// one per bat, picked at random for its gap (and for the one hanging on a branch).
+export const BAT_LOOKS = [
+  { fur: 0x4a3a5c, dark: 0x2a2036, wing: 0x5d4a75, eye: 0xff5a4a, ear: 1, span: 1, collar: null },
+  { fur: 0x5a4030, dark: 0x32231a, wing: 0x6e5240, eye: 0xffb347, ear: 1.15, span: 0.95, collar: 0xc9a063 },
+  { fur: 0x6b7078, dark: 0x3a3d44, wing: 0x80858f, eye: 0xff5a4a, ear: 0.85, span: 1.12, collar: null },
+  { fur: 0x24222b, dark: 0x121118, wing: 0x3a3646, eye: 0xffe14a, ear: 1.05, span: 0.9, collar: null },
+];
+const batLook = (rand) => BAT_LOOKS[Math.floor(rand() * BAT_LOOKS.length)];
 const EYE = 0xffffff;
 const PUPIL = 0x111111;
 
@@ -1088,41 +1101,49 @@ function buildPurpleBird(o) {
   return { parts: [body], body, animate };
 }
 
-// Hitbox: circle r 16. A bat: a furry body with pointed ears and red eyes, and a
-// membrane wing that flutters fast. It faces the way it patrols, like the bird.
+// Hitbox: circle r 16. A bat: a furry body with pointed ears and glowing eyes, and a
+// membrane wing that flutters fast, in one of BAT_LOOKS by gap. It faces the way it flies,
+// like the bird; the one that flies in circles (the purple bird's night replacement)
+// also pitches its nose along the circle.
 function buildBat(o) {
+  const look = batLook(mulberry32(mixSeed(0xba7, o.gap)));
+  const circles = o.type === 'circleBat';
   const body = new Container();
   const g = new Graphics();
-  g.ellipse(-2, 1, 10, 7.5).fill(BAT);
-  g.circle(9, -2, 6).fill(BAT);
-  g.poly([5, -6, 6, -14, 10, -7]).fill(BAT_DARK).poly([9, -6, 12, -13, 14, -4]).fill(BAT_DARK);
-  g.poly([14, -1, 19, 1, 14, 3]).fill(BAT_DARK);
-  g.circle(11, -3, 1.8).fill(BAT_EYE);
-  g.poly([-11, 1, -18, 5, -12, 5]).fill(BAT_DARK);
+  const ear = look.ear;
+  g.ellipse(-2, 1, 10, 7.5).fill(look.fur);
+  if (look.collar !== null) g.ellipse(4, 0, 4, 6.5).fill(look.collar);
+  g.circle(9, -2, 6).fill(look.fur);
+  g.poly([5, -6, 6, -6 - 8 * ear, 10, -7]).fill(look.dark).poly([9, -6, 12, -6 - 7 * ear, 14, -4]).fill(look.dark);
+  g.poly([14, -1, 19, 1, 14, 3]).fill(look.dark);
+  g.circle(11, -3, 1.8).fill(look.eye);
+  g.poly([-11, 1, -18, 5, -12, 5]).fill(look.dark);
   const wing = new Graphics();
   body.addChild(wing, g);
   const animate = (t) => {
-    body.scale.set(o.vxAt(t) >= 0 ? o.scale : -o.scale, o.scale);
+    const facing = o.vxAt(t) >= 0 ? 1 : -1;
+    body.scale.set(facing * o.scale, o.scale);
+    if (circles) body.rotation = facing * Math.max(-0.5, Math.min(0.5, o.vyAt(t) / 400));
     // One wing seen from the side: an arm out to a tip, and a scalloped membrane from
     // the tip back to the body.
     const lift = Math.sin(t * 22);
     const root = [-3, 4];
-    const tip = [-23 - 3 * Math.abs(lift), -5 - 22 * lift];
-    const elbow = [-7, -4 - 11 * lift];
+    const tip = [(-23 - 3 * Math.abs(lift)) * look.span, (-5 - 22 * lift) * look.span];
+    const elbow = [-7, (-4 - 11 * lift) * look.span];
     const along = (f, dx, dy) => [tip[0] + (root[0] - tip[0]) * f + dx, tip[1] + (root[1] - tip[1]) * f + dy];
     const edge = [along(0.22, 3, 1), along(0.4, -1, 7), along(0.58, 3, 4), along(0.78, -1, 6)];
     wing
       .clear()
       .poly([0, -3, ...elbow, ...tip, ...edge.flat(), ...root])
-      .fill(BAT_WING)
+      .fill(look.wing)
       .poly([0, -3, ...elbow, ...tip])
-      .stroke({ width: 2.4, color: BAT_DARK, cap: 'round', join: 'round' });
-    for (const e of [edge[1], edge[3]]) wing.moveTo(0, -3).lineTo(e[0], e[1]).stroke({ width: 1, color: BAT_DARK, alpha: 0.7 });
+      .stroke({ width: 2.4, color: look.dark, cap: 'round', join: 'round' });
+    for (const e of [edge[1], edge[3]]) wing.moveTo(0, -3).lineTo(e[0], e[1]).stroke({ width: 1, color: look.dark, alpha: 0.7 });
   };
   return { parts: [body], body, animate };
 }
 
-const BUILD_MOVING = { spider: buildSpider, snake: buildSnake, bird: buildBird, bat: buildBat, blueBird: buildBlueBird, purpleBird: buildPurpleBird };
+const BUILD_MOVING = { spider: buildSpider, snake: buildSnake, bird: buildBird, bat: buildBat, circleBat: buildBat, blueBird: buildBlueBird, purpleBird: buildPurpleBird };
 
 // A view: `view` to add to the layer, and `update()` each frame.
 function buildObstacle(o) {
@@ -1159,7 +1180,9 @@ export class ObstacleViews {
   }
 
   // `time` is the world time (s), for the scenery that moves on its own (the bees).
-  update(obstacles, time = 0) {
+  // `tint` is the background's, which the temple takes too: its stone and its ferns would
+  // otherwise stay as bright as by day in the dark stages.
+  update(obstacles, time = 0, tint = 0xffffff) {
     const seen = new Set();
     for (const o of obstacles) {
       if (!o) continue;
@@ -1171,6 +1194,7 @@ export class ObstacleViews {
         this.view.addChild(entry.view);
       }
       entry.update?.(time);
+      if (o.type === ObstacleType.TEMPLE) entry.view.tint = tint;
     }
     for (const [o, entry] of this.views) {
       if (seen.has(o)) continue;

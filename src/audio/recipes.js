@@ -23,6 +23,7 @@ export const BONG_PITCH = {
   thornBush: 247,
   spider: 294,
   purpleBird: 311,
+  circleBat: 277,
   blueBird: 349,
   bird: 392,
   bat: 466,

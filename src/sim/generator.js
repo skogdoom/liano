@@ -33,7 +33,7 @@ import {
 } from '../config.js';
 import { Banana } from './banana.js';
 import { Liana } from './liana.js';
-import { DAY_DECORATIONS, NIGHT_DECORATIONS, Obstacle, ObstacleType, STATIC_TYPES } from './obstacle.js';
+import { BranchDecoration, DAY_DECORATIONS, NIGHT_DECORATIONS, Obstacle, ObstacleType, STATIC_TYPES } from './obstacle.js';
 import {
   emptyGapFlights,
   flightHits,
@@ -114,13 +114,16 @@ export function pickHeight(type, rand, rules = STAGE_ONE) {
 // (seed, gap), with its own random stream: the obstacle is the same with or without it.
 const DECORATION_SALT = 0xa91a;
 
+const NIGHT_DAY_DECORATIONS = DAY_DECORATIONS.filter((d) => d !== BranchDecoration.BIRD);
+
 export function branchDecorationFor(seed, gap) {
   const rand = mulberry32(mixSeed(seed ^ DECORATION_SALT, gap));
   const night = timeOfDayFor(gap) === TimeOfDay.NIGHT;
   if (rand() >= (night ? BRANCH_DECORATION_CHANCE_NIGHT : BRANCH_DECORATION_CHANCE)) return null;
   // The night ones only come out at night, and then a share of the branches that carry a
   // decoration carry one of them.
-  const choices = night && rand() < NIGHT_DECORATION_SHARE ? NIGHT_DECORATIONS : DAY_DECORATIONS;
+  // The birds go too: a bird does not perch on a branch at night.
+  const choices = night && rand() < NIGHT_DECORATION_SHARE ? NIGHT_DECORATIONS : night ? NIGHT_DAY_DECORATIONS : DAY_DECORATIONS;
   return choices[Math.floor(rand() * choices.length)];
 }
 
@@ -230,11 +233,11 @@ const pick = (list, rand) => list[Math.floor(rand() * list.length)];
 // The moving types a gap can get: spiders, snakes and birds, with the birds giving way
 // to bats at night. A bat has a bird's hitbox and patrol, so it takes a bird's place in
 // the list and the gap gets the obstacle it would have had with a bird. By day (not at
-// dusk or night) blue birds fly up and down as well. Purple birds, which fly in circles,
-// come at any time.
+// dusk or night) blue birds fly up and down as well. Purple birds fly in circles, and at
+// night a bat that does the same takes their place: there are no birds at night.
 export function movingTypesFor(gap) {
   const phase = timeOfDayFor(gap);
-  if (phase === TimeOfDay.NIGHT) return [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BAT, ObstacleType.PURPLE_BIRD];
+  if (phase === TimeOfDay.NIGHT) return [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BAT, ObstacleType.CIRCLE_BAT];
   const types = [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BIRD];
   if (phase !== TimeOfDay.DUSK) types.push(ObstacleType.BLUE_BIRD);
   types.push(ObstacleType.PURPLE_BIRD);
@@ -280,7 +283,7 @@ export function movingCandidate(type, gap, rand, scale = 1) {
     if (!isPathClearOfLianas(bird, offset)) throw new Error(`Bird patrol in gap ${gap} reaches a swing`);
     return bird;
   }
-  if (type === ObstacleType.PURPLE_BIRD) {
+  if (type === ObstacleType.PURPLE_BIRD || type === ObstacleType.CIRCLE_BAT) {
     // A circle at the gap centre, either way round: the motion is (ax sin u, ay cos u)
     // with ax = ±ay.
     const radius = lerp(PURPLE_BIRD_RADIUS, rand());

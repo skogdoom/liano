@@ -16,6 +16,7 @@ export const ObstacleType = Object.freeze({
   BAT: 'bat',
   BLUE_BIRD: 'blueBird',
   PURPLE_BIRD: 'purpleBird',
+  CIRCLE_BAT: 'circleBat',
 });
 
 // Every static type. (The generator picks among all but the temple, which has its own
@@ -36,6 +37,7 @@ export const MOVING_TYPES = [
   ObstacleType.BAT,
   ObstacleType.BLUE_BIRD,
   ObstacleType.PURPLE_BIRD,
+  ObstacleType.CIRCLE_BAT,
 ];
 
 // The decorations a branch can carry, for show: animals now, and not part of the hitbox.

@@ -13,6 +13,7 @@ const recipes = {
   'bong (bat)': bong('bat'),
   'bong (blue bird)': bong('blueBird'),
   'bong (purple bird)': bong('purpleBird'),
+  'bong (circling bat)': bong('circleBat'),
   crash: crash(),
   pling: pling(),
 };
@@ -94,7 +95,7 @@ describe('sound recipes', () => {
     expect(base('branch')).toBeLessThan(base('thornBush'));
     expect(base('unknown')).toBe(BONG_PITCH.rock);
     // Every obstacle type has its own pitch.
-    const types = ['rock', 'branch', 'thornBush', 'spider', 'snake', 'bird', 'bat', 'blueBird', 'purpleBird', 'beehive', 'temple'];
+    const types = ['rock', 'branch', 'thornBush', 'spider', 'snake', 'bird', 'bat', 'blueBird', 'purpleBird', 'circleBat', 'beehive', 'temple'];
     expect(new Set(types.map(base)).size).toBe(types.length);
   });
 });
