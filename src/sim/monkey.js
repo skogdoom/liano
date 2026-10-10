@@ -45,6 +45,9 @@ export class Monkey {
   constructor() {
     this.x = 0;
     this.y = 0;
+    // Where it was before the latest step, for drawing between steps.
+    this.prevX = 0;
+    this.prevY = 0;
     this.vx = 0;
     this.vy = 0;
     this.state = MonkeyState.AIRBORNE;
@@ -83,6 +86,9 @@ export class Monkey {
     this.catchSpeed = this.vx * Math.sin(angle) + this.vy * Math.cos(angle);
     this.#planSlip();
     this.#updateHanging();
+    // The catch puts it on the rope at once: drawn there, not slid there from where it flew.
+    this.prevX = this.x;
+    this.prevY = this.y;
   }
 
   // Lets go of the liana, keeping its velocity (tangential plus the slip along the
@@ -121,6 +127,8 @@ export class Monkey {
     this.catchSpeed = 0;
     this.#planSlip();
     this.#updateHanging();
+    this.prevX = this.x;
+    this.prevY = this.y;
   }
 
   // A quick slide down to FLOW_GRIP if caught above it, then a steady slip timed to
@@ -166,6 +174,8 @@ export class Monkey {
 
   // Lianas must be stepped before the monkey so a hanging monkey follows the current angle.
   step(dt) {
+    this.prevX = this.x;
+    this.prevY = this.y;
     if (this.state === MonkeyState.HANGING) {
       if (this.slipping) this.gripTime += dt;
       this.#updateHanging();

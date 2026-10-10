@@ -46,6 +46,7 @@ export class SharedView {
   // After world.step(dt). `playing`: whether trailing monkeys can be left behind.
   step(dt, playing) {
     const { world, camera } = this;
+    camera.mark();
     // Hold the camera still once everyone is out.
     const target = this.#target();
     if (target !== null) camera.update(target, dt);

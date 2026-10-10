@@ -2,6 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import { SCREEN_WIDTH, TIP_WARNING_TIME } from '../config.js';
 import { LianaState, SWING_OMEGA } from '../sim/liana.js';
 import { mixSeed, mulberry32 } from '../sim/rng.js';
+import { MAX_STEP_TURN, blend } from './interpolate.js';
 import { leafPoints } from './shapes.js';
 
 // Vine colours: green, and in shared screen golden for player 2's own lianas.
@@ -57,10 +58,24 @@ function ropePoints(liana, bow) {
 }
 
 // What a liana looks like right now; it is only redrawn when this changes. Resting
-// lianas never change, so only the held one and any settling ones redraw each frame.
+// lianas never change, and a swinging one is straight, so it is drawn once hanging
+// straight down from the origin and turned about its anchor (see LianaView.update):
+// only the lianas settling after a release redraw each frame.
 function drawnState(liana, flash) {
-  return liana.state === LianaState.IDLE ? 'idle' : `${liana.state}:${liana.angle}:${liana.angularVelocity}:${flash}`;
+  if (liana.state === LianaState.IDLE) return 'idle';
+  if (liana.state === LianaState.SWINGING) return `swinging:${flash}`;
+  return `${liana.state}:${liana.angle}:${liana.angularVelocity}:${flash}`;
 }
+
+// A swinging liana as drawn at rest in its own frame: straight down from (0, 0).
+const upright = (liana) => ({
+  x: 0,
+  anchorY: 0,
+  length: liana.length,
+  state: LianaState.SWINGING,
+  angle: 0,
+  angularVelocity: 0,
+});
 
 // Whether the end of a liana is lit `tipTime` s before the grip reaches its tip: it
 // blinks within TIP_WARNING_TIME, twice as fast in the second half.
@@ -108,8 +123,9 @@ export class LianaView {
     this.redraws = 0; // for tests and profiling
   }
 
-  // `monkeys` light up the end of the liana they are slipping towards.
-  update(lianas, cameraX, viewWidth = SCREEN_WIDTH, monkeys = []) {
+  // `monkeys` light up the end of the liana they are slipping towards. `alpha`: how far
+  // between the previous sim step and the current one to draw (see interpolate.js).
+  update(lianas, cameraX, viewWidth = SCREEN_WIDTH, monkeys = [], alpha = 1) {
     const margin = 500;
     const seen = new Set();
     const flashing = new Set(monkeys.filter((m) => tipFlashOn(m.tipTime)).map((m) => m.liana));
@@ -126,8 +142,18 @@ export class LianaView {
       if (!visible) continue;
       const flash = flashing.has(liana);
       const state = drawnState(liana, flash);
+      // Swinging: only the turn changes each frame, about the anchor.
+      if (liana.state === LianaState.SWINGING) entry.g.rotation = -blend(liana.prevAngle, liana.angle, alpha, MAX_STEP_TURN);
       if (state === entry.drawn) continue;
-      drawLiana(entry.g.clear(), liana, entry.layout, flash, this.palette);
+      if (liana.state === LianaState.SWINGING) {
+        entry.g.position.set(liana.x, liana.anchorY);
+        entry.g.rotation = -blend(liana.prevAngle, liana.angle, alpha, MAX_STEP_TURN);
+        drawLiana(entry.g.clear(), upright(liana), entry.layout, flash, this.palette);
+      } else {
+        entry.g.position.set(0, 0);
+        entry.g.rotation = 0;
+        drawLiana(entry.g.clear(), liana, entry.layout, flash, this.palette);
+      }
       entry.drawn = state;
       this.redraws++;
     }

@@ -39,6 +39,8 @@ import { ballisticStep, circleIntersectsSegment } from './physics.js';
 // How often the solver was asked (queries, cached or not) and actually ran (runs),
 // so tests can check that play only uses the precomputed table.
 export const solverStats = { queries: 0, runs: 0, movingRuns: 0 };
+// For tests: how many flight lists are cached (see flightCache).
+export const flightCacheSize = () => flightCache.size;
 // Whole steps a window of `ms` needs.
 export function windowSteps(ms) {
   return Math.ceil(ms / (SIM_DT * 1000) - 1e-9);
@@ -152,6 +154,9 @@ function flightPath(body, target) {
 // over an empty gap do not depend on the obstacle and are cached.
 export const ARRIVAL_PHASES = 12;
 
+// Keyed by entry radius and hold. Only the radii of ENTRY_RADII (ten entries with hold,
+// each about 70 flights) are cached, which are all the generator asks for: the debug view
+// asks for the exact radius of a grab, which would fill the cache without end.
 const flightCache = new Map();
 
 // For grabbing liana 0 at `entryRadius` moving forward: the
@@ -179,7 +184,7 @@ export function emptyGapFlights(entryRadius, hold = false) {
     if (path) flights.push({ k, path });
   }
   result = { lastStep, flights };
-  flightCache.set(key, result);
+  if (ENTRY_RADII.includes(entryRadius)) flightCache.set(key, result);
   return result;
 }
 

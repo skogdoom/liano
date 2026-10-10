@@ -113,7 +113,7 @@ export class Hud {
     this.players.forEach((t) => (t.visible = !solo));
     this.tallies.forEach((tally, p) => {
       tally.view.visible = p < game.players;
-      if (tally.view.visible) tally.update(String(game.playerBananas(p).taken));
+      if (tally.view.visible) tally.update(String(game.playerBananasTaken(p)));
     });
     // The hearts, in the games with lives; none once a player is out.
     this.heartRows.forEach((row, p) => {

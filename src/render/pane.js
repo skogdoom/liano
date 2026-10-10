@@ -4,6 +4,7 @@ import { Background } from './background.js';
 import { Shake } from './shake.js';
 import { BananaViews } from './bananaView.js';
 import { Camera, cameraTarget } from './camera.js';
+import { blend } from './interpolate.js';
 import { LIANA_PALETTES, LianaView } from './lianaView.js';
 import { MonkeyView, PALETTES } from './monkeyView.js';
 import { ObstacleViews } from './obstacleViews.js';
@@ -102,8 +103,11 @@ export class Pane {
   }
 
   // Fixed-step camera update; it holds still once everyone in the world is out.
+  // (A shared camera is marked and moved by the rules.)
   stepCamera(dt) {
-    if (this.camera === this.ownCamera && this.world.alive) this.camera.update(this.#target(), dt);
+    if (this.camera !== this.ownCamera) return;
+    this.camera.mark();
+    if (this.world.alive) this.camera.update(this.#target(), dt);
   }
 
   // What the pane's own camera follows: player 1's monkey.
@@ -114,21 +118,24 @@ export class Pane {
   // `events`: this frame's events from this pane's world.
   // `shakes`: whether deaths shake the view (not with reduced motion).
   // `ghost` is the shadow monkey to draw (see Game.shadowFrame), or null.
-  update(events, dt, shakes = true, ghost = null) {
+  // `alpha`: how far between the previous sim step and the current one to draw the camera,
+  // the monkeys and the lianas they swing on (see interpolate.js).
+  update(events, dt, shakes = true, ghost = null, alpha = 1) {
     const { world, camera, shake } = this;
     if (shakes && events.some((e) => e.type === 'death')) shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
     shake.update(dt);
     this.scene.position.set(shake.x, this.layout.bandTop * this.layout.scale + shake.y);
-    this.worldLayer.x = -camera.x;
-    this.overlay.x = -camera.x;
-    this.background.update(camera.x);
+    const cameraX = blend(camera.prevX, camera.x, alpha);
+    this.worldLayer.x = -cameraX;
+    this.overlay.x = -cameraX;
+    this.background.update(cameraX);
     this.background.setStage(Math.max(...world.stages), world, dt);
     world.lianaSets.forEach((set, i) => {
-      this.lianaViews[i].update(set.values(), camera.x, this.layout.view.width, world.monkeys);
+      this.lianaViews[i].update(set.values(), cameraX, this.layout.view.width, world.monkeys, alpha);
     });
     this.obstacleViews.update(world.obstacles.values(), world.time, this.background.color);
     this.bananaViews.update(world, events, dt);
-    world.monkeys.forEach((m, i) => this.monkeyViews[i].update(m, dt, world.isInvulnerable(i)));
+    world.monkeys.forEach((m, i) => this.monkeyViews[i].update(m, dt, world.isInvulnerable(i), alpha));
     this.shadowView.update(ghost, dt);
   }
 }

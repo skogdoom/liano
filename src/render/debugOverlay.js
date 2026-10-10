@@ -1,6 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { BANANA_RADIUS, MONKEY_RADIUS, SIM_DT } from '../config.js';
 import { MonkeyState } from '../sim/monkey.js';
+import { heapMB } from './fpsMeter.js';
 import { validReleaseSteps, longestRun, movingValidSteps } from '../sim/feasibility.js';
 
 
@@ -40,7 +41,8 @@ export class DebugOverlay {
     this.#applyVisibility();
   }
 
-  update(game, sound = null) {
+  // `fps` is an FpsMeter (the frame rate and times) and `sound` the SoundPlayer, for their lines.
+  update(game, sound = null, fps = null) {
     if (!this.visible) return;
     const { world } = game;
     const { monkey } = world;
@@ -72,7 +74,9 @@ export class DebugOverlay {
 
     g.circle(monkey.x, monkey.y, MONKEY_RADIUS).stroke({ width: 2, color: COLORS.monkeyHitbox });
 
+    const heap = heapMB();
     const lines = [
+      fps ? `${fps.describe()}${heap === null ? '' : `  heap ${heap.toFixed(0)} MB`}` : '',
       `${game.state}  stage ${game.stage}  score ${game.score}  lianas ${world.lianas.size}  obstacles ${world.obstacles.size}`,
       `slipping ${game.slip ? 'on' : 'off'} (G)${sound ? `  sound ${sound.details}` : ''}`,
     ];
