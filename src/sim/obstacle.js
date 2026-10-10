@@ -8,13 +8,62 @@ export const ObstacleType = Object.freeze({
   BRANCH: 'branch',
   THORN_BUSH: 'thornBush',
   ROCK: 'rock',
+  BEEHIVE: 'beehive',
+  TEMPLE: 'temple',
   SPIDER: 'spider',
   SNAKE: 'snake',
   BIRD: 'bird',
+  BAT: 'bat',
+  BLUE_BIRD: 'blueBird',
+  PURPLE_BIRD: 'purpleBird',
 });
 
-export const STATIC_TYPES = [ObstacleType.BRANCH, ObstacleType.THORN_BUSH, ObstacleType.ROCK];
-export const MOVING_TYPES = [ObstacleType.SPIDER, ObstacleType.SNAKE, ObstacleType.BIRD];
+// Every static type. (The generator picks among all but the temple, which has its own
+// rule: see templeGapFor in generator.js.)
+export const STATIC_TYPES = [
+  ObstacleType.BRANCH,
+  ObstacleType.THORN_BUSH,
+  ObstacleType.ROCK,
+  ObstacleType.BEEHIVE,
+  ObstacleType.TEMPLE,
+];
+// Every moving type; which of them a gap gets depends on its time of day (see
+// movingTypesFor in generator.js).
+export const MOVING_TYPES = [
+  ObstacleType.SPIDER,
+  ObstacleType.SNAKE,
+  ObstacleType.BIRD,
+  ObstacleType.BAT,
+  ObstacleType.BLUE_BIRD,
+  ObstacleType.PURPLE_BIRD,
+];
+
+// The decorations a branch can carry, for show: animals now, and not part of the hitbox.
+export const BranchDecoration = Object.freeze({
+  BIRD: 'bird',
+  SNAKE: 'snake',
+  MONKEY: 'monkey',
+  NEST: 'nest',
+  PANTHER: 'panther',
+  HANGING_BAT: 'hangingBat',
+  OWL: 'owl',
+  FLOWERS: 'flowers',
+  COCONUTS: 'coconuts',
+});
+export const BRANCH_DECORATIONS = [
+  BranchDecoration.BIRD,
+  BranchDecoration.SNAKE,
+  BranchDecoration.MONKEY,
+  BranchDecoration.NEST,
+  BranchDecoration.PANTHER,
+  BranchDecoration.HANGING_BAT,
+  BranchDecoration.OWL,
+  BranchDecoration.FLOWERS,
+  BranchDecoration.COCONUTS,
+];
+// Some only come out at night (see branchDecorationFor in generator.js).
+export const NIGHT_DECORATIONS = [BranchDecoration.HANGING_BAT, BranchDecoration.OWL];
+export const DAY_DECORATIONS = BRANCH_DECORATIONS.filter((d) => !NIGHT_DECORATIONS.includes(d));
 
 const scaledHitboxes = new Map();
 
@@ -39,10 +88,15 @@ export function scaledHitbox(type, scale) {
 // A moving one has a `motion` { period (s), phase (rad), ax, ay, bob }: at world time t,
 // with u = 2π·t / period + phase, it is at
 //   (x, y) = (baseX + ax·sin u, baseY + ay·cos u + bob·sin 2u).
-// Spiders and snakes move vertically (ax = 0), birds patrol horizontally with a bob.
+// Spiders, snakes and blue birds move vertically (ax = 0), birds and bats patrol
+// horizontally with a bob, and a purple bird flies in a circle (ax = ±ay: the sign is
+// which way round).
 // The world sets the time every step (setTime); the solver asks positionAt(t).
+//
+// A branch may carry a `decoration` (a BranchDecoration, or null), and a temple has a
+// `variant` (0 to TEMPLE_VARIANTS - 1): only the view uses them.
 export class Obstacle {
-  constructor(gap, type, x, y, motion = null, scale = 1) {
+  constructor(gap, type, x, y, motion = null, scale = 1, decoration = null, variant = null) {
     this.gap = gap;
     this.type = type;
     this.baseX = x;
@@ -52,22 +106,42 @@ export class Obstacle {
     this.motion = motion;
     this.time = 0;
     this.scale = scale;
+    this.decoration = decoration;
+    this.variant = variant;
     this.hitbox = scaledHitbox(type, scale);
     if (motion) this.setTime(0);
   }
 
   // Plain data for passing between threads; fromData rebuilds the obstacle.
   toData() {
-    return { gap: this.gap, type: this.type, x: this.baseX, y: this.baseY, motion: this.motion, scale: this.scale };
+    return {
+      gap: this.gap,
+      type: this.type,
+      x: this.baseX,
+      y: this.baseY,
+      motion: this.motion,
+      scale: this.scale,
+      decoration: this.decoration,
+      variant: this.variant,
+    };
   }
 
   static fromData(d) {
-    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale);
+    return d && new Obstacle(d.gap, d.type, d.x, d.y, d.motion, d.scale, d.decoration ?? null, d.variant ?? null);
   }
 
   // The same obstacle moved to gap `gap` (the solver works in gap 0).
   inGap(gap) {
-    return new Obstacle(gap, this.type, this.baseX + (gap - this.gap) * LIANA_SPACING, this.baseY, this.motion, this.scale);
+    return new Obstacle(
+      gap,
+      this.type,
+      this.baseX + (gap - this.gap) * LIANA_SPACING,
+      this.baseY,
+      this.motion,
+      this.scale,
+      this.decoration,
+      this.variant,
+    );
   }
 
   get moving() {
@@ -87,6 +161,16 @@ export class Obstacle {
     if (!m) return 0;
     const w = (2 * Math.PI) / m.period;
     return m.ax * w * Math.cos(w * t + m.phase);
+  }
+
+  // Vertical velocity at time t (px/s, down positive), for pitching a bird that flies up
+  // and down.
+  vyAt(t) {
+    const m = this.motion;
+    if (!m) return 0;
+    const w = (2 * Math.PI) / m.period;
+    const u = w * t + m.phase;
+    return -m.ay * w * Math.sin(u) + 2 * m.bob * w * Math.cos(2 * u);
   }
 
   setTime(t) {
@@ -120,10 +204,11 @@ export class Obstacle {
     for (const s of this.hitbox) {
       const [w, h] = s.kind === 'rect' ? [s.w, s.h] : [0, 0];
       const r = s.kind === 'rect' ? 0 : s.r;
-      minX = Math.min(minX, this.baseX + s.dx - r - m.ax);
-      maxX = Math.max(maxX, this.baseX + s.dx + w + r + m.ax);
-      minY = Math.min(minY, this.baseY + s.dy - r - m.ay - m.bob);
-      maxY = Math.max(maxY, this.baseY + s.dy + h + r + m.ay + m.bob);
+      const [ax, ay] = [Math.abs(m.ax), Math.abs(m.ay)];
+      minX = Math.min(minX, this.baseX + s.dx - r - ax);
+      maxX = Math.max(maxX, this.baseX + s.dx + w + r + ax);
+      minY = Math.min(minY, this.baseY + s.dy - r - ay - m.bob);
+      maxY = Math.max(maxY, this.baseY + s.dy + h + r + ay + m.bob);
     }
     return { minX, minY, maxX, maxY };
   }

@@ -131,6 +131,39 @@ describe('sound player', () => {
     expect(contexts[0].state).toBe('running');
   });
 
+  it('resumes when the game resumes while the suspend is still settling', () => {
+    const { player, contexts } = setup();
+    player.unlock();
+    const ctx = contexts[0];
+    ctx.deferred = true;
+    player.setPaused(true); // tabbing away
+    player.setPaused(false); // and straight back: the context still says 'running'
+    ctx.settle(); // the suspend lands; the state change asks for a resume
+    ctx.settle();
+    expect(ctx.state).toBe('running');
+    expect(player.play(crash())).toBe(true);
+  });
+
+  it('brings back a context the browser interrupted or suspended, on the next frame', () => {
+    const { player, contexts } = setup();
+    player.unlock();
+    for (const state of ['interrupted', 'suspended']) {
+      contexts[0].state = state;
+      player.setPaused(false);
+      expect(contexts[0].state).toBe('running');
+    }
+  });
+
+  it('keeps a context the browser stopped quiet while the game is paused', () => {
+    const { player, contexts } = setup();
+    player.unlock();
+    player.setPaused(true);
+    contexts[0].log.length = 0;
+    contexts[0].state = 'suspended';
+    player.setPaused(true);
+    expect(contexts[0].log).toEqual([]);
+  });
+
   it('fades out playing sounds when muted', () => {
     const { player, contexts } = setup();
     player.unlock();

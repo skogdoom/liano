@@ -46,7 +46,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 | Regrab | The liana just released cannot be regrabbed until a different liana has been grabbed. |
 | Backward | Releasing on the backswing is allowed. The monkey may fly backward and grab the previous liana. |
 | Layout | Lianas have identical length and identical horizontal spacing. |
-| Obstacles | One per gap (none in the first gap, nor in the gap behind the start liana). Static types: branch, thorn bush, rock. Moving types (spider, snake, bird) from obstacle 6. No liana ever sweeps over an obstacle: static and moving obstacles alike stay clear of the area either neighbouring liana can swing through, with the rope and a hanging monkey at any grip radius. |
+| Obstacles | One per gap (none in the first gap, nor in the gap behind the start liana). Static types: branch, thorn bush, rock, beehive, and a rare temple. Moving types (spider, snake, bird, bats at night, blue birds by day, and purple birds at any time) from obstacle 6. No liana ever sweeps over an obstacle: static and moving obstacles alike stay clear of the area either neighbouring liana can swing through, with the rope and a hanging monkey at any grip radius. |
 | Bananas | Collected on touch, and counted per player against the bananas passed. They change neither the score nor the swing. |
 | Difficulty | Stages keyed on obstacle index. Levers: shorter release windows, a larger share of moving obstacles, bigger obstacles. Swing speed and slip speed do not ramp. |
 | Death | Collision with an obstacle, falling below the world band (world y WORLD_HEIGHT; the visible bottom edge can be higher when the flexible frame crops), or (shared screen only) being left behind the left edge. Going above the top edge is not a death. |
@@ -76,12 +76,19 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 
 ## Obstacles
 
-**Static:** branch, thorn bush, rock. A random height in OBSTACLE_Y_RANGE, horizontally centred, rerolled until the gap is passable and clear of both neighbouring lianas' swept areas.
+**Static:** branch, thorn bush, rock, beehive (BEEHIVE_SHARE, 8 % of the static gaps; the other three equally likely). A random height in OBSTACLE_Y_RANGE, horizontally centred, rerolled until the gap is passable and clear of both neighbouring lianas' swept areas.
+
+**Temple.** A rare Mayan-style temple, a static obstacle in the lower region. Each day/night cycle (the five stages from Day to Dawn: obstacles 1–90, then 91–190, and so on) has at most one, at a random gap in it (not among the first TEMPLE_MIN_GAP, 6), so about one every five stages, and it is not drawn from the ordinary static pool. Which gap, its height and its look depend only on (seed, cycle) and (seed, gap). It comes in TEMPLE_VARIANTS (4) looks, which share one hitbox and differ only in the art. The hitbox is a stepped pyramid drawn from the top centre of the shrine down: a shrine 100 wide and 64 tall, three tiers 46 tall and each wider than the last (180, 272, 368), and a base 472 wide, tall enough to reach the floor at any height, so a flight has to pass over it. It is big on purpose: a door and a staircase bigger than the monkey, so it reads as the top of a temple far larger than the gap. It fits the free area under the swings, which widens downward like its steps; the shrine's width at the top is what limits how high it can stand, and the solver passes it from an apex height of about y 308 (320 at the largest scale) down to 375, the lowest region, with the same windows as any other static obstacle.
+
+**Branch decorations.** By day about one branch in seven (BRANCH_DECORATION_CHANCE, 0.14) carries a decoration: a bird, a snake, a hanging monkey, a bird's nest, a panther, a cluster of flowers or a bunch of coconuts, picked at random, and at night also a hanging bat or an owl. A night decoration only appears on a branch in a Night stage (see Difficulty stages). Night stages are few and a branch is only about one gap in thirteen in them, so by day's odds the hanging bat and the owl would almost never show: at night about two branches in five carry a decoration (BRANCH_DECORATION_CHANCE_NIGHT, 0.4), and half of those (NIGHT_DECORATION_SHARE) carry a night one, which comes to about one night animal per three or four night stages. It is scenery: the obstacle is the same branch with the same hitbox, so nothing about passability or difficulty changes, and a flight can pass through the decoration unharmed. Whether a branch has one, and which, depends only on (seed, gap) with its own random stream, and rides along with the obstacle's data to the worker and back. A branch is about one gap in thirty, so a decoration shows about once or twice in a run.
 
 **Moving** (from obstacle MOVING_FROM, in each stage's share). Each has a deterministic position with period P (MOVING_PERIOD_RANGE), driven by world time (counted in whole sim steps) plus a seeded phase, so the solver matches the world exactly. It stays in its own gap and its whole path stays clear of both swings, so a hanging monkey is never hit:
 - **Spider:** drops and climbs on a thread from the canopy at the gap centre.
 - **Snake:** climbs up and down a stalk standing in the gap centre.
 - **Bird:** patrols across the gap with a slight bob, between the widest bounds that stay clear of the swings (asserted by the generator).
+- **Bat:** at night (the Night time of day: Stage 4 and every fifth after, see Difficulty stages) bats replace the birds. A bat has a bird's hitbox and patrol, and takes its place in the list the generator picks from, so a night gap gets the obstacle a bird would have had and nothing about fairness changes.
+- **Purple bird:** at any time of day a moving type flies in a circle at the gap centre, either way round, with a radius of 42–72 (PURPLE_BIRD_RADIUS) and its highest point 322–345 (PURPLE_BIRD_TOP), once round in 2.4–3.6 s. Where it is when the monkey swings by decides what it is: high at the top of its circle, low at the bottom, wide at the sides. Motion is `ax = ±ay`, `bob = 0`. The solver checks it like every moving obstacle, and a candidate that fails is rerolled.
+- **Blue bird:** by day (Day, Late afternoon and Dawn; not at Dusk or Night) a fourth moving type flies up and down at the gap centre, without a thread or a stalk. Like the spider and snake it can only use the free air the swings leave: either the high band (its lowest point 165–200, over a flight of 70–130) or the low band (its highest point 296–322, over 80–140), picked at random, with a slight swoop (BLUE_BIRD_BOB). The solver checks it like every moving obstacle, and a candidate that fails is rerolled.
 - Room for them: at the gap centre a moving hitbox stays clear of the swings only above y ≈ 213 or below y ≈ 288, while valid flights cross the centre at y ≈ 189–361. So spiders work the high band (lowest point 175–212), snakes the low band (highest point 290–320), and birds patrol low (y 330–390, ±35 to ±117 px). They block about 10–20 % of otherwise valid releases.
 
 ## Bananas
@@ -98,14 +105,14 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 
 Stages are keyed on **obstacle index**, not score, so banana points don't speed up difficulty and in shared screen both players meet the same level. A stage starts when a monkey grabs the liana before the stage's first obstacle (obstacle #i is in gap i). A banner ("Stage 2 · Late afternoon") fades in low in the band, and the background tint eases over 2.5 s (day → late afternoon → dusk → night). A new run starts over at day.
 
-The day goes on past Stage 4: the stage number and the time of day keep counting every STAGE_LENGTH_AFTER (20) obstacles, from obstacle 51 on: Night 51–70, Dawn 71–90, then Day again, Late afternoon, Dusk, Night, Dawn, and so on, for as long as the run lasts ("Stage 6 · Day"). Difficulty goes on rising subtly each of these stages too, up to a limit: the shortest release window shrinks by LATER_WINDOW_STEP_MS (2 ms) per stage, from 60 ms down to LATER_MIN_WINDOW_MS (40 ms, about 5 sim steps, reached at Stage 14, obstacle 251), and the moving share rises by LATER_MOVING_STEP (4 points) per stage, from 70 % up to LATER_MOVING_MAX (90 %, Stage 9, obstacle 151). Obstacle scale stays at 1.3: at that size a branch already fits at only one height range. From Stage 14 on only the sky goes on. Both levers are checked at generation like any stage's, so every gap stays passable; the window table is unchanged, since the stage's minimum is applied at lookup.
+The day goes on past Stage 4: the stage number and the time of day keep counting every STAGE_LENGTH_AFTER (20) obstacles, from obstacle 51 on: Night 51–70, Dawn 71–90, then Day again, Late afternoon, Dusk, Night, Dawn, and so on, for as long as the run lasts ("Stage 6 · Day"). Difficulty goes on rising subtly each of these stages too, up to a limit: the shortest release window shrinks by LATER_WINDOW_STEP_MS (2 ms) per stage, from 60 ms down to LATER_MIN_WINDOW_MS (40 ms, about 5 sim steps, reached at Stage 14, obstacle 251), and the moving share rises by LATER_MOVING_STEP (4 points) per stage, from 55 % up to LATER_MOVING_MAX (75 %, Stage 9, obstacle 151). Obstacle scale stays at 1.3: at that size a branch already fits at only one height range. From Stage 14 on only the sky goes on. Both levers are checked at generation like any stage's, so every gap stays passable; the window table is unchanged, since the stage's minimum is applied at lookup.
 
 | Stage | Obstacles | Min release window | Moving share | Obstacle scale |
 |---|---|---|---|---|
-| 1 | 1–15 | 90 ms | 0% for 1–5, then 15% | 1.00 |
-| 2 | 16–30 | 80 ms | 25% | 1.10 |
-| 3 | 31–50 | 70 ms | 50% | 1.20 |
-| 4 | 51+ | 60 ms | 70% | 1.30 |
+| 1 | 1–15 | 90 ms | 0% for 1–5, then 12% | 1.00 |
+| 2 | 16–30 | 80 ms | 20% | 1.10 |
+| 3 | 31–50 | 70 ms | 40% | 1.20 |
+| 4 | 51+ | 60 ms | 55% | 1.30 |
 
 Scaled obstacles must still pass the swing-clearance rule; heights that fail are rerolled. At scale 1.3 a branch fits only at y 371–375, so stage-4 branches almost always sit at the bottom. The tint multiplies the background only (sky, parallax, canopy and floor), so lianas, obstacles and the monkeys stay readable at night.
 
@@ -166,7 +173,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 
 | Event | Sim trigger | Synthesis |
 |---|---|---|
-| "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock 110 Hz, snake 131, branch 165, thorn bush 247, spider 294, bird 392. |
+| "Bong" | `death` with cause `obstacle` | Bell-like decaying sines at inharmonic ratios (1, 2.76, 5.4) with a fast attack and about 1 s decay. Base pitch by obstacle type: rock 110 Hz, snake 131, branch 165, thorn bush 247, spider 294, purple bird 311, blue bird 349, bird 392, bat 466; beehive 196, temple 98. |
 | "Crash" | `death` from a fall, or from being left behind | A low-passed noise burst plus a falling low sine thud, about 0.8 s. |
 
 - **Recipes and player:** each sound is a pure recipe function (data, unit-tested in Node). A thin player is the only code that touches `AudioContext`.
@@ -234,6 +241,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | FLOW_GRIP, QUICK_SLIP_SPEED | 0.7 × L, 1000 px/s | Catches above FLOW_GRIP slide quickly down to it |
 | HOLD_GRIP | 350 px (about 0.83 × L) | With slipping off (G) the grip holds where it catches but no higher; the shallowest grip that keeps every sampled gap's window |
 | HOLD_SLIDE_TIME | 0.25 s | Longest slide down to HOLD_GRIP; it starts at the catch speed along the rope and brakes evenly |
+| TEMPLE_MIN_GAP, TEMPLE_VARIANTS | 6, 4 | The temple (one a day/night cycle, see Obstacles) is never among the first 6 obstacles, and has 4 looks |
 | SLIP_OFF_PHASE | 0.11 × P after the bottom, swinging right | The forced release comes mid-way through the forward window (about 0.05–0.165 × P) |
 | ENTRY_RADII | [0.35, 0.5, 0.65, 0.8, 0.95] × L | The entry radii the solver checks |
 | MAX_ENTRY_RADIUS | 0.95 × L | Lower catches grip here |
@@ -246,7 +254,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | STAGES | see Difficulty stages | First obstacle, shortest window, moving share and obstacle scale per stage |
 | STAGE_LENGTH_AFTER | 20 obstacles | After the last stage, the stage number (the time of day) counts on this often |
 | LATER_WINDOW_STEP_MS, LATER_MIN_WINDOW_MS | 2 ms per stage, down to 40 ms | The shortest release window of the stages after the last: 60 ms at Stage 4, 40 ms from Stage 14 (about 5 steps) |
-| LATER_MOVING_STEP, LATER_MOVING_MAX | +4 points per stage, up to 90 % | The moving share of those stages: 70 % at Stage 4, 90 % from Stage 9 |
+| LATER_MOVING_STEP, LATER_MOVING_MAX | +4 points per stage, up to 75 % | The moving share of those stages: 55 % at Stage 4, 75 % from Stage 9 |
 | MOVING_FROM | 6 | Obstacles 1–5 are always static |
 | MOVING_PERIOD_RANGE | 1.5–3.0 s | |
 | SPIDER_LOW_RANGE, SPIDER_TRAVEL_RANGE | 175–212, 80–150 px | Lowest point and climb |
@@ -316,7 +324,7 @@ liano/
       background.js         # parallax layers, taller views, stage tint
       lianaView.js          # vine, leaves, tip warning; green or golden
       monkeyView.js         # per-player palette, invulnerable blink
-      obstacleViews.js      # static art, animated spider, snake and bird
+      obstacleViews.js      # static art, animated spider, snake, bird, bat, blue bird and purple bird
       bananaView.js         # bananas, "+1" pops
       camera.js             # easing camera, portrait anchor
       hud.js                # 1P and 2P variants
@@ -339,14 +347,28 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
   - Poses: hanging, airborne spread, dead tumble. A respawned monkey blinks while invulnerable.
 - **Lianas.** A green polyline with leaves (P2's in shared screen golden), which bends slightly while settling. The grip slide is visible, and the lower vine blinks yellow near the forced release.
 - **Static obstacles.**
-  - Branch: brown limb with a leaf tuft.
+  - Branch: brown limb with a leaf tuft, and sometimes a decoration (see Branch decorations):
+    - Perched bird: a small bird in the colours of one of the flying birds (red, blue or purple, at random; not the owl), on top of the limb, facing left or right at random; every couple of seconds it dips its head to peck, and its tail flicks.
+    - Snake: a green snake wrapped around the limb in three or four coils (on a standing branch, in about half the cases, vertically around the trunk it stands on instead), its tail hanging off one end and its head rising from the other, facing left or right at random; the neck sways and now and then the tongue flicks.
+    - Bird's nest (a decoration, not an animal): a woven bowl of twigs on top of the limb, facing either way. What it holds is picked at random, in equal shares: nothing (a dry leaf), a speckled blue egg that rocks now and then, or a hatched egg: a yellow chick peeping from its cracked shell, bobbing, with the cap of the shell beside it.
+    - Panther: a black panther lying along the top of the limb with its head up, watching, with yellow slit eyes. Its flanks rise and fall as it breathes, its tail hangs down off the end of the limb and swishes, an ear flicks now and then and it blinks. Faces either way.
+    - Hanging bat (night only): a small purple bat roosting upside down from the underside of the limb, wrapped in its wings like a cloak with scalloped edges. It sways a little, an ear twitches now and then, and it opens its red eyes for a moment every few seconds.
+    - Owl (night only): a round brown owl perched on top of the limb, with ear tufts, big yellow eyes in a pale face and a chevroned belly. Its face slides slowly from side to side as if the head were turning, the pupils lead the turn, its eyes close for a moment now and then, and it puffs a little as it breathes.
+    - Flowers: a small cluster of three to five on stems with a leaf or two, growing from the top of the limb, each in a colour of its own (red, pink, yellow, purple, white, orange or blue), swaying in the breeze, each out of step with the others.
+    - Coconuts: a bunch of two or three brown, hairy coconuts, each with its three dark "eyes", hanging from the underside of the limb on short stems under a small green frond, swaying a little, each out of step with the others.
+    - Hanging monkey: a small grey monkey hanging from the underside of the limb by its hands, swaying like a pendulum, with its legs swinging, its tail curling out to one side and an occasional blink. It hangs below the limb, clear of the vines it hangs from.
   - Thorn bush: dark blob with thorns.
   - Rock: grey polygon on a small ledge.
-  - High ones hang from the canopy on vines; low ones stand on a trunk or pole.
+  - Temple: a stepped pyramid with a shrine on top and a staircase up the middle of its front, on a platform of mouldings and recessed panels, drawn big (a door taller than the monkey) and buried: only the top shows, the lower part lost in a green haze that thickens toward the ground and a thick fringe of ferns and leaves wider than the temple, with moss, vines and ferns on every tier. Four looks, one of which each temple has: limestone with a stepped-fret frieze round the shrine; sandstone with a roof comb over the shrine; mossy grey-green stone with serpent heads on the stairs, moss and ferns; and dark basalt with gold inlay and two braziers whose flames flicker.
+  - Beehive: a teardrop paper nest in gold bands with a dark entrance, hanging from a vine, or from an arm off a trunk when it is low (its hitbox is three stacked circles, widest in the middle). A handful of bees buzz around it; they are scenery, and the animation takes the world time, so they stop while the game is paused.
+  - High ones hang from the canopy on vines; low ones stand on a trunk or pole (the beehive hangs from an arm off the trunk).
 - **Moving obstacles.**
   - Spider: dark body with a red mark and wriggling legs, on a thin thread.
   - Snake: green coils on a leafy stalk, its head pointing the way it climbs.
   - Bird: red body with a yellow belly and flapping wings, facing the way it flies.
+  - Purple bird: a purple body with a pale belly, a crest and a tail feather, flapping, facing the way it is flying and pitched along the circle.
+  - Blue bird: a blue body with a pale belly and a small crest, flapping and pitched along its climb or dive, facing left or right by gap.
+  - Bat: a purple furry body with pointed ears and red eyes, and a scalloped membrane wing that flutters fast, facing the way it flies.
 - **Banana.** A single tilted banana, tapering to both ends, with a lighter ridge, a stem and a dark tip, a gentle bob, and a glint near the stem that fades in and out while it waits to be taken. The same drawing is the icon in the HUD and on the results.
 - **Background.** Three parallax layers, a canopy strip at the top, and a dark jungle floor band at the bottom. Taller views extend the forest upward and the undergrowth downward. The tint shifts per stage, through a five-step day (day, late afternoon, dusk, night, dawn) that repeats.
 - **HUD and buttons.** Readable text with a subtle shadow, plus the speaker and fullscreen icons.
@@ -496,7 +518,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 
 **25. The day goes on.** The stage number and the sky keep cycling after Stage 4: night, dawn, day, late afternoon, dusk, night, ... every 20 obstacles, and the difficulty keeps rising subtly up to a limit (see Difficulty stages).
 - [x] `stageFor` counts on every STAGE_LENGTH_AFTER obstacles past the last stage; the world raises a `stage` event for each
-- [x] Each such stage has a 2 ms shorter shortest window (down to 40 ms) and 4 points more moving obstacles (up to 90 %), at Stage 4's obstacle scale; stages up to well past the limit are checked passable, boosted swings included (tested)
+- [x] Each such stage has a 2 ms shorter shortest window (down to 40 ms) and 4 points more moving obstacles (up to 75 %), at Stage 4's obstacle scale; stages up to well past the limit are checked passable, boosted swings included (tested)
 - [x] A dawn tint and name; the tint and banner follow the stage number modulo the five times of day
 - [x] The window table is unchanged; generation stays cheap (about 1.5 ms per obstacle on average in the late stages)
 

@@ -92,6 +92,32 @@ export const OBSTACLE_HITBOXES = {
   spider: [{ kind: 'circle', dx: 0, dy: 0, r: 18 }],
   snake: [{ kind: 'circle', dx: 0, dy: 0, r: 18 }],
   bird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
+  // The bat takes the bird's place at night: the same hitbox, so the same patrols.
+  bat: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
+  blueBird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
+  purpleBird: [{ kind: 'circle', dx: 0, dy: 0, r: 16 }],
+  // A stepped pyramid with a shrine on top, drawn from the top centre of the shrine
+  // down: the shrine, three tiers each wider than the last, and a base tall enough to
+  // reach the floor whatever the height (the obstacle is picked high enough in the lower
+  // region that a flight passes over it, not under it). It is big: a door taller than the
+  // monkey, a staircase wider than it. What shows is the top of a temple far bigger than
+  // the gap, the rest lost in the undergrowth (see drawTemple). The shrine's width at the
+  // top is what limits how high it can stand: the base can be as wide as it likes, below
+  // where the swings reach. Every variant has this hitbox.
+  temple: [
+    { kind: 'rect', dx: -50, dy: 0, w: 100, h: 64 },
+    { kind: 'rect', dx: -90, dy: 64, w: 180, h: 46 },
+    { kind: 'rect', dx: -136, dy: 110, w: 272, h: 46 },
+    { kind: 'rect', dx: -184, dy: 156, w: 368, h: 46 },
+    { kind: 'rect', dx: -236, dy: 202, w: 472, h: 420 },
+  ],
+  // A skep-shaped hive: three stacked circles, about as wide as a thorn bush and a
+  // little taller than a rock.
+  beehive: [
+    { kind: 'circle', dx: 0, dy: -16, r: 18 },
+    { kind: 'circle', dx: 0, dy: 2, r: 24 },
+    { kind: 'circle', dx: 0, dy: 22, r: 18 },
+  ],
 };
 
 // Moving obstacles (see obstacle.js). Their whole path stays clear of both
@@ -107,10 +133,52 @@ export const SPIDER_TRAVEL_RANGE = [80, 150];
 // slides down below that.
 export const SNAKE_HIGH_RANGE = [290, 320];
 export const SNAKE_TRAVEL_RANGE = [90, 160];
-// Bird: patrols across the gap, low where flights come in over the far liana, with a
-// slight bob. Its patrol bounds are the widest that stay clear of the swings.
+// Bird (and the bat that replaces it at night): patrols across the gap, low where
+// flights come in over the far liana, with a slight bob. Its patrol bounds are the
+// widest that stay clear of the swings.
 export const BIRD_Y_RANGE = [330, 390];
 export const BIRD_BOB = 8;
+
+// A Mayan-style temple: rare, a static obstacle in the lower region. Each day/night cycle
+// (the five stages from day to dawn, see stages.js) has at most one, at a random gap in it
+// but not among the first TEMPLE_MIN_GAP, in one of TEMPLE_VARIANTS looks (the hitbox is
+// the same for all).
+export const TEMPLE_MIN_GAP = 6;
+export const TEMPLE_VARIANTS = 4;
+
+// The share of the static gaps that get a beehive; the other three static types split
+// the rest equally. A hive is a bigger thing to meet than a rock.
+export const BEEHIVE_SHARE = 0.08;
+
+// Some branches (this share of them) carry a decoration, for show: see BRANCH_DECORATIONS in
+// obstacle.js. The decoration is not part of the hitbox.
+export const BRANCH_DECORATION_CHANCE = 0.14;
+// The night stages are few and far between, and a branch is only about one gap in seven
+// in them, so by day's odds the night animals (the hanging bat and the owl) would almost
+// never show. At night more branches carry a decoration, and this share of them one of the
+// night ones.
+export const BRANCH_DECORATION_CHANCE_NIGHT = 0.4;
+export const NIGHT_DECORATION_SHARE = 0.5;
+
+// Blue bird: flies up and down at the gap centre, in free air: in the high band (its
+// lowest point in BLUE_BIRD_HIGH, over a flight of BLUE_BIRD_HIGH_TRAVEL) or the low band
+// (its highest point in BLUE_BIRD_LOW, over BLUE_BIRD_LOW_TRAVEL), with a slight
+// swoop (BLUE_BIRD_BOB). By day only: not at dusk or at night.
+export const BLUE_BIRD_HIGH = [165, 200];
+export const BLUE_BIRD_HIGH_TRAVEL = [70, 130];
+export const BLUE_BIRD_LOW = [296, 322];
+export const BLUE_BIRD_LOW_TRAVEL = [80, 140];
+export const BLUE_BIRD_BOB = 6;
+
+// Purple bird: flies in a circle at the gap centre, either way round, in the open space
+// the swings leave in the lower region, between the highest point of the circle
+// (PURPLE_BIRD_TOP) and a radius (PURPLE_BIRD_RADIUS), once round in PURPLE_BIRD_PERIOD
+// seconds. So it is a high obstacle at the top of its circle, a low one at the bottom and
+// a wide one at the sides, depending on where it is when the monkey swings by. At any
+// time of day.
+export const PURPLE_BIRD_TOP = [322, 345];
+export const PURPLE_BIRD_RADIUS = [42, 72];
+export const PURPLE_BIRD_PERIOD = [2.4, 3.6];
 
 // The shortest release window a gap may have in stage 1 (later stages: STAGES).
 export const MIN_RELEASE_WINDOW_MS = 90;
@@ -118,20 +186,20 @@ export const MIN_RELEASE_WINDOW_MS = 90;
 // by score. Each has its shortest release window, share of moving obstacles and
 // obstacle scale.
 export const STAGES = [
-  { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.15, scale: 1.0 },
-  { first: 16, minWindowMs: 80, movingShare: 0.25, scale: 1.1 },
-  { first: 31, minWindowMs: 70, movingShare: 0.5, scale: 1.2 },
-  { first: 51, minWindowMs: 60, movingShare: 0.7, scale: 1.3 },
+  { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.12, scale: 1.0 },
+  { first: 16, minWindowMs: 80, movingShare: 0.2, scale: 1.1 },
+  { first: 31, minWindowMs: 70, movingShare: 0.4, scale: 1.2 },
+  { first: 51, minWindowMs: 60, movingShare: 0.55, scale: 1.3 },
 ];
 // From the last stage's first obstacle on, the stage number (and the time of day) counts
 // on every STAGE_LENGTH_AFTER obstacles. Each stage after the last then keeps the last
 // one's obstacle scale but asks a little more: a shortest release window 2 ms shorter
-// (down to 40 ms, about 5 sim steps) and 4 points more moving obstacles (up to 90 %).
+// (down to 40 ms, about 5 sim steps) and 4 points more moving obstacles (up to 75 %).
 export const STAGE_LENGTH_AFTER = 20;
 export const LATER_WINDOW_STEP_MS = 2;
 export const LATER_MIN_WINDOW_MS = 40;
 export const LATER_MOVING_STEP = 0.04;
-export const LATER_MOVING_MAX = 0.9;
+export const LATER_MOVING_MAX = 0.75;
 // The first obstacles are always static: moving ones start at this obstacle index.
 export const MOVING_FROM = 6;
 

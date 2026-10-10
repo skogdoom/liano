@@ -64,6 +64,22 @@ export class FakeAudioContext {
     this.sampleRate = 8000;
     this.destination = new FakeNode(this, 'destination');
     this.log = [];
+    // With `deferred`, resume() and suspend() change the state only on settle(), as a
+    // browser does, and the state change event follows.
+    this.deferred = false;
+    this.pending = [];
+    this.onstatechange = null;
+  }
+  setState(state) {
+    if (this.deferred) this.pending.push(state);
+    else this.state = state;
+    return Promise.resolve();
+  }
+  settle() {
+    for (const state of this.pending.splice(0)) {
+      this.state = state;
+      this.onstatechange?.();
+    }
   }
   createGain() {
     const node = new FakeNode(this, 'gain');
@@ -93,13 +109,11 @@ export class FakeAudioContext {
   }
   resume() {
     this.log.push('resume');
-    this.state = 'running';
-    return Promise.resolve();
+    return this.setState('running');
   }
   suspend() {
     this.log.push('suspend');
-    this.state = 'suspended';
-    return Promise.resolve();
+    return this.setState('suspended');
   }
   sources() {
     return this.nodes.filter((n) => n instanceof FakeSource);

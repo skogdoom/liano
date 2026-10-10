@@ -243,7 +243,7 @@ describe('fair generation', () => {
     for (let a = -SWING_AMPLITUDE; a <= SWING_AMPLITUDE + 1e-9; a += SWING_AMPLITUDE / 30) angles.push(a);
     const byType = {};
     const hits = [];
-    for (let gap = 16; byType.bird === undefined || Object.values(byType).some((n) => n < 20); gap++) {
+    for (let gap = 16; MOVING_TYPES.some((t) => (byType[t] ?? 0) < 20); gap++) {
       const o = createObstacle(31, gap);
       if (!o.moving || (byType[o.type] ?? 0) >= 20) continue;
       byType[o.type] = (byType[o.type] ?? 0) + 1;
@@ -263,7 +263,7 @@ describe('fair generation', () => {
       }
     }
     expect(hits).toEqual([]);
-    expect(byType).toEqual({ spider: 20, snake: 20, bird: 20 });
+    expect(byType).toEqual(Object.fromEntries(MOVING_TYPES.map((t) => [t, 20])));
   });
 
   it('keeps every generated obstacle clear of the swinging lianas and hanging monkey', () => {

@@ -34,6 +34,9 @@ export class SoundPlayer {
       compressor.connect(ctx.destination);
       this.noise = whiteNoise(ctx);
       this.ctx = ctx;
+      // A suspend or resume takes a moment to settle, and the browser can also change the
+      // state on its own: whenever it does, bring it back to what the game wants.
+      ctx.onstatechange = () => this.#sync();
     }
     this.#sync();
   }
@@ -45,8 +48,8 @@ export class SoundPlayer {
     this.#sync();
   }
 
+  // Called every frame, so a resume the browser refused is tried again.
   setPaused(paused) {
-    if (paused === this.paused) return;
     this.paused = paused;
     this.#sync();
   }
@@ -115,13 +118,15 @@ export class SoundPlayer {
     return osc;
   }
 
-  // Runs the context only while unmuted and unpaused.
+  // Runs the context only while unmuted and unpaused. Anything but 'running' (also
+  // 'interrupted', which Safari reports) is brought back; a suspend still settling when
+  // the game resumes is caught by the state change it ends in.
   #sync() {
     const { ctx } = this;
     if (!ctx) return;
     const run = !this.muted && !this.paused;
-    // Both can reject (e.g. audio still not allowed); the next gesture tries again.
-    if (run && ctx.state === 'suspended') ctx.resume()?.catch?.(() => {});
+    // Both can reject (e.g. audio still not allowed); the next frame or gesture tries again.
+    if (run && ctx.state !== 'running') ctx.resume()?.catch?.(() => {});
     else if (!run && ctx.state === 'running') ctx.suspend()?.catch?.(() => {});
   }
 }
