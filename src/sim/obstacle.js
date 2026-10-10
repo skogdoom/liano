@@ -36,6 +36,7 @@ export const BranchDecoration = Object.freeze({
   PANTHER: 'panther',
   HANGING_BAT: 'hangingBat',
   OWL: 'owl',
+  FLOWERS: 'flowers',
 });
 export const BRANCH_DECORATIONS = [
   BranchDecoration.BIRD,
@@ -45,6 +46,7 @@ export const BRANCH_DECORATIONS = [
   BranchDecoration.PANTHER,
   BranchDecoration.HANGING_BAT,
   BranchDecoration.OWL,
+  BranchDecoration.FLOWERS,
 ];
 // Some only come out at night.
 export const NIGHT_DECORATIONS = new Set([BranchDecoration.HANGING_BAT, BranchDecoration.OWL]);

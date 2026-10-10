@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DECORATIONS, NEST_STATES } from '../src/render/obstacleViews.js';
+import { DECORATIONS, FLOWER_COLORS, NEST_STATES } from '../src/render/obstacleViews.js';
 import { BRANCH_DECORATIONS } from '../src/sim/obstacle.js';
 import { mulberry32 } from '../src/sim/rng.js';
 
@@ -28,6 +28,25 @@ describe('branch decoration art', () => {
     }
     expect(NEST_STATES).toEqual(['empty', 'egg', 'hatched']);
     for (const state of NEST_STATES) expect(counts[state]).toBeGreaterThan(60);
+  });
+
+  it('grows three to five flowers, each in a colour of its own, in all the colours', () => {
+    const used = new Set();
+    let differing = 0;
+    for (let seed = 1; seed <= 80; seed++) {
+      const { colors, part } = DECORATIONS.flowers(mulberry32(seed));
+      expect(colors.length).toBeGreaterThanOrEqual(3);
+      expect(colors.length).toBeLessThanOrEqual(5);
+      expect(part.children).toHaveLength(colors.length);
+      for (const c of colors) {
+        expect(FLOWER_COLORS).toContain(c);
+        used.add(c);
+      }
+      if (new Set(colors).size > 1) differing++;
+    }
+    expect(used.size).toBe(FLOWER_COLORS.length);
+    // Most clusters mix colours.
+    expect(differing).toBeGreaterThan(60);
   });
 
   it('turns some of each decoration left and some right', () => {

@@ -444,6 +444,55 @@ function drawHangingBat(rand) {
   return { part: bat, animate };
 }
 
+// The colours flowers come in; each flower in a cluster picks its own.
+export const FLOWER_COLORS = [0xe8505b, 0xff8fb3, 0xffd23f, 0xb06bd6, 0xf6f3ee, 0xff9a3c, 0x6fa8ff];
+const FLOWER_STEM = 0x3f7a2c;
+const FLOWER_HEART = 0xffe066;
+const FLOWER_HEART_DARK = 0xb8691f;
+
+// A small cluster of three to five flowers growing from the top of the branch, each on a
+// stem with a leaf or two and each in a colour of its own: red, pink, yellow, purple,
+// white, orange or blue. They sway in the breeze, each out of step with the others.
+// Returns the colours too.
+function drawFlowers(rand) {
+  const flowers = new Container();
+  flowers.scale.x = rand() < 0.5 ? 1 : -1;
+  const cx = -40 + rand() * 40;
+  flowers.position.set(cx, branchTop(cx));
+  const count = 3 + Math.floor(rand() * 3);
+  const colors = [];
+  const stems = [];
+  for (let i = 0; i < count; i++) {
+    const x = (i - (count - 1) / 2) * 10 + (rand() - 0.5) * 4;
+    const height = 11 + rand() * 9;
+    const color = FLOWER_COLORS[Math.floor(rand() * FLOWER_COLORS.length)];
+    colors.push(color);
+    const plant = new Container();
+    plant.position.set(x, 1);
+    const g = new Graphics();
+    // A stem, a leaf or two, and the head: five or six petals round a heart.
+    g.moveTo(0, 0).quadraticCurveTo(1.5, -height / 2, 0, -height).stroke({ width: 1.6, color: FLOWER_STEM, cap: 'round' });
+    const leafAt = height * (0.3 + rand() * 0.2);
+    g.poly(leafPoints(0, -leafAt, -0.6 - rand() * 0.5, 7, 3)).fill(FLOWER_STEM);
+    if (rand() < 0.5) g.poly(leafPoints(0, -leafAt * 0.55, Math.PI + 0.6 + rand() * 0.5, 6, 2.6)).fill(LEAF_DARK);
+    const petals = 5 + Math.floor(rand() * 2);
+    const r = 2.5 + rand() * 1.1;
+    const turn = rand() * 6.3;
+    for (let p = 0; p < petals; p++) {
+      const a = turn + (p / petals) * Math.PI * 2;
+      g.circle(Math.cos(a) * r * 1.2, -height + Math.sin(a) * r * 1.2, r * 0.82).fill(color);
+    }
+    g.circle(0, -height, r * 0.62).fill(color === 0xffd23f ? FLOWER_HEART_DARK : FLOWER_HEART);
+    plant.addChild(g);
+    flowers.addChild(plant);
+    stems.push({ plant, phase: rand() * 6.3, speed: 1.3 + rand() * 0.8 });
+  }
+  const animate = (t) => {
+    for (const s of stems) s.plant.rotation = 0.1 * Math.sin(t * s.speed + s.phase);
+  };
+  return { part: flowers, animate, colors };
+}
+
 const OWL = 0x8a6a48;
 const OWL_DARK = 0x5a432c;
 const OWL_BELLY = 0xe8d7b5;
@@ -515,6 +564,7 @@ export const DECORATIONS = {
   panther: drawPanther,
   hangingBat: drawHangingBat,
   owl: drawOwl,
+  flowers: drawFlowers,
 };
 
 // Adds the decoration the branch carries to `view`; returns its animation.
