@@ -175,3 +175,18 @@ describe('banana pickup and tally', () => {
     expect([world.bananaTally(0).passed, world.bananaTally(1).passed]).toEqual([2, 2]);
   });
 });
+
+describe('bananas taken, for the HUD', () => {
+  it('is a lookup of the count, not a walk over every banana of the run (the HUD asks every frame)', () => {
+    const game = new Game({ createWorld: (options) => new World({ ...options, makeObstacle: () => null, makeBanana: () => null }) });
+    game.world.bananasTaken[0] = 7;
+    game.world.bananaTally = () => {
+      throw new Error('walks every banana');
+    };
+    expect(game.playerBananasTaken(0)).toBe(7);
+    // The same as the tally says.
+    const fresh = new Game({ createWorld: (options) => new World({ ...options, makeObstacle: () => null, makeBanana: () => null }) });
+    fresh.world.bananasTaken[0] = 3;
+    expect(fresh.playerBananasTaken(0)).toBe(fresh.playerBananas(0).taken);
+  });
+});

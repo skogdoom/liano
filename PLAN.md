@@ -27,7 +27,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 - **Other keys:**
   - `M` or the on-screen speaker mutes the sound.
   - `F` or the on-screen button toggles full screen.
-  - `D` toggles the debug overlay.
+  - `D` toggles the debug overlay (frame rate and heap on its first line).
   - `G` turns slipping off and on (see Trying without slipping).
   - `H` (for hearts) turns lives on and off for 1P, on the title screen only (see Lives and hearts).
   - `S` (for shadow) turns the shadow monkey on and off for 1P, on the title screen only (see Shadow monkey).
@@ -247,11 +247,19 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 - **Graphics context loss:** a lost context pauses the game with a notice. If it isn't restored within 5 s, a "tap to reload" screen appears.
 - **Errors:** a global handler for the game's own errors shows the reload screen instead of a frozen canvas.
 - **Drawing cost:**
-  - Lianas are redrawn only when their state changes.
+  - Lianas are redrawn only when their look changes: a swinging liana is straight, so it is drawn once hanging straight down from the origin and turned about its anchor each frame (no new geometry to build and upload); only a liana settling after a release, which bends, redraws every frame.
   - The parallax layers are render groups.
   - The frame is clipped with black bars instead of a mask; only split-screen panes use masks.
 - **Budget:** at 4× CPU throttling, per-frame work stays under 6 ms at p95. No frame goes over 16 ms during generation, restarts or deaths.
 - **Soak test:** 5,000 gaps (with moving obstacles and bananas), with entity counts and the event queue staying bounded. Rendering stays precise at large world x.
+- **Frame rate in the debug view (D):** the first line shows the frame rate, mean and worst frame time over the last second, the number of frames over 34 ms since the start (`slow`) and, where the browser says (Chrome), the JS heap: `60 fps  16.7 ms  worst 21 ms  slow 3  heap 17 MB`.
+- **Long-run check** (done once, repeatable with `scripts/longrun.mjs`, which needs `playwright-core` and the dev server and is not part of the suite): a bot that plays perfectly (it solves each grab's release window) drives the real game in headless Chromium, with the frame loop fed 33 ms of game time per frame as fast as it will go and `performance.now()` following that game time, so Pixi's time-based clean-up runs as it would in play; it renders every 90th frame (software GL is the slow part) and samples the heap after a forced GC. Four scenarios of 30 game-minutes (660–940 gaps): solo; solo with slipping, lives and shadow; shared screen; split screen.
+  - **Leak found and fixed:** the flight cache (`emptyGapFlights`) kept a list for every exact entry radius it was asked for, about 70 flights of 80 points each. The generator only asks for the five radii of ENTRY_RADII, but the debug view (and the bot) ask for the exact radius of every grab, so with the debug view open the heap grew by 6 MB a game-minute. Only the ENTRY_RADII are cached now.
+  - **After the fix:** the heap after a GC is flat: solo 43 → 46 MB over 30 game-minutes (0.1 MB a minute; Pixi's text cache gains a key for every distinct string it draws, such as each score, which is the likely source), shared 43 → 46 MB, solo with everything on 45 → 54 MB (0.4 MB a minute: the shadow's recording, 25 bytes a step, plus the best run kept). Lianas (at most 11), obstacles (at most 10) and scene nodes (160–200) stay bounded, as do the textures (16 → 25).
+  - **No slowdown:** the JS side of a frame (sim and view updates, without the GPU) has a median of 0.1–0.2 ms and a p95 of 0.3–0.5 ms in all four, the same in each quarter of the run. A CPU profile of 8 game-minutes finds no hot spot of the game's own: the largest were the lianas' redraws (about 1 % of the samples, which is why they now turn instead), and `flightHits` of the bot's own solving.
+  - **Memory:** the production build uses about 15–16 MB of JS heap at the title and after play (the 45 MB seen in the dev server is mostly its unminified source strings). The scripts are 750 kB, 190 kB gzipped, in chunks of which only the WebGL renderer is loaded.
+  - **GPU work in a frame** (counted at the WebGL calls): about 28–34 draw calls, 15–18 shader switches and 5–7 buffer uploads. The uploads are the redrawn Graphics: the wings, legs and tails of moving obstacles and animated decorations (a `clear()` and redraw each frame). Turning each limb about a pivot instead would remove them, a bigger change left for later; likewise capping the frame rate on 120 Hz screens (`ticker.maxFPS`), which would halve the GPU work there at the price of smoothness.
+- **The HUD asks the game for the bananas taken, not the tally** (`playerBananasTaken` is a lookup; `bananaTally` walks every banana of the run, which grew with it, and the HUD called it every frame).
 - **Input edge cases** are unit-tested: keys held across a restart, taps during the results lock, multi-touch, and input held while focus is lost.
 - **Reduced motion:** with `prefers-reduced-motion`, the death shake is off.
 

@@ -319,7 +319,10 @@ function frame(ticker) {
   const events = game.takeEvents();
   for (const recipe of soundsFor(events)) sound.play(recipe);
   const ghost = game.shadowFrame();
-  panes.forEach((pane, i) => pane.update(events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches, i === 0 ? ghost : null));
+  // Most frames have no events: do not make an array per pane for nothing.
+  panes.forEach((pane, i) =>
+    pane.update(events.length === 0 ? events : events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches, i === 0 ? ghost : null),
+  );
   hud.update(game);
   overlays.update(game, panes[0].camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
   debugOverlay.update(game, sound, fpsMeter);

@@ -118,6 +118,13 @@ export class Game {
     return world.bananaTally(index);
   }
 
+  // How many bananas player `p` has taken. The HUD asks every frame, so it is a lookup: the
+  // tally (`playerBananas`) walks every banana of the run.
+  playerBananasTaken(p) {
+    const { world, index } = this.slot(p);
+    return world.bananasTaken[index];
+  }
+
   playerLives(p) {
     const { world, index } = this.slot(p);
     return world.lives[index];
