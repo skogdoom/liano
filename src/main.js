@@ -313,7 +313,8 @@ function frame(ticker) {
   const paused = pause.paused;
   if (paused) input.clear(); // a press made just before pausing must not act on resume
   const frameDt = paused ? 0 : Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
-  loop.advance(frameDt);
+  // The part of a step the accumulator holds: the camera and monkeys are drawn that far on.
+  const alpha = loop.advance(frameDt);
   prefetch.update(game.worlds.map((w) => w.obstacles));
   sound.setPaused(paused);
   const events = game.takeEvents();
@@ -321,7 +322,7 @@ function frame(ticker) {
   const ghost = game.shadowFrame();
   // Most frames have no events: do not make an array per pane for nothing.
   panes.forEach((pane, i) =>
-    pane.update(events.length === 0 ? events : events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches, i === 0 ? ghost : null),
+    pane.update(events.length === 0 ? events : events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches, i === 0 ? ghost : null, alpha),
   );
   hud.update(game);
   overlays.update(game, panes[0].camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });

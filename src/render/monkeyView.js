@@ -1,6 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import { MonkeyState } from '../sim/monkey.js';
 import { SWING_OMEGA } from '../sim/liana.js';
+import { blend } from './interpolate.js';
 
 // The body and head fit inside the MONKEY_RADIUS hitbox circle; only the limbs, ears
 // and tail reach outside it. Local +y is down, and the monkey faces +x (mirrored when
@@ -105,8 +106,10 @@ export class MonkeyView {
     this.monkey = null;
   }
 
-  // `blinking` while the monkey is invulnerable after a respawn.
-  update(monkey, dt, blinking = false) {
+  // `blinking` while the monkey is invulnerable after a respawn. `alpha`: how far between
+  // the previous sim step and the current one to draw (see interpolate.js); the shadow's
+  // frames carry no previous position and are drawn as they are.
+  update(monkey, dt, blinking = false, alpha = 1) {
     this.blinkTime = blinking ? (this.blinkTime ?? 0) + dt : 0;
     this.view.alpha = blinking && Math.floor(this.blinkTime * INVULNERABLE_BLINK * 2) % 2 ? 0.3 : 1;
     if (monkey !== this.monkey) {
@@ -114,7 +117,8 @@ export class MonkeyView {
       this.monkey = monkey;
       this.body.rotation = this.#targetRotation(monkey);
     }
-    this.view.position.set(monkey.x, monkey.y);
+    if (alpha < 1 && monkey.prevX !== undefined) this.view.position.set(blend(monkey.prevX, monkey.x, alpha), blend(monkey.prevY, monkey.y, alpha));
+    else this.view.position.set(monkey.x, monkey.y);
 
     if (monkey.state === MonkeyState.HANGING) this.facing = monkey.liana.swingDir;
     else if (monkey.state === MonkeyState.AIRBORNE && monkey.vx !== 0) this.facing = Math.sign(monkey.vx);

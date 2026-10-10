@@ -23,6 +23,7 @@ export class Liana {
     this.length = LIANA_LENGTH;
     this.state = LianaState.IDLE;
     this.angle = 0;
+    this.prevAngle = 0; // before the latest step, for drawing between steps
     this.angularVelocity = 0;
     this.swingTime = 0;
     this.swingDir = 1;
@@ -51,6 +52,7 @@ export class Liana {
     this.swingTime = 0;
     this.period = period;
     this.#updateSwing();
+    this.prevAngle = this.angle; // a new swing starts here, not from the old sway
   }
 
   // One monkey lets go; the liana settles once none holds it.
@@ -60,6 +62,7 @@ export class Liana {
   }
 
   step(dt) {
+    this.prevAngle = this.angle;
     if (this.state === LianaState.SWINGING) {
       this.swingTime += dt;
       this.#updateSwing();

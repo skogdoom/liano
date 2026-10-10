@@ -10,6 +10,12 @@ export class Camera {
 
   reset(targetX) {
     this.x = targetX - this.screenX;
+    this.prevX = this.x;
+  }
+
+  // At the start of each sim step: where the camera was, to draw between steps.
+  mark() {
+    this.prevX = this.x;
   }
 
   update(targetX, dt) {

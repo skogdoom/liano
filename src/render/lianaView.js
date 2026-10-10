@@ -2,6 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import { SCREEN_WIDTH, TIP_WARNING_TIME } from '../config.js';
 import { LianaState, SWING_OMEGA } from '../sim/liana.js';
 import { mixSeed, mulberry32 } from '../sim/rng.js';
+import { MAX_STEP_TURN, blend } from './interpolate.js';
 import { leafPoints } from './shapes.js';
 
 // Vine colours: green, and in shared screen golden for player 2's own lianas.
@@ -122,8 +123,9 @@ export class LianaView {
     this.redraws = 0; // for tests and profiling
   }
 
-  // `monkeys` light up the end of the liana they are slipping towards.
-  update(lianas, cameraX, viewWidth = SCREEN_WIDTH, monkeys = []) {
+  // `monkeys` light up the end of the liana they are slipping towards. `alpha`: how far
+  // between the previous sim step and the current one to draw (see interpolate.js).
+  update(lianas, cameraX, viewWidth = SCREEN_WIDTH, monkeys = [], alpha = 1) {
     const margin = 500;
     const seen = new Set();
     const flashing = new Set(monkeys.filter((m) => tipFlashOn(m.tipTime)).map((m) => m.liana));
@@ -141,11 +143,11 @@ export class LianaView {
       const flash = flashing.has(liana);
       const state = drawnState(liana, flash);
       // Swinging: only the turn changes each frame, about the anchor.
-      if (liana.state === LianaState.SWINGING) entry.g.rotation = -liana.angle;
+      if (liana.state === LianaState.SWINGING) entry.g.rotation = -blend(liana.prevAngle, liana.angle, alpha, MAX_STEP_TURN);
       if (state === entry.drawn) continue;
       if (liana.state === LianaState.SWINGING) {
         entry.g.position.set(liana.x, liana.anchorY);
-        entry.g.rotation = -liana.angle;
+        entry.g.rotation = -blend(liana.prevAngle, liana.angle, alpha, MAX_STEP_TURN);
         drawLiana(entry.g.clear(), upright(liana), entry.layout, flash, this.palette);
       } else {
         entry.g.position.set(0, 0);
