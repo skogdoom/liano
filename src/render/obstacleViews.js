@@ -73,7 +73,7 @@ function drawBranch(g, o, rand, hangs, view) {
     const a = -Math.PI / 2 + (i - 2) * 0.45;
     g.poly(leafPoints(right - 30 + i * 4, top + 4, a, 16, 8)).fill(i % 2 ? LEAF_DARK : LEAF);
   }
-  return o.decoration ? addDecoration(view, o) : null;
+  return o.decoration ? addDecoration(view, o, hangs) : null;
 }
 
 // The decorations on a branch (animals) are scenery: not part of the hitbox. Each is placed (and, where
@@ -126,51 +126,84 @@ const SMOOTH = (a, b, x) => {
   return u * u * (3 - 2 * u);
 };
 
-// A snake lying along the top of the branch in lazy S-curves, its head reared up: the
-// neck sways, and now and then the tongue flicks. Faces left or right at random.
-function drawPerchedSnake(rand) {
+// A snake coiled around the branch (about every third) or, on a standing branch, around
+// the trunk it stands on (about half of those). The front of each coil shows as a band
+// slanting across the wood; the tail hangs off the lower end and the head rises from the
+// upper end, swaying, with a flicking tongue. Faces left or right at random.
+const COIL_SPACING = 13;
+
+function drawPerchedSnake(rand, { hangs = false } = {}) {
   const snake = new Container();
-  const dir = rand() < 0.5 ? 1 : -1;
-  snake.scale.x = dir;
-  const cx = -40 + rand() * 40;
-  snake.position.set(cx, branchTop(cx));
+  snake.scale.x = rand() < 0.5 ? 1 : -1;
+  const pole = !hangs && rand() < 0.5;
+  const coils = 3 + Math.floor(rand() * 2);
   const phase = rand() * 6.3;
+  // Local frame: the head faces +x. On the limb the origin is the top of the wood and the
+  // snake runs along it; on the pole it is the trunk's axis and the snake runs down it.
+  let reach;
+  let thick;
+  let at;
+  if (pole) {
+    thick = 26;
+    snake.position.set(-OBSTACLE_HITBOXES.branch[0].w / 2 + 14, 0);
+    const top = 40 + rand() * 40;
+    at = (k) => ({ along: top + (coils - 1 - k) * COIL_SPACING, across: 0 });
+    reach = (along) => ({ x: 0, y: along });
+  } else {
+    const centre = -40 + rand() * 50;
+    // The limb tapers: 24 px at the stub, 14 at the tip.
+    thick = 24 - (10 * (centre + 80)) / 142;
+    snake.position.set(centre, branchTop(centre));
+    at = (k) => ({ along: (k - (coils - 1) / 2) * COIL_SPACING, across: 0 });
+    reach = (along) => ({ x: along, y: 0 });
+  }
   const g = new Graphics();
-  snake.addChild(g);
-  const SEGMENTS = 26;
+  const neck = new Graphics();
+  const head = new Graphics();
+  snake.addChild(g, neck, head);
+  // Where the strand crosses the wood: from one edge to the other, slanting.
+  const band = (k) => {
+    const { along } = at(k);
+    const r = reach(along);
+    if (pole) return { from: [-thick / 2 - 1, r.y], to: [thick / 2 + 1, r.y + 6], bulge: [0, r.y + 4.5] };
+    return { from: [r.x - 4, -1], to: [r.x + 4, thick + 1], bulge: [r.x + 2.5, thick / 2] };
+  };
+  const bands = Array.from({ length: coils }, (_, k) => band(k));
+  // Tail: the lower end tapers away past the last coil on the front.
+  const tailRoot = bands[0].to;
+  const tailTip = pole ? [tailRoot[0] - 4, tailRoot[1] + 16] : [tailRoot[0] - 15, tailRoot[1] + 4];
+  const tailSteps = 8;
+  for (let i = 0; i < tailSteps; i++) {
+    const u0 = i / tailSteps;
+    const u1 = (i + 1) / tailSteps;
+    const pt = (u) => [tailRoot[0] + (tailTip[0] - tailRoot[0]) * u, tailRoot[1] + (tailTip[1] - tailRoot[1]) * u + (pole ? 0 : -3 * Math.sin(u * Math.PI))];
+    const [a, b] = [pt(u0), pt(u1)];
+    g.moveTo(a[0], a[1]).lineTo(b[0], b[1]).stroke({ width: 7 - 5 * u1, color: SNAKE, cap: 'round' });
+  }
+  for (const [k, b] of bands.entries()) {
+    g.moveTo(b.from[0], b.from[1]).quadraticCurveTo(b.bulge[0], b.bulge[1], b.to[0], b.to[1]).stroke({ width: 8, color: SNAKE, cap: 'round' });
+    // Darker scale marks across the band, and a lighter edge where it turns the corner.
+    const mid = [(b.from[0] + b.to[0]) / 2 + (pole ? 0 : 0.5), (b.from[1] + b.to[1]) / 2];
+    g.circle(mid[0], mid[1], 2).fill(SNAKE_DARK);
+    g.circle(k % 2 ? b.from[0] : b.to[0], k % 2 ? b.from[1] : b.to[1], 1.6).fill(SNAKE_DARK);
+  }
+  const neckRoot = bands[coils - 1].from;
   const animate = (t) => {
     const sway = Math.sin(t * 1.5 + phase);
-    const points = [];
-    for (let i = 0; i <= SEGMENTS; i++) {
-      const u = i / SEGMENTS;
-      const rise = 25 * SMOOTH(0.55, 1, u) ** 1.3;
-      const x = -28 + 50 * u + 5 * sway * SMOOTH(0.6, 1, u) ** 2;
-      const y = -4 - 4.5 * Math.sin(u * 11) * (1 - u) * (1 - SMOOTH(0.6, 0.9, u)) - rise;
-      points.push([x, y]);
-    }
-    g.clear();
-    for (let i = 0; i < SEGMENTS; i++) {
-      const u = i / SEGMENTS;
-      const width = 3 + 5 * Math.min(1, u * 2.2) - 1.5 * SMOOTH(0.8, 1, u);
-      const [a, b] = [points[i], points[i + 1]];
-      g.moveTo(a[0], a[1]).lineTo(b[0], b[1]).stroke({ width, color: Math.floor(i / 3) % 2 ? SNAKE_DARK : SNAKE, cap: 'round' });
-    }
-    const [hx, hy] = points[SEGMENTS];
-    const [px, py] = points[SEGMENTS - 3];
-    const angle = Math.atan2(hy - py, hx - px);
-    g.ellipse(hx, hy, 7, 4.8).fill(SNAKE);
-    // Eye and, flicking, the tongue, in the head's own frame.
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    const at = (x, y) => [hx + x * cos - y * sin, hy + x * sin + y * cos];
-    const [ex, ey] = at(2, -1.8);
-    g.circle(ex, ey, 1.4).fill(PUPIL);
+    const [rx, ry] = neckRoot;
+    const hx = pole ? 20 + 2 * sway : rx + 12 + 2 * sway;
+    const hy = pole ? ry - 12 + sway : ry - 18 + 1.5 * sway;
+    neck.clear()
+      .moveTo(rx, ry)
+      .quadraticCurveTo(pole ? rx + 14 : rx - 1, pole ? ry - 2 : ry - 14, hx, hy)
+      .stroke({ width: 7, color: SNAKE, cap: 'round' });
+    head.position.set(hx, hy);
+    head.rotation = -0.35 + 0.08 * sway;
+    head.clear();
+    head.ellipse(2, 0, 7, 4.8).fill(SNAKE);
+    head.circle(4, -1.8, 1.4).fill(PUPIL);
     if ((t * 0.9 + phase) % 1 < 0.14) {
-      const [x0, y0] = at(7, 0);
-      const [x1, y1] = at(13, 0);
-      const [x2, y2] = at(16, -2.5);
-      const [x3, y3] = at(16, 2.5);
-      g.moveTo(x0, y0).lineTo(x1, y1).lineTo(x2, y2).moveTo(x1, y1).lineTo(x3, y3).stroke({ width: 1.2, color: TONGUE });
+      head.moveTo(9, 0).lineTo(15, 0).lineTo(18, -2.5).moveTo(15, 0).lineTo(18, 2.5).stroke({ width: 1.2, color: TONGUE });
     }
   };
   return { part: snake, animate };
@@ -617,8 +650,8 @@ export const DECORATIONS = {
 };
 
 // Adds the decoration the branch carries to `view`; returns its animation.
-function addDecoration(view, o) {
-  const { part, animate } = DECORATIONS[o.decoration](mulberry32(mixSeed(0xa11a, o.gap)));
+function addDecoration(view, o, hangs) {
+  const { part, animate } = DECORATIONS[o.decoration](mulberry32(mixSeed(0xa11a, o.gap)), { hangs });
   view.addChild(part);
   return animate;
 }
