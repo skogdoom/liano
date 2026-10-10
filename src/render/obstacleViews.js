@@ -804,6 +804,8 @@ const MOSS = 0x4f8a3a;
 const MOSS_LIGHT = 0x73ad4c;
 const FLAME = 0xff9a2e;
 const FLAME_CORE = 0xffe27a;
+const GLOW = 0xff8a2a;
+const GLOW_LAYERS = 16;
 const HAZE = 0x183222;
 
 function drawTemple(g, o, rand, hangs, view) {
@@ -885,15 +887,32 @@ function drawTemple(g, o, rand, hangs, view) {
     for (const x of spots) {
       g.poly([x - 11, tierA.dy, x - 7, tierA.dy - 12, x + 7, tierA.dy - 12, x + 11, tierA.dy]).fill(style.deep).rect(x - 13, tierA.dy - 16, 26, 5).fill(GOLD);
     }
+    // The fire is not tinted with the stone (see ObstacleViews.update): it stays bright in the
+    // dark stages and, there, lights up the stone round each brazier with a warm glow
+    // (added to what is behind it), flickering with the flame.
+    const fire = new Container();
+    fire.untinted = true;
+    const glow = new Graphics();
+    glow.blendMode = 'add';
     const flames = new Graphics();
-    view.addChild(flames);
+    fire.addChild(glow, flames);
+    view.addChild(fire);
     const phase = rand() * 6.3;
     animate = (t) => {
       flames.clear();
+      glow.clear();
+      const dark = view.darkness ?? 0;
       spots.forEach((x, i) => {
         const k = 0.5 + 0.5 * Math.sin(t * 9 + phase + i * 2.1);
         const sway = 3 * Math.sin(t * 6 + phase + i);
         const top = tierA.dy - 16 - 20 - 9 * k;
+        if (dark > 0) {
+          const flicker = 0.85 + 0.15 * k;
+          // Many thin layers, so there are no rings to see.
+          for (let j = 0; j < GLOW_LAYERS; j++) {
+            glow.circle(x, tierA.dy - 34, (10 + 4.2 * j) * (0.95 + 0.05 * k)).fill({ color: GLOW, alpha: (0.035 * dark * flicker * (GLOW_LAYERS - j / 2)) / GLOW_LAYERS });
+          }
+        }
         flames.poly([x - 8, tierA.dy - 16, x - 5 + sway * 0.3, top + 13, x + sway, top, x + 5 + sway * 0.3, top + 13, x + 8, tierA.dy - 16]).fill(FLAME);
         flames.poly([x - 4, tierA.dy - 16, x + sway * 0.5, top + 12, x + 4, tierA.dy - 16]).fill(FLAME_CORE);
       });
@@ -1176,6 +1195,12 @@ function buildObstacle(o) {
   return { view, update: (time) => animate(time) };
 }
 
+// How dark the stage is, 0 (day) to 1 (night), from its tint: the brighter the tint, the less.
+export function darknessOf(tint) {
+  const brightness = ((tint >> 16) + ((tint >> 8) & 0xff) + (tint & 0xff)) / (3 * 255);
+  return Math.min(Math.max((0.85 - brightness) / 0.35, 0), 1);
+}
+
 export class ObstacleViews {
   constructor() {
     this.view = new Container();
@@ -1183,10 +1208,11 @@ export class ObstacleViews {
   }
 
   // `time` is the world time (s), for the scenery that moves on its own (the bees).
-  // `tint` is the background's, which the temple takes too: its stone and its ferns would
-  // otherwise stay as bright as by day in the dark stages.
+  // `tint` is the background's, which the temple's stone and ferns take too: they would
+  // otherwise stay as bright as by day in the dark stages. Its fires keep their light.
   update(obstacles, time = 0, tint = 0xffffff) {
     const seen = new Set();
+    const dark = darknessOf(tint);
     for (const o of obstacles) {
       if (!o) continue;
       seen.add(o);
@@ -1196,8 +1222,12 @@ export class ObstacleViews {
         this.views.set(o, entry);
         this.view.addChild(entry.view);
       }
+      if (o.type === ObstacleType.TEMPLE) {
+        entry.view.darkness = dark;
+        // The stone and the greenery take the tint, but not the fire.
+        for (const child of entry.view.children) child.tint = child.untinted ? 0xffffff : tint;
+      }
       entry.update?.(time);
-      if (o.type === ObstacleType.TEMPLE) entry.view.tint = tint;
     }
     for (const [o, entry] of this.views) {
       if (seen.has(o)) continue;
