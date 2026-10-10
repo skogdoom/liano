@@ -21,7 +21,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 | 2P Shared screen | P1 `A`, P2 `L` | 3 each | Higher total score after both are out of lives; equal = draw |
 | 2P Split screen | P1 `A`, P2 `L` | 3 each | Same as shared |
 
-- **Title screen.** A mode picker: keys `1` / `2` / `3` select a mode, and Space or Enter starts it. On a touch device the picker is hidden and a tap starts 1P: the 2P modes are keyboard-only. The title shows the controls for the selected mode ("SPACE · let go", or "P1 A · P2 L · let go") and "P pause · Esc menu · G slipping" with a keyboard.
+- **Title screen.** A mode picker: keys `1` / `2` / `3` select a mode, and Space or Enter starts it. On a touch device the picker is hidden and a tap starts 1P: the 2P modes are keyboard-only. The title shows the controls for the selected mode ("SPACE · let go", or "P1 A · P2 L · let go") and "P pause · Esc menu" with a keyboard, and between them one line with the two settings, "H · Lives: off" and "G · Slipping: off" (gold when on; in the 2P modes "Lives: on" dimmed). The panel has as much room below its last line as above its first (35 px).
 - **During a run:** `P` pauses and resumes; `Esc` ends the run and goes back to the title screen (in 1P the run's score still counts for the best).
 - **Results:** after a 400 ms input lock, Space or Enter plays again in the same mode, `Esc` goes to the title screen, and `1` / `2` / `3` go to it with that mode selected.
 - **Other keys:**
