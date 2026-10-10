@@ -78,7 +78,7 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 
 **Static:** branch, thorn bush, rock, beehive (BEEHIVE_SHARE, 8 % of the static gaps; the other three equally likely). A random height in OBSTACLE_Y_RANGE, horizontally centred, rerolled until the gap is passable and clear of both neighbouring lianas' swept areas.
 
-**Branch decorations.** About one branch in five (BRANCH_DECORATION_CHANCE, 0.2) carries a decoration: a bird, a snake or a hanging monkey, picked at random. It is scenery: the obstacle is the same branch with the same hitbox, so nothing about passability or difficulty changes, and a flight can pass through the decoration unharmed. Whether a branch has one, and which, depends only on (seed, gap) with its own random stream, and rides along with the obstacle's data to the worker and back. A branch is about one gap in thirty, so a decoration shows about once or twice in a run.
+**Branch decorations.** About one branch in seven (BRANCH_DECORATION_CHANCE, 0.14) carries a decoration: a bird, a snake or a hanging monkey, picked at random. It is scenery: the obstacle is the same branch with the same hitbox, so nothing about passability or difficulty changes, and a flight can pass through the decoration unharmed. Whether a branch has one, and which, depends only on (seed, gap) with its own random stream, and rides along with the obstacle's data to the worker and back. A branch is about one gap in thirty, so a decoration shows about once or twice in a run.
 
 **Moving** (from obstacle MOVING_FROM, in each stage's share). Each has a deterministic position with period P (MOVING_PERIOD_RANGE), driven by world time (counted in whole sim steps) plus a seeded phase, so the solver matches the world exactly. It stays in its own gap and its whole path stays clear of both swings, so a hanging monkey is never hit:
 - **Spider:** drops and climbs on a thread from the canopy at the gap centre.
@@ -102,14 +102,14 @@ To test whether slipping helps the pacing, `G` turns it off and on, anywhere (ti
 
 Stages are keyed on **obstacle index**, not score, so banana points don't speed up difficulty and in shared screen both players meet the same level. A stage starts when a monkey grabs the liana before the stage's first obstacle (obstacle #i is in gap i). A banner ("Stage 2 · Late afternoon") fades in low in the band, and the background tint eases over 2.5 s (day → late afternoon → dusk → night). A new run starts over at day.
 
-The day goes on past Stage 4: the stage number and the time of day keep counting every STAGE_LENGTH_AFTER (20) obstacles, from obstacle 51 on: Night 51–70, Dawn 71–90, then Day again, Late afternoon, Dusk, Night, Dawn, and so on, for as long as the run lasts ("Stage 6 · Day"). Difficulty goes on rising subtly each of these stages too, up to a limit: the shortest release window shrinks by LATER_WINDOW_STEP_MS (2 ms) per stage, from 60 ms down to LATER_MIN_WINDOW_MS (40 ms, about 5 sim steps, reached at Stage 14, obstacle 251), and the moving share rises by LATER_MOVING_STEP (4 points) per stage, from 70 % up to LATER_MOVING_MAX (90 %, Stage 9, obstacle 151). Obstacle scale stays at 1.3: at that size a branch already fits at only one height range. From Stage 14 on only the sky goes on. Both levers are checked at generation like any stage's, so every gap stays passable; the window table is unchanged, since the stage's minimum is applied at lookup.
+The day goes on past Stage 4: the stage number and the time of day keep counting every STAGE_LENGTH_AFTER (20) obstacles, from obstacle 51 on: Night 51–70, Dawn 71–90, then Day again, Late afternoon, Dusk, Night, Dawn, and so on, for as long as the run lasts ("Stage 6 · Day"). Difficulty goes on rising subtly each of these stages too, up to a limit: the shortest release window shrinks by LATER_WINDOW_STEP_MS (2 ms) per stage, from 60 ms down to LATER_MIN_WINDOW_MS (40 ms, about 5 sim steps, reached at Stage 14, obstacle 251), and the moving share rises by LATER_MOVING_STEP (4 points) per stage, from 55 % up to LATER_MOVING_MAX (75 %, Stage 9, obstacle 151). Obstacle scale stays at 1.3: at that size a branch already fits at only one height range. From Stage 14 on only the sky goes on. Both levers are checked at generation like any stage's, so every gap stays passable; the window table is unchanged, since the stage's minimum is applied at lookup.
 
 | Stage | Obstacles | Min release window | Moving share | Obstacle scale |
 |---|---|---|---|---|
-| 1 | 1–15 | 90 ms | 0% for 1–5, then 15% | 1.00 |
-| 2 | 16–30 | 80 ms | 25% | 1.10 |
-| 3 | 31–50 | 70 ms | 50% | 1.20 |
-| 4 | 51+ | 60 ms | 70% | 1.30 |
+| 1 | 1–15 | 90 ms | 0% for 1–5, then 12% | 1.00 |
+| 2 | 16–30 | 80 ms | 20% | 1.10 |
+| 3 | 31–50 | 70 ms | 40% | 1.20 |
+| 4 | 51+ | 60 ms | 55% | 1.30 |
 
 Scaled obstacles must still pass the swing-clearance rule; heights that fail are rerolled. At scale 1.3 a branch fits only at y 371–375, so stage-4 branches almost always sit at the bottom. The tint multiplies the background only (sky, parallax, canopy and floor), so lianas, obstacles and the monkeys stay readable at night.
 
@@ -250,7 +250,7 @@ All sounds are synthesized with the Web Audio API at runtime; no audio files.
 | STAGES | see Difficulty stages | First obstacle, shortest window, moving share and obstacle scale per stage |
 | STAGE_LENGTH_AFTER | 20 obstacles | After the last stage, the stage number (the time of day) counts on this often |
 | LATER_WINDOW_STEP_MS, LATER_MIN_WINDOW_MS | 2 ms per stage, down to 40 ms | The shortest release window of the stages after the last: 60 ms at Stage 4, 40 ms from Stage 14 (about 5 steps) |
-| LATER_MOVING_STEP, LATER_MOVING_MAX | +4 points per stage, up to 90 % | The moving share of those stages: 70 % at Stage 4, 90 % from Stage 9 |
+| LATER_MOVING_STEP, LATER_MOVING_MAX | +4 points per stage, up to 75 % | The moving share of those stages: 55 % at Stage 4, 75 % from Stage 9 |
 | MOVING_FROM | 6 | Obstacles 1–5 are always static |
 | MOVING_PERIOD_RANGE | 1.5–3.0 s | |
 | SPIDER_LOW_RANGE, SPIDER_TRAVEL_RANGE | 175–212, 80–150 px | Lowest point and climb |
@@ -506,7 +506,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 
 **25. The day goes on.** The stage number and the sky keep cycling after Stage 4: night, dawn, day, late afternoon, dusk, night, ... every 20 obstacles, and the difficulty keeps rising subtly up to a limit (see Difficulty stages).
 - [x] `stageFor` counts on every STAGE_LENGTH_AFTER obstacles past the last stage; the world raises a `stage` event for each
-- [x] Each such stage has a 2 ms shorter shortest window (down to 40 ms) and 4 points more moving obstacles (up to 90 %), at Stage 4's obstacle scale; stages up to well past the limit are checked passable, boosted swings included (tested)
+- [x] Each such stage has a 2 ms shorter shortest window (down to 40 ms) and 4 points more moving obstacles (up to 75 %), at Stage 4's obstacle scale; stages up to well past the limit are checked passable, boosted swings included (tested)
 - [x] A dawn tint and name; the tint and banner follow the stage number modulo the five times of day
 - [x] The window table is unchanged; generation stays cheap (about 1.5 ms per obstacle on average in the late stages)
 

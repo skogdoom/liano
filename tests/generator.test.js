@@ -147,7 +147,7 @@ describe('obstacle generation', () => {
     expect(counts[ObstacleType.BEEHIVE] / statics).toBeGreaterThan(BEEHIVE_SHARE - 0.05);
     expect(counts[ObstacleType.BEEHIVE] / statics).toBeLessThan(BEEHIVE_SHARE + 0.05);
     // The bat only flies at night, one stage in five.
-    for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BAT ? 100 : 400);
+    for (const t of MOVING_TYPES) expect(counts[t]).toBeGreaterThan(t === ObstacleType.BAT ? 80 : 250);
   });
 
   it('carries a decoration on some branches, for show, and never on anything else', () => {
@@ -267,7 +267,7 @@ describe('obstacle generation', () => {
     const share = (from, to) => {
       let moving = 0;
       let total = 0;
-      for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      for (let seed = 1; seed <= 24; seed++) {
         for (let gap = from; gap <= to; gap++, total++) if (createObstacle(seed, gap).moving) moving++;
       }
       return moving / total;

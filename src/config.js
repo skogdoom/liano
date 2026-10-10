@@ -129,7 +129,7 @@ export const BEEHIVE_SHARE = 0.08;
 
 // Some branches (this share of them) carry a decoration, for show: see BRANCH_DECORATIONS in
 // obstacle.js. The decoration is not part of the hitbox.
-export const BRANCH_DECORATION_CHANCE = 0.2;
+export const BRANCH_DECORATION_CHANCE = 0.14;
 
 // Blue bird: flies up and down at the gap centre, in free air: in the high band (its
 // lowest point in BLUE_BIRD_HIGH, over a flight of BLUE_BIRD_HIGH_TRAVEL) or the low band
@@ -147,20 +147,20 @@ export const MIN_RELEASE_WINDOW_MS = 90;
 // by score. Each has its shortest release window, share of moving obstacles and
 // obstacle scale.
 export const STAGES = [
-  { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.15, scale: 1.0 },
-  { first: 16, minWindowMs: 80, movingShare: 0.25, scale: 1.1 },
-  { first: 31, minWindowMs: 70, movingShare: 0.5, scale: 1.2 },
-  { first: 51, minWindowMs: 60, movingShare: 0.7, scale: 1.3 },
+  { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.12, scale: 1.0 },
+  { first: 16, minWindowMs: 80, movingShare: 0.2, scale: 1.1 },
+  { first: 31, minWindowMs: 70, movingShare: 0.4, scale: 1.2 },
+  { first: 51, minWindowMs: 60, movingShare: 0.55, scale: 1.3 },
 ];
 // From the last stage's first obstacle on, the stage number (and the time of day) counts
 // on every STAGE_LENGTH_AFTER obstacles. Each stage after the last then keeps the last
 // one's obstacle scale but asks a little more: a shortest release window 2 ms shorter
-// (down to 40 ms, about 5 sim steps) and 4 points more moving obstacles (up to 90 %).
+// (down to 40 ms, about 5 sim steps) and 4 points more moving obstacles (up to 75 %).
 export const STAGE_LENGTH_AFTER = 20;
 export const LATER_WINDOW_STEP_MS = 2;
 export const LATER_MIN_WINDOW_MS = 40;
 export const LATER_MOVING_STEP = 0.04;
-export const LATER_MOVING_MAX = 0.9;
+export const LATER_MOVING_MAX = 0.75;
 // The first obstacles are always static: moving ones start at this obstacle index.
 export const MOVING_FROM = 6;
 
