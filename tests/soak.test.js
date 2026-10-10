@@ -48,7 +48,7 @@ describe('soak', () => {
     expect(limits.obstacles).toBeLessThanOrEqual(MAX_LIANAS);
     expect(limits.events).toBeLessThanOrEqual(3);
     expect(game.events).toEqual([]);
-  }, 60000);
+  }, 180_000); // about 43 s alone; the rest of the suite runs beside it in CI
 
   it('restarts 20 times without carrying anything over', () => {
     const game = new Game();
