@@ -189,9 +189,9 @@ export const MIN_RELEASE_WINDOW_MS = 90;
 // obstacle scale.
 export const STAGES = [
   { first: 1, minWindowMs: MIN_RELEASE_WINDOW_MS, movingShare: 0.12, scale: 1.0, grades: [0.65, 0.35, 0, 0], high: 0.5 },
-  { first: 16, minWindowMs: 80, movingShare: 0.2, scale: 1.1, grades: [0.4, 0.4, 0.2, 0], high: 0.5 },
-  { first: 31, minWindowMs: 70, movingShare: 0.4, scale: 1.2, grades: [0.25, 0.35, 0.4, 0], high: 0.5 },
-  { first: 51, minWindowMs: 60, movingShare: 0.55, scale: 1.3, grades: [0.2, 0.3, 0.3, 0.2], high: null },
+  { first: 16, minWindowMs: 76, movingShare: 0.26, scale: 1.1, grades: [0.3, 0.4, 0.3, 0], high: 0.5 },
+  { first: 31, minWindowMs: 64, movingShare: 0.46, scale: 1.2, grades: [0.15, 0.3, 0.55, 0], high: 0.5 },
+  { first: 51, minWindowMs: 54, movingShare: 0.6, scale: 1.3, grades: [0.1, 0.25, 0.3, 0.35], high: null },
 ];
 
 // Obstacles above this height hang from the canopy ("high"); lower ones stand on the
@@ -211,8 +211,8 @@ export const GRADE_BOUNDS = [0.12, 0.19, 0.27];
 // obstacles wait for the stage that lists them. The stages after the last move on
 // from its odds towards LATER_GRADE_ODDS, over LATER_GRADE_STAGES stages: all four grades
 // stay in play, the harder ones get likelier.
-export const LATER_GRADE_ODDS = [0.1, 0.2, 0.3, 0.4];
-export const LATER_GRADE_STAGES = 8;
+export const LATER_GRADE_ODDS = [0.05, 0.15, 0.3, 0.5];
+export const LATER_GRADE_STAGES = 6;
 // A moving obstacle is accepted with a grade within one of the one a gap aims for, else
 // the gap gets a static one. Only the first MOVING_GRADED_TRIES candidates that clear the
 // solver are graded (grading a moving obstacle costs a few ms), the closest wins.
@@ -225,13 +225,13 @@ export const GRADE_ARRIVAL_STEP = 4;
 export const GRADE_RADIUS_STEP = 2;
 // From the last stage's first obstacle on, the stage number (and the time of day) counts
 // on every STAGE_LENGTH_AFTER obstacles. Each stage after the last then keeps the last
-// one's obstacle scale but asks a little more: a shortest release window 2 ms shorter
-// (down to 40 ms, about 5 sim steps) and 4 points more moving obstacles (up to 75 %).
+// one's obstacle scale but asks a little more: a shortest release window 3 ms shorter
+// (down to 40 ms, about 5 sim steps) and 5 points more moving obstacles (up to 80 %).
 export const STAGE_LENGTH_AFTER = 20;
-export const LATER_WINDOW_STEP_MS = 2;
+export const LATER_WINDOW_STEP_MS = 3;
 export const LATER_MIN_WINDOW_MS = 40;
-export const LATER_MOVING_STEP = 0.04;
-export const LATER_MOVING_MAX = 0.75;
+export const LATER_MOVING_STEP = 0.05;
+export const LATER_MOVING_MAX = 0.8;
 // The first obstacles are always static: moving ones start at this obstacle index.
 export const MOVING_FROM = 6;
 
