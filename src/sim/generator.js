@@ -18,12 +18,14 @@ import {
   BLUE_BIRD_BOB,
   BANANA_CHANCE,
   BRANCH_DECORATION_CHANCE,
+  BRANCH_DECORATION_CHANCE_NIGHT,
+  NIGHT_DECORATION_SHARE,
   BEEHIVE_SHARE,
   ENTRY_RADII,
 } from '../config.js';
 import { Banana } from './banana.js';
 import { Liana } from './liana.js';
-import { Obstacle, ObstacleType, STATIC_TYPES, branchDecorationsFor } from './obstacle.js';
+import { DAY_DECORATIONS, NIGHT_DECORATIONS, Obstacle, ObstacleType, STATIC_TYPES } from './obstacle.js';
 import {
   emptyGapFlights,
   flightHits,
@@ -104,9 +106,11 @@ const DECORATION_SALT = 0xa91a;
 
 export function branchDecorationFor(seed, gap) {
   const rand = mulberry32(mixSeed(seed ^ DECORATION_SALT, gap));
-  if (rand() >= BRANCH_DECORATION_CHANCE) return null;
-  // Picked from what the gap's time of day allows (some decorations are for the night).
-  const choices = branchDecorationsFor(timeOfDayFor(gap) === TimeOfDay.NIGHT);
+  const night = timeOfDayFor(gap) === TimeOfDay.NIGHT;
+  if (rand() >= (night ? BRANCH_DECORATION_CHANCE_NIGHT : BRANCH_DECORATION_CHANCE)) return null;
+  // The night ones only come out at night, and then a share of the branches that carry a
+  // decoration carry one of them.
+  const choices = night && rand() < NIGHT_DECORATION_SHARE ? NIGHT_DECORATIONS : DAY_DECORATIONS;
   return choices[Math.floor(rand() * choices.length)];
 }
 

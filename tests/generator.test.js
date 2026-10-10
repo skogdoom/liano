@@ -16,12 +16,12 @@ import {
 import { mulberry32, mixSeed } from '../src/sim/rng.js';
 import {
   BRANCH_DECORATIONS,
+  DAY_DECORATIONS,
   NIGHT_DECORATIONS,
   Obstacle,
   ObstacleType,
   STATIC_TYPES,
   MOVING_TYPES,
-  branchDecorationsFor,
 } from '../src/sim/obstacle.js';
 import { timeOfDayFor, TimeOfDay } from '../src/sim/stages.js';
 import { isPassable } from '../src/sim/windowTable.js';
@@ -42,6 +42,8 @@ import {
   BLUE_BIRD_LOW,
   BLUE_BIRD_BOB,
   BRANCH_DECORATION_CHANCE,
+  BRANCH_DECORATION_CHANCE_NIGHT,
+  NIGHT_DECORATION_SHARE,
   BEEHIVE_SHARE,
 } from '../src/config.js';
 
@@ -179,27 +181,38 @@ describe('obstacle generation', () => {
       }
     }
     expect(branches).toBeGreaterThan(100);
-    expect(decorated / branches).toBeGreaterThan(BRANCH_DECORATION_CHANCE - 0.1);
-    expect(decorated / branches).toBeLessThan(BRANCH_DECORATION_CHANCE + 0.1);
+    expect(decorated).toBeGreaterThan(5);
   });
 
-  it('keeps the night decorations for the night', () => {
-    expect(branchDecorationsFor(true)).toEqual(BRANCH_DECORATIONS);
-    expect(branchDecorationsFor(false)).toEqual(BRANCH_DECORATIONS.filter((d) => !NIGHT_DECORATIONS.has(d)));
-    expect(NIGHT_DECORATIONS.size).toBeGreaterThan(0);
+  it('keeps the night decorations for the night, and shows more decorations then', () => {
+    expect(NIGHT_DECORATIONS.length).toBeGreaterThan(0);
+    expect([...DAY_DECORATIONS, ...NIGHT_DECORATIONS].sort()).toEqual([...BRANCH_DECORATIONS].sort());
+    const total = { night: 0, day: 0 };
+    const decorated = { night: 0, day: 0 };
     const seen = { night: new Set(), day: new Set() };
+    let nightKind = 0;
     for (const seed of [1, 2, 3, 4, 5, 6]) {
       for (let gap = 1; gap <= 1500; gap++) {
         const d = branchDecorationFor(seed, gap);
+        const when = timeOfDayFor(gap) === TimeOfDay.NIGHT ? 'night' : 'day';
+        total[when]++;
         if (!d) continue;
-        const night = timeOfDayFor(gap) === TimeOfDay.NIGHT;
-        seen[night ? 'night' : 'day'].add(d);
-        if (!night) expect(NIGHT_DECORATIONS.has(d)).toBe(false);
+        decorated[when]++;
+        seen[when].add(d);
+        if (NIGHT_DECORATIONS.includes(d)) {
+          expect(when).toBe('night');
+          nightKind++;
+        }
       }
     }
-    // By night they all turn up; by day only the others.
+    // By day, the usual odds and none of the night ones; by night, more branches carry one
+    // and a share of those carry a night one.
+    expect(decorated.day / total.day).toBeCloseTo(BRANCH_DECORATION_CHANCE, 1);
+    expect(Math.abs(decorated.day / total.day - BRANCH_DECORATION_CHANCE)).toBeLessThan(0.02);
+    expect(Math.abs(decorated.night / total.night - BRANCH_DECORATION_CHANCE_NIGHT)).toBeLessThan(0.04);
+    expect(Math.abs(nightKind / decorated.night - NIGHT_DECORATION_SHARE)).toBeLessThan(0.05);
     expect([...seen.night].sort()).toEqual([...BRANCH_DECORATIONS].sort());
-    expect([...seen.day].sort()).toEqual(branchDecorationsFor(false).slice().sort());
+    expect([...seen.day].sort()).toEqual([...DAY_DECORATIONS].sort());
   });
 
   it('hangs beehives among the static obstacles, at heights that can be passed', () => {

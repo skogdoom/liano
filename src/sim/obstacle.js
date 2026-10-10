@@ -50,13 +50,9 @@ export const BRANCH_DECORATIONS = [
   BranchDecoration.FLOWERS,
   BranchDecoration.COCONUTS,
 ];
-// Some only come out at night.
-export const NIGHT_DECORATIONS = new Set([BranchDecoration.HANGING_BAT, BranchDecoration.OWL]);
-
-// What a branch can carry: everything at night, and by day all but the night ones.
-export function branchDecorationsFor(night) {
-  return night ? BRANCH_DECORATIONS : BRANCH_DECORATIONS.filter((d) => !NIGHT_DECORATIONS.has(d));
-}
+// Some only come out at night (see branchDecorationFor in generator.js).
+export const NIGHT_DECORATIONS = [BranchDecoration.HANGING_BAT, BranchDecoration.OWL];
+export const DAY_DECORATIONS = BRANCH_DECORATIONS.filter((d) => !NIGHT_DECORATIONS.includes(d));
 
 const scaledHitboxes = new Map();
 

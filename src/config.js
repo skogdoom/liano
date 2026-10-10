@@ -130,6 +130,12 @@ export const BEEHIVE_SHARE = 0.08;
 // Some branches (this share of them) carry a decoration, for show: see BRANCH_DECORATIONS in
 // obstacle.js. The decoration is not part of the hitbox.
 export const BRANCH_DECORATION_CHANCE = 0.14;
+// The night stages are few and far between, and a branch is only about one gap in seven
+// in them, so by day's odds the night animals (the hanging bat and the owl) would almost
+// never show. At night more branches carry a decoration, and this share of them one of the
+// night ones.
+export const BRANCH_DECORATION_CHANCE_NIGHT = 0.4;
+export const NIGHT_DECORATION_SHARE = 0.5;
 
 // Blue bird: flies up and down at the gap centre, in free air: in the high band (its
 // lowest point in BLUE_BIRD_HIGH, over a flight of BLUE_BIRD_HIGH_TRAVEL) or the low band
