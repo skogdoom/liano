@@ -31,8 +31,9 @@ export const MOVING_TYPES = [
 export const BranchAnimal = Object.freeze({
   BIRD: 'bird',
   SNAKE: 'snake',
+  MONKEY: 'monkey',
 });
-export const BRANCH_ANIMALS = [BranchAnimal.BIRD, BranchAnimal.SNAKE];
+export const BRANCH_ANIMALS = [BranchAnimal.BIRD, BranchAnimal.SNAKE, BranchAnimal.MONKEY];
 
 const scaledHitboxes = new Map();
 

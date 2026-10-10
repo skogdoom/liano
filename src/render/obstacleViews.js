@@ -177,7 +177,64 @@ function drawPerchedSnake(rand) {
   return { part: snake, animate };
 }
 
-export const ANIMALS = { bird: drawPerchedBird, snake: drawPerchedSnake };
+const FUR = 0x7d7468;
+const FUR_DARK = 0x574f45;
+const FACE = 0xe6d0b2;
+
+// A grey monkey hanging from the underside of the branch by its hands, swaying like a
+// pendulum, its legs swinging and its tail curling; now and then it blinks. Mirrored at
+// random, so its tail curls out to the left or right.
+function drawHangingMonkey(rand) {
+  const monkey = new Container();
+  const [box] = OBSTACLE_HITBOXES.branch;
+  const cx = -32 + rand() * 36;
+  monkey.position.set(cx, box.dy + box.h - 1);
+  monkey.scale.x = rand() < 0.5 ? 1 : -1;
+  const phase = rand() * 6.3;
+  // Everything hangs from the hands at (0, 0): the pendulum swings about that point.
+  const swing = new Container();
+  monkey.addChild(swing);
+  const arms = new Graphics();
+  for (const side of [-1, 1]) arms.moveTo(side * 4, 1).lineTo(side * 7.5, 18).stroke({ width: 4.2, color: FUR, cap: 'round' });
+  for (const side of [-1, 1]) arms.circle(side * 4, 1, 2.6).fill(FUR_DARK);
+  const tail = new Graphics();
+  const legs = new Graphics();
+  const body = new Graphics();
+  body.ellipse(0, 36, 9.5, 12.5).fill(FUR);
+  body.ellipse(0, 38, 5.8, 8).fill(FACE);
+  body.circle(-8.2, 19, 3).fill(FUR_DARK).circle(8.2, 19, 3).fill(FUR_DARK);
+  body.circle(0, 21, 8.4).fill(FUR);
+  body.ellipse(0, 22.5, 5.4, 4.8).fill(FACE);
+  const eyes = new Graphics();
+  swing.addChild(tail, legs, body, arms, eyes);
+  const animate = (t) => {
+    swing.rotation = 0.13 * Math.sin(t * 1.7 + phase);
+    // Legs kick out and back, out of step.
+    legs.clear();
+    for (const side of [-1, 1]) {
+      const k = 0.35 * Math.sin(t * 2.6 + phase + (side > 0 ? 1.6 : 0));
+      const x = side * 5;
+      legs.moveTo(x, 44).lineTo(x + side * 2 + 9 * Math.sin(k), 44 + 11 * Math.cos(k)).stroke({ width: 4.2, color: FUR, cap: 'round' });
+    }
+    // A tail that curls out and up, uncurling a little as it swings.
+    const curl = 3 * Math.sin(t * 2.2 + phase);
+    tail.clear();
+    tail
+      .moveTo(5, 45)
+      .bezierCurveTo(16 + curl, 47, 21 + curl, 36, 14 - curl, 31)
+      .stroke({ width: 3.4, color: FUR_DARK, cap: 'round' });
+    // Eyes, shut for a moment every few seconds.
+    const blink = (t * 0.33 + phase) % 1 < 0.04;
+    eyes.clear();
+    for (const side of [-1, 1]) {
+      if (blink) eyes.moveTo(side * 3.6 - 1.4, 20.5).lineTo(side * 3.6 + 1.4, 20.5).stroke({ width: 1, color: PUPIL });
+      else eyes.circle(side * 3.6, 20.5, 1.5).fill(PUPIL);
+    }
+  };
+  return { part: monkey, animate };
+}
+
+export const ANIMALS = { bird: drawPerchedBird, snake: drawPerchedSnake, monkey: drawHangingMonkey };
 
 // Adds the animal the branch carries to `view`; returns its animation.
 function addAnimal(view, o) {

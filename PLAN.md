@@ -346,6 +346,7 @@ Simple stylized vector art drawn in code with Pixi `Graphics`. No image assets.
   - Branch: brown limb with a leaf tuft, and sometimes an animal (see Branch animals):
     - Perched bird: a small brown sparrow with a cream belly, on top of the limb, facing left or right at random; every couple of seconds it dips its head to peck, and its tail flicks.
     - Snake: a green snake with darker bands lying along the top of the limb in lazy S-curves, its head reared up; the neck sways and now and then the tongue flicks.
+    - Hanging monkey: a small grey monkey hanging from the underside of the limb by its hands, swaying like a pendulum, with its legs swinging, its tail curling out to one side and an occasional blink. It hangs below the limb, clear of the vines it hangs from.
   - Thorn bush: dark blob with thorns.
   - Rock: grey polygon on a small ledge.
   - Beehive: a teardrop paper nest in gold bands with a dark entrance, hanging from a vine, or from an arm off a trunk when it is low (its hitbox is three stacked circles, widest in the middle). A handful of bees buzz around it; they are scenery, and the animation takes the world time, so they stop while the game is paused.
