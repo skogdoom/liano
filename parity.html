@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Liano parity</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      body {
+        margin: 24px;
+        background: #10261a;
+        color: #f4e7c5;
+        font: 15px sans-serif;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      h2 {
+        font-size: 17px;
+        margin-bottom: 4px;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        margin-top: 4px;
+        opacity: 0.8;
+      }
+      canvas {
+        display: block;
+        border: 1px solid #3a6d20;
+      }
+      .pass {
+        color: #8fe08f;
+      }
+      .fail {
+        color: #ff8c6b;
+      }
+      .offscreen {
+        position: absolute;
+        left: -10000px;
+        top: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Liano: Pixi and Phaser, side by side</h1>
+    <p>Each scenario drawn by both versions of the game, and where their pictures differ. Dev only (see PHASER_PLAN.md, M0).</p>
+    <div id="scenarios"></div>
+    <script type="module" src="/src/parity/main.js"></script>
+  </body>
+</html>
