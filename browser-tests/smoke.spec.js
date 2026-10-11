@@ -23,16 +23,16 @@ async function started(page, errors) {
   await expect(page.locator('html')).toHaveAttribute('data-ready', 'true');
 }
 
-for (const [label, query, renderer] of [
+for (const [label, query, engine] of [
   ['default', '', 'pixi'],
-  ['Pixi', '?renderer=pixi', 'pixi'],
-  ['Phaser', '?renderer=phaser', 'phaser'],
+  ['Pixi', '?engine=pixi', 'pixi'],
+  ['Phaser', '?engine=phaser', 'phaser'],
 ]) {
   test(`the ${label} version of the production build starts without errors`, async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto(PREVIEW + query);
     await started(page, errors);
-    await expect(page.locator('html')).toHaveAttribute('data-renderer', renderer);
+    await expect(page.locator('html')).toHaveAttribute('data-engine', engine);
     await expect(page.locator('canvas')).toHaveCount(1);
     await expect(page.locator('#fatal')).not.toHaveClass(/shown/);
     expect(errors).toEqual([]);
@@ -41,7 +41,7 @@ for (const [label, query, renderer] of [
 
 test('the Pixi version plays: Space starts a run', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?renderer=pixi`);
+  await page.goto(`${DEV}?engine=pixi`);
   await started(page, errors);
   expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
   await page.keyboard.press('Space');

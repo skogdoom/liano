@@ -58,7 +58,7 @@ How Pixi is used today (counted in `src/`): 241 `fill`, 76 `poly`, 71 `circle`, 
 
 New code goes in `src/phaser/`, next to the untouched `src/render/`, until Pixi is removed (M8).
 
-**Two playable versions until M8.** `?renderer=pixi` and `?renderer=phaser` pick the version. Each is a complete game: the Pixi version keeps today's renderer, input, fullscreen, pause and sound player unchanged; the Phaser version uses Phaser for all of them. Both share the simulation, the layout, the loop and the sound recipes. Each version is loaded with a dynamic import, so a page downloads only its own library. Pixi is the default until the end of M7, then Phaser, with Pixi one URL parameter away until M8 removes it. Master (and the live game) stays on Pixi throughout, since `phaser` is merged into it only at the end.
+**Two playable versions until M8.** `?engine=pixi` and `?engine=phaser` pick the version. Each is a complete game: the Pixi version keeps today's renderer, input, fullscreen, pause and sound player unchanged; the Phaser version uses Phaser for all of them. Both share the simulation, the layout, the loop and the sound recipes. Each version is loaded with a dynamic import, so a page downloads only its own library. Pixi is the default until the end of M7, then Phaser, with Pixi one URL parameter away until M8 removes it. Master (and the live game) stays on Pixi throughout, since `phaser` is merged into it only at the end.
 
 ```
 Phaser.Game (WebGL, our canvas, audio on, delta smoothing off)
@@ -167,14 +167,14 @@ Sizes are relative: S (about a day of focused work), M (a few days), L (a week o
 ### M0. Groundwork and the parity tool (M)
 
 - Add `phaser@4.2.1` next to `pixi.js`; Vite config; report the bundle, try the custom entries and record what each saves.
-- Create `src/phaser/` and the `?renderer=pixi|phaser` switch, each version behind a dynamic import; the game still defaults to Pixi.
+- Create `src/phaser/` and the `?engine=pixi|phaser` switch, each version behind a dynamic import; the game still defaults to Pixi.
 - **Parity tool**: a dev-only page that renders the same scenario with Pixi and with Phaser and reports a pixel diff, so "identical" is measured, not judged by eye. Scenarios come from deterministic states (fixed seed, stopped ticker, fixed time): title in each mode and settings combination, each stage and time of day, a gallery of every obstacle kind, decoration and temple variant, every liana state, monkey poses, HUD with hearts and bananas, split and shared panes, pause, results, the debug view. The tool goes with Pixi in M8.
 - CI: a Playwright job (Chromium only) for the smoke tests of both versions, kept separate from the fast `npm test`.
 - Define the test split for views: for each of the ~11 Pixi-touching test files (hud/banana, branchDecorations, debugOverlay, hearts, interpolate, lianaView, shadow, swing, stageViews, templeFire, split) list which assertions the Phaser version's view-models must also cover. The Pixi tests themselves stay as they are until M8.
-- **Done when:** `?renderer=phaser` boots a blank scene, `?renderer=pixi` (and no parameter) plays the game as today, the parity page runs one scenario both ways, and CI runs a smoke test of each.
+- **Done when:** `?engine=phaser` boots a blank scene, `?engine=pixi` (and no parameter) plays the game as today, the parity page runs one scenario both ways, and CI runs a smoke test of each.
 
 **M0 report (done, version 3.0.0-dev.1).**
-- **The switch.** `index.html` loads `src/boot.js`, which reads `?renderer` (`src/renderer.js`, unit tested) and imports `src/main.js` (the Pixi version, unchanged) or `src/phaser/main.js`. The Phaser version so far is a placeholder scene that names itself ("Phaser 4.2.1: not playable yet"), with Phaser's sound turned off until M3 and its frame-time smoothing off. `boot.js` marks the page (`data-renderer`, `data-ready`) for the browser tests and shows the error screen if a version fails to load.
+- **The switch.** `index.html` loads `src/boot.js`, which reads `?engine` (`src/engine.js`, unit tested) and imports `src/main.js` (the Pixi version, unchanged) or `src/phaser/main.js`. The Phaser version so far is a placeholder scene that names itself ("Phaser 4.2.1: not playable yet"), with Phaser's sound turned off until M3 and its frame-time smoothing off. `boot.js` marks the page (`data-engine`, `data-ready`) for the browser tests and shows the error screen if a version fails to load.
 - **Download.** Each version is its own chunk, so a page loads only its own library. The Pixi version downloads what it did before (its main chunk 177 KB, 56 KB gzipped, plus Pixi's chunks). The Phaser version's chunk is 1,375 KB, **358 KB gzipped**: Phaser's own ESM build, all of it.
 - **Custom Phaser builds** (Phaser's source entries built with Vite, gzipped at level 9): the ESM build as shipped 352 KB; `src/phaser.js` 347 KB; `src/phaser-no-physics.js` 302 KB; no physics and WebGL only **296 KB, 56 KB (16 %) less**. The last one boots and draws in Chromium. It needs two build tweaks: Node's `global` mapped to `globalThis`, and a transform that replaces Phaser's feature flags (`typeof CANVAS_RENDERER` and the like) the way its webpack build does. It is left for M7, since the dev server's dependency pre-bundling needs the same transform.
 - **Parity page** (`parity.html`, dev only, `src/parity/`): draws each scenario with both libraries at a pixel ratio of 1 and shows the two pictures and their differences. The diff (`src/parity/diff.js`) is unit tested. Its one scenario so far, basic shapes drawn with each library's own calls, differs on **0.23 %** of the pixels, all on antialiased edges (largest difference 64/255): inside the 1 % limit.
@@ -242,13 +242,13 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
 - Bundle: custom Phaser build or lazy features if the size is a problem.
 - Real-device pass: desktop browsers, the iPhone 13 mini, an iPad, an Android phone; portrait and landscape; split and shared; both versions side by side.
 - **Replacement drill**: in a test build, swap one piece of each kind (plain, flipbook, joint, stretch, rope, tinted) for placeholder art, check the game, gallery and validator handle them, then revert.
-- Make Phaser the default version; Pixi stays reachable with `?renderer=pixi`.
+- Make Phaser the default version; Pixi stays reachable with `?engine=pixi`.
 - **Done when:** parity and budgets are met or each exception is accepted in writing here.
 
 ### M8. Remove Pixi (S–M)
 
 Only once M7 is accepted: until then the Pixi version is the reference.
-- Remove the `pixi.js` dependency, the Pixi version's renderer (the `src/render/` views and `main.js` wiring) and the modules only it uses (its DOM input, fullscreen, pause and sound player, which Phaser has replaced), the parity tool and the `?renderer` switch.
+- Remove the `pixi.js` dependency, the Pixi version's renderer (the `src/render/` views and `main.js` wiring) and the modules only it uses (its DOM input, fullscreen, pause and sound player, which Phaser has replaced), the parity tool and the `?engine` switch.
 - Remove the tests of the Pixi views and modules; their view-model and adapter counterparts stay. Move `src/phaser/` to its final place.
 - Keep a small set of reference screenshots of the parity scenarios from the last two-version build (a few MB at most), for later visual checks.
 - **Done when:** the build contains no Pixi code, all tests and smoke tests pass, and the bundle size is recorded.

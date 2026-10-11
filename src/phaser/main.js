@@ -45,4 +45,4 @@ const game = new Phaser.Game({
 await new Promise((resolve) => game.events.once(Phaser.Core.Events.READY, resolve));
 
 // Hooks for inspecting the game from the browser console and tests.
-if (import.meta.env.DEV) window.__liano = { game, renderer: 'phaser' };
+if (import.meta.env.DEV) window.__liano = { game, engine: 'phaser' };

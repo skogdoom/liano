@@ -1,12 +1,12 @@
-import { rendererFrom } from './renderer.js';
+import { engineFrom } from './engine.js';
 import { createFatalOverlay } from './fatal.js';
 
-// The page's entry: starts the version of the game the URL asks for (see renderer.js).
+// The page's entry: starts the version of the game the URL asks for (see engine.js).
 // Each version is its own chunk, so a page downloads only its own library.
-const renderer = rendererFrom(location.search);
-document.documentElement.dataset.renderer = renderer;
+const engine = engineFrom(location.search);
+document.documentElement.dataset.engine = engine;
 try {
-  if (renderer === 'phaser') await import('./phaser/main.js');
+  if (engine === 'phaser') await import('./phaser/main.js');
   else await import('./main.js');
   // For the browser tests: the version has started.
   document.documentElement.dataset.ready = 'true';
