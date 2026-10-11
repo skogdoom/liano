@@ -2,7 +2,7 @@
 
 A one-button browser game. A monkey swings on lianas through a jungle. It grabs a liana anywhere along its length, slowly slips toward the tip, and the player presses a key (or taps) to let go. The monkey flies ballistically and auto-grabs the next liana it touches. Obstacles sit in the gaps between lianas: static ones first, moving ones from the sixth. Bananas are an extra challenge: each player's are counted against the bananas they passed. Difficulty ramps in stages. Modes: single player, two-player shared screen, two-player split screen.
 
-This document describes the game as released in v2.0.0 (https://skogdoom.github.io/liano/): the rules, the tunables, how it is built, and the milestones that got it there.
+This document describes the game as released in v2.2.0 (https://skogdoom.github.io/liano/): the rules, the tunables, how it is built, and the milestones that got it there.
 
 ## Tech stack
 
@@ -52,7 +52,7 @@ This document describes the game as released in v2.0.0 (https://skogdoom.github.
 | Bananas | Collected on touch, and counted per player against the bananas passed. They change neither the score nor the swing. |
 | Difficulty | Stages keyed on obstacle index. Levers: shorter release windows, a larger share of moving obstacles, bigger obstacles, and the grade (1–4) of the obstacles a stage lets in. Swing speed and slip speed do not ramp. |
 | Death | Collision with an obstacle, falling below the world band (world y WORLD_HEIGHT; the visible bottom edge can be higher when the flexible frame crops), or (shared screen only) being left behind the left edge. Going above the top edge is not a death. |
-| Scoring | +1 per obstacle gap crossed: the gap scores when the monkey, moving forward, grabs the liana on its far side. Swinging or flying past without reaching that liana does not score. Each gap scores once per monkey (flying back and forth does not re-score). Plus banana points. |
+| Scoring | +1 per obstacle gap crossed: the gap scores when the monkey, moving forward, grabs the liana on its far side. Swinging or flying past without reaching that liana does not score. Each gap scores once per monkey (flying back and forth does not re-score). Bananas add no points. |
 | HUD | Top-right. 1P shows the score and session best. 2P shows each player's score and hearts (OUT when none are left): in split screen at the top of each pane, in shared screen side by side. The speaker and fullscreen buttons sit top-left. All of these stay inside the safe area (notch). |
 
 ## Grip and slip
