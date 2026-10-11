@@ -612,7 +612,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 
 ## Phaser migration (v3.0.0, planned)
 
-The game is to move from PixiJS to Phaser 4 without changing how it plays, looks or sounds. The plan, with its decisions, the target device (iPhone 13 mini) and budgets, risks, milestones M0 to M9, test strategy and open questions, is in [PHASER_PLAN.md](PHASER_PLAN.md). It is developed on the long-lived `phaser` branch (version 3.0.0-dev.N), where the Pixi and Phaser versions both stay playable (`?renderer=pixi|phaser`) until Pixi is removed in M8. It is merged into master once, as 3.0.0, and only after every milestone is finished and the owner explicitly says so. Nothing is implemented yet.
+The game is to move from PixiJS to Phaser 4 without changing how it plays, looks or sounds. The plan, with its decisions, the pre-rendered art that can later be replaced by custom PNG or SVG art, the target device (iPhone 13 mini) and budgets, risks, milestones M0 to M9, test strategy and open questions, is in [PHASER_PLAN.md](PHASER_PLAN.md). It is developed on the long-lived `phaser` branch (version 3.0.0-dev.N), where the Pixi and Phaser versions both stay playable (`?renderer=pixi|phaser`) until Pixi is removed in M8. It is merged into master once, as 3.0.0, and only after every milestone is finished and the owner explicitly says so. Nothing is implemented yet.
 
 ## Design decisions
 
