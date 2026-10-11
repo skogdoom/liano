@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **plan for review. Nothing in it is implemented.** The `phaser` branch carries only the version bump (3.0.0-dev.0) and this document.
+Status: **plan for review (second draft, with the owner's answers). Nothing in it is implemented.** The `phaser` branch carries only the version bump (3.0.0-dev.0) and this document.
 
 The goal is to replace PixiJS 8 with Phaser, and to keep every bit of the game as it is: the gameplay, all three modes, every feature and setting, the graphics, and the sounds. The player should not be able to tell the versions apart, except that the title screen says v3.
 
@@ -14,14 +14,16 @@ Made with the owner (answers to the planning questions):
 | How to port the graphics? | **Identical look via Canvas2D baking**: the existing drawing code runs through a small Pixi-Graphics-compatible shim onto Canvas2D, and the results become Phaser textures. |
 | How to test the views? | **Pure view-models tested in Node, plus a few browser smoke tests** in CI. |
 | Branching? | **Long-lived `phaser` branch**: each milestone is a PR into `phaser`, master is merged into `phaser` regularly, and `phaser` is merged into master once, as 3.0.0. |
+| Which Phaser? | **Phaser 4.2.1** (the current `latest`), not 3.90. |
+| Sounds? | **Keep the synthesized recipes**: they play through Phaser's audio context and master nodes, so Phaser handles unlock, mute and pause, and every sound stays the same. |
+| Both versions? | **Both stay playable side by side** until the Pixi removal milestone (M8), which comes after parity and performance (M7), so they can be compared at any point. |
+| Weakest device? | **iPhone 13 mini**: the budgets are set for it (section 5). |
 
-Assumptions I made. Please confirm or overrule them (see section 9):
+Assumptions I made. Please confirm or overrule them (see section 10):
 
-- Phaser **4.2.1** (the current `latest`; 4.0.0 is out and 3.x is in maintenance), not 3.90.
 - The simulation (`src/sim/`), the generator, the worker and the pure modules stay exactly as they are. Phaser only replaces what draws, listens and plays.
 - The fixed-step loop stays: `Scene.update` feeds our accumulator, with Phaser's delta smoothing turned off.
 - Our own screen-shake maths and camera interpolation stay, driving Phaser cameras, so the shake looks the same.
-- Sounds stay synthesized by the existing recipes. They connect to Phaser's audio context and master nodes, so Phaser handles unlock, mute and pause.
 
 ## 2. What the migration touches
 
@@ -41,7 +43,9 @@ How Pixi is used today (counted in `src/`): 241 `fill`, 76 `poly`, 71 `circle`, 
 
 ## 3. Target architecture
 
-New code goes in `src/phaser/`, next to the untouched `src/render/`, until Pixi is removed (milestone 8). A dev flag (`?renderer=phaser`) picks the renderer, so each milestone can be merged and reviewed.
+New code goes in `src/phaser/`, next to the untouched `src/render/`, until Pixi is removed (M8).
+
+**Two playable versions until M8.** `?renderer=pixi` and `?renderer=phaser` pick the version. Each is a complete game: the Pixi version keeps today's renderer, input, fullscreen, pause and sound player unchanged; the Phaser version uses Phaser for all of them. Both share the simulation, the layout, the loop and the sound recipes. Each version is loaded with a dynamic import, so a page downloads only its own library. Pixi is the default until the end of M7, then Phaser, with Pixi one URL parameter away until M8 removes it. Master (and the live game) stays on Pixi throughout, since `phaser` is merged into it only at the end.
 
 ```
 Phaser.Game (WebGL, our canvas, audio on, delta smoothing off)
@@ -56,7 +60,7 @@ Phaser.Game (WebGL, our canvas, audio on, delta smoothing off)
 | `renderer.resize(w, h, resolution)` with `autoDensity` | Scale Manager plus a manual pixel-ratio step (Phaser 4 has no `resolution` or `autoDensity`): canvas backing size = CSS size × ratio, camera zoom × ratio, text `resolution` = ratio. |
 | `Container` trees | Containers or Layers in a Scene, shown by cameras. |
 | `Graphics` drawing code | The shim records the same calls and runs them on Canvas2D; the result is a texture shown by `Image` or `Sprite`. |
-| Redrawn `Graphics` (wings, legs, flames) | Rotated or scaled baked parts, flipbook frame sets, or a small live canvas texture (decided per piece, section 5). |
+| Redrawn `Graphics` (wings, legs, flames) | Rotated or scaled baked parts, flipbook frame sets, or a small live canvas texture (decided per piece, section 6). |
 | `container.tint` | `Image.setTint` (multiply) on baked images; a colour-matrix filter on a container where one tint covers a group. |
 | `blendMode = 'add'` (temple glow) | `setBlendMode(ADD)` on the glow image. |
 | Stencil mask (split-screen clip) | Camera viewports clip for free. |
@@ -71,19 +75,30 @@ Phaser.Game (WebGL, our canvas, audio on, delta smoothing off)
 Checked by installing `phaser@4.2.1` and reading its source and bundled docs:
 
 - **Graphics** has `moveTo`, `lineTo`, `arc`, rectangles, circles, ellipses, triangles and point lists, but **no quadratic or bezier curves** (the `Curves` classes sample them into points), and **no line cap or join options** (no `lineCap` anywhere in its Graphics renderers). Its own docs say the command buffer is **replayed and re-tessellated every frame**, that it is "expensive to render", and advise `generateTexture` for static art. This is why the art is baked.
-- **No `resolution` or `autoDensity` in the game config**, and `devicePixelRatio` is only read for an `OS.pixelRatio` value. HiDPI crispness must be built by hand (section 5, R3).
+- **No `resolution` or `autoDensity` in the game config**, and `devicePixelRatio` is only read for an `OS.pixelRatio` value. HiDPI crispness must be built by hand (section 6, R3).
 - **Containers and Graphics have no tint.** Images and Sprites do (multiply by default; fill, add, screen and others exist). v4 filters can be enabled on any object, including a container.
 - **Cameras**: viewport, zoom, scroll and `ignore(...)` per camera, which fits split screen, shared zoom and the pane clip.
 - **Sound**: `WebAudioSoundManager` exposes its `context`, `masterMuteNode`, `masterVolumeNode` and `destination`, and handles the browser unlock (`locked`, an unlock on first input).
 - **Cannot be imported under Node** (`window is not defined`). Pixi 8 can, which is why a dozen of our test files build real Pixi views headlessly today.
 - **Size**: `phaser.esm.min.js` is 1.38 MB, **356 KB gzipped**. Today's whole game (Pixi included) is 207 KB gzipped, so the download grows by roughly 150–170 KB gzipped unless a custom build (`phaser-core`, `phaser-no-physics`) trims it.
 
-## 5. Risks and how the plan deals with them
+## 5. Target device and budgets
+
+The weakest device is an **iPhone 13 mini**: A15 chip, 4 GB of memory, a 60 Hz screen, 375 × 812 CSS pixels at a pixel ratio of 3 (the game caps it at 2, as today, so the canvas is 750 × 1624 in portrait), and Safari's WebKit engine (every browser on iOS uses WebKit). Proposed budgets, measured on that phone:
+
+- **Frame rate:** a steady 60 fps in every mode, split screen included: no frames over 34 ms in a normal run (the debug view's `slow` counter), and the JS part of a frame no more than about twice today's.
+- **Start:** a playable title within about 1.5 s of the page loading (once cached), art baking included.
+- **Texture memory:** a budget set in the M1 spike, aimed well under 150 MB at a pixel ratio of 2. iOS reloads a page whose memory grows too large, and WebGL textures count towards it. The texture size limit is read on the phone in M1; until then the plan assumes 4096 pixels.
+- **Memory over time:** no growth of the post-GC heap over 30 game-minutes (measured in Chrome, which reports the heap; Safari doesn't).
+
+Measuring on the phone: the debug view's frame line (`fps`, `worst`, `slow`) works in Safari; Safari's Web Inspector (from a Mac) gives timelines and memory. In CI, the smoke tests can also run in Playwright's WebKit to catch WebKit-only problems early (section 10).
+
+## 6. Risks and how the plan deals with them
 
 | # | Risk | Mitigation | Where |
 |---|---|---|---|
 | R1 | The Graphics API gap (curves, caps, joins) breaks "identical". | The shim: a **recorder** of the Pixi calls we use (pure, testable in Node) and a **Canvas2D executor** (browser). Canvas2D has curves, caps and joins. The drawing code moves over almost unchanged. | M1, M4 |
-| R2 | Baked textures cost memory. A full-screen layer at 2× is ~15 MB, and there are five layers. | Per-layer bake scale (soft scenery can be baked below device scale); tiles instead of full strips; a measured GPU budget with a go/no-go gate. | M1, M4, M7 |
+| R2 | Baked textures cost memory, the tightest limit on the iPhone 13 mini. A full-screen layer at 2× is ~15 MB, and there are five layers. | Per-layer bake scale (soft scenery can be baked below device scale); tiles instead of full strips; a measured texture budget with a go/no-go gate (section 5). | M1, M4, M7 |
 | R3 | **HiDPI.** No `resolution` in Phaser. | Canvas size = CSS size × ratio (capped at 2 as today), camera zoom × ratio, text `resolution`, and baking at the effective scale. Prototyped in the spike. | M1, M2 |
 | R4 | **Animated art** (wings, legs, tails, eyes, flames, bees, spider threads, settling lianas) is redrawn every frame today. | Classified per piece: (a) parts rotated or scaled from baked textures (monkey limbs, swinging lianas, already rotation-based); (b) flipbooks of N baked frames for periodic motion (wings, bees, flames); (c) a small live canvas texture for the few that depend on state. Measured against the budget. | M4–M5 |
 | R5 | **Tinting** whole layers and the temple. | Baked layers are Images (tint multiplies as today). Temple children tint the same way, with the fires excluded. | M5 |
@@ -92,23 +107,24 @@ Checked by installing `phaser@4.2.1` and reading its source and bundled docs:
 | R8 | **Input semantics** (key repeat ignored, `consumePress`, touch rules, buttons intercepting taps). | Keep our semantic layer and feed it from Phaser Input; `input.test.js` adapted to drive the adapter with synthetic events. | M3 |
 | R9 | **Fullscreen, safe areas, iOS** quirks, portrait follow. | `layout.js` stays authoritative; the Scale Manager only provides the size; fullscreen via `scale.startFullscreen` on `pointerup`, keeping the exceptions. | M2 |
 | R10 | **WebGL context loss** (phones backgrounding the page). | Keep our pause-and-notice handling. Baked textures come from Canvas sources, so Phaser re-uploads them; live textures are redrawn on `restorewebgl`. Tested with the `WEBGL_lose_context` extension. | M2 |
-| R11 | **Startup time**: hundreds of baked textures. | Bake lazily by kind on first need (as views are built on first appearance today), the shared backdrop at boot; budget set in the spike. | M1, M7 |
+| R11 | **Startup time**: hundreds of baked textures. | Bake lazily by kind on first need (as views are built on first appearance today), the shared backdrop at boot; budget in section 5. | M1, M7 |
 | R12 | **Performance**: Phaser replays Graphics every frame. | Only small shapes stay live; everything large is baked. Measured with the existing long-run harness, ported. | M1, M7 |
 | R13 | Phaser 4 is young (4.0.0 came out in April 2026, 4.2.1 in July). | Pin 4.2.1; the spike exercises exactly the features we need; a short list of known-bad areas kept in this document. | M1 |
 | R14 | Master keeps changing `src/render/*` during the migration. | Merge master into `phaser` regularly; a visual change on master needs a matching change in `src/phaser/` (a checklist item on each such PR). | workflow |
+| R15 | Two versions to keep working until M8. | The shared code (sim, layout, loop, recipes) is untouched; each version's own code lives in its own folder; CI runs both versions' tests and smoke tests. | M0–M8 |
 
-## 6. Milestones
+## 7. Milestones
 
 Sizes are relative: S (about a day of focused work), M (a few days), L (a week or more).
 
 ### M0. Groundwork and the parity tool (M)
 
 - Add `phaser@4.2.1` next to `pixi.js`; Vite config; report the bundle, try the custom entries and record what each saves.
-- Create `src/phaser/` and the `?renderer=phaser` switch; the game still defaults to Pixi.
-- **Parity tool**: a dev-only page that renders the same scenario with Pixi and with Phaser and reports a pixel diff, so "identical" is measured, not judged by eye. Scenarios come from deterministic states (fixed seed, stopped ticker, fixed time): title in each mode and settings combination, each stage and time of day, a gallery of every obstacle kind, decoration and temple variant, every liana state, monkey poses, HUD with hearts and bananas, split and shared panes, pause, results, the debug view. The tool is removed in M8.
-- CI: a Playwright job (Chromium) for the smoke tests, kept separate from the fast `npm test`.
-- Define the test split for views: for each of the ~11 Pixi-touching test files (hud/banana, branchDecorations, debugOverlay, hearts, interpolate, lianaView, shadow, swing, stageViews, templeFire, split) mark which assertions become view-model tests.
-- **Done when:** the Phaser build boots a blank scene on the dev flag, the parity page runs one scenario both ways, and CI runs a smoke test.
+- Create `src/phaser/` and the `?renderer=pixi|phaser` switch, each version behind a dynamic import; the game still defaults to Pixi.
+- **Parity tool**: a dev-only page that renders the same scenario with Pixi and with Phaser and reports a pixel diff, so "identical" is measured, not judged by eye. Scenarios come from deterministic states (fixed seed, stopped ticker, fixed time): title in each mode and settings combination, each stage and time of day, a gallery of every obstacle kind, decoration and temple variant, every liana state, monkey poses, HUD with hearts and bananas, split and shared panes, pause, results, the debug view. The tool goes with Pixi in M8.
+- CI: a Playwright job (Chromium, and WebKit if agreed) for the smoke tests of both versions, kept separate from the fast `npm test`.
+- Define the test split for views: for each of the ~11 Pixi-touching test files (hud/banana, branchDecorations, debugOverlay, hearts, interpolate, lianaView, shadow, swing, stageViews, templeFire, split) list which assertions the Phaser version's view-models must also cover. The Pixi tests themselves stay as they are until M8.
+- **Done when:** `?renderer=phaser` boots a blank scene, `?renderer=pixi` (and no parameter) plays the game as today, the parity page runs one scenario both ways, and CI runs a smoke test of each.
 
 ### M1. Spike: prove the approach and set the budgets (M, a decision gate)
 
@@ -118,8 +134,8 @@ Build the minimum of M4 and M2 for three representative pieces and measure:
 2. the **panther** on a branch (many parts, animated eyes and tail);
 3. a **liana** that swings, with its leaf pattern (rotation of a baked texture).
 
-Measure on desktop and with CPU/GPU throttling: pixel diff against Pixi, GPU memory (textures), bake time, per-frame JS time, draw calls, and crispness at 1×, 1.5× and 2× pixel ratios. Also try Phaser's native Graphics for the same three pieces, to confirm the baking decision with numbers.
-- **Done when:** a short report in this document records the numbers and the choices: bake scale per layer class, the animated-art classification, the HiDPI method, startup time, the memory budget. **Go/no-go**: if the budgets can't be met, stop and revise the plan before M2.
+Measure on desktop, with CPU/GPU throttling, and **on the iPhone 13 mini**: pixel diff against Pixi, texture memory, bake time, per-frame JS time, draw calls, the phone's texture size limit, and crispness at 1×, 1.5× and 2× pixel ratios. Also try Phaser's native Graphics for the same three pieces, to confirm the baking decision with numbers.
+- **Done when:** a short report in this document records the numbers and the choices: bake scale per layer class, the animated-art classification, the HiDPI method, startup time, the texture budget. **Go/no-go**: if the section 5 budgets can't be met on the phone, stop and revise the plan before M2.
 
 ### M2. Platform: Game, Scenes, Scale, lifecycle (M)
 
@@ -134,7 +150,7 @@ Measure on desktop and with CPU/GPU throttling: pixel diff against Pixi, GPU mem
 
 - **Input** adapter on Phaser's keyboard and pointers: `KEYS`, key repeat ignored, shift avoided, the toggle keys (`D G H S M F P Esc 1 2 3`), `consumePress`/`consumeModePick`, touch taps, the buttons' tap interception, `accepts` (no input while paused or just resumed). `input.test.js` adapted.
 - **Audio** on Phaser's `WebAudioSoundManager`: our recipes (`audio/recipes.js`, unchanged) connect to its `destination`; mute, pause, volume, unlock and resume handled by Phaser, plus the extra recovery we had to add (rebuilding a context that stays suspended, the clock check) if Phaser's own handling doesn't cover the cases we hit; the debug `sound` line kept.
-- **Done when:** the player, sounds and recipes tests pass adapted; an offline render of every sound matches the current one sample for sample (the same recipes, so it should); a manual pass on desktop Chrome, Firefox, Safari and an iPhone confirms sound survives tab switches and reloads.
+- **Done when:** the player, sounds and recipes tests pass adapted; an offline render of every sound matches the current one sample for sample (the same recipes, so it should); a manual pass on desktop Chrome, Firefox, Safari and the iPhone 13 mini confirms sound survives tab switches and reloads.
 
 ### M4. The art pipeline (L)
 
@@ -142,7 +158,7 @@ Measure on desktop and with CPU/GPU throttling: pixel diff against Pixi, GPU mem
 - **Bake manager**: texture keys, bake scale (device × layout scale, per class), caching, lazy baking by kind, re-bake on pixel-ratio or layout-scale change, a per-liana texture cache (each liana's leaf pattern is unique) with eviction, a memory counter.
 - **Part, flipbook and live-texture helpers** for the animated classes from M1.
 - Tint support, additive glow, texture atlas packing if the spike shows it pays (fewer draw calls).
-- **Done when:** the shim reproduces the gallery shapes within the parity tolerance (agreed in section 9); the recorder and bake-manager tests pass in Node; bake time and memory are inside the M1 budgets.
+- **Done when:** the shim reproduces the gallery shapes within the parity tolerance (agreed in section 10); the recorder and bake-manager tests pass in Node; bake time and memory are inside the M1 budgets.
 
 ### M5. World rendering (L, in four parts)
 
@@ -164,31 +180,39 @@ For each part: a view-model (tested in Node) plus a Phaser adapter.
 ### M7. Parity, performance and polish (M–L)
 
 - Run the whole parity set; fix every diff above tolerance or record a reviewed exception.
-- Port the long-run harness (`scripts/longrun.mjs`) and the measurement scripts to Phaser and re-run the benchmarks from the performance work: frame time, heap over 30 game-minutes in the four scenarios, draw calls, the leak check, 90/120/144 Hz motion, first-appearance hitches. **Budgets** (to confirm in section 9): JS frame cost no more than about twice today's (median 0.1–0.25 ms); no growth of the post-GC heap over 30 game-minutes; no slow frames at 60 Hz on a mid-range phone; time to a playable title under about 1.5 s there.
+- Port the long-run harness (`scripts/longrun.mjs`) and the measurement scripts to Phaser and re-run the benchmarks from the performance work: frame time, heap over 30 game-minutes in the four scenarios, draw calls, the leak check, 90/120/144 Hz motion, first-appearance hitches. The **budgets** are those of section 5, on the iPhone 13 mini.
 - Bundle: custom Phaser build or lazy features if the size is a problem.
-- Real-device pass: desktop browsers, an iPhone, an iPad, an Android phone; portrait and landscape; split and shared.
+- Real-device pass: desktop browsers, the iPhone 13 mini, an iPad, an Android phone; portrait and landscape; split and shared; both versions side by side.
+- Make Phaser the default version; Pixi stays reachable with `?renderer=pixi`.
 - **Done when:** parity and budgets are met or each exception is accepted in writing here.
 
-### M8. Cleanup and release (S–M)
+### M8. Remove Pixi (S–M)
 
-- Remove Pixi, the old `src/render/`, the parity tool and the flag; move `src/phaser/` to its final place; update the tests that named the old modules.
+Only once M7 is accepted: until then the Pixi version is the reference.
+- Remove the `pixi.js` dependency, the Pixi version's renderer (the `src/render/` views and `main.js` wiring) and the modules only it uses (its DOM input, fullscreen, pause and sound player, which Phaser has replaced), the parity tool and the `?renderer` switch.
+- Remove the tests of the Pixi views and modules; their view-model and adapter counterparts stay. Move `src/phaser/` to its final place.
+- Optionally keep a few reference screenshots of the parity scenarios from the last two-version build, for later visual checks (section 10).
+- **Done when:** the build contains no Pixi code, all tests and smoke tests pass, and the bundle size is recorded.
+
+### M9. Cleanup and release (S)
+
 - Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables), the README's technology section, and the `package.json` description; set the version to 3.0.0.
 - Merge master into `phaser` one last time, run CI, open the PR into master. The owner tags `v3.0.0` and writes the release notes.
 
-## 7. Tests
+## 8. Tests
 
 | Kind | Now | After |
 |---|---|---|
 | Sim, generator, solver, layout, loop, scoring, physics, windows, passive-player, etc. (about 400 tests) | Node | Unchanged. |
-| View logic (lianas, monkeys, hearts, hud, banana pops, shadow, temple, branch decorations, stage views, debug text; about 100 tests across 11 files, part of them touch Pixi objects) | Node, with real Pixi objects | Split: the **view-model** (plain data and functions: positions, rotations, alphas, which pieces show, text content, texture keys) is tested in Node; the Phaser adapter is exercised by smoke and parity tests. |
-| Input, pause, fullscreen, audio player | Node with fakes | Node with fakes for the semantic layer, plus synthetic-event tests of the Phaser adapters. |
+| View logic (lianas, monkeys, hearts, hud, banana pops, shadow, temple, branch decorations, stage views, debug text; about 100 tests across 11 files, part of them touch Pixi objects) | Node, with real Pixi objects | Until M8 they stay as they are, for the Pixi version. The Phaser version gets **view-models** (plain data and functions: positions, rotations, alphas, which pieces show, text content, texture keys) tested in Node; its adapters are exercised by smoke and parity tests. M8 removes the Pixi tests. |
+| Input, pause, fullscreen, audio player | Node with fakes | Unchanged for the Pixi version until M8; the Phaser adapters get synthetic-event tests of the same semantics. |
 | Drawing shim | none | Recorder tests in Node; pixel checks in the browser. |
-| New: smoke tests (Playwright, Chromium, in CI) | none | The page boots without errors; each mode starts and a key press lets go; resize and rotate; fullscreen request; context loss and restore; sound context state; no console errors over a short bot-driven run. |
-| New: parity (dev tool; a few scenarios as CI checks once stable) | none | Pixel diff Pixi against Phaser until M8; afterwards a small set of stored reference images, if wanted (section 9). |
+| New: smoke tests (Playwright, Chromium and possibly WebKit, in CI) | none | For both versions until M8: the page boots without errors; each mode starts and a key press lets go; resize and rotate; fullscreen request; context loss and restore; sound context state; no console errors over a short bot-driven run. |
+| New: parity (dev tool; a few scenarios as CI checks once stable) | none | Pixel diff Pixi against Phaser until M8; afterwards a small set of stored reference images, if wanted (section 10). |
 
 CI gets a second job for the browser tests. `npm test` stays fast and Node-only.
 
-## 8. Definition of done: parity checklist
+## 9. Definition of done: parity checklist
 
 Everything below must work on the Phaser renderer as on v2.3:
 
@@ -201,22 +225,22 @@ Everything below must work on the Phaser renderer as on v2.3:
 - Robustness: pause on blur, context loss notice and restore, fatal overlay, sound recovery after tab switches.
 - Sounds: every recipe identical; mute; pause.
 - Version on the title screen; Pages deploy at `/liano/`; the window-table check in CI.
-- Performance within the M7 budgets.
+- Performance within the section 5 budgets on the iPhone 13 mini.
 
-## 9. Open questions and things to confirm
+## 10. Open questions and things to confirm
 
-1. **Phaser 4.2.1 or 3.90?** I assumed 4.2.1 (current, filters, new renderer). 3.90 is the last 3.x and the more established, but the older renderer.
-2. **Audio route.** I assumed our recipes (kept as they are) feed Phaser's audio context and master nodes. The alternative, rendering each sound to an audio buffer at startup and playing it as a Phaser sound, uses more of Phaser's sound API but risks small differences. Which do you prefer?
-3. **What counts as identical?** Proposed: a pixel diff under about 1 % of pixels differing by more than 8/255 per channel, with sub-pixel antialiasing differences accepted, checked on the parity scenarios. Is that right, or do you want stricter or looser?
-4. **Reference images.** The parity tool needs both renderers in one build until M8. Is a dev-only dependency on both acceptable, rather than storing reference screenshots in the repo (a few MB)?
-5. **Budgets and devices.** The budgets in M7 are my proposals. What is the oldest or weakest device and browser you want it to run on (it sets the texture size and memory limits, e.g. a 4096-pixel texture cap)?
-6. **Download size.** About +150–170 KB gzipped for Phaser unless a custom build trims it. Acceptable?
-7. **Screen shake.** I assumed our own shake maths driving Phaser's camera, so the death shake is unchanged, rather than Phaser's built-in `camera.shake`.
-8. **Master during the migration.** Visual changes to `src/render/*` on master need a matching change in `src/phaser/`. Is "bug fixes yes, new visual features wait" an acceptable policy?
-9. **Version numbers.** I suggest `3.0.0-dev.1`, `-dev.2`, ... at each milestone merge into `phaser`, and `3.0.0` at the end.
-10. **CI cost.** The browser job adds a Chromium install and a few minutes per PR. Acceptable?
+Answered: Phaser 4.2.1; the synthesized recipes stay; both versions playable until M8; the iPhone 13 mini sets the budgets (section 1). Still open:
 
-## 10. Appendix: Pixi use by file
+1. **What counts as identical?** Proposed: a pixel diff under about 1 % of pixels differing by more than 8/255 per channel, with sub-pixel antialiasing differences accepted, checked on the parity scenarios. Stricter or looser?
+2. **Reference images after M8.** The parity tool compares the two live versions until M8. Should M8 store a few reference screenshots (a few MB in the repo) for later visual checks, or drop visual comparison after the migration?
+3. **Budgets.** Section 5's numbers (60 fps with no frame over 34 ms, a playable title in about 1.5 s, textures well under 150 MB) are my proposals for the iPhone 13 mini. Right?
+4. **Download size.** About +150–170 KB gzipped for Phaser unless a custom build trims it. Acceptable?
+5. **Screen shake.** I assumed our own shake maths driving Phaser's camera, so the death shake is unchanged, rather than Phaser's built-in `camera.shake`.
+6. **Master during the migration.** Visual changes to `src/render/*` on master need a matching change in `src/phaser/`. Is "bug fixes yes, new visual features wait" an acceptable policy?
+7. **Version numbers.** I suggest `3.0.0-dev.1`, `-dev.2`, ... at each milestone merge into `phaser`, and `3.0.0` at the end.
+8. **CI.** The browser job adds a Chromium install and a few minutes per PR; WebKit (closest to the iPhone) adds a little more. Both, Chromium only, or none?
+
+## 11. Appendix: Pixi use by file
 
 | File | Lines | Pixi features | Approach |
 |---|---|---|---|
