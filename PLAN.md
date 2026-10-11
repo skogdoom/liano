@@ -610,6 +610,10 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] `ShadowRun` records the monkey every sim step; the best run per setting of lives and slipping is the next game's shadow
 - [x] The pane draws the shadow behind the monkey: grey and see-through, on a grey liana of its own while it hangs on one (`ShadowView`)
 
+## Phaser migration (v3.0.0, planned)
+
+The game is to move from PixiJS to Phaser 4 without changing how it plays, looks or sounds. The plan, with its decisions, risks, milestones M0 to M8, test strategy and open questions, is in [PHASER_PLAN.md](PHASER_PLAN.md); it is developed on the long-lived `phaser` branch (version 3.0.0-dev.N) and merged into master once, as 3.0.0. Nothing is implemented yet.
+
 ## Design decisions
 
 1. **Swing starts at vertical, in the direction of travel.** Released lianas settle back to vertical with a damped cosmetic sway.
