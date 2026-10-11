@@ -14,13 +14,14 @@ export default defineConfig({
   testDir: 'browser-tests',
   timeout: 60_000,
   forbidOnly: !!process.env.CI,
-  reporter: process.env.CI ? 'list' : 'line',
+  // On GitHub the failures also become annotations on the check run.
+  reporter: process.env.CI ? [['github'], ['list']] : 'line',
   use: {
     browserName: 'chromium',
     launchOptions: {
       executablePath: process.env.CHROMIUM || undefined,
       // WebGL without a GPU: SwiftShader, which headless Chromium no longer picks by itself.
-      args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+      args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
     },
   },
   webServer: [

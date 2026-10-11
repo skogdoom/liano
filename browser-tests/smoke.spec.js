@@ -15,6 +15,14 @@ function collectErrors(page) {
   return errors;
 }
 
+// Waits until the page has started a version or shown its error screen, then reports
+// any errors before checking that it started (so a failure says why).
+async function started(page, errors) {
+  await page.waitForFunction(() => document.documentElement.dataset.ready || document.querySelector('#fatal.shown'), null, { timeout: 30_000 });
+  expect(errors).toEqual([]);
+  await expect(page.locator('html')).toHaveAttribute('data-ready', 'true');
+}
+
 for (const [label, query, renderer] of [
   ['default', '', 'pixi'],
   ['Pixi', '?renderer=pixi', 'pixi'],
@@ -23,9 +31,8 @@ for (const [label, query, renderer] of [
   test(`the ${label} version of the production build starts without errors`, async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto(PREVIEW + query);
-    const html = page.locator('html');
-    await expect(html).toHaveAttribute('data-ready', 'true', { timeout: 30_000 });
-    await expect(html).toHaveAttribute('data-renderer', renderer);
+    await started(page, errors);
+    await expect(page.locator('html')).toHaveAttribute('data-renderer', renderer);
     await expect(page.locator('canvas')).toHaveCount(1);
     await expect(page.locator('#fatal')).not.toHaveClass(/shown/);
     expect(errors).toEqual([]);
@@ -35,7 +42,7 @@ for (const [label, query, renderer] of [
 test('the Pixi version plays: Space starts a run', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto(`${DEV}?renderer=pixi`);
-  await expect(page.locator('html')).toHaveAttribute('data-ready', 'true', { timeout: 30_000 });
+  await started(page, errors);
   expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
   await page.keyboard.press('Space');
   await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');
@@ -45,7 +52,9 @@ test('the Pixi version plays: Space starts a run', async ({ page }) => {
 test('the parity page draws its scenarios with both versions', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto(`${DEV}parity.html`);
-  await expect(page.locator('html')).toHaveAttribute('data-parity', 'done', { timeout: 30_000 });
+  await page.waitForFunction(() => document.documentElement.dataset.parity, null, { timeout: 30_000 });
+  expect(errors).toEqual([]);
+  await expect(page.locator('html')).toHaveAttribute('data-parity', 'done');
   const results = await page.evaluate(() => window.__parity);
   console.log('parity:', JSON.stringify(results));
   expect(results.length).toBeGreaterThan(0);
