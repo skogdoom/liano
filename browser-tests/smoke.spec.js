@@ -49,10 +49,13 @@ test('the Pixi version plays: Space starts a run', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('the parity page draws its scenarios with both versions', async ({ page }) => {
+// Both versions run on the same software WebGL here, so the agreed meaning of identical
+// (PHASER_PLAN.md, section 1) holds for every scenario. Needs `npm run art:atlas` first.
+test('the parity page draws its scenarios identically with both versions', async ({ page }) => {
+  test.setTimeout(180_000);
   const errors = collectErrors(page);
   await page.goto(`${DEV}parity.html`);
-  await page.waitForFunction(() => document.documentElement.dataset.parity, null, { timeout: 30_000 });
+  await page.waitForFunction(() => document.documentElement.dataset.parity, null, { timeout: 120_000 });
   expect(errors).toEqual([]);
   await expect(page.locator('html')).toHaveAttribute('data-parity', 'done');
   const results = await page.evaluate(() => window.__parity);
@@ -63,5 +66,6 @@ test('the parity page draws its scenarios with both versions', async ({ page }) 
     expect(result.share).toBeGreaterThanOrEqual(0);
     expect(result.share).toBeLessThanOrEqual(1);
   }
+  expect(results.filter((result) => !result.pass).map((result) => result.id)).toEqual([]);
   expect(errors).toEqual([]);
 });

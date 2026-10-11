@@ -28,5 +28,25 @@ export function compareImages(a, b, { channel = PARITY.channel } = {}) {
   return { pixels, differing, share: pixels ? differing / pixels : 0, maxDelta, diff };
 }
 
+// How many of the pixels over the limit have all eight neighbours over it too: in a
+// solid patch of difference rather than on an edge. Antialiasing differences are rims a
+// pixel or two wide and leave next to none; a missing or wrong part leaves a patch. For
+// the report only (the M1 spike found the share alone too lenient for small objects on
+// a large picture: PHASER_PLAN.md, M1).
+export function solidPixels({ diff }, width) {
+  const height = diff.length / 4 / width;
+  const over = (x, y) => diff[(y * width + x) * 4 + 1] === 0 && diff[(y * width + x) * 4] === 255;
+  let solid = 0;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      if (!over(x, y)) continue;
+      let all = true;
+      for (let dy = -1; dy <= 1 && all; dy++) for (let dx = -1; dx <= 1 && all; dx++) all = over(x + dx, y + dy);
+      if (all) solid++;
+    }
+  }
+  return solid;
+}
+
 // Whether a comparison counts as identical.
 export const passes = (result, share = PARITY.share) => result.share < share;

@@ -85,8 +85,25 @@ export function tipFlashOn(tipTime) {
   return Math.floor(tipTime / blink + 1e-6) % 2 === 0;
 }
 
-export function drawLiana(g, liana, layout, flash, palette) {
+// Where a liana's rope runs and where its leaves sit, for drawing it (here, and as
+// pieces in the Phaser version): the rope's points, and for each leaf its base, its
+// direction (a screen angle, 0 = +x), its length and whether it is a dark one.
+export function lianaShape(liana, layout) {
   const points = ropePoints(liana, layout.bow);
+  const leaves = layout.leaves.map((leaf) => {
+    const p = points[Math.round(leaf.s * SEGMENTS)];
+    // Rope direction as a screen angle (0 = +x), rotated out to the leaf's side.
+    const down = Math.PI / 2 - p.angle;
+    return { x: p.x, y: p.y, angle: down - leaf.side * leaf.spread, length: leaf.length, dark: leaf.dark };
+  });
+  // The lower end lights up when the grip is about to slip off. It starts well above the
+  // grip, since the monkey covers the last stretch of rope.
+  const flash = points.slice(Math.floor(SEGMENTS * TIP_FLASH_FROM));
+  return { points, leaves, flash };
+}
+
+export function drawLiana(g, liana, layout, flash, palette) {
+  const { points, leaves, flash: end } = lianaShape(liana, layout);
   const path = (width, color) => {
     g.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < points.length; i++) g.lineTo(points[i].x, points[i].y);
@@ -94,17 +111,10 @@ export function drawLiana(g, liana, layout, flash, palette) {
   };
   path(7, palette.ropeDark);
   path(4, palette.rope);
-  for (const leaf of layout.leaves) {
-    const p = points[Math.round(leaf.s * SEGMENTS)];
-    // Rope direction as a screen angle (0 = +x), rotated out to the leaf's side.
-    const down = Math.PI / 2 - p.angle;
-    const a = down - leaf.side * leaf.spread;
-    g.poly(leafPoints(p.x, p.y, a, leaf.length, leaf.length * 0.5)).fill(leaf.dark ? palette.leafDark : palette.leaf);
+  for (const leaf of leaves) {
+    g.poly(leafPoints(leaf.x, leaf.y, leaf.angle, leaf.length, leaf.length * 0.5)).fill(leaf.dark ? palette.leafDark : palette.leaf);
   }
   if (flash) {
-    // The lower end lights up: the grip is about to slip off. It starts well above the
-    // grip, since the monkey covers the last stretch of rope.
-    const end = points.slice(Math.floor(SEGMENTS * TIP_FLASH_FROM));
     g.moveTo(end[0].x, end[0].y);
     for (const p of end.slice(1)) g.lineTo(p.x, p.y);
     g.stroke({ width: 5, color: TIP_FLASH, cap: 'round', join: 'round' });

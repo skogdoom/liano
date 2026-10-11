@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Liano spike: rasterizers</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      body { margin: 24px; background: #10261a; color: #f4e7c5; font: 14px sans-serif; }
+      table { border-collapse: collapse; }
+      td, th { padding: 3px 10px; text-align: right; border-bottom: 1px solid #2a4a33; }
+      td:first-child, th:first-child { text-align: left; }
+      .pass { color: #8fe08f; }
+      .fail { color: #ff8c6b; }
+    </style>
+  </head>
+  <body>
+    <h1>M1 spike: Pixi against the generated SVG, rasterized by Chromium and by resvg</h1>
+    <p>Each piece frame at 1× and 2× (times its own scale), over the sky colour. Share of pixels differing by more than 8/255 (limit 1 %). Dev only (PHASER_PLAN.md, M1); needs <code>npm run art</code> and <code>node scripts/spike/resvg.mjs</code> first.</p>
+    <table id="results"><tr><th>Piece</th><th>Size</th><th>Chromium vs Pixi</th><th>resvg vs Pixi</th><th>Chromium vs resvg</th><th>resvg 1× stretched to 2×, vs Pixi 2×</th></tr></table>
+    <p id="summary"></p>
+    <script type="module" src="/src/spike/compare.js"></script>
+  </body>
+</html>

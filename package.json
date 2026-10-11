@@ -1,7 +1,7 @@
 {
   "name": "liano",
   "private": true,
-  "version": "3.0.0-dev.1",
+  "version": "3.0.0-dev.2",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -9,6 +9,9 @@
     "dev:host": "vite --host",
     "icons": "node scripts/make-icons.mjs",
     "windows": "node scripts/build-windows.mjs",
+    "art": "node scripts/art.mjs",
+    "art:atlas": "node scripts/spike/atlas.mjs",
+    "spike:bench": "node scripts/spike/bench.mjs",
     "prebuild": "node scripts/build-windows.mjs",
     "build": "vite build",
     "preview": "vite preview",
@@ -22,6 +25,7 @@
   },
   "devDependencies": {
     "@playwright/test": "1.64.0",
+    "@resvg/resvg-js": "2.6.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
   }

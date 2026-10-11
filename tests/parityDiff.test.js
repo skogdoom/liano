@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PARITY, compareImages, passes } from '../src/parity/diff.js';
+import { PARITY, compareImages, passes, solidPixels } from '../src/parity/diff.js';
 
 // An image of `n` pixels, all of one RGBA colour.
 const image = (n, rgba) => Uint8ClampedArray.from({ length: n * 4 }, (_, i) => rgba[i % 4]);
@@ -34,5 +34,19 @@ describe('the parity diff', () => {
 
   it('refuses images of different sizes', () => {
     expect(() => compareImages(image(2, [0, 0, 0, 0]), image(3, [0, 0, 0, 0]))).toThrow(/size/);
+  });
+
+  it('counts the differing pixels in solid patches, not on thin rims', () => {
+    // 10 × 10: a 1-pixel line across row 2 and a 4 × 4 block at (5, 5).
+    const width = 10;
+    const a = image(100, [0, 0, 0, 255]);
+    const b = a.slice();
+    const mark = (x, y) => (b[(y * width + x) * 4] = 255);
+    for (let x = 0; x < width; x++) mark(x, 2);
+    for (let y = 5; y < 9; y++) for (let x = 5; x < 9; x++) mark(x, y);
+    const result = compareImages(a, b);
+    expect(result.differing).toBe(26);
+    // Only the block's inner 2 × 2 has all eight neighbours over the limit.
+    expect(solidPixels(result, width)).toBe(4);
   });
 });

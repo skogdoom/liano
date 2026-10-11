@@ -42,8 +42,15 @@ function vine(g, x, fromY, toY, sway) {
 
 // From topY down past the floor line; y in the obstacle's local coordinates.
 function trunk(g, o, x, topY, width) {
-  const bottom = (FLOOR_Y + 20 - o.y) / o.scale;
-  g.poly([x - width / 2, topY, x + width / 2, topY, x + width / 2 + 5, bottom, x - width / 2 - 5, bottom]).fill(SUPPORT_TRUNK);
+  drawTrunk(g, x, topY, trunkBottom(o), width);
+}
+
+// Where an obstacle's trunk ends, below the floor line, in its local coordinates.
+export const trunkBottom = (o) => (FLOOR_Y + 20 - o.y) / o.scale;
+
+// A trunk `width` wide at the top, from `topY` down to `bottom`, flaring by 5 px a side.
+export function drawTrunk(g, x, topY, bottom, width) {
+  return g.poly([x - width / 2, topY, x + width / 2, topY, x + width / 2 + 5, bottom, x - width / 2 - 5, bottom]).fill(SUPPORT_TRUNK);
 }
 
 // Hitbox: rect 160 × 24 centred. A limb tapering from a cut trunk stub on the left,
@@ -54,26 +61,56 @@ function drawBranch(g, o, rand, hangs, view) {
   const left = box.dx;
   const right = box.dx + box.w;
   const top = box.dy;
-  const bottom = box.dy + box.h;
   if (hangs) {
     vine(g, left + 30, (CANOPY_Y - o.y) / o.scale, top + 2, 8);
     vine(g, right - 45, (CANOPY_Y - o.y) / o.scale, top + 4, -8);
   } else {
-    trunk(g, o, left + 14, 0, 26);
+    trunk(g, o, BRANCH_TRUNK_X, 0, BRANCH_TRUNK_WIDTH);
   }
+  drawBranchBody(g, branchBarkLines(rand));
+  return o.decoration ? addDecoration(view, o, hangs) : null;
+}
+
+// Where a branch standing on a trunk has it, and how wide.
+export const BRANCH_TRUNK_X = OBSTACLE_HITBOXES.branch[0].dx + 14;
+export const BRANCH_TRUNK_WIDTH = 26;
+
+// The four dark lines in a branch's bark, at random along it: { x0, y0, x1, y1 } each.
+export function branchBarkLines(rand) {
+  const [box] = OBSTACLE_HITBOXES.branch;
+  const lines = [];
+  for (let i = 0; i < 4; i++) {
+    const x = box.dx + 30 + i * 28 + rand() * 10;
+    const y0 = -3 + rand() * 4;
+    lines.push({ x0: x, y0, x1: x + 14, y1: -2 + rand() * 4 });
+  }
+  return lines;
+}
+
+// One of those lines.
+export function drawBarkLine(g, { x0, y0, x1, y1 }) {
+  return g.moveTo(x0, y0).lineTo(x1, y1).stroke({ width: 1.5, color: BARK_DARK });
+}
+
+// The limb itself (also as pieces for the Phaser version: the limb without `lines`, and
+// the lines on top): bark, its lit upper side, the lines, the cut stub end and the leaf
+// tuft near the tip.
+export function drawBranchBody(g, lines = []) {
+  const [box] = OBSTACLE_HITBOXES.branch;
+  const left = box.dx;
+  const right = box.dx + box.w;
+  const top = box.dy;
+  const bottom = box.dy + box.h;
   g.poly([left, top, right - 18, top + 5, right, -1, right - 18, bottom - 5, left, bottom]).fill(BARK);
   g.poly([left, top, right - 18, top + 5, right - 14, top + 9, left, top + 7]).fill(BARK_LIGHT);
-  for (let i = 0; i < 4; i++) {
-    const x = left + 30 + i * 28 + rand() * 10;
-    g.moveTo(x, -3 + rand() * 4).lineTo(x + 14, -2 + rand() * 4).stroke({ width: 1.5, color: BARK_DARK });
-  }
+  for (const line of lines) drawBarkLine(g, line);
   // Cut stub end.
   g.ellipse(left + 3, 0, 5, box.h / 2).fill(BARK_LIGHT).ellipse(left + 3, 0, 2.5, box.h / 4).fill(BARK_DARK);
   for (let i = 0; i < 5; i++) {
     const a = -Math.PI / 2 + (i - 2) * 0.45;
     g.poly(leafPoints(right - 30 + i * 4, top + 4, a, 16, 8)).fill(i % 2 ? LEAF_DARK : LEAF);
   }
-  return o.decoration ? addDecoration(view, o, hangs) : null;
+  return g;
 }
 
 // The decorations on a branch (animals) are scenery: not part of the hitbox. Each is placed (and, where
@@ -82,7 +119,7 @@ const SPARROW_BEAK = 0x3a2a1c;
 
 // Where along the branch's top edge x lies: the limb tapers from y = top at the stub to
 // 5 px lower at its end.
-function branchTop(x) {
+export function branchTop(x) {
   const [box] = OBSTACLE_HITBOXES.branch;
   return box.dy + (5 * (x - box.dx)) / (box.w - 18);
 }
@@ -381,15 +418,44 @@ const PANTHER_NOSE = 0x5a4a52;
 // ears twitch now and then and it blinks. Faces left or right at random.
 function drawPanther(rand) {
   const panther = new Container();
-  panther.scale.x = rand() < 0.5 ? 1 : -1;
-  const cx = -28 + rand() * 24;
+  const { facing, cx, phase } = pantherPlacement(rand);
+  panther.scale.x = facing;
   panther.position.set(cx, branchTop(cx));
-  const phase = rand() * 6.3;
 
   const tail = new Graphics();
   const body = new Container();
   const g = new Graphics();
-  // Haunch, a long heavy body and the front legs stretched out ahead, a paw on each.
+  drawPantherBody(g);
+  const eye = new Graphics();
+  const ear = new Graphics();
+  drawPantherEar(ear);
+  ear.position.set(35.5, -22);
+  body.addChild(g, ear, eye);
+  panther.addChild(tail, body);
+
+  const animate = (t) => {
+    // Breathing: the body swells and settles.
+    body.scale.y = 1 + 0.03 * Math.sin(t * 1.7 + phase);
+    drawPantherTail(tail.clear(), pantherSwish(t, phase));
+    drawPantherEyes(eye.clear(), pantherBlinks(t, phase));
+    // One ear flicks now and then.
+    ear.scale.y = 1 - 0.55 * Math.max(0, Math.sin(t * 1.3 + phase * 2)) ** 14;
+  };
+  return { part: panther, animate };
+}
+
+// Which way the panther faces, where along the branch it lies and its animation's phase,
+// drawn from the decoration's random stream.
+export function pantherPlacement(rand) {
+  const facing = rand() < 0.5 ? 1 : -1;
+  const cx = -28 + rand() * 24;
+  return { facing, cx, phase: rand() * 6.3 };
+}
+
+// The panther's parts, each drawn on its own (also as pieces for the Phaser version).
+// The body: haunch, a long heavy body and the front legs stretched out ahead, a paw on
+// each, and the head raised at the front.
+export function drawPantherBody(g) {
   g.ellipse(-22, -8.5, 14, 10).fill(PANTHER);
   g.ellipse(-3, -10.5, 27, 10.5).fill(PANTHER);
   g.ellipse(23, -3.5, 12, 4).fill(PANTHER).ellipse(21, -6.8, 11, 3.6).fill(PANTHER_SHEEN);
@@ -401,36 +467,33 @@ function drawPanther(rand) {
   g.ellipse(39.5, -13.5, 5.6, 3.7).fill(PANTHER_SHEEN);
   g.ellipse(43, -14.6, 1.8, 1.3).fill(PANTHER_NOSE);
   for (const dy of [-1.5, 0.8]) g.moveTo(40.5, -12 + dy).lineTo(48, -13 + dy * 2.4).stroke({ width: 0.7, color: 0xc9c4d4, alpha: 0.7 });
-  const eye = new Graphics();
-  const ear = new Graphics();
-  ear.circle(0, 0, 2).fill(PANTHER_SHEEN);
-  ear.position.set(35.5, -22);
-  body.addChild(g, ear, eye);
-  panther.addChild(tail, body);
+  return g;
+}
 
-  const animate = (t) => {
-    // Breathing: the body swells and settles.
-    body.scale.y = 1 + 0.03 * Math.sin(t * 1.7 + phase);
-    // The tail hangs from the rump over the end of the limb and swishes at its tip.
-    const swish = 6 * Math.sin(t * 1.9 + phase);
-    tail.clear();
-    tail
-      .moveTo(-32, -9)
-      .bezierCurveTo(-44, -8, -48 + swish * 0.3, 4, -44 + swish, 14)
-      .stroke({ width: 5, color: PANTHER, cap: 'round' });
-    tail.moveTo(-44 + swish, 14).quadraticCurveTo(-42 + swish * 1.3, 19.5, -36 + swish * 1.4, 18.5).stroke({ width: 4.4, color: PANTHER, cap: 'round' });
-    // Eyes: slit pupils in yellow, shut for a moment every few seconds.
-    const blink = (t * 0.28 + phase) % 1 < 0.035;
-    eye.clear();
-    if (blink) eye.moveTo(26.5, -17.6).lineTo(31, -18).moveTo(33, -17.8).lineTo(37.5, -17.2).stroke({ width: 1, color: PANTHER_SHEEN });
-    else {
-      eye.ellipse(28.8, -18, 2.4, 1.9).fill(PANTHER_EYE).ellipse(35.4, -17.6, 2.4, 1.9).fill(PANTHER_EYE);
-      eye.ellipse(28.8, -18, 0.6, 1.6).fill(PANTHER).ellipse(35.4, -17.6, 0.6, 1.6).fill(PANTHER);
-    }
-    // One ear flicks now and then.
-    ear.scale.y = 1 - 0.55 * Math.max(0, Math.sin(t * 1.3 + phase * 2)) ** 14;
-  };
-  return { part: panther, animate };
+// The inside of the ear that flicks (drawn about its own centre).
+export function drawPantherEar(g) {
+  return g.circle(0, 0, 2).fill(PANTHER_SHEEN);
+}
+
+// How far the tail's tip has swung (px, about ±6) at time `t`.
+export const pantherSwish = (t, phase) => 6 * Math.sin(t * 1.9 + phase);
+// Whether the eyes are shut at time `t`: for a moment every few seconds.
+export const pantherBlinks = (t, phase) => (t * 0.28 + phase) % 1 < 0.035;
+
+// The tail hangs from the rump over the end of the limb and swishes at its tip.
+export function drawPantherTail(g, swish) {
+  g.moveTo(-32, -9)
+    .bezierCurveTo(-44, -8, -48 + swish * 0.3, 4, -44 + swish, 14)
+    .stroke({ width: 5, color: PANTHER, cap: 'round' });
+  g.moveTo(-44 + swish, 14).quadraticCurveTo(-42 + swish * 1.3, 19.5, -36 + swish * 1.4, 18.5).stroke({ width: 4.4, color: PANTHER, cap: 'round' });
+  return g;
+}
+
+// The eyes: slit pupils in yellow, or shut.
+export function drawPantherEyes(g, shut) {
+  if (shut) return g.moveTo(26.5, -17.6).lineTo(31, -18).moveTo(33, -17.8).lineTo(37.5, -17.2).stroke({ width: 1, color: PANTHER_SHEEN });
+  g.ellipse(28.8, -18, 2.4, 1.9).fill(PANTHER_EYE).ellipse(35.4, -17.6, 2.4, 1.9).fill(PANTHER_EYE);
+  return g.ellipse(28.8, -18, 0.6, 1.6).fill(PANTHER).ellipse(35.4, -17.6, 0.6, 1.6).fill(PANTHER);
 }
 
 // A bat roosting upside down from the underside of the branch, wrapped in its wings like a

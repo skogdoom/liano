@@ -1,0 +1,175 @@
+{
+  "pieces": [
+    {
+      "key": "backdrop.far",
+      "frames": [
+        "generated/backdrop.far.svg"
+      ],
+      "box": {
+        "x": 0,
+        "y": -1130,
+        "w": 2048,
+        "h": 1790
+      },
+      "scale": 1,
+      "tint": true
+    },
+    {
+      "key": "branch.body",
+      "frames": [
+        "generated/branch.body.svg"
+      ],
+      "box": {
+        "x": -83,
+        "y": -25,
+        "w": 164,
+        "h": 38
+      },
+      "scale": 1.3,
+      "tint": true
+    },
+    {
+      "key": "branch.barkLine",
+      "frames": [
+        "generated/branch.barkLine.svg"
+      ],
+      "box": {
+        "x": -4,
+        "y": -4,
+        "w": 22,
+        "h": 8
+      },
+      "scale": 1.3,
+      "tint": true
+    },
+    {
+      "key": "branch.trunk",
+      "frames": [
+        "generated/branch.trunk.svg"
+      ],
+      "box": {
+        "x": -19,
+        "y": -1,
+        "w": 38,
+        "h": 102
+      },
+      "scale": 1.3,
+      "tint": true
+    },
+    {
+      "key": "panther.body",
+      "frames": [
+        "generated/panther.body.svg"
+      ],
+      "box": {
+        "x": -37,
+        "y": -28,
+        "w": 88,
+        "h": 31
+      },
+      "scale": 1.3,
+      "tint": true
+    },
+    {
+      "key": "panther.ear",
+      "frames": [
+        "generated/panther.ear.svg"
+      ],
+      "box": {
+        "x": -3,
+        "y": -3,
+        "w": 6,
+        "h": 6
+      },
+      "scale": 1.3,
+      "tint": true
+    },
+    {
+      "key": "panther.eyes",
+      "frames": [
+        "generated/panther.eyes.0.svg",
+        "generated/panther.eyes.1.svg"
+      ],
+      "box": {
+        "x": 24,
+        "y": -21,
+        "w": 16,
+        "h": 7
+      },
+      "scale": 1.3,
+      "tint": true
+    },
+    {
+      "key": "panther.tail",
+      "frames": [
+        "generated/panther.tail.0.svg",
+        "generated/panther.tail.1.svg",
+        "generated/panther.tail.2.svg",
+        "generated/panther.tail.3.svg",
+        "generated/panther.tail.4.svg",
+        "generated/panther.tail.5.svg",
+        "generated/panther.tail.6.svg",
+        "generated/panther.tail.7.svg",
+        "generated/panther.tail.8.svg",
+        "generated/panther.tail.9.svg",
+        "generated/panther.tail.10.svg",
+        "generated/panther.tail.11.svg",
+        "generated/panther.tail.12.svg",
+        "generated/panther.tail.13.svg",
+        "generated/panther.tail.14.svg",
+        "generated/panther.tail.15.svg"
+      ],
+      "box": {
+        "x": -59,
+        "y": -18,
+        "w": 39,
+        "h": 46
+      },
+      "scale": 1.3,
+      "tint": true
+    },
+    {
+      "key": "liana.rope",
+      "frames": [
+        "generated/liana.rope.svg"
+      ],
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 430,
+        "h": 10
+      },
+      "scale": 2,
+      "tint": false
+    },
+    {
+      "key": "liana.flash",
+      "frames": [
+        "generated/liana.flash.svg"
+      ],
+      "box": {
+        "x": -4,
+        "y": -4,
+        "w": 218,
+        "h": 8
+      },
+      "scale": 2,
+      "tint": false
+    },
+    {
+      "key": "liana.leaf",
+      "frames": [
+        "generated/liana.leaf.0.svg",
+        "generated/liana.leaf.1.svg"
+      ],
+      "box": {
+        "x": -1,
+        "y": -6,
+        "w": 19,
+        "h": 12
+      },
+      "scale": 1,
+      "tint": false
+    }
+  ]
+}
