@@ -1,6 +1,8 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **plan for review (second draft, with the owner's answers). Nothing in it is implemented.** The `phaser` branch carries only the version bump (3.0.0-dev.0) and this document.
+Status: **agreed plan (third draft: every question answered). Nothing in it is implemented yet.** The `phaser` branch carries only the version bump (3.0.0-dev.0) and this document.
+
+**Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
 The goal is to replace PixiJS 8 with Phaser, and to keep every bit of the game as it is: the gameplay, all three modes, every feature and setting, the graphics, and the sounds. The player should not be able to tell the versions apart, except that the title screen says v3.
 
@@ -13,13 +15,21 @@ Made with the owner (answers to the planning questions):
 | How far into Phaser? | **Adopt Phaser throughout**: Scenes, the Scale Manager, Cameras, Input and the Sound manager, not only the renderer. |
 | How to port the graphics? | **Identical look via Canvas2D baking**: the existing drawing code runs through a small Pixi-Graphics-compatible shim onto Canvas2D, and the results become Phaser textures. |
 | How to test the views? | **Pure view-models tested in Node, plus a few browser smoke tests** in CI. |
-| Branching? | **Long-lived `phaser` branch**: each milestone is a PR into `phaser`, master is merged into `phaser` regularly, and `phaser` is merged into master once, as 3.0.0. |
+| Branching? | **Long-lived `phaser` branch**: each milestone is a PR into `phaser`, master is merged into `phaser` regularly, and `phaser` is merged into master once, as 3.0.0, only after all milestones are finished and the owner explicitly says so. |
 | Which Phaser? | **Phaser 4.2.1** (the current `latest`), not 3.90. |
 | Sounds? | **Keep the synthesized recipes**: they play through Phaser's audio context and master nodes, so Phaser handles unlock, mute and pause, and every sound stays the same. |
 | Both versions? | **Both stay playable side by side** until the Pixi removal milestone (M8), which comes after parity and performance (M7), so they can be compared at any point. |
 | Weakest device? | **iPhone 13 mini**: the budgets are set for it (section 5). |
+| What counts as identical? | A pixel diff under about 1 % of pixels differing by more than 8/255 per channel on the parity scenarios; sub-pixel antialiasing differences are accepted. |
+| Visual checks after M8? | M8 keeps a small set of reference screenshots of the parity scenarios (a few MB at most) for later visual checks. |
+| Budgets? | Those of section 5. |
+| Download size? | The roughly +150–170 KB gzipped for Phaser is accepted; a custom build is tried in M0 and M7 but not required. |
+| Screen shake? | Our own shake maths drives Phaser's camera, so the death shake stays as it is. |
+| Master meanwhile? | Bug fixes only; new visual features wait until 3.0.0 (a fix that changes `src/render/*` gets a matching change in `src/phaser/`). |
+| Version numbers? | `3.0.0-dev.N`, bumped at each milestone merged into `phaser`; `3.0.0` at the end. |
+| Browser tests in CI? | **Chromium only.** WebKit behaviour is checked on the iPhone itself. |
 
-Assumptions I made. Please confirm or overrule them (see section 10):
+Also agreed:
 
 - The simulation (`src/sim/`), the generator, the worker and the pure modules stay exactly as they are. Phaser only replaces what draws, listens and plays.
 - The fixed-step loop stays: `Scene.update` feeds our accumulator, with Phaser's delta smoothing turned off.
@@ -91,7 +101,7 @@ The weakest device is an **iPhone 13 mini**: A15 chip, 4 GB of memory, a 60 Hz s
 - **Texture memory:** a budget set in the M1 spike, aimed well under 150 MB at a pixel ratio of 2. iOS reloads a page whose memory grows too large, and WebGL textures count towards it. The texture size limit is read on the phone in M1; until then the plan assumes 4096 pixels.
 - **Memory over time:** no growth of the post-GC heap over 30 game-minutes (measured in Chrome, which reports the heap; Safari doesn't).
 
-Measuring on the phone: the debug view's frame line (`fps`, `worst`, `slow`) works in Safari; Safari's Web Inspector (from a Mac) gives timelines and memory. In CI, the smoke tests can also run in Playwright's WebKit to catch WebKit-only problems early (section 10).
+Measuring on the phone: the debug view's frame line (`fps`, `worst`, `slow`) works in Safari; Safari's Web Inspector (from a Mac) gives timelines and memory. CI runs the browser tests in Chromium only, so anything WebKit-specific is caught on the phone.
 
 ## 6. Risks and how the plan deals with them
 
@@ -122,7 +132,7 @@ Sizes are relative: S (about a day of focused work), M (a few days), L (a week o
 - Add `phaser@4.2.1` next to `pixi.js`; Vite config; report the bundle, try the custom entries and record what each saves.
 - Create `src/phaser/` and the `?renderer=pixi|phaser` switch, each version behind a dynamic import; the game still defaults to Pixi.
 - **Parity tool**: a dev-only page that renders the same scenario with Pixi and with Phaser and reports a pixel diff, so "identical" is measured, not judged by eye. Scenarios come from deterministic states (fixed seed, stopped ticker, fixed time): title in each mode and settings combination, each stage and time of day, a gallery of every obstacle kind, decoration and temple variant, every liana state, monkey poses, HUD with hearts and bananas, split and shared panes, pause, results, the debug view. The tool goes with Pixi in M8.
-- CI: a Playwright job (Chromium, and WebKit if agreed) for the smoke tests of both versions, kept separate from the fast `npm test`.
+- CI: a Playwright job (Chromium only) for the smoke tests of both versions, kept separate from the fast `npm test`.
 - Define the test split for views: for each of the ~11 Pixi-touching test files (hud/banana, branchDecorations, debugOverlay, hearts, interpolate, lianaView, shadow, swing, stageViews, templeFire, split) list which assertions the Phaser version's view-models must also cover. The Pixi tests themselves stay as they are until M8.
 - **Done when:** `?renderer=phaser` boots a blank scene, `?renderer=pixi` (and no parameter) plays the game as today, the parity page runs one scenario both ways, and CI runs a smoke test of each.
 
@@ -158,7 +168,7 @@ Measure on desktop, with CPU/GPU throttling, and **on the iPhone 13 mini**: pixe
 - **Bake manager**: texture keys, bake scale (device × layout scale, per class), caching, lazy baking by kind, re-bake on pixel-ratio or layout-scale change, a per-liana texture cache (each liana's leaf pattern is unique) with eviction, a memory counter.
 - **Part, flipbook and live-texture helpers** for the animated classes from M1.
 - Tint support, additive glow, texture atlas packing if the spike shows it pays (fewer draw calls).
-- **Done when:** the shim reproduces the gallery shapes within the parity tolerance (agreed in section 10); the recorder and bake-manager tests pass in Node; bake time and memory are inside the M1 budgets.
+- **Done when:** the shim reproduces the gallery shapes within the parity tolerance (section 1); the recorder and bake-manager tests pass in Node; bake time and memory are inside the M1 budgets.
 
 ### M5. World rendering (L, in four parts)
 
@@ -191,13 +201,13 @@ For each part: a view-model (tested in Node) plus a Phaser adapter.
 Only once M7 is accepted: until then the Pixi version is the reference.
 - Remove the `pixi.js` dependency, the Pixi version's renderer (the `src/render/` views and `main.js` wiring) and the modules only it uses (its DOM input, fullscreen, pause and sound player, which Phaser has replaced), the parity tool and the `?renderer` switch.
 - Remove the tests of the Pixi views and modules; their view-model and adapter counterparts stay. Move `src/phaser/` to its final place.
-- Optionally keep a few reference screenshots of the parity scenarios from the last two-version build, for later visual checks (section 10).
+- Keep a small set of reference screenshots of the parity scenarios from the last two-version build (a few MB at most), for later visual checks.
 - **Done when:** the build contains no Pixi code, all tests and smoke tests pass, and the bundle size is recorded.
 
 ### M9. Cleanup and release (S)
 
 - Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables), the README's technology section, and the `package.json` description; set the version to 3.0.0.
-- Merge master into `phaser` one last time, run CI, open the PR into master. The owner tags `v3.0.0` and writes the release notes.
+- Merge master into `phaser` one last time, run CI and open the PR into master. It is merged only when the owner explicitly says so, after every milestone is finished. The owner tags `v3.0.0` and writes the release notes.
 
 ## 8. Tests
 
@@ -207,8 +217,8 @@ Only once M7 is accepted: until then the Pixi version is the reference.
 | View logic (lianas, monkeys, hearts, hud, banana pops, shadow, temple, branch decorations, stage views, debug text; about 100 tests across 11 files, part of them touch Pixi objects) | Node, with real Pixi objects | Until M8 they stay as they are, for the Pixi version. The Phaser version gets **view-models** (plain data and functions: positions, rotations, alphas, which pieces show, text content, texture keys) tested in Node; its adapters are exercised by smoke and parity tests. M8 removes the Pixi tests. |
 | Input, pause, fullscreen, audio player | Node with fakes | Unchanged for the Pixi version until M8; the Phaser adapters get synthetic-event tests of the same semantics. |
 | Drawing shim | none | Recorder tests in Node; pixel checks in the browser. |
-| New: smoke tests (Playwright, Chromium and possibly WebKit, in CI) | none | For both versions until M8: the page boots without errors; each mode starts and a key press lets go; resize and rotate; fullscreen request; context loss and restore; sound context state; no console errors over a short bot-driven run. |
-| New: parity (dev tool; a few scenarios as CI checks once stable) | none | Pixel diff Pixi against Phaser until M8; afterwards a small set of stored reference images, if wanted (section 10). |
+| New: smoke tests (Playwright, Chromium, in CI) | none | For both versions until M8: the page boots without errors; each mode starts and a key press lets go; resize and rotate; fullscreen request; context loss and restore; sound context state; no console errors over a short bot-driven run. |
+| New: parity (dev tool; a few scenarios as CI checks once stable) | none | Pixel diff Pixi against Phaser until M8; afterwards the small set of reference screenshots kept in M8. |
 
 CI gets a second job for the browser tests. `npm test` stays fast and Node-only.
 
@@ -227,18 +237,9 @@ Everything below must work on the Phaser renderer as on v2.3:
 - Version on the title screen; Pages deploy at `/liano/`; the window-table check in CI.
 - Performance within the section 5 budgets on the iPhone 13 mini.
 
-## 10. Open questions and things to confirm
+## 10. Open questions
 
-Answered: Phaser 4.2.1; the synthesized recipes stay; both versions playable until M8; the iPhone 13 mini sets the budgets (section 1). Still open:
-
-1. **What counts as identical?** Proposed: a pixel diff under about 1 % of pixels differing by more than 8/255 per channel, with sub-pixel antialiasing differences accepted, checked on the parity scenarios. Stricter or looser?
-2. **Reference images after M8.** The parity tool compares the two live versions until M8. Should M8 store a few reference screenshots (a few MB in the repo) for later visual checks, or drop visual comparison after the migration?
-3. **Budgets.** Section 5's numbers (60 fps with no frame over 34 ms, a playable title in about 1.5 s, textures well under 150 MB) are my proposals for the iPhone 13 mini. Right?
-4. **Download size.** About +150–170 KB gzipped for Phaser unless a custom build trims it. Acceptable?
-5. **Screen shake.** I assumed our own shake maths driving Phaser's camera, so the death shake is unchanged, rather than Phaser's built-in `camera.shake`.
-6. **Master during the migration.** Visual changes to `src/render/*` on master need a matching change in `src/phaser/`. Is "bug fixes yes, new visual features wait" an acceptable policy?
-7. **Version numbers.** I suggest `3.0.0-dev.1`, `-dev.2`, ... at each milestone merge into `phaser`, and `3.0.0` at the end.
-8. **CI.** The browser job adds a Chromium install and a few minutes per PR; WebKit (closest to the iPhone) adds a little more. Both, Chromium only, or none?
+None: every question from the first two drafts is answered in section 1. New questions that come up during a milestone are added here and asked before that milestone's PR is merged into `phaser`.
 
 ## 11. Appendix: Pixi use by file
 
