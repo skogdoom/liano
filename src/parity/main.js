@@ -106,8 +106,8 @@ try {
       const pixi = await drawWithPixi(scenario, zoom);
       const phaser = await drawWithPhaser(scenario, zoom);
       const result = compareImages(pixi.data, phaser.data);
-      const pass = passes(result);
       const solid = solidPixels(result, width);
+      const pass = passes({ ...result, solid });
       const id = zoom === 1 ? scenario.id : `${scenario.id}@${zoom}x`;
       results.push({ id, pixels: result.pixels, differing: result.differing, share: result.share, maxDelta: result.maxDelta, solid, pass });
 
@@ -116,7 +116,7 @@ try {
       heading.textContent = `${id}: ${scenario.title}`;
       const summary = document.createElement('p');
       summary.className = pass ? 'pass' : 'fail';
-      summary.textContent = `${pass ? 'Identical' : 'Different'}: ${(result.share * 100).toFixed(2)} % of the pixels differ by more than ${PARITY.channel}/255 (limit ${PARITY.share * 100} %); largest difference ${result.maxDelta}/255; ${solid} in solid patches.`;
+      summary.textContent = `${pass ? 'Identical' : 'Different'}: ${(result.share * 100).toFixed(2)} % of the pixels differ by more than ${PARITY.channel}/255 (limit ${PARITY.share * 100} %); largest difference ${result.maxDelta}/255; ${solid} in solid patches (${((solid / result.pixels) * 1e6).toFixed(0)} per million, limit ${PARITY.solidPerMillion}).`;
       const row = document.createElement('div');
       row.className = 'row';
       row.append(

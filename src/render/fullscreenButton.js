@@ -1,9 +1,8 @@
 import { Container, Graphics } from 'pixi.js';
+import { FULLSCREEN_HIT, inside } from '../controls.js';
 
 const CREAM = 0xf4e7c5;
 const OUTLINE = 0x2a1a0c;
-// Tap target in logical pixels, right of the mute button's.
-const HIT = { x: 90, y: 0, w: 90, h: 90 };
 const SIZE = 38;
 const ARM = 12;
 
@@ -45,7 +44,7 @@ export class FullscreenButton {
   }
 
   contains(x, y) {
-    return this.view.visible && x >= HIT.x && x <= HIT.x + HIT.w && y >= HIT.y && y <= HIT.y + HIT.h;
+    return this.view.visible && inside(FULLSCREEN_HIT, { x, y });
   }
 
   update(active) {

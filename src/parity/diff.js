@@ -1,7 +1,8 @@
 // Comparing the two versions' pictures of the same scenario. The agreed meaning of
 // "identical" (PHASER_PLAN.md, section 1): under PARITY.share of the pixels differ by
-// more than PARITY.channel (out of 255) in a colour channel.
-export const PARITY = { channel: 8, share: 0.01 };
+// more than PARITY.channel (out of 255) in a colour channel, and no more than
+// PARITY.solidPerMillion of the pixels are in solid patches of difference.
+export const PARITY = { channel: 8, share: 0.01, solidPerMillion: 25 };
 
 // `a` and `b` are the RGBA bytes of two images of the same size. Returns how many
 // pixels differ by more than `channel` in any channel (alpha included), their share,
@@ -30,9 +31,8 @@ export function compareImages(a, b, { channel = PARITY.channel } = {}) {
 
 // How many of the pixels over the limit have all eight neighbours over it too: in a
 // solid patch of difference rather than on an edge. Antialiasing differences are rims a
-// pixel or two wide and leave next to none; a missing or wrong part leaves a patch. For
-// the report only (the M1 spike found the share alone too lenient for small objects on
-// a large picture: PHASER_PLAN.md, M1).
+// pixel or two wide and leave next to none; a missing or wrong part leaves a patch, which
+// the share alone lets through for a small object on a large picture (PHASER_PLAN.md, M1).
 export function solidPixels({ diff }, width) {
   const height = diff.length / 4 / width;
   const over = (x, y) => diff[(y * width + x) * 4 + 1] === 0 && diff[(y * width + x) * 4] === 255;
@@ -48,5 +48,7 @@ export function solidPixels({ diff }, width) {
   return solid;
 }
 
-// Whether a comparison counts as identical.
-export const passes = (result, share = PARITY.share) => result.share < share;
+// Whether a comparison counts as identical: `result` from compareImages, with `solid`
+// from solidPixels (none if left out).
+export const passes = ({ share, pixels, solid = 0 }) =>
+  share < PARITY.share && (pixels ? (solid / pixels) * 1e6 : 0) <= PARITY.solidPerMillion;
