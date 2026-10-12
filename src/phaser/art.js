@@ -1,4 +1,4 @@
-import { atlasScaleFor } from '../art/catalog.js';
+import { TILE_EDGE, atlasScaleFor } from '../art/catalog.js';
 
 // The pre-rendered art in the Phaser version (PHASER_PLAN.md, section 5): loading the
 // atlases built into public/art/ (scripts/build-art.mjs) and making pieces from them.
@@ -29,7 +29,7 @@ export function queueArt(load, scale, sets = ['boot', 'main']) {
 export function queueSet(load, catalog, set, scale) {
   load.multiatlas(atlasKey(set), `${BASE}${set}@${scale}x.json`, BASE);
   for (const [key, piece] of Object.entries(catalog.pieces)) {
-    if (piece.set === set && piece.kind === 'tile') load.image(tileKey(key), `${BASE}${piece.image}`);
+    if (piece.set === set && piece.kind === 'tile') load.image(tileKey(key), `${BASE}${piece.at[scale].image}`);
   }
 }
 
@@ -83,6 +83,19 @@ export class Art {
     return this.image(scene, key, frame).setBlendMode(BLEND_ADD);
   }
 
+  // Stretches an image of a flat piece (or the part of it from `from` to `to`, in units
+  // across its box) over the rect { x, y, w, h }. A picture stretched far blends its edge
+  // pixels with the transparent space round it, so a pixel is cut off each edge first.
+  stretch(image, key, { x, y, w, h }, { from = [0, 0], to = null } = {}) {
+    const { box } = this.piece(key);
+    const { zoom } = this.at(key);
+    const [fx, fy] = [from[0] * zoom + 1, from[1] * zoom + 1];
+    const [tx, ty] = to ? [to[0] * zoom - 1, to[1] * zoom - 1] : [box.w * zoom - 1, box.h * zoom - 1];
+    image.setOrigin(0, 0).setCrop(fx, fy, tx - fx, ty - fy);
+    const [sx, sy] = [w / (tx - fx), h / (ty - fy)];
+    return image.setScale(sx, sy).setPosition(x - fx * sx, y - fy * sy);
+  }
+
   // A piece that repeats downwards (the temple's base and stairs): copies stacked from its
   // origin down to `height` units below it, the last one cropped there. Images, not yet
   // added; each sits where the drawing put that repeat.
@@ -130,7 +143,11 @@ export class Art {
   tint(objects, color) {
     for (const object of objects) {
       if (object.list) this.tint(object.list, color);
-      else if (object.artKey && this.piece(object.artKey).tint) object.setTint(color);
+      else if (object.artKey && this.piece(object.artKey).tint) {
+        // A strip (a Rope) has no tint: it takes a colour per point.
+        if (object.setTint) object.setTint(color);
+        else object.setColors(color);
+      }
     }
   }
 
@@ -143,7 +160,9 @@ export class Art {
   rope(scene, key) {
     const p = this.piece(key);
     const at = this.table[key];
-    return scene.make.rope({ key: atlasKey(p.set), frame: at.frames[0], points: 2 }, false).setScale(1 / at.zoom);
+    const rope = scene.make.rope({ key: atlasKey(p.set), frame: at.frames[0], points: 2 }, false).setScale(1 / at.zoom);
+    rope.artKey = key;
+    return rope;
   }
 
   // Lays a strip piece's rope along `points` (in world units).
@@ -152,11 +171,22 @@ export class Art {
   }
 
   // A tile piece repeating sideways over `width` units, its top where its box's top is.
+  // Its image has `zoom` pixels per unit: the sprite is that much larger, scaled down.
   tile(scene, key, width) {
     const p = this.piece(key);
-    const height = p.box.h;
-    const tile = scene.make.tileSprite({ x: 0, y: p.box.y, width, height, key: tileKey(key) }, false).setOrigin(0, 0);
+    const { zoom } = this.at(key);
+    const tile = scene.make.tileSprite({ x: 0, y: p.box.y, width: width * zoom, height: p.box.h * zoom, key: tileKey(key) }, false).setOrigin(0, 0).setScale(1 / zoom);
+    // Only the rows between the image's edge rows (see TILE_EDGE).
+    tile.tilePositionY = TILE_EDGE;
     tile.artKey = key;
+    return tile;
+  }
+
+  // Sets a tile's width (units) and scroll: the tile at `x` units across it shows first.
+  setTile(tile, key, { width = null, x = 0 }) {
+    const { zoom } = this.at(key);
+    if (width !== null) tile.setSize(width * zoom, tile.height);
+    tile.tilePositionX = x * zoom;
     return tile;
   }
 }

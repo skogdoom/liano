@@ -1,5 +1,5 @@
-import { HEART_GLINT, bananaShape, drawBanana, drawGlint } from '../../render/bananaView.js';
-import { drawHeart } from '../../render/heartView.js';
+import { HEART_GLINT, bananaShape, drawBanana, drawGlint } from '../../views/banana.js';
+import { drawHeart } from '../../views/hearts.js';
 
 // What the monkeys collect, and the hearts and banana icons of the HUD and results.
 const { glint } = bananaShape();
@@ -10,8 +10,13 @@ export const HUD_HEART = 11;
 export const HUD_BANANA = 11;
 export const RESULTS_BANANA = 13;
 
+// The banana, the heart to take and the glint rock and bob between pixels: rasterized at
+// twice the density, so they are sampled smoothly.
+const rocking = { scale: 2 };
+
 export const ITEM_PIECES = [
   {
+    ...rocking,
     key: 'banana.body',
     set: 'boot',
     purpose: 'A banana to take, about its centre (the origin): curved, with a ridge, a stem and a dark tip. It bobs and rocks.',
@@ -19,12 +24,14 @@ export const ITEM_PIECES = [
     frames: [(g) => drawBanana(g)],
   },
   {
+    ...rocking,
     key: 'banana.glint',
     set: 'boot',
     purpose: 'A four-pointed glint on a banana (or a heart), about its centre; it fades in and out.',
     frames: [(g) => drawGlint(g, GLINT_SIZE)],
   },
   {
+    ...rocking,
     key: 'heart.field',
     set: 'boot',
     purpose: `A heart to take (a banana turned into a life), ${FIELD_HEART} px across about its centre.`,

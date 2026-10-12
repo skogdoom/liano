@@ -38,7 +38,7 @@ async function drawWithPixi(scenario, zoom) {
   world.scale.set(zoom);
   world.position.set(-sx * zoom, -sy * zoom);
   app.stage.addChild(world);
-  scenario.pixi(world, { Graphics, Container });
+  scenario.pixi(world, { Graphics, Container }, zoom);
   app.render();
   const image = pixelsOf(app.canvas, width, height);
   app.destroy(true, { children: true });
@@ -98,8 +98,11 @@ function figure(caption, canvas) {
 
 const results = [];
 const list = document.getElementById('scenarios');
+// `?only=world.` draws only the scenarios whose id starts with it (`?only=world.,spike.`:
+// with any of them).
+const only = new URLSearchParams(location.search).get('only')?.split(',');
 try {
-  for (const scenario of SCENARIOS) {
+  for (const scenario of SCENARIOS.filter((s) => !only || only.some((prefix) => s.id.startsWith(prefix)))) {
     for (const zoom of scenario.zooms ?? [1]) {
       const width = scenario.width * zoom;
       const height = scenario.height * zoom;

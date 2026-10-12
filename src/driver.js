@@ -13,15 +13,16 @@ const ROLES = ['start', 'primary', 'p1', 'p2', 'menu'];
 //
 // `input` is createInput's, `pause` createPause's, `sound` a SoundPlayer (or the Phaser
 // version's), `prefetch` an ObstaclePrefetch. `onDebugToggle` and `onMuteToggle` are
-// called when D and M are pressed.
-export function createDriver({ game, input, pause, sound, prefetch, onStep = () => {}, onDebugToggle = () => {}, onMuteToggle = () => {} }) {
+// called when D and M are pressed. Until `ready()` (the Phaser version's art), presses
+// wait in the input: one made before then acts as soon as it is.
+export function createDriver({ game, input, pause, sound, prefetch, ready = () => true, onStep = () => {}, onDebugToggle = () => {}, onMuteToggle = () => {} }) {
   const loop = createFixedStepLoop({
     dt: SIM_DT,
     maxFrameDt: MAX_FRAME_DT,
     step(dt) {
       const pick = input.consumeModePick();
       if (pick && game.selectMode(MODE_ORDER[pick - 1])) input.clear();
-      for (const role of ROLES) {
+      for (const role of ready() ? ROLES : []) {
         // A press that changes the state (starts or restarts a run) is the step's last.
         if (input.consumePress(role) && game.press(role)) {
           input.clear();

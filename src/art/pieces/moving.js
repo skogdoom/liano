@@ -14,7 +14,7 @@ import {
   drawSnakeCoil,
   drawSnakeStalkLeaf,
   drawSpiderBody,
-} from '../../render/obstacleViews.js';
+} from '../../views/obstacles.js';
 import { OBSTACLE_SCALE } from './branch.js';
 import { BAT_LOOK_NAMES, BIRD_LOOKS, flipbook } from './decorations.js';
 import { linePieces } from './lines.js';

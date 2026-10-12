@@ -97,11 +97,12 @@ export class LianaRig {
 // camera at `cameraX` as the Pixi layer is.
 export class BackdropRig {
   constructor(scene, art, width) {
+    this.art = art;
     this.view = scene.add.existing(art.tile(scene, 'backdrop.far', width));
   }
 
   update(cameraX, tint = 0xffffff) {
-    this.view.tilePositionX = ((((cameraX * FAR_FACTOR) % TILE) + TILE) % TILE);
+    this.art.setTile(this.view, 'backdrop.far', { x: (((cameraX * FAR_FACTOR) % TILE) + TILE) % TILE });
     this.view.setTint(tint);
   }
 }

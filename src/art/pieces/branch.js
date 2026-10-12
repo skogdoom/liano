@@ -8,7 +8,7 @@ import {
   drawPantherEyes,
   drawPantherTail,
   drawTrunk,
-} from '../../render/obstacleViews.js';
+} from '../../views/obstacles.js';
 
 // The branch and the panther on it. Obstacles grow to 1.3 by stage 4: their pieces are
 // rasterized for that scale.
@@ -22,7 +22,7 @@ export const tailFrameFor = (swish) =>
   Math.min(TAIL_FRAMES - 1, Math.max(0, Math.round(((swish + TAIL_SWISH) / (2 * TAIL_SWISH)) * (TAIL_FRAMES - 1))));
 
 // Stretched pieces are drawn at a reference size and scaled by the rig.
-export const TRUNK_REFERENCE = 100; // px from the top of the trunk to its bottom (straight sides: stretched)
+export const TRUNK_REFERENCE = 100; // px from the top of the trunk to its bottom (straight sides: stretched; its top is under the branch)
 export const BARK_LINE_LENGTH = 14;
 
 // Obstacles are not tinted with the stage (only the temple and the backdrop are).
@@ -50,28 +50,31 @@ export const BRANCH_PIECES = [
   },
 ];
 
+// A decoration: rasterized at twice the density, as the others (decorations.js).
+const decoration = { scale: 2 * OBSTACLE_SCALE };
+
 export const PANTHER_PIECES = [
   {
-    ...obstacle,
+    ...decoration,
     key: 'panther.body',
     purpose: 'A black panther lying on the branch, head up: the body and head. It breathes (scaled up and down).',
     attach: { ear: [35.5, -22] },
     frames: [(g) => drawPantherBody(g)],
   },
   {
-    ...obstacle,
+    ...decoration,
     key: 'panther.ear',
     purpose: 'The inside of the ear that flicks, about its own centre (folded by scaling).',
     frames: [(g) => drawPantherEar(g)],
   },
   {
-    ...obstacle,
+    ...decoration,
     key: 'panther.eyes',
     purpose: 'The eyes: open (frame 0) and shut (frame 1).',
     frames: [(g) => drawPantherEyes(g, false), (g) => drawPantherEyes(g, true)],
   },
   {
-    ...obstacle,
+    ...decoration,
     key: 'panther.tail',
     purpose: `The tail hanging off the end of the branch, in ${TAIL_FRAMES} frames from its tip swung ${TAIL_SWISH} px one way to as far the other.`,
     frames: Array.from({ length: TAIL_FRAMES }, (_, i) => (g) => drawPantherTail(g, tailSwishOf(i))),

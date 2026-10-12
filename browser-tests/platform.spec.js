@@ -26,8 +26,6 @@ function pixelsAt(page, points) {
 }
 
 const BLACK = [0, 0, 0, 255];
-const VIEW = [0x10, 0x26, 0x1a, 255];
-const BAND = [0x4a, 0x80, 0x60, 255];
 
 // Window shapes: 16:9, wider (a phone in landscape), much wider (bars at the sides),
 // 4:3 (an iPad), portrait phones; at the pixel ratios the game uses (3 is capped at 2).
@@ -51,26 +49,30 @@ for (const [width, height, ratio] of SHAPES) {
     const layout = layoutFor(width, height);
     const expected = viewCamera(layout, r);
     await expect.poll(() => page.evaluate(() => window.__liano.camera)).toEqual(expected);
+    // The world is drawn once the main art set is in (until then the view is black).
+    await page.waitForFunction(() => window.__liano.platform.world?.panes.length > 0);
     const canvas = await page.evaluate(() => {
       const { canvas: c } = window.__liano.app;
       return { width: c.width, height: c.height, css: [c.style.width, c.style.height] };
     });
     expect(canvas).toEqual({ ...canvasSize(width, height, r), css: [`${width}px`, `${height}px`] });
-    // Inside the view: the frame, and the world band; outside it: black bars.
+    // Inside the view: the world (the sky at the top, the floor at the bottom, the jungle
+    // in the band), never black; outside it: black bars.
     const { x, y, width: w, height: h, zoom } = expected;
     const band = Math.round(y + (layout.bandTop + 360) * zoom);
     const points = [
       [x + 2, y + 2],
       [x + w - 3, y + h - 3],
-      // Beside the readout text, which is centred.
       [x + 4, band],
     ];
     const bars = [];
     if (x > 2) bars.push([1, y + 2], [canvas.width - 2, y + 2]);
     if (y > 2) bars.push([x + 2, 1], [x + 2, canvas.height - 2]);
     const pixels = await pixelsAt(page, [...points, ...bars]);
-    const inBand = (py) => py >= y + layout.bandTop * zoom && py < y + (layout.bandTop + 720) * zoom;
-    points.forEach(([, py], i) => expect(pixels[i], `view at ${points[i]}`).toEqual(inBand(py) ? BAND : VIEW));
+    points.forEach((point, i) => {
+      expect(pixels[i][3], `view at ${point}`).toBe(255);
+      expect(pixels[i], `view at ${point}`).not.toEqual(BLACK);
+    });
     bars.forEach((point, i) => expect(pixels[points.length + i], `bar at ${point}`).toEqual(BLACK));
     expect(errors).toEqual([]);
     await page.close();
@@ -189,6 +191,59 @@ for (const [ratio, scale] of [
     expect(await page.evaluate(() => window.__liano.platform.art.scale)).toBe(scale);
     // A piece from each set is in Phaser's textures.
     expect(await page.evaluate(() => ['liana.green.rope', 'panther.body'].map((key) => window.__liano.app.textures.get(`art.${window.__liano.platform.art.piece(key).set}`).has(key)))).toEqual([true, true]);
+    expect(errors).toEqual([]);
+    await page.close();
+  });
+}
+
+// A TileSprite wraps its texture up and down too, so a backdrop tile's edge could show its
+// opposite row: a dark line along the top of the floor, at some window sizes (these four
+// showed it). The tile images carry copies of their edge rows (TILE_EDGE in catalog.js).
+for (const [width, ratio] of [
+  [1092, 1],
+  [1598, 1],
+  [1368, 2],
+  [1460, 2],
+]) {
+  test(`the Phaser version's backdrop tiles show no line at their edges at ${width} px, ${ratio}×`, async ({ browser }) => {
+    const page = await browser.newPage({ viewport: { width, height: Math.round((width * 9) / 16) }, deviceScaleFactor: ratio });
+    const errors = collectErrors(page);
+    await page.goto(`${DEV}?engine=phaser`);
+    await started(page, errors);
+    await page.waitForFunction(() => window.__liano.platform.artLoad?.sets.length === 2);
+    // Each tile edge in the band: the floor's top, the ferns' top, the clumps' bottom and
+    // the canopy strip's bottom (world y); the mean of each pixel row about it, on the left.
+    const rows = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const { app, camera, layout } = window.__liano;
+          app.renderer.snapshot((image) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            const context = canvas.getContext('2d');
+            context.drawImage(image, 0, 0);
+            resolve(
+              [626, 560, 100, 58].map((edge) => {
+                const y = Math.floor(camera.y + (layout.bandTop + edge) * camera.zoom);
+                return [y - 2, y - 1, y, y + 1, y + 2].map((row) => {
+                  const data = context.getImageData(0, row, Math.floor(canvas.width / 3), 1).data;
+                  let sum = 0;
+                  for (let i = 0; i < data.length; i += 4) sum += data[i] + data[i + 1] + data[i + 2];
+                  return sum / (data.length / 4);
+                });
+              }),
+            );
+          });
+        }),
+    );
+    // A line is a row much darker (or lighter) than both rows beside it.
+    for (const means of rows) {
+      for (let i = 1; i < means.length - 1; i++) {
+        const apart = Math.sign(means[i] - means[i - 1]) === Math.sign(means[i] - means[i + 1]);
+        expect(apart && Math.abs(means[i] - (means[i - 1] + means[i + 1]) / 2) > 20, `rows ${means.map(Math.round)}`).toBe(false);
+      }
+    }
     expect(errors).toEqual([]);
     await page.close();
   });

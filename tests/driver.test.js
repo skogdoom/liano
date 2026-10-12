@@ -8,7 +8,7 @@ import { MAX_FRAME_DT, SIM_DT } from '../src/config.js';
 
 // A game with empty worlds, real input on a fake key target, and stand-ins for pause,
 // sound and prefetch that record what the driver asks of them.
-function setup() {
+function setup({ ready } = {}) {
   const keys = new EventTarget();
   const press = (code) => keys.dispatchEvent(Object.assign(new Event('keydown', { cancelable: true }), { code, repeat: false }));
   const game = new Game({ createWorld: (options) => new World({ ...options, makeObstacle: () => null, makeBanana: () => null }) });
@@ -37,6 +37,7 @@ function setup() {
     pause,
     sound,
     prefetch,
+    ready,
     onStep: () => calls.steps++,
     onDebugToggle: () => calls.debug++,
     onMuteToggle: () => calls.mute++,
@@ -52,6 +53,17 @@ describe('the game driver', () => {
     driver.frame(1000 / 60);
     expect(game.state).toBe(GameState.PLAYING);
     expect(calls.steps).toBe(2); // 1/60 s is two 1/120 s steps
+  });
+
+  it('holds a press until the version is ready, then applies it', () => {
+    let art = false;
+    const { game, driver, press } = setup({ ready: () => art });
+    press('Space');
+    driver.frame(1000 / 60);
+    expect(game.state).toBe(GameState.TITLE);
+    art = true;
+    driver.frame(1000 / 60);
+    expect(game.state).toBe(GameState.PLAYING);
   });
 
   it('runs the sim by the frame time, up to MAX_FRAME_DT, and says how far into the next step to draw', () => {

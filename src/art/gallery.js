@@ -1,6 +1,6 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { PARITY, compareImages, solidPixels } from '../parity/diff.js';
-import { ATLAS_SCALES } from './catalog.js';
+import { ATLAS_SCALES, TILE_EDGE } from './catalog.js';
 import { frameName } from './piece.js';
 import { PIECES } from './pieces/index.js';
 
@@ -120,6 +120,8 @@ function pixiFrame(piece, i, box, w, h, zoom) {
   app.renderer.resize(w, h);
   const world = new Container();
   const g = new Graphics();
+  // A see-through piece: Pixi blends each shape on its own at the Graphics' alpha.
+  g.alpha = piece.alpha ?? 1;
   piece.frames[i](zoomed(g, zoom));
   // Nothing to draw (a wing seen edge on): the renderer would leave the last picture.
   if (g.bounds.width === 0 || g.bounds.height === 0) {
@@ -182,7 +184,7 @@ for (const piece of PIECES) {
     const [w, h] = piece.kind === 'tile' ? [at.size[0], at.size[1]] : at.size;
     // From the atlas (or the tile's own image).
     const built = canvasOf(w, h, view);
-    if (piece.kind === 'tile') built.context.drawImage(await loadImage(`/art/${info.image}`), 0, 0);
+    if (piece.kind === 'tile') built.context.drawImage(await loadImage(`/art/${at.image}`), 0, TILE_EDGE, w, h, 0, 0, w, h);
     else {
       const { image, frame } = atlases[name];
       built.context.drawImage(image, frame.x, frame.y, frame.w, frame.h, 0, 0, w, h);

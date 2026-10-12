@@ -13,6 +13,11 @@
 //   scale     the largest scale the game draws it at (before the screen's), so it is
 //             rasterized sharp enough
 //   tint      whether the stage tint applies
+//   density   the least density (pixels per unit at its scale) to rasterize it at, whatever
+//             the atlas: for large pictures with long straight edges, which a 1× picture
+//             placed between pixels would blur
+//   alpha     for a piece drawn see-through (the shadow monkey): every shape in it at
+//             this share of its alpha, each blending on its own as the game draws them
 //   box       the picture's box in the piece's own units (default: around the drawing)
 //   fps       a flipbook's frame rate, if it plays at one (most are picked by the code)
 //   attach    named points where other pieces join it: { name: [x, y] }
@@ -36,6 +41,8 @@ export function definePiece(piece) {
   if (!KINDS.includes(p.kind)) fail(`kind must be one of ${KINDS.join(', ')}`);
   if (!SETS.includes(p.set)) fail(`set must be one of ${SETS.join(', ')}`);
   if (!(p.scale > 0)) fail('scale must be positive');
+  if (p.density !== undefined && !(p.density >= 1)) fail('density must be at least 1');
+  if (p.alpha !== undefined && !(p.alpha > 0 && p.alpha <= 1)) fail('alpha must be above 0 and at most 1');
   if (p.kind === 'slice' && !p.slices) fail('a slice piece needs its slices');
   if (p.kind === 'strip' && !(p.length > 0)) fail('a strip needs its length');
   if (p.kind === 'tile' && !p.box) fail('a tile needs its box (one repeat)');

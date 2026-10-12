@@ -1,12 +1,12 @@
 // Builds the art the game loads (PHASER_PLAN.md, section 5) into public/art/: each
 // piece's frames (the custom picture from art/custom/ where there is one, else the
 // generated SVG) rasterized by resvg and packed into atlases per set (boot, main) and
-// scale (1×, 2×, 4×); the backdrop tiles as images of their own at 1×; and pieces.json,
+// scale (1×, 2×, 4×); the backdrop tiles as images of their own; and pieces.json,
 // which tells the game where everything is. Runs before `npm run build` and `npm run dev`;
 // stops on a mistake in the custom art (`npm run art:check` says more).
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { Resvg } from '@resvg/resvg-js';
-import { ATLAS_SCALES, cellOf, placement } from '../src/art/catalog.js';
+import { ATLAS_SCALES, TILE_EDGE, cellOf, placement, tileImage } from '../src/art/catalog.js';
 import { readCustom } from '../src/art/custom.js';
 import { pack } from '../src/art/pack.js';
 import { frameName } from '../src/art/piece.js';
@@ -71,11 +71,14 @@ const pieces = manifest.pieces;
 const sets = [...new Set(pieces.map((p) => p.set))];
 
 for (const scale of ATLAS_SCALES) {
-  const width = Math.min(1024 * scale, MAX_PAGE);
+  // At least 2048 wide: some pieces have a density of their own (the temple's stone).
+  const width = Math.min(Math.max(2048, 1024 * scale), MAX_PAGE);
   for (const set of sets) {
     const cells = pieces
       .filter((p) => p.set === set && p.kind !== 'tile')
-      .flatMap((piece) => piece.frames.map((_, i) => ({ piece, i, name: frameName(piece, i), ...cellOf(piece, scale) })));
+      // Strips go on each set's first page: Phaser 4.2.1's Rope draws from a multi-page
+      // atlas's first image whatever page its frame is on.
+      .flatMap((piece) => piece.frames.map((_, i) => ({ piece, i, name: frameName(piece, i), first: piece.kind === 'strip', ...cellOf(piece, scale) })));
     if (cells.length === 0) continue;
     const pages = pack(cells, { width, maxHeight: MAX_PAGE, padding: PADDING });
     const textures = pages.map((page, n) => {
@@ -103,13 +106,24 @@ for (const scale of ATLAS_SCALES) {
   }
 }
 
-// The tiles, each an image of its own at 1×.
+// The tiles, each an image of its own at each scale it is made at (see tileZoom).
 for (const piece of pieces.filter((p) => p.kind === 'tile')) {
-  const cell = { x: 0, y: 0, ...cellOf(piece, 1) };
-  const image = `tiles/${piece.key}@1x.png`;
-  write(image, render(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}">${cellSvg(piece, 0, cell)}</svg>`));
-  sizes[image] = `${cell.w} × ${cell.h}`;
-  for (const scale of ATLAS_SCALES) memory[scale] += cell.w * cell.h * 4;
+  for (const scale of ATLAS_SCALES) {
+    const cell = { x: 0, y: 0, ...cellOf(piece, scale) };
+    const image = tileImage(piece, scale);
+    if (!written.has(image)) {
+      // The tile between its edge rows (see TILE_EDGE), each a copy of the row next to it:
+      // the rendered tile placed again, one pixel row of it showing.
+      const tile = dataUri('tile.png', render(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}">${cellSvg(piece, 0, cell)}</svg>`));
+      const placed = (y) => `<image x="0" y="${y}" width="${cell.w}" height="${cell.h}" href="${tile}"/>`;
+      const row = (y, from) => `<svg y="${y}" width="${cell.w}" height="1">${placed(-from)}</svg>`;
+      const edges = Array.from({ length: TILE_EDGE }, (_, i) => row(i, 0) + row(TILE_EDGE + cell.h + i, cell.h - 1)).join('');
+      const h = cell.h + 2 * TILE_EDGE;
+      write(image, render(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${h}">${edges}${placed(TILE_EDGE)}</svg>`));
+      sizes[image] = `${cell.w} × ${h}`;
+    }
+    memory[scale] += cell.w * (cell.h + 2 * TILE_EDGE) * 4;
+  }
 }
 
 // Where everything is, for the game: per piece its contract (and what a sidecar changes)
@@ -134,7 +148,6 @@ const catalog = {
           ...(attach && { attach }),
           ...(slices && { slices }),
           ...(length !== undefined && { length }),
-          ...(kind === 'tile' && { image: `tiles/${key}@1x.png` }),
           at: Object.fromEntries(ATLAS_SCALES.map((s) => [s, placement(piece, s, sidecar.pivot)])),
         },
       ];

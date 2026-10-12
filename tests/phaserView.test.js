@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { layoutFor } from '../src/layout.js';
-import { applyViewCamera, canvasSize, viewCamera } from '../src/phaser/view.js';
+import { applyViewCamera, canvasSize, rectCamera, viewCamera } from '../src/phaser/view.js';
+import { paneLayouts } from '../src/layout.js';
 import { ENTER_FULLSCREEN, LEAVE_FULLSCREEN, createPhaserFullscreen } from '../src/phaser/fullscreen.js';
 
 // Where a camera placed by viewCamera draws a view point, in canvas pixels.
@@ -57,6 +58,42 @@ describe('the Phaser view on the screen', () => {
     expect(wide.y).toBe(0);
     expect(wide.x).toBeGreaterThan(0);
     expect(wide.x * 2 + wide.width).toBeCloseTo(3440, 0);
+  });
+
+  it('gives each split-screen pane a camera that clips to it and draws it where the view camera does', () => {
+    for (const [w, h, ratio] of [
+      [1280, 720, 2],
+      [1001, 601, 1.5],
+      [390, 844, 2],
+    ]) {
+      const layout = layoutFor(w, h);
+      const view = viewCamera(layout, ratio);
+      const panes = paneLayouts(layout, 2);
+      const cameras = panes.map((pane) => rectCamera(view, pane));
+      cameras.forEach((camera, i) => {
+        const pane = panes[i];
+        for (const [vx, vy] of [
+          [pane.x, pane.y],
+          [pane.x + pane.width, pane.y + pane.height],
+          [37.5, pane.y + 10.25],
+        ]) {
+          const [x, y] = onCanvas(camera, vx, vy);
+          const [ex, ey] = onCanvas(view, vx, vy);
+          expect(x).toBeCloseTo(ex, 9);
+          expect(y).toBeCloseTo(ey, 9);
+        }
+        for (const value of [camera.x, camera.y, camera.width, camera.height]) expect(Number.isInteger(value)).toBe(true);
+        expect(camera.zoom).toBe(view.zoom);
+      });
+      // Together they cover the view's viewport, without overlapping.
+      expect(cameras[0]).toMatchObject({ x: view.x, y: view.y, width: view.width });
+      expect(cameras[1].y).toBe(cameras[0].y + cameras[0].height);
+      expect(cameras[1].y + cameras[1].height).toBe(view.y + view.height);
+    }
+    // The whole view's rect is the view camera itself.
+    const view = viewCamera(layoutFor(1001, 601), 1.5);
+    const layout = layoutFor(1001, 601);
+    expect(rectCamera(view, { x: 0, y: 0, width: layout.view.width, height: layout.view.height })).toEqual(view);
   });
 
   it('points a Phaser camera at it', () => {
