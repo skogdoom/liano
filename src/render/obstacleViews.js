@@ -749,8 +749,19 @@ function drawThornBush(g, o, rand, hangs) {
   for (const c of circles) g.circle(c.dx - c.r * 0.3, c.dy - c.r * 0.3, c.r * 0.45).fill(BUSH_LIGHT);
 }
 
+// Rocks come in ROCK_VARIANTS outlines, one picked per gap (PHASER_PLAN.md, M4: a random
+// outline per gap could not be pre-rendered).
+export const ROCK_VARIANTS = 24;
+export const rockVariant = (gap) => Math.floor(mulberry32(mixSeed(0x70c4, gap))() * ROCK_VARIANTS);
+
 // Hitbox: one circle. An angular grey polygon close to the circle, on a vine or a ledge.
 function drawRock(g, o, rand, hangs) {
+  drawRockSupport(g, o, hangs);
+  drawRockBody(g, rockVariant(o.gap));
+}
+
+// The vine or the ledge on a stem the rock sits on.
+function drawRockSupport(g, o, hangs) {
   const [{ r }] = OBSTACLE_HITBOXES.rock;
   if (hangs) {
     vine(g, 0, (CANOPY_Y - o.y) / o.scale, -r + 4, 9);
@@ -759,6 +770,13 @@ function drawRock(g, o, rand, hangs) {
     g.poly([-5, r - 4, 5, r - 4, 8, (FLOOR_Y + 20 - o.y) / o.scale, -8, (FLOOR_Y + 20 - o.y) / o.scale]).fill(SUPPORT_TRUNK);
     g.roundRect(-r - 4, r - 6, 2 * r + 8, 10, 4).fill(BARK_DARK);
   }
+}
+
+// The rock itself, in outline `variant` (0 to ROCK_VARIANTS - 1): grey, with a lit and a
+// shaded facet.
+export function drawRockBody(g, variant) {
+  const [{ r }] = OBSTACLE_HITBOXES.rock;
+  const rand = mulberry32(mixSeed(0x70c5, variant));
   const n = 9;
   const outline = [];
   for (let i = 0; i < n; i++) {
@@ -775,6 +793,7 @@ function drawRock(g, o, rand, hangs) {
   };
   facet(4, 7, ROCK_LIGHT);
   facet(0, 2, ROCK_DARK);
+  return g;
 }
 
 // Hitbox: three stacked circles. A teardrop paper nest in gold bands with a dark

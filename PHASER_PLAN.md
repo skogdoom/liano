@@ -387,6 +387,36 @@ The atlas rigs hold 60 fps under the stress load, where Pixi drops to 50, and na
 - **The art gallery page** and the generated `art/README.md`.
 - **Done when:** every piece is generated and shown in the gallery; the gallery shapes are within the parity tolerance (section 1); the recorder, writer, manifest and validator tests pass in Node; replacing one piece with a placeholder in a test build shows in the game with no code change; atlas sizes and load time are inside the budgets.
 
+**M4 inventory** (from the drawing code; how each kind of variety maps to pieces, section 5). *Exact*: the rig reproduces the drawing up to antialiasing. *Close*: a continuous change approximated, checked against the parity limit.
+
+| Object | Pieces | Variety and how it maps |
+|---|---|---|
+| Liana (3 palettes: green, gold, shadow grey) | rope strip, tip flash strip, leaf (light, dark) | Bent rope (M1); leaves placed per liana. Exact. |
+| Monkey (2 palettes + shadow) | tail, torso, head, eyes, dead eyes, arm, leg | Limbs turn about their pivots, body turns, facing flips, blink alpha. Exact. |
+| Branch | body, bark line, trunk | Bark lines placed and stretched (M1); trunk stretched. Exact. |
+| Supports (vines, trunks, stems, ledges) | vine strip, trunk, stem, ledge | Trunks and stems stretched; a vine from the canopy is a rope along its curve. Exact (vines close). |
+| Thorn bush | bush circles, highlight, thorn | Thorns placed and turned per bush. Exact. |
+| Rock | 24 outlines (body with facets), ledge, stem | **Decided after M4's inventory: a fixed set of 24 outlines**, one picked per gap in both versions (a random outline per gap cannot be pre-rendered). Exact. |
+| Beehive | nest, bee body, bee wing | Bees placed per frame, wings beat (scale). Exact. |
+| Temple (4 looks) | per look: shrine, tiers, stairs, base pattern (tiled to the floor), braziers; flame flipbook, glow; haze; moss, vine, fern leaf | Base and stairs tiled to the floor depth; moss and ferns placed; vines along their curves; the glow scaled and added. Exact, vines close. |
+| Decorations: panther | as M1 | Exact (tail flipbook). |
+| bird | tail, body, head (3 colourings) | Head and tail turn. Exact. |
+| snake | coil band, tail, neck strip, head, tongue | Coil bands stretched to the limb's thickness, the neck a rope. Close. |
+| hanging monkey | arms, legs, body, tail flipbook, eyes | Exact. |
+| nest (3 states) | back, front, twig, egg, shell, chick, beak flipbook, leaf | Twigs placed and stretched; the egg rocks. Exact. |
+| hanging bat (4 looks) | body, ear flipbook, eyes | Exact. |
+| owl | body, skull, face disc, eye, pupil, beak | Face and pupils slide, blink. Exact. |
+| flowers | stem, leaf, petal, heart (tinted per colour) | Stems stretched (a quadratic curve stays itself under scaling), petals placed. Exact. |
+| coconuts | frond, stem, nut, hair, highlight, eye | Nuts and hairs placed. Exact. |
+| Spider | body, leg segment, thread | Legs from two turned segments; thread stretched. Close at the knee. |
+| Snake (moving) | stalk (rope), stalk leaf, coil, head | Head flips. Exact. |
+| Birds (red, blue, purple) | body, wing flipbook | Exact. |
+| Bats (4 looks, flying and circling) | body, wing flipbook | Exact. |
+| Banana, heart | banana, glint, heart (filled, outline) | Exact. |
+| Backdrop | sky (32 bands, stretched), far, mid, near, canopy and floor tiles | Tiles at 1× (M1); tinted. Exact. |
+| HUD and overlays | panel (9-slice), banana icon, off-screen arrow, mute and full-screen icons | Text stays Phaser Text. Exact. |
+| Debug view | | Phaser Graphics (dev only). |
+
 ### M5. World rendering (L, in four parts)
 
 For each part: rigs built from the M4 pieces, a view-model (tested in Node) and a Phaser adapter.
