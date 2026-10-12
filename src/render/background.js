@@ -10,13 +10,13 @@ import { leafPoints, mixColor } from './shapes.js';
 // frame only moves containers. Colours are opaque: shapes near a tile edge are drawn
 // again one tile to each side, and overlapping copies must look identical.
 
-const TILE = 2048;
+export const TILE = 2048;
 export const FLOOR_Y = WORLD_HEIGHT - 60;
 const CANOPY_BOTTOM = 34;
 
 // Taller views (portrait, 4:3) show this much forest above the world band and
 // undergrowth below it.
-const EXTEND_UP = 1000;
+export const EXTEND_UP = 1000;
 const EXTEND_DOWN = 1600;
 
 const SKY_TOP = 0x10261a;
@@ -71,7 +71,14 @@ function drawSky(g, top, width, bottom) {
 
 // Far: hazy tree silhouettes and canopy masses.
 function farLayer() {
-  const ctx = new GraphicsContext();
+  return new ParallaxLayer(drawFarLayer(new GraphicsContext()), FAR_FACTOR);
+}
+
+// How fast the far layer scrolls, as a share of the camera's speed.
+export const FAR_FACTOR = 0.15;
+
+// One tile (TILE wide, repeating) of the far layer (also as a piece for the Phaser version).
+export function drawFarLayer(ctx) {
   const rand = mulberry32(101);
   const trunk = 0x3c6c4d;
   const crown = 0x284d37;
@@ -99,7 +106,7 @@ function farLayer() {
     const r = 60 + upper() * 70;
     wrapped(x, (px) => ctx.circle(px, y, r).fill(crown));
   }
-  return new ParallaxLayer(ctx, 0.15);
+  return ctx;
 }
 
 // Mid: darker trunks with a few branch stubs.

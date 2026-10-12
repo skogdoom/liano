@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0 is done (its report is under M0); M1 is next.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0 is done (its report is under M0). M1 is done on desktop (its report is under M1); its go/no-go waits for the iPhone 13 mini numbers and the questions in section 11.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -192,6 +192,75 @@ Build the minimum of M4 and M2, the whole path from drawing code to SVG to atlas
 Measure on desktop, with CPU/GPU throttling, and **on the iPhone 13 mini**: pixel diff against Pixi, atlas size and texture memory, load and decode time, per-frame JS time, draw calls, the phone's texture size limit, and crispness at 1×, 1.5× and 2× pixel ratios. Compare the two rasterizers (R17). Replace one piece with a hand-made placeholder, as a PNG and as an SVG, and confirm nothing else has to change. Also try Phaser's native Graphics for the same three objects, to confirm the decision with numbers.
 - **Done when:** a short report in this document records the numbers and the choices: the rasterizer, the atlas scales and sizes, the rig patterns, the HiDPI method, startup time, the texture budget. **Go/no-go**: if the section 6 budgets can't be met on the phone, stop and revise the plan before M2.
 
+**M1 report (version 3.0.0-dev.2; desktop done, the phone pending).**
+
+What was built (all dev only, removed or replaced in M4):
+- `src/art/recorder.js` records the Pixi `Graphics` calls, `src/art/svg.js` writes them as SVG; tested in Node, and checked against Pixi's own instructions for a liana. To give the rigs the pieces separately, the three objects' drawing code was split into exported functions (`lianaShape`, `drawTrunk`, `drawBranchBody`, `drawPantherBody`, ...); the Pixi version draws exactly as before (its recorded instructions were compared before and after for 67 branches, the lianas and the backdrop).
+- `npm run art` writes `art/generated/*.svg` and `art/manifest.json` for 11 pieces (28 frames, `src/art/spike.js`); a test fails when they are out of date. `npm run art:atlas` packs the atlases into `art/build/` (not committed; CI builds them before the browser tests).
+- Rigs in Phaser (`src/spike/rigs.js`), parity scenarios for them (`src/parity/spikeScenarios.js`), a rasterizer comparison page (`spike/compare.html`) and a bench page (`spike/bench.html`, `npm run spike:bench` for a production build on the local network).
+
+**Rasterizer: resvg** (`@resvg/resvg-js`, pure npm). Against Pixi's own drawing of every piece frame, resvg differs on 0.14 % of the pixels and Chromium on 0.16 %; both differ only on antialiased rims a pixel wide (Pixi multisamples, the rasterizers compute coverage). resvg needs no browser and renders the 28 frames at both scales in under half a second.
+
+**Parity** (share of pixels over 8/255; "solid": over the limit with all eight neighbours too, see below). The browser test now requires every scenario to pass.
+
+| Scenario | 1× | 1.5× | 2× |
+|---|---|---|---|
+| Far backdrop, by day | 0.08 % | | 0.23 % (59 solid: the 1× tile stretched) |
+| Far backdrop, dusk tint | 0.47 % | | |
+| Branch with a panther, eyes open | 0.65 % | 0.29 % | 0.33 % |
+| The same, blinking | 0.62 % | 0.28 % | 0.33 % |
+| Lianas: rest, swinging, settling, lit tip | 0.81 % | 0.62 % | 0.41 % |
+| Native Phaser Graphics (backdrop, panther, lianas) | 0.02–0.06 % (36 solid: no round caps) | | |
+
+**Bake scales.** Pieces are rasterized at their largest game scale (obstacles 1.3, stage 4) times the atlas scale (1 or 2). Thin strips (the rope, the tip flash) are rasterized at twice that: a thin strip at an angle samples more smoothly scaled down (the lianas went from 1.04 % to 0.81 % at 1×). Backdrop tiles only at 1×: stretched on 2× screens they differ by 0.23 %, and a 2× tile would cost 56 MB instead of 14 MB.
+
+**Atlases.** The spike's pieces: `atlas@1x` 1024 × 232 (15 KB PNG, 0.9 MB as a texture), `atlas@2x` 2048 × 448 (35 KB, 3.5 MB), the far backdrop tile 2048 × 1790 (189 KB, 14.0 MB). Most of the atlas area is the rope (420 units at 4 px a unit at 2×). Shelf packing into one SVG, rendered once per scale.
+
+**Rig patterns**, all proven in the parity scenarios:
+- *plain piece* (the branch, the panther's body): an Image whose origin is the drawing's origin;
+- *stretch piece* (the trunk, drawn 100 units tall and scaled to each trunk's length; the bark lines, turned and stretched): exact for straight-sided shapes;
+- *flipbook* (the tail, 16 frames picked from its swish; the eyes, open and shut);
+- *joint* (the ear folding about its base; the body breathing);
+- *rope* (the liana's rope and tip flash): a straight strip piece bent along the points the code computes, on a Phaser `Rope`. A Rope spreads its texture evenly over its points, which squashed the round caps; the rig lays it by distance instead (`bendStrip`, tested);
+- *placed pieces* (each liana's leaves, where and as the code places them today);
+- *tinted tile* (the backdrop: a `TileSprite` scrolled with `tilePositionX` and tinted).
+
+**HiDPI method.** The Scale Manager in `NONE` mode with a canvas of the CSS size times the pixel ratio (capped at 2) and `scale.zoom` of 1/ratio, so the canvas keeps its CSS size; the camera zooms by the fit times the ratio. The 1× atlas on 1× screens, the 2× atlas on anything denser (1.5× screens scale it down: 0.28–0.62 % above). M2 does the same with resizing.
+
+**Performance** (the bench: 24 branches with panthers, 24 lianas swinging, settling and blinking, the far backdrop scrolling, in a 1280 × 720 view; headless Chromium with software WebGL, so the CPU times compare, the frame rates only relatively):
+
+| | JS per frame (mean, 95th percentile) | Draw calls | Textures |
+|---|---|---|---|
+| Pixi (today) | 3.7 ms, 6.1 ms | 99 | (none) |
+| Phaser, atlas rigs, 1× / 1.5× / 2× | 1.0 / 1.2 / 1.4 ms, under 2.1 ms | 50 | 14.9 MB (1×), 17.5 MB (2×) |
+| Phaser, native Graphics | 29 ms, 41 ms | 6 | none |
+
+With a screenful (4 branches, 4 lianas): atlas rigs 0.47 ms and 10 draw calls, Pixi 1.4 ms and 19. In software WebGL the atlas version also draws 3–4 times faster (19 fps against 5).
+
+**Native Graphics**, for comparison: it looks nearly identical (curves sampled, no round caps or joins), but Phaser rebuilds a Graphics' geometry every frame: the static backdrop alone costs 23 ms a frame (0.26 ms as a tile). With no way to replace its art either, this confirms the plan: native Graphics only for the debug view.
+
+**Start** (production build, local server): the first frame 1.1–1.3 s after navigation for all three; loading and decoding the art 80 ms (1×) to 110–160 ms (2×).
+
+**Custom art.** `art/custom/panther.eyes.0.png` (a magenta placeholder of any size, stretched over the piece's box) and `art/custom/liana.leaf.1.svg` (a blue diamond in the piece's box) were packed into both atlases and showed in the Phaser rigs with no code change; removing them brought the generated pieces back.
+
+**What the parity share misses.** The magenta eyes still passed, at 0.71 %: a small object on a large picture moves the share very little. So the parity page now also counts *solid* pixels (over the limit with all eight neighbours too). Antialiasing rims leave next to none (0–2 on the panther), while wrong art leaves a patch (the magenta eyes 96 at 1×, 472 at 2×). The same count found the rope's flat ends (18 at 1×, 209 at 2×) before they were fixed. Whether to make it part of "identical" is question 2 in section 11.
+
+**Phaser 4.2.1 notes** (the known-bad list, R13):
+- `Rope` spreads its texture evenly over its points, not by distance (the rigs set the UVs themselves).
+- A `Rope` breaks the sprite batch, so each liana costs two draw calls. In M5a all ropes go in one layer and all leaves in another.
+- `Graphics` geometry is rebuilt every frame: never for static or large drawing.
+- No `resolution`: the HiDPI method above.
+
+**Texture budget (proposed).** An estimate for the whole game at a pixel ratio of 2:
+- backdrop tiles at 1×: three parallax layers like the far one, at about 14 MB each, plus smaller canopy and floor strips, about 45–55 MB;
+- object atlases at 2×: two to four 2048 × 2048 sheets at 16 MB each, about 32–64 MB.
+
+That is 80–120 MB, so the proposed budget is **120 MB at a ratio of 2** (question 3). If the phone needs less:
+- the upper part of each backdrop tile (only seen in tall portrait views) becomes a smaller repeating tile;
+- mostly empty layers are trimmed.
+
+**Go/no-go.** On desktop it is a go: less JS per frame than today, fewer draw calls, a fast start, parity within the limit everywhere and replacement with no code change. The phone numbers are needed to close M1 (question 1): the frame rate, `slow`, the JS time, the texture size limit and the start time on the iPhone 13 mini.
+
 ### M2. Platform: Game, Scenes, Scale, lifecycle (M)
 
 - `Phaser.Game` config (WebGL, antialias, our canvas, audio on, `fps.smoothStep: false`, no auto-pause surprises); Boot, Play and UI scenes.
@@ -289,7 +358,12 @@ Everything below must work on the Phaser renderer as on v2.3:
 
 ## 11. Open questions
 
-None: every question from the first two drafts is answered in section 1. New questions that come up during a milestone are added here and asked before that milestone's PR is merged into `phaser`.
+Every question from the first two drafts is answered in section 1. New questions that come up during a milestone are added here and asked before that milestone's PR is merged into `phaser`.
+
+From M1:
+1. **The iPhone 13 mini numbers.** On a computer on the same network as the phone: `npm ci`, `npm run art:atlas`, `npm run spike:bench`. Then, in Safari on the phone, open the printed network address followed by `spike/bench.html`. The page shows the frame rate, `worst`, `slow`, the JS time per frame, draw calls, texture memory, the texture size limit and the start time. Use the buttons to try `engine` pixi, atlas and native. After 12 s a `result` line appears. Wanted: those lines for pixi and atlas, and the texture size limit. Fewer objects make a fairer game-like load: add `&branches=4&lianas=4` to the address.
+2. **Solid patches as part of "identical"?** Proposed: a scenario also fails with more than 25 solid pixels per million. The spike's correct rigs score 0–16 per million; the magenta eyes 640; the rope's flat ends 49 (1×) and 142 (2×).
+3. **The texture budget**: 120 MB at a pixel ratio of 2, as estimated in the M1 report?
 
 ## 12. Appendix: Pixi use by file
 

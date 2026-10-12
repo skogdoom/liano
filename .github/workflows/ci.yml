@@ -47,6 +47,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run build
+      # The parity page's spike scenarios load the atlases (not committed: built from art/).
+      - run: npm run art:atlas
       - run: npm run test:browser
 
   deploy:
