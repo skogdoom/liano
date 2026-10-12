@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { version } from '../../package.json';
 import { WORLD_HEIGHT } from '../config.js';
-import { FULLSCREEN_HIT } from '../controls.js';
+import { FULLSCREEN_HIT, MUTE_HIT } from '../controls.js';
+import { MODES } from '../sim/match.js';
 import { applyViewCamera } from './view.js';
 
 // The Phaser version's scenes (PHASER_PLAN.md, M2): Boot loads the art and starts the
@@ -10,8 +11,8 @@ import { applyViewCamera } from './view.js';
 // platform (main.js) holds the layout, pause and full screen; scenes find it in the
 // game's registry.
 //
-// M2: Play draws an empty frame (the view and the world band in it) and UI names the
-// version, shows when the game is paused, and a stand-in full-screen button.
+// So far Play draws an empty frame (the view and the world band in it), and UI a readout
+// of the game (readout below), "Paused", and stand-in mute and full-screen buttons.
 
 const VIEW = 0x10261a;
 const BAND = 0x4a8060;
@@ -79,6 +80,30 @@ function drawFullscreenIcon(g, active) {
   }
 }
 
+// A speaker, crossed out when muted (a stand-in for the button's art, M6).
+function drawMuteIcon(g, muted) {
+  g.clear().fillStyle(0xf4e7c5).fillPoints(
+    [0, 12, 10, 12, 22, 2, 22, 38, 10, 28, 0, 28].reduce((pts, v, i, all) => (i % 2 ? pts : [...pts, { x: v, y: all[i + 1] }]), []),
+    true,
+  );
+  g.lineStyle(3.5, 0xf4e7c5);
+  if (muted) g.lineBetween(28, 12, 42, 28).lineBetween(42, 12, 28, 28);
+  else g.lineBetween(28, 14, 32, 20).lineBetween(32, 20, 28, 26).lineBetween(34, 8, 40, 20).lineBetween(40, 20, 34, 32);
+}
+
+// What the game is doing, as text, until the game is drawn (M5, M6). With `debug` (D),
+// the frame rate and the sound's state too.
+export function readout(game, { debug = false, fps = null, sound = null, inputType = 'keyboard' } = {}) {
+  const press = inputType === 'touch' ? 'Tap' : 'Space';
+  const lines = [
+    `${MODES[game.mode].label}  ${game.state}  score ${game.score}  best ${game.best}  stage ${game.stage}`,
+    `slipping ${game.slip ? 'on' : 'off'} (G)  lives ${game.livesOn ? 'on' : 'off'} (H)  shadow ${game.shadowOn ? 'on' : 'off'} (S)`,
+    `${press}: start or let go  1 2 3: mode  Esc: title  P: pause  M: mute  D: details`,
+  ];
+  if (debug) lines.push(`${fps?.describe() ?? ''}  sound ${sound?.details ?? '—'}`);
+  return lines.join('\n');
+}
+
 export class UiScene extends Phaser.Scene {
   constructor() {
     super('ui');
@@ -87,27 +112,43 @@ export class UiScene extends Phaser.Scene {
   create() {
     const platform = platformOf(this);
     const style = { fontFamily: 'sans-serif', color: CREAM, align: 'center' };
-    this.title = this.add.text(0, 0, `Liano v${version}\nPhaser ${Phaser.VERSION}: not playable yet`, { ...style, fontSize: '40px' }).setOrigin(0.5);
+    this.title = this.add.text(0, 0, `Liano v${version}\nPhaser ${Phaser.VERSION}: the game runs, drawn as text for now`, { ...style, fontSize: '40px' }).setOrigin(0.5);
+    this.status = this.add.text(0, 0, '', { ...style, fontSize: '26px', lineSpacing: 8 }).setOrigin(0.5, 0);
     this.paused = this.add.text(0, 0, 'Paused', { ...style, fontSize: '56px', fontStyle: 'bold' }).setOrigin(0.5);
     this.controls = this.add.container(0, 0);
+    this.muteIcon = this.add.graphics();
+    // Where the Pixi button draws its icon inside its tap target.
+    this.muteIcon.setPosition(MUTE_HIT.x + 20, MUTE_HIT.y + 16);
+    drawMuteIcon(this.muteIcon, false);
+    platform.on('mute', (muted) => drawMuteIcon(this.muteIcon, muted));
+    this.controls.add(this.muteIcon);
     this.fullscreenIcon = this.add.graphics();
     // Where the Pixi button draws its icon inside its tap target.
     this.fullscreenIcon.setPosition(FULLSCREEN_HIT.x + 8, FULLSCREEN_HIT.y + 17);
     this.controls.add(this.fullscreenIcon);
-    this.controls.visible = platform.fullscreenButton;
+    this.fullscreenIcon.visible = platform.fullscreenButton;
     drawFullscreenIcon(this.fullscreenIcon, platform.fullscreen.active);
     platform.on('fullscreen', (active) => drawFullscreenIcon(this.fullscreenIcon, active));
     followLayout(this, (layout, camera) => {
       const { view } = layout;
-      this.title.setPosition(view.width / 2, view.height / 2);
+      this.title.setPosition(view.width / 2, layout.bandTop + 200);
+      this.status.setPosition(view.width / 2, layout.bandTop + 300);
       this.paused.setPosition(layout.panels.paused.x, layout.panels.paused.y - 120);
       this.controls.setPosition(layout.insets.left, layout.insets.top).setScale(layout.ui);
       // Text is drawn at the camera's zoom: rasterized at it, it stays sharp.
-      for (const text of [this.title, this.paused]) text.setResolution(camera.zoom);
+      for (const text of [this.title, this.status, this.paused]) text.setResolution(camera.zoom);
     });
+    // The platform wires the game's input to this scene's keyboard and pointers.
+    platform.emit('ui', this);
   }
 
   update() {
-    this.paused.visible = platformOf(this).pause.paused;
+    const platform = platformOf(this);
+    this.paused.visible = platform.pause.paused;
+    if (platform.game) {
+      this.status.setText(
+        readout(platform.game, { debug: platform.debug, fps: platform.fpsMeter, sound: platform.sound, inputType: platform.input?.lastType }),
+      );
+    }
   }
 }

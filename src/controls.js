@@ -1,7 +1,9 @@
 // The on-screen buttons' places, for both versions. They sit in the top-left corner
 // inside the safe area, scaled by the layout's `ui` (see layout.js).
 
-// Tap targets in the buttons' own coordinates (logical pixels).
+// Tap targets in the buttons' own coordinates (logical pixels): larger than the icons,
+// since a phone shows the game at about half size. The fullscreen button's starts where
+// the mute button's ends.
 export const MUTE_HIT = { x: 0, y: 0, w: 90, h: 90 };
 export const FULLSCREEN_HIT = { x: 90, y: 0, w: 90, h: 90 };
 

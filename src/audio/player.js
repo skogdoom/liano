@@ -6,6 +6,9 @@
 // suspended while the game is paused or muted. A context that then does not come back
 // (the browser or the audio device left it stuck after a window switch) is replaced at
 // the next gesture.
+//
+// The Phaser version plays through Phaser's context and output (phaser/sound.js), with
+// the hooks below; their defaults are the Pixi version's own context.
 
 const MASTER_GAIN = 0.6;
 const STOP_FADE = 0.05; // s
@@ -14,12 +17,25 @@ const STOP_FADE = 0.05; // s
 const STUCK_MS = 1500;
 
 export class SoundPlayer {
+  // `createContext()` gives the context to play on (at the first gesture, and again for
+  // each rebuild); `output(ctx)` the node the sounds go to; `closeContext(ctx)` closes a
+  // context replaced by a rebuild. `applyMute(muted)`, if given, mutes somewhere else
+  // than the player's own gain; `onRun(run)` hears, at every sync, whether the context
+  // should be running.
   constructor({
     createContext = () => new (globalThis.AudioContext || globalThis.webkitAudioContext)(),
     now = () => performance.now(),
+    output = (ctx) => ctx.destination,
+    closeContext = (ctx) => ctx.close?.()?.catch?.(() => {}),
+    applyMute = null,
+    onRun = () => {},
   } = {}) {
     this.createContext = createContext;
     this.now = now;
+    this.output = output;
+    this.closeContext = closeContext;
+    this.applyMute = applyMute;
+    this.onRun = onRun;
     this.ctx = null;
     this.rebuilds = 0;
     this.played = 0;
@@ -45,10 +61,10 @@ export class SoundPlayer {
   #create() {
     const ctx = this.createContext();
     this.master = ctx.createGain();
-    this.master.gain.value = this.muted ? 0 : MASTER_GAIN;
     const compressor = ctx.createDynamicsCompressor();
     this.master.connect(compressor);
-    compressor.connect(ctx.destination);
+    compressor.connect(this.output(ctx));
+    this.#applyMute();
     this.noise = whiteNoise(ctx);
     this.ctx = ctx;
     this.stuckSince = null;
@@ -63,7 +79,7 @@ export class SoundPlayer {
     const old = this.ctx;
     old.onstatechange = null;
     try {
-      old.close?.()?.catch?.(() => {});
+      this.closeContext(old);
     } catch {
       // Already closed.
     }
@@ -90,9 +106,16 @@ export class SoundPlayer {
 
   setMuted(muted) {
     this.muted = muted;
-    if (this.master) this.master.gain.value = muted ? 0 : MASTER_GAIN;
+    if (this.master) this.#applyMute();
     if (muted) this.stopAll();
     this.#sync();
+  }
+
+  #applyMute() {
+    if (this.applyMute) {
+      this.master.gain.value = MASTER_GAIN;
+      this.applyMute(this.muted);
+    } else this.master.gain.value = this.muted ? 0 : MASTER_GAIN;
   }
 
   // Called every frame, so a resume the browser refused is tried again.
@@ -187,6 +210,7 @@ export class SoundPlayer {
     const { ctx } = this;
     if (!ctx) return;
     const run = !this.muted && !this.paused;
+    this.onRun(run);
     if (!run) {
       this.stuckSince = null;
       this.lastTime = null;
