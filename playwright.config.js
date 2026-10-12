@@ -14,6 +14,9 @@ export default defineConfig({
   testDir: 'browser-tests',
   timeout: 60_000,
   forbidOnly: !!process.env.CI,
+  // One test at a time in CI: the pages draw in software WebGL, and two at once starve
+  // each other on the runner (the Pixi title scene alone takes a few hundred ms a frame).
+  workers: process.env.CI ? 1 : undefined,
   // On GitHub the failures also become annotations on the check run.
   reporter: process.env.CI ? [['github'], ['list']] : 'line',
   use: {
