@@ -6,7 +6,7 @@
 // stops on a mistake in the custom art (`npm run art:check` says more).
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { Resvg } from '@resvg/resvg-js';
-import { ATLAS_SCALES, cellOf, placement, tileImage } from '../src/art/catalog.js';
+import { ATLAS_SCALES, TILE_EDGE, cellOf, placement, tileImage } from '../src/art/catalog.js';
 import { readCustom } from '../src/art/custom.js';
 import { pack } from '../src/art/pack.js';
 import { frameName } from '../src/art/piece.js';
@@ -112,10 +112,17 @@ for (const piece of pieces.filter((p) => p.kind === 'tile')) {
     const cell = { x: 0, y: 0, ...cellOf(piece, scale) };
     const image = tileImage(piece, scale);
     if (!written.has(image)) {
-      write(image, render(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}">${cellSvg(piece, 0, cell)}</svg>`));
-      sizes[image] = `${cell.w} × ${cell.h}`;
+      // The tile between its edge rows (see TILE_EDGE), each a copy of the row next to it:
+      // the rendered tile placed again, one pixel row of it showing.
+      const tile = dataUri('tile.png', render(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}">${cellSvg(piece, 0, cell)}</svg>`));
+      const placed = (y) => `<image x="0" y="${y}" width="${cell.w}" height="${cell.h}" href="${tile}"/>`;
+      const row = (y, from) => `<svg y="${y}" width="${cell.w}" height="1">${placed(-from)}</svg>`;
+      const edges = Array.from({ length: TILE_EDGE }, (_, i) => row(i, 0) + row(TILE_EDGE + cell.h + i, cell.h - 1)).join('');
+      const h = cell.h + 2 * TILE_EDGE;
+      write(image, render(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${h}">${edges}${placed(TILE_EDGE)}</svg>`));
+      sizes[image] = `${cell.w} × ${h}`;
     }
-    memory[scale] += cell.w * cell.h * 4;
+    memory[scale] += cell.w * (cell.h + 2 * TILE_EDGE) * 4;
   }
 }
 

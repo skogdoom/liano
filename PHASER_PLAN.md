@@ -535,7 +535,8 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
     - it measures a font on `|MÉqgy`, Pixi on `|ÉqÅM`, so `src/phaser/text.js` sets Pixi's;
     - it rounds its width up, so it is centred on the measured width.
   - A stretched frame takes in its transparent padding at the edges.
-- **Texture memory: 46 MB at 1×, 105 MB at 2×, 250 MB at 4×** (M4: 48, 86, 234). The rise at 2× is the front tiles at 2× and the denser pieces; the build fails over 120 MB at 2× or 300 MB at 4×.
+  - A `TileSprite` wraps its texture up and down as well as sideways. A tile's top edge could show its bottom row, which drew a dark line along the top of the floor at some window sizes. Each tile image now has a copy of its first row above it and of its last row below it, and the game shows only the rows between (`TILE_EDGE`). A browser test checks the tile edges at four window sizes that showed the line.
+- **Texture memory: 47 MB at 1×, 105 MB at 2×, 250 MB at 4×** (M4: 48, 86, 234). The rise at 2× is the front tiles at 2× and the denser pieces; the build fails over 120 MB at 2× or 300 MB at 4×.
 - **Frame time** (headless Chromium, software WebGL, 1280 × 720, a bot playing for 25 s; CPU time of each animation frame, so it compares, while the frame rates compare only relatively):
 
   | | Median, 95th percentile | Frames drawn |

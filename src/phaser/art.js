@@ -1,4 +1,4 @@
-import { atlasScaleFor } from '../art/catalog.js';
+import { TILE_EDGE, atlasScaleFor } from '../art/catalog.js';
 
 // The pre-rendered art in the Phaser version (PHASER_PLAN.md, section 5): loading the
 // atlases built into public/art/ (scripts/build-art.mjs) and making pieces from them.
@@ -176,6 +176,8 @@ export class Art {
     const p = this.piece(key);
     const { zoom } = this.at(key);
     const tile = scene.make.tileSprite({ x: 0, y: p.box.y, width: width * zoom, height: p.box.h * zoom, key: tileKey(key) }, false).setOrigin(0, 0).setScale(1 / zoom);
+    // Only the rows between the image's edge rows (see TILE_EDGE).
+    tile.tilePositionY = TILE_EDGE;
     tile.artKey = key;
     return tile;
   }

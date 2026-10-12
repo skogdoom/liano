@@ -32,5 +32,9 @@ export function placement(piece, atlasScale, pivot = [0, 0]) {
   };
 }
 
-// A tile's image file (under public/art/) at an atlas scale.
+// A tile's image file (under public/art/) at an atlas scale. It has TILE_EDGE more rows
+// above and below the tile, copies of its first and last: a TileSprite wraps its texture
+// up and down as well as sideways, so its top edge would otherwise blend in the bottom
+// row (and the reverse); the game shows only the rows between.
+export const TILE_EDGE = 1;
 export const tileImage = (piece, atlasScale) => `tiles/${piece.key}@${tileZoom(piece, atlasScale)}x.png`;

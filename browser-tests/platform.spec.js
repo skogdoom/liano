@@ -193,3 +193,56 @@ for (const [ratio, scale] of [
     await page.close();
   });
 }
+
+// A TileSprite wraps its texture up and down too, so a backdrop tile's edge could show its
+// opposite row: a dark line along the top of the floor, at some window sizes (these four
+// showed it). The tile images carry copies of their edge rows (TILE_EDGE in catalog.js).
+for (const [width, ratio] of [
+  [1092, 1],
+  [1598, 1],
+  [1368, 2],
+  [1460, 2],
+]) {
+  test(`the Phaser version's backdrop tiles show no line at their edges at ${width} px, ${ratio}×`, async ({ browser }) => {
+    const page = await browser.newPage({ viewport: { width, height: Math.round((width * 9) / 16) }, deviceScaleFactor: ratio });
+    const errors = collectErrors(page);
+    await page.goto(`${DEV}?engine=phaser`);
+    await started(page, errors);
+    await page.waitForFunction(() => window.__liano.platform.artLoad?.sets.length === 2);
+    // Each tile edge in the band: the floor's top, the ferns' top, the clumps' bottom and
+    // the canopy strip's bottom (world y); the mean of each pixel row about it, on the left.
+    const rows = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const { app, camera, layout } = window.__liano;
+          app.renderer.snapshot((image) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            const context = canvas.getContext('2d');
+            context.drawImage(image, 0, 0);
+            resolve(
+              [626, 560, 100, 58].map((edge) => {
+                const y = Math.floor(camera.y + (layout.bandTop + edge) * camera.zoom);
+                return [y - 2, y - 1, y, y + 1, y + 2].map((row) => {
+                  const data = context.getImageData(0, row, Math.floor(canvas.width / 3), 1).data;
+                  let sum = 0;
+                  for (let i = 0; i < data.length; i += 4) sum += data[i] + data[i + 1] + data[i + 2];
+                  return sum / (data.length / 4);
+                });
+              }),
+            );
+          });
+        }),
+    );
+    // A line is a row much darker (or lighter) than both rows beside it.
+    for (const means of rows) {
+      for (let i = 1; i < means.length - 1; i++) {
+        const apart = Math.sign(means[i] - means[i - 1]) === Math.sign(means[i] - means[i + 1]);
+        expect(apart && Math.abs(means[i] - (means[i - 1] + means[i + 1]) / 2) > 20, `rows ${means.map(Math.round)}`).toBe(false);
+      }
+    }
+    expect(errors).toEqual([]);
+    await page.close();
+  });
+}
