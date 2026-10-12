@@ -98,9 +98,18 @@ function countDrawCalls(gl) {
 
 const stats = document.getElementById('stats');
 const fps = new FpsMeter();
-const info = { engine, branches: BRANCHES, lianas: LIANAS, dpr: DPR };
+const info = { engine, branches: BRANCHES, lianas: LIANAS, dpr: DPR, errors: [], stage: 'starting' };
 const samples = { cpu: [], frame: [], calls: [], slow: 0 };
+const recent = { cpu: [], calls: [] }; // the last second's frames, for the live line
 let measuring = null;
+
+// Anything that goes wrong shows on the page (there is no console on a phone).
+const report = (message) => {
+  info.errors.push(String(message));
+  show();
+};
+window.addEventListener('error', (event) => report(event.error?.stack ?? event.message));
+window.addEventListener('unhandledrejection', (event) => report(event.reason?.stack ?? event.reason));
 
 // Called once a frame: `cpu` ms of work (update and draw), `calls` draw calls.
 function frameDone(now, cpu, calls) {
@@ -116,7 +125,12 @@ function frameDone(now, cpu, calls) {
     samples.cpu.push(cpu);
     samples.calls.push(calls);
   } else if (t >= WARM_UP + SECONDS && !window.__bench) finish();
-  if (fps.frames % 15 === 0) show(cpu, calls);
+  recent.cpu.push(cpu);
+  recent.calls.push(calls);
+  if (recent.cpu.length > Math.max(fps.fps, 30)) {
+    recent.cpu.shift();
+    recent.calls.shift();
+  }
 }
 
 const mean = (xs) => xs.reduce((a, b) => a + b, 0) / Math.max(xs.length, 1);
@@ -136,16 +150,29 @@ function finish() {
   document.documentElement.dataset.bench = 'done';
 }
 
-function show(cpu, calls) {
-  const lines = [
-    `${engine}  ${BRANCHES} branches  ${LIANAS} lianas  dpr ${DPR}  canvas ${info.canvas}`,
-    fps.describe(),
-    `cpu ${cpu.toFixed(2)} ms  draw calls ${calls}`,
-    `textures ${info.textureMB ?? '—'} MB  max texture ${info.maxTexture}  started at ${info.loadMs} ms (art ${info.artMs ?? '—'} ms)`,
-  ];
-  if (window.__bench) lines.push(`result: ${window.__bench.fps.toFixed(1)} fps, cpu ${window.__bench.cpuMs.toFixed(2)} ms (p95 ${window.__bench.cpuP95.toFixed(2)})`);
+// The stats box, twice a second: the live numbers (means over the last second), then
+// the result once measured, and any errors.
+function show() {
+  const lines = [`${engine}  ${BRANCHES} branches  ${LIANAS} lianas  dpr ${DPR}  canvas ${info.canvas ?? '…'}`];
+  if (!info.startedAt) {
+    lines.push(`${info.stage}…${info.progress === undefined ? '' : ` ${Math.round(info.progress * 100)} %`}`);
+  } else {
+    lines.push(
+      fps.describe(),
+      `cpu ${mean(recent.cpu).toFixed(2)} ms  draw calls ${Math.round(mean(recent.calls))}`,
+      `textures ${info.textureMB ?? '—'} MB  max texture ${info.maxTexture}  started at ${info.loadMs} ms (art ${info.artMs ?? '—'} ms)`,
+    );
+    const left = WARM_UP + SECONDS - (performance.now() - info.startedAt) / 1000;
+    if (window.__bench) {
+      const r = window.__bench;
+      lines.push(`result: ${r.fps.toFixed(1)} fps, worst ${r.worstMs.toFixed(0)} ms, slow ${r.slow}, cpu ${r.cpuMs.toFixed(2)} ms (p95 ${r.cpuP95.toFixed(2)}), ${r.drawCalls.toFixed(0)} draw calls`);
+    } else lines.push(`measuring… ${Math.max(0, Math.ceil(left))} s`);
+  }
+  for (const error of info.errors) lines.push(`ERROR: ${error}`);
   stats.textContent = lines.join('\n');
+  stats.classList.toggle('failed', info.errors.length > 0);
 }
+setInterval(show, 500);
 
 function modeLinks() {
   const modes = document.getElementById('modes');
@@ -236,10 +263,15 @@ function runPhaser() {
     scene: {
       preload() {
         const loading = performance.now();
+        info.stage = 'loading the art';
+        this.load.on('progress', (share) => (info.progress = share));
+        this.load.on('loaderror', (file) => report(`could not load ${file.key} (${file.url})`));
         this.load.once('complete', () => (info.artMs = Math.round(performance.now() - loading)));
         if (engine === 'atlas') preloadArt(this, DPR);
       },
       create() {
+        info.stage = 'building the scene';
+        info.progress = undefined;
         counter = countDrawCalls(this.game.renderer.gl);
         this.cameras.main.setOrigin(0, 0).setZoom(fit * DPR);
         const placed = branches();
