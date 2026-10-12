@@ -31,7 +31,7 @@ test('the Pixi version plays: Space starts a run', async ({ page }) => {
 });
 
 // Both versions run on the same software WebGL here, so the agreed meaning of identical
-// (PHASER_PLAN.md, section 1) holds for every scenario. Needs `npm run art:atlas` first.
+// (PHASER_PLAN.md, section 1) holds for every scenario. Needs the art built (`npm run art:build`, part of the build).
 test('the parity page draws its scenarios identically with both versions', async ({ page }) => {
   test.setTimeout(180_000);
   const errors = collectErrors(page);

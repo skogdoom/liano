@@ -7,7 +7,8 @@ import { LianaView, leafLayout } from '../render/lianaView.js';
 import { ObstacleViews } from '../render/obstacleViews.js';
 import { createObstacle } from '../sim/generator.js';
 import { Liana } from '../sim/liana.js';
-import { BackdropRig, BranchRig, LianaRig, NativeBackdropRig, NativeBranchRig, NativeLianaRig, piecesFor, preloadArt } from './rigs.js';
+import { Art, CATALOG, queueArt } from '../phaser/art.js';
+import { BackdropRig, BranchRig, LianaRig, NativeBackdropRig, NativeBranchRig, NativeLianaRig } from './rigs.js';
 
 // M1 spike (dev only, spike/bench.html): many branches with panthers and many lianas,
 // animated, with the far backdrop scrolling; drawn by today's Pixi views, by the Phaser
@@ -267,7 +268,7 @@ function runPhaser() {
         this.load.on('progress', (share) => (info.progress = share));
         this.load.on('loaderror', (file) => report(`could not load ${file.key} (${file.url})`));
         this.load.once('complete', () => (info.artMs = Math.round(performance.now() - loading)));
-        if (engine === 'atlas') preloadArt(this, DPR);
+        if (engine === 'atlas') queueArt(this.load, Art.scaleFor(fit * DPR));
       },
       create() {
         info.stage = 'building the scene';
@@ -280,7 +281,7 @@ function runPhaser() {
         let rigs;
         let lianaRigs;
         if (engine === 'atlas') {
-          const pieces = piecesFor(this, DPR);
+          const pieces = new Art(this.cache.json.get(CATALOG), Art.scaleFor(fit * DPR));
           backdrop = new BackdropRig(this, pieces, SCREEN_WIDTH);
           rigs = placed.map((o) => new BranchRig(this, pieces, o));
           lianaRigs = driver.lianas.map((liana) => new LianaRig(this, pieces, leafLayout(liana.index)));

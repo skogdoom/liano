@@ -23,6 +23,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: Check the custom art
+        run: npm run art:check
       - run: npm run build
       # The build regenerates the release-window table; it must match the committed one.
       - name: Check the window table is up to date
@@ -46,9 +48,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      # The build also builds the art (public/art/, not committed) the dev server serves.
       - run: npm run build
-      # The parity page's spike scenarios load the atlases (not committed: built from art/).
-      - run: npm run art:atlas
       - run: npm run test:browser
 
   deploy:

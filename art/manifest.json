@@ -2,9 +2,9 @@
   "pieces": [
     {
       "key": "backdrop.far",
-      "frames": [
-        "generated/backdrop.far.svg"
-      ],
+      "purpose": "The far layer of the jungle: hazy tree trunks and canopy masses. One tile, repeating sideways.",
+      "kind": "tile",
+      "set": "boot",
       "box": {
         "x": 0,
         "y": -1130,
@@ -12,13 +12,70 @@
         "h": 1790
       },
       "scale": 1,
-      "tint": true
+      "tint": true,
+      "frames": [
+        "generated/backdrop.far.svg"
+      ]
+    },
+    {
+      "key": "liana.rope",
+      "purpose": "A liana's rope: a straight strip 420 px along +x from the anchor, bent along the swinging rope.",
+      "kind": "strip",
+      "set": "boot",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 430,
+        "h": 10
+      },
+      "scale": 2,
+      "tint": false,
+      "length": 420,
+      "frames": [
+        "generated/liana.rope.svg"
+      ]
+    },
+    {
+      "key": "liana.flash",
+      "purpose": "The lit lower half of a liana, when the grip is about to slip off the end; bent like the rope.",
+      "kind": "strip",
+      "set": "boot",
+      "box": {
+        "x": -4,
+        "y": -4,
+        "w": 218,
+        "h": 8
+      },
+      "scale": 2,
+      "tint": false,
+      "length": 210,
+      "frames": [
+        "generated/liana.flash.svg"
+      ]
+    },
+    {
+      "key": "liana.leaf",
+      "purpose": "A leaf on a liana, 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -1,
+        "y": -6,
+        "w": 19,
+        "h": 12
+      },
+      "scale": 1,
+      "tint": false,
+      "frames": [
+        "generated/liana.leaf.0.svg",
+        "generated/liana.leaf.1.svg"
+      ]
     },
     {
       "key": "branch.body",
-      "frames": [
-        "generated/branch.body.svg"
-      ],
+      "purpose": "The branch: a limb from a cut stub, with a leaf tuft near the tip. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
       "box": {
         "x": -83,
         "y": -25,
@@ -26,13 +83,25 @@
         "h": 38
       },
       "scale": 1.3,
-      "tint": true
+      "tint": true,
+      "hitbox": [
+        {
+          "kind": "rect",
+          "dx": -80,
+          "dy": -12,
+          "w": 160,
+          "h": 24
+        }
+      ],
+      "frames": [
+        "generated/branch.body.svg"
+      ]
     },
     {
       "key": "branch.barkLine",
-      "frames": [
-        "generated/branch.barkLine.svg"
-      ],
+      "purpose": "A dark line in the bark, 14 px along +x; four per branch, placed, turned and stretched.",
+      "kind": "sprite",
+      "set": "main",
       "box": {
         "x": -4,
         "y": -4,
@@ -40,13 +109,16 @@
         "h": 8
       },
       "scale": 1.3,
-      "tint": true
+      "tint": true,
+      "frames": [
+        "generated/branch.barkLine.svg"
+      ]
     },
     {
       "key": "branch.trunk",
-      "frames": [
-        "generated/branch.trunk.svg"
-      ],
+      "purpose": "The trunk a low branch stands on, from its top (the origin) 100 px down; stretched to reach below the floor.",
+      "kind": "sprite",
+      "set": "main",
       "box": {
         "x": -19,
         "y": -1,
@@ -54,13 +126,16 @@
         "h": 102
       },
       "scale": 1.3,
-      "tint": true
+      "tint": true,
+      "frames": [
+        "generated/branch.trunk.svg"
+      ]
     },
     {
       "key": "panther.body",
-      "frames": [
-        "generated/panther.body.svg"
-      ],
+      "purpose": "A black panther lying on the branch, head up: the body and head. It breathes (scaled up and down).",
+      "kind": "sprite",
+      "set": "main",
       "box": {
         "x": -37,
         "y": -28,
@@ -68,13 +143,22 @@
         "h": 31
       },
       "scale": 1.3,
-      "tint": true
+      "tint": true,
+      "attach": {
+        "ear": [
+          35.5,
+          -22
+        ]
+      },
+      "frames": [
+        "generated/panther.body.svg"
+      ]
     },
     {
       "key": "panther.ear",
-      "frames": [
-        "generated/panther.ear.svg"
-      ],
+      "purpose": "The inside of the ear that flicks, about its own centre (folded by scaling).",
+      "kind": "sprite",
+      "set": "main",
       "box": {
         "x": -3,
         "y": -3,
@@ -82,14 +166,16 @@
         "h": 6
       },
       "scale": 1.3,
-      "tint": true
+      "tint": true,
+      "frames": [
+        "generated/panther.ear.svg"
+      ]
     },
     {
       "key": "panther.eyes",
-      "frames": [
-        "generated/panther.eyes.0.svg",
-        "generated/panther.eyes.1.svg"
-      ],
+      "purpose": "The eyes: open (frame 0) and shut (frame 1).",
+      "kind": "sprite",
+      "set": "main",
       "box": {
         "x": 24,
         "y": -21,
@@ -97,10 +183,25 @@
         "h": 7
       },
       "scale": 1.3,
-      "tint": true
+      "tint": true,
+      "frames": [
+        "generated/panther.eyes.0.svg",
+        "generated/panther.eyes.1.svg"
+      ]
     },
     {
       "key": "panther.tail",
+      "purpose": "The tail hanging off the end of the branch, in 16 frames from its tip swung 6 px one way to as far the other.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -59,
+        "y": -18,
+        "w": 39,
+        "h": 46
+      },
+      "scale": 1.3,
+      "tint": true,
       "frames": [
         "generated/panther.tail.0.svg",
         "generated/panther.tail.1.svg",
@@ -118,58 +219,7 @@
         "generated/panther.tail.13.svg",
         "generated/panther.tail.14.svg",
         "generated/panther.tail.15.svg"
-      ],
-      "box": {
-        "x": -59,
-        "y": -18,
-        "w": 39,
-        "h": 46
-      },
-      "scale": 1.3,
-      "tint": true
-    },
-    {
-      "key": "liana.rope",
-      "frames": [
-        "generated/liana.rope.svg"
-      ],
-      "box": {
-        "x": -5,
-        "y": -5,
-        "w": 430,
-        "h": 10
-      },
-      "scale": 2,
-      "tint": false
-    },
-    {
-      "key": "liana.flash",
-      "frames": [
-        "generated/liana.flash.svg"
-      ],
-      "box": {
-        "x": -4,
-        "y": -4,
-        "w": 218,
-        "h": 8
-      },
-      "scale": 2,
-      "tint": false
-    },
-    {
-      "key": "liana.leaf",
-      "frames": [
-        "generated/liana.leaf.0.svg",
-        "generated/liana.leaf.1.svg"
-      ],
-      "box": {
-        "x": -1,
-        "y": -6,
-        "w": 19,
-        "h": 12
-      },
-      "scale": 1,
-      "tint": false
+      ]
     }
   ]
 }

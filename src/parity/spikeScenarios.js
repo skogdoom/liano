@@ -5,12 +5,15 @@ import { HIGH_BELOW_Y, SIM_DT } from '../config.js';
 import { createObstacle } from '../sim/generator.js';
 import { Liana } from '../sim/liana.js';
 import { mixSeed, mulberry32 } from '../sim/rng.js';
-import { BackdropRig, BranchRig, LianaRig, piecesFor, preloadArt } from '../spike/rigs.js';
+import { Art, CATALOG, queueArt } from '../phaser/art.js';
+import { BackdropRig, BranchRig, LianaRig } from '../spike/rigs.js';
 
 // M1 spike scenarios (PHASER_PLAN.md, M1): the far backdrop, a branch with a panther and
 // some lianas, drawn by today's Pixi views and by the Phaser rigs of pre-rendered pieces.
 
 const SKY = 0x4a8060;
+
+const artFor = (scene, zoom) => new Art(scene.cache.json.get(CATALOG), Art.scaleFor(zoom));
 
 // The first low branch (on a trunk) carrying a panther, over a few seeds.
 function pantherBranch() {
@@ -64,9 +67,9 @@ const branchScenario = (id, title, when) => {
       views.update([o], t, 0xffffff);
       world.addChild(views.view);
     },
-    preload: (scene, zoom) => preloadArt(scene, zoom),
+    preload: (scene, zoom) => queueArt(scene.load, Art.scaleFor(zoom)),
     phaser(scene, zoom) {
-      new BranchRig(scene, piecesFor(scene, zoom), o).update(t);
+      new BranchRig(scene, artFor(scene, zoom), o).update(t);
     },
   };
 };
@@ -85,9 +88,9 @@ export const SPIKE_SCENARIOS = [
       background.far.update(1234);
       world.addChild(background.far.view);
     },
-    preload: (scene, zoom) => preloadArt(scene, zoom),
+    preload: (scene, zoom) => queueArt(scene.load, Art.scaleFor(zoom)),
     phaser(scene, zoom) {
-      new BackdropRig(scene, piecesFor(scene, zoom), 1280).update(1234);
+      new BackdropRig(scene, artFor(scene, zoom), 1280).update(1234);
     },
   },
   {
@@ -103,9 +106,9 @@ export const SPIKE_SCENARIOS = [
       background.far.view.tint = 0xc88cb4;
       world.addChild(background.far.view);
     },
-    preload: (scene, zoom) => preloadArt(scene, zoom),
+    preload: (scene, zoom) => queueArt(scene.load, Art.scaleFor(zoom)),
     phaser(scene, zoom) {
-      new BackdropRig(scene, piecesFor(scene, zoom), 1280).update(4321, 0xc88cb4);
+      new BackdropRig(scene, artFor(scene, zoom), 1280).update(4321, 0xc88cb4);
     },
   },
   branchScenario('spike.panther', 'A branch on a trunk with a panther', 'open'),
@@ -124,10 +127,10 @@ export const SPIKE_SCENARIOS = [
       view.update(all, 0, 800, [{ liana: lit, tipTime: 0.05 }]);
       world.addChild(view.view);
     },
-    preload: (scene, zoom) => preloadArt(scene, zoom),
+    preload: (scene, zoom) => queueArt(scene.load, Art.scaleFor(zoom)),
     phaser(scene, zoom) {
       const { all, lit } = lianas();
-      const pieces = piecesFor(scene, zoom);
+      const pieces = artFor(scene, zoom);
       for (const liana of all) new LianaRig(scene, pieces, leafLayout(liana.index)).update(liana, liana === lit);
     },
   },

@@ -1,4 +1,4 @@
-// Node module hooks for the dev scripts: lets the game's modules import JSON as Vite
+// Node module hooks for the scripts: lets the game's modules import JSON as Vite
 // does (`import table from './x.json'`, `import { version } from './package.json'`),
 // without import attributes.
 import { readFileSync } from 'node:fs';

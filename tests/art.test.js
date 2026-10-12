@@ -3,9 +3,12 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { Graphics } from 'pixi.js';
 import { generateArt } from '../src/art/generate.js';
 import { DEFAULT_STROKE, RecordingGraphics } from '../src/art/recorder.js';
-import { SPIKE_PIECES, TAIL_FRAMES, TAIL_SWISH, tailFrameFor, tailSwishOf } from '../src/art/spike.js';
-import { bounds, elements, shapeD, toSvg, unionBox } from '../src/art/svg.js';
-import { bendStrip } from '../src/spike/rigs.js';
+import { PIECES } from '../src/art/pieces/index.js';
+import { TAIL_FRAMES, TAIL_SWISH, tailFrameFor, tailSwishOf } from '../src/art/pieces/branch.js';
+import { bounds, elements, guideLayer, shapeD, toSvg, unionBox } from '../src/art/svg.js';
+import { definePiece, definePieces, frameName } from '../src/art/piece.js';
+import { atlasScaleFor, cellOf, placement } from '../src/art/catalog.js';
+import { bendStrip } from '../src/phaser/art.js';
 import { drawLiana, leafLayout, LIANA_PALETTES } from '../src/render/lianaView.js';
 import { Liana } from '../src/sim/liana.js';
 
@@ -111,13 +114,13 @@ describe('writing SVG', () => {
     expect(box).toEqual({ x: -6, y: -2, w: 22, h: 8 });
     expect(unionBox([box, { x: 0, y: 0, w: 30, h: 1 }])).toEqual({ x: -6, y: -2, w: 36, h: 8 });
     const svg = toSvg(g.instructions, box);
-    expect(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg" width="22" height="8" viewBox="-6 -2 22 8">')).toBe(true);
+    expect(svg).toMatch(/^<svg xmlns="http:\/\/www.w3.org\/2000\/svg"[^>]* width="22" height="8" viewBox="-6 -2 22 8">/);
   });
 });
 
 describe('the generated art', () => {
   it('is up to date (npm run art)', () => {
-    const { files, manifest } = generateArt(SPIKE_PIECES);
+    const { files, manifest } = generateArt(PIECES);
     const dir = new URL('../art/generated/', import.meta.url);
     expect(readdirSync(dir).sort()).toEqual(Object.keys(files).sort());
     for (const [name, svg] of Object.entries(files)) expect(readFileSync(new URL(name, dir), 'utf8'), name).toBe(svg);
@@ -125,7 +128,7 @@ describe('the generated art', () => {
   });
 
   it('gives every piece a box with room in it', () => {
-    const { manifest } = generateArt(SPIKE_PIECES);
+    const { manifest } = generateArt(PIECES);
     for (const piece of JSON.parse(manifest).pieces) {
       expect(piece.box.w, piece.key).toBeGreaterThan(0);
       expect(piece.box.h, piece.key).toBeGreaterThan(0);
@@ -133,7 +136,7 @@ describe('the generated art', () => {
   });
 });
 
-describe('the spike pieces', () => {
+describe('the panther’s tail', () => {
   it('picks the tail frame nearest the swish, within the flipbook', () => {
     for (let frame = 0; frame < TAIL_FRAMES; frame++) expect(tailFrameFor(tailSwishOf(frame))).toBe(frame);
     expect(tailSwishOf(0)).toBe(-TAIL_SWISH);
@@ -181,5 +184,63 @@ describe('bending a strip piece along a rope', () => {
     bendStrip(rope, { zoom: 2, anchor: [5 / 110, 0.5] }, points, 100);
     const u = [...rope.uv].filter((_, i) => i % 4 === 0).map((v) => ((v - 0.1) / 0.4) * 110);
     [0, 5, 55, 105, 110].forEach((units, i) => expect(u[i]).toBeCloseTo(units, 4));
+  });
+});
+
+describe('the guides for whoever replaces a piece', () => {
+  it('draw the box, the origin, the hitbox, the attachment points and the slices, hidden', () => {
+    const layer = guideLayer({
+      box: { x: -10, y: -5, w: 30, h: 20 },
+      attach: { ear: [3, -2] },
+      hitbox: [{ dx: 0, dy: 0, r: 4 }, { dx: -2, dy: -1, w: 6, h: 3 }],
+      slices: { left: 4, right: 4, top: 3, bottom: 3 },
+    });
+    expect(layer).toMatch(/^<g id="guides" inkscape:groupmode="layer" inkscape:label="Guides" display="none"/);
+    for (const title of ['box', 'origin', 'hitbox', 'attach: ear', 'slices']) expect(layer).toContain(`<title>${title}</title>`);
+    expect(layer.match(/<title>hitbox<\/title>/g)).toHaveLength(2);
+  });
+});
+
+describe('a piece’s contract', () => {
+  const frames = [(g) => g.circle(0, 0, 1).fill(0)];
+  it('fills in the defaults, and names each frame', () => {
+    const p = definePiece({ key: 'rock.body', purpose: 'A rock.', frames });
+    expect(p).toMatchObject({ kind: 'sprite', set: 'main', scale: 1, tint: false });
+    expect(frameName(p, 0)).toBe('rock.body');
+    expect(frameName({ key: 'bird.wing', frames: [0, 0] }, 1)).toBe('bird.wing.1');
+  });
+
+  it('refuses a piece without a proper key, a purpose, frames, or what its kind needs', () => {
+    expect(() => definePiece({ key: 'Rock', purpose: 'x', frames })).toThrow(/key/);
+    expect(() => definePiece({ key: 'rock.body', frames })).toThrow(/purpose/);
+    expect(() => definePiece({ key: 'rock.body', purpose: 'x', frames: [] })).toThrow(/frames/);
+    expect(() => definePiece({ key: 'hud.panel', purpose: 'x', frames, kind: 'slice' })).toThrow(/slices/);
+    expect(() => definePiece({ key: 'liana.rope', purpose: 'x', frames, kind: 'strip' })).toThrow(/length/);
+    expect(() => definePiece({ key: 'backdrop.far', purpose: 'x', frames, kind: 'tile' })).toThrow(/box/);
+    expect(() => definePiece({ key: 'rock.body', purpose: 'x', frames, fps: 10 })).toThrow(/fps/);
+    expect(() => definePieces([{ key: 'rock.body', purpose: 'x', frames }, { key: 'rock.body', purpose: 'y', frames }])).toThrow(/twice/);
+  });
+});
+
+describe('the catalog the game reads', () => {
+  it('picks the atlas scale for the screen’s density, allowing a little upscaling', () => {
+    expect(atlasScaleFor(0.6)).toBe(1);
+    expect(atlasScaleFor(1.2)).toBe(1);
+    expect(atlasScaleFor(1.5)).toBe(2);
+    expect(atlasScaleFor(2.3)).toBe(2);
+    expect(atlasScaleFor(3)).toBe(4);
+    expect(atlasScaleFor(9)).toBe(4);
+  });
+
+  it('sizes a frame’s cell by the piece’s scale and the atlas’s, tiles at 1× only', () => {
+    const piece = { box: { x: -10, y: -4, w: 21, h: 9 }, scale: 1.3, frames: [0] };
+    expect(cellOf(piece, 2)).toEqual({ zoom: 2.6, w: 55, h: 24 });
+    expect(cellOf({ ...piece, kind: 'tile' }, 4)).toEqual({ zoom: 1, w: 21, h: 9 });
+  });
+
+  it('anchors a frame at the drawing’s origin, or at a custom pivot', () => {
+    const piece = { key: 'x.y', box: { x: -10, y: -4, w: 20, h: 8 }, scale: 1, frames: [0] };
+    expect(placement(piece, 1)).toEqual({ frames: ['x.y'], anchor: [0.5, 0.5], zoom: 1, size: [20, 8] });
+    expect(placement(piece, 2, [0, 4]).anchor).toEqual([0.5, 1]);
   });
 });

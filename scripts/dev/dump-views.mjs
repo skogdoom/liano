@@ -3,7 +3,7 @@
 // at a few times and tints, the panes in each mode and state, the HUD and the overlays.
 // Writes the dump to the file given (default: dump-views.json in the working folder) and
 // prints a hash per section; run before and after a change and compare.
-//   node --import ./scripts/dev/json.mjs scripts/dev/dump-views.mjs [out.json]
+//   node --import ./scripts/lib/json.mjs scripts/dev/dump-views.mjs [out.json]
 import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { BrowserAdapter, DOMAdapter, Graphics, Text } from 'pixi.js';
