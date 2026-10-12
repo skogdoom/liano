@@ -298,7 +298,7 @@ That is 80–120 MB, so the proposed budget is **120 MB at a ratio of 2** (quest
 - **Errors**: an error anywhere shows the error screen and stops Phaser's loop. `window.__liano` has the game, the platform, the layout, the camera, the pause and full screen.
 - **Browser tests** (`browser-tests/platform.spec.js`, 15 tests), checking the snapshot's pixels where it matters:
   - the letterboxed frame at 7 window shapes: 16:9, a phone in landscape, an ultra-wide with bars, an iPad, two portrait phones, 1.5×;
-  - following a resize to portrait, and a pixel-ratio change;
+  - following a resize to portrait, and a pixel-ratio change (watching the ratio's media query is unit tested: in CI's Chromium an emulated change did not reach it);
   - F into and out of full screen, for both versions;
   - the button's tap entering full screen on release;
   - a lost and restored context, for both versions;

@@ -153,6 +153,11 @@ test('the Phaser version follows a change of pixel ratio (a window moved to anot
   expect(await page.evaluate(() => window.__liano.game.canvas.width)).toBe(1000);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1000, height: 600, deviceScaleFactor: 2, mobile: false });
+  expect(await page.evaluate(() => window.devicePixelRatio)).toBe(2);
+  // In CI's Chromium the emulated change did not reach the layout through the ratio's
+  // media query, so a resize event stands in for it here; watching the query is unit
+  // tested (tests/screen.test.js).
+  await page.evaluate(() => window.dispatchEvent(new Event('resize')));
   await expect.poll(() => page.evaluate(() => window.__liano.game.canvas.width)).toBe(2000);
   expect(await page.evaluate(() => window.__liano.camera)).toEqual(viewCamera(layoutFor(1000, 600), 2));
   expect(await page.evaluate(() => window.__liano.game.canvas.style.width)).toBe('1000px');
