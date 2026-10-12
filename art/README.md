@@ -5,7 +5,7 @@
 Every picture in the game is a **piece**: a part of an object (a monkey's arm, a bird's
 wing, a temple's base) drawn by the game's own code. `npm run art` writes each piece's
 pictures into `generated/` as SVG, and the build turns them into the textures the game
-loads. There are 173 pieces, 591 pictures in all.
+loads. There are 174 pieces, 593 pictures in all.
 
 ## Replacing a piece
 
@@ -29,6 +29,8 @@ build then uses yours instead of the generated one; nothing else changes.
   at a rate, `"fps"`.
 - **Tinted** pieces (the backdrop, the temple) are multiplied by the time of day's colour:
   draw them as they look by day.
+- **See-through** pieces (the shadow monkey and its lianas) are drawn as they show: each
+  shape at the given share of its opacity, so the shapes behind show through.
 - **Strips** (ropes, vines, necks) are bent along a curve: draw them straight along +x.
   **Tiles** (the backdrop layers) repeat sideways: their left and right edges must meet.
   **Slices** (panels) keep their corners and stretch their edges and middle.
@@ -60,33 +62,34 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `monkey.p1.tail` | 40 × 50 | 1 |  | The tail of player 1, behind everything else. |
-| `monkey.p1.leg` | 20 × 32 | 1 |  | A leg of player 1, 12 px down from its hip (the origin); it turns about the hip. |
-| `monkey.p1.arm` | 18 × 39 | 1 |  | An arm of player 1, 21 px down from its shoulder (the origin); it turns about the shoulder. |
-| `monkey.p1.torso` | 28 × 30 | 1 | joins: armBack, armFront, legBack, legFront | The body of player 1; its origin is the centre of the monkey's hitbox. The limbs join it at the attachment points. |
-| `monkey.p1.head` | 34 × 24 | 1 |  | The head of player 1 (ears, face, muzzle), over the body. |
-| `monkey.p2.tail` | 40 × 50 | 1 |  | The tail of player 2, behind everything else. |
-| `monkey.p2.leg` | 20 × 32 | 1 |  | A leg of player 2, 12 px down from its hip (the origin); it turns about the hip. |
-| `monkey.p2.arm` | 18 × 39 | 1 |  | An arm of player 2, 21 px down from its shoulder (the origin); it turns about the shoulder. |
-| `monkey.p2.torso` | 28 × 30 | 1 | joins: armBack, armFront, legBack, legFront | The body of player 2; its origin is the centre of the monkey's hitbox. The limbs join it at the attachment points. |
-| `monkey.p2.head` | 34 × 24 | 1 |  | The head of player 2 (ears, face, muzzle), over the body. |
-| `monkey.shadow.tail` | 40 × 50 | 1 |  | The tail of the shadow monkey, behind everything else. |
-| `monkey.shadow.leg` | 20 × 32 | 1 |  | A leg of the shadow monkey, 12 px down from its hip (the origin); it turns about the hip. |
-| `monkey.shadow.arm` | 18 × 39 | 1 |  | An arm of the shadow monkey, 21 px down from its shoulder (the origin); it turns about the shoulder. |
-| `monkey.shadow.torso` | 28 × 30 | 1 | joins: armBack, armFront, legBack, legFront | The body of the shadow monkey; its origin is the centre of the monkey's hitbox. The limbs join it at the attachment points. |
-| `monkey.shadow.head` | 34 × 24 | 1 |  | The head of the shadow monkey (ears, face, muzzle), over the body. |
-| `monkey.eyes.0` … `.1` | 18 × 12 | 1 |  | The monkey's eyes: open (frame 0), and crossed after a fall (frame 1). |
+| `monkey.p1.tail` | 40 × 50 | 2 |  | The tail of player 1, behind everything else. |
+| `monkey.p1.leg` | 20 × 32 | 2 |  | A leg of player 1, 12 px down from its hip (the origin); it turns about the hip. |
+| `monkey.p1.arm` | 18 × 39 | 2 |  | An arm of player 1, 21 px down from its shoulder (the origin); it turns about the shoulder. |
+| `monkey.p1.torso` | 28 × 30 | 2 | joins: armBack, armFront, legBack, legFront | The body of player 1; its origin is the centre of the monkey's hitbox. The limbs join it at the attachment points. |
+| `monkey.p1.head` | 34 × 24 | 2 |  | The head of player 1 (ears, face, muzzle), over the body. |
+| `monkey.p2.tail` | 40 × 50 | 2 |  | The tail of player 2, behind everything else. |
+| `monkey.p2.leg` | 20 × 32 | 2 |  | A leg of player 2, 12 px down from its hip (the origin); it turns about the hip. |
+| `monkey.p2.arm` | 18 × 39 | 2 |  | An arm of player 2, 21 px down from its shoulder (the origin); it turns about the shoulder. |
+| `monkey.p2.torso` | 28 × 30 | 2 | joins: armBack, armFront, legBack, legFront | The body of player 2; its origin is the centre of the monkey's hitbox. The limbs join it at the attachment points. |
+| `monkey.p2.head` | 34 × 24 | 2 |  | The head of player 2 (ears, face, muzzle), over the body. |
+| `monkey.shadow.tail` | 40 × 50 | 2 | see-through (36 %) | The tail of the shadow monkey, behind everything else. |
+| `monkey.shadow.leg` | 20 × 32 | 2 | see-through (36 %) | A leg of the shadow monkey, 12 px down from its hip (the origin); it turns about the hip. |
+| `monkey.shadow.arm` | 18 × 39 | 2 | see-through (36 %) | An arm of the shadow monkey, 21 px down from its shoulder (the origin); it turns about the shoulder. |
+| `monkey.shadow.torso` | 28 × 30 | 2 | see-through (36 %), joins: armBack, armFront, legBack, legFront | The body of the shadow monkey; its origin is the centre of the monkey's hitbox. The limbs join it at the attachment points. |
+| `monkey.shadow.head` | 34 × 24 | 2 | see-through (36 %) | The head of the shadow monkey (ears, face, muzzle), over the body. |
+| `monkey.eyes.0` … `.1` | 18 × 12 | 2 |  | The monkey's eyes: open (frame 0), and crossed after a fall (frame 1). |
+| `monkey.shadow.eyes.0` … `.1` | 18 × 12 | 2 | see-through (36 %) | The shadow monkey's eyes, see-through: open (frame 0), and crossed after a fall (frame 1). |
 
 ### liana
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
 | `liana.green.rope` | 430 × 10 | 2 | strip | The rope of the lianas: a straight strip 420 px along +x from the anchor (the origin), bent along the swinging rope. |
-| `liana.green.leaf.0` … `.1` | 19 × 12 | 1 |  | A leaf on the lianas, 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf. |
+| `liana.green.leaf.0` … `.1` | 19 × 12 | 2 |  | A leaf on the lianas, 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf. |
 | `liana.gold.rope` | 430 × 10 | 2 | strip | The rope of player 2's own lianas in shared screen: a straight strip 420 px along +x from the anchor (the origin), bent along the swinging rope. |
-| `liana.gold.leaf.0` … `.1` | 19 × 12 | 1 |  | A leaf on player 2's own lianas in shared screen, 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf. |
-| `liana.shadow.rope` | 430 × 10 | 2 | strip | The rope of the shadow monkey's lianas: a straight strip 420 px along +x from the anchor (the origin), bent along the swinging rope. |
-| `liana.shadow.leaf.0` … `.1` | 19 × 12 | 1 |  | A leaf on the shadow monkey's lianas, 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf. |
+| `liana.gold.leaf.0` … `.1` | 19 × 12 | 2 |  | A leaf on player 2's own lianas in shared screen, 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf. |
+| `liana.shadow.rope` | 430 × 10 | 2 | strip, see-through (36 %) | The rope of the shadow monkey's lianas (see-through): a straight strip 420 px along +x from the anchor (the origin), bent along the swinging rope. |
+| `liana.shadow.leaf.0` … `.1` | 19 × 12 | 2 | see-through (36 %) | A leaf on the shadow monkey's lianas (see-through), 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf. |
 | `liana.flash` | 218 × 8 | 2 | strip | The lit lower half of a liana, when the grip is about to slip off the end; bent like the rope. |
 
 ### banana

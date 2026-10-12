@@ -22,6 +22,15 @@ describe('packing atlas pages', () => {
     expect(pages.length).toBeGreaterThan(1);
   });
 
+  it('puts the cells marked first on the first page (strips, for Phaser’s Rope)', () => {
+    const cells = Array.from({ length: 60 }, (_, i) => ({ name: `c${i}`, w: 10 + ((i * 37) % 90), h: 8 + ((i * 53) % 70), first: i % 15 === 0 }));
+    const pages = pack(cells, { width: 256, maxHeight: 256 });
+    expect(pages.length).toBeGreaterThan(1);
+    expect(pages[0].cells.filter((c) => c.first).map((c) => c.name).sort()).toEqual(cells.filter((c) => c.first).map((c) => c.name).sort());
+    const tooMany = Array.from({ length: 40 }, (_, i) => ({ name: `s${i}`, w: 100, h: 60, first: true }));
+    expect(() => pack(tooMany, { width: 256, maxHeight: 256 })).toThrow(/first page/);
+  });
+
   it('refuses a cell bigger than a page', () => {
     expect(() => pack([{ name: 'huge', w: 300, h: 10 }], { width: 256, maxHeight: 256 })).toThrow(/huge/);
   });

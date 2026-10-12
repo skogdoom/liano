@@ -1,19 +1,22 @@
 import Phaser from 'phaser';
 import { version } from '../../package.json';
-import { WORLD_HEIGHT } from '../config.js';
+import { SHARED_ZOOM, WORLD_HEIGHT } from '../config.js';
+import { paneLayouts } from '../layout.js';
 import { FULLSCREEN_HIT, MUTE_HIT } from '../controls.js';
 import { MODES } from '../sim/match.js';
 import { Art, CATALOG, queueCatalog, queueSet } from './art.js';
 import { applyViewCamera } from './view.js';
+import { WorldPane } from './world/pane.js';
 
 // The Phaser version's scenes (PHASER_PLAN.md, M2): Boot loads the art and starts the
-// others; Play will draw the worlds (M5), UI the HUD, panels and buttons (M6). Each
-// scene's camera shows the logical view as the layout places it (see view.js). The
-// platform (main.js) holds the layout, pause and full screen; scenes find it in the
-// game's registry.
+// others; Play draws the worlds (M5), UI the HUD, panels and buttons (M6). Each scene's
+// camera shows the logical view as the layout places it (see view.js). The platform
+// (main.js) holds the layout, pause and full screen; scenes find it in the game's
+// registry.
 //
-// So far Play draws an empty frame (the view and the world band in it), and UI a readout
-// of the game (readout below), "Paused", and stand-in mute and full-screen buttons.
+// So far Play draws the worlds over a plain frame (until the backdrop, M5d), and UI a
+// readout of the game (readout below), "Paused", and stand-in mute and full-screen
+// buttons.
 
 const VIEW = 0x10261a;
 const BAND = 0x4a8060;
@@ -76,10 +79,75 @@ export class PlayScene extends Phaser.Scene {
   }
 
   create() {
+    const platform = platformOf(this);
+    this.platform = platform;
+    this.panes = [];
+    this.paneWorlds = null;
+    // Screen shake is off for players who ask for reduced motion.
+    this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const frame = this.add.graphics();
     followLayout(this, ({ view, bandTop }) => {
       frame.clear().fillStyle(VIEW).fillRect(0, 0, view.width, view.height).fillStyle(BAND).fillRect(0, bandTop, view.width, WORLD_HEIGHT);
+      this.layoutPanes();
     });
+    // The world is drawn once the main set of the art is in (obstacles are in it); until
+    // then the game holds presses (see main.js).
+    const start = () => {
+      this.ready = true;
+      platform.world = this;
+      this.sync();
+    };
+    if (platform.artLoad.sets.some((s) => s.set === 'main')) start();
+    else {
+      const onArt = (set) => {
+        if (set !== 'main') return;
+        platform.off('art', onArt);
+        start();
+      };
+      platform.on('art', onArt);
+    }
+  }
+
+  // Places the panes as the layout says (paneLayouts): shared screen shows a wider stretch.
+  layoutPanes() {
+    const { game, layout } = this.platform;
+    if (!this.panes.length) return;
+    const zoom = game.mode === 'shared' ? SHARED_ZOOM : 1;
+    paneLayouts(layout, this.panes.length, zoom).forEach((pane, i) => this.panes[i].resize(pane));
+  }
+
+  // A pane per world, rebuilt when the mode or match changes the worlds. In split screen
+  // pane p shows player p; otherwise the one pane shows every player.
+  sync() {
+    if (!this.ready) return;
+    const { game } = this.platform;
+    const same = this.paneWorlds && this.paneWorlds.length === game.worlds.length && this.paneWorlds.every((w, i) => w === game.worlds[i]);
+    if (same) return;
+    const relayout = !this.paneWorlds || this.paneWorlds.length !== game.worlds.length;
+    while (this.panes.length < game.worlds.length) this.panes.push(new WorldPane(this, this.platform.art));
+    for (const pane of this.panes.splice(game.worlds.length)) pane.destroy();
+    game.worlds.forEach((world, i) => {
+      const players = game.worlds.length > 1 ? [i] : world.monkeys.map((_, m) => m);
+      this.panes[i].setWorld(world, players, game.sharedView?.camera);
+    });
+    this.paneWorlds = [...game.worlds];
+    if (relayout) this.layoutPanes();
+  }
+
+  // After every sim step (see main.js).
+  stepCameras(dt) {
+    for (const pane of this.panes) pane.stepCamera(dt);
+  }
+
+  update() {
+    const { frame, game } = this.platform;
+    if (!this.ready || !frame) return;
+    this.sync();
+    const { frameDt, alpha, events } = frame;
+    const ghost = game.shadowFrame();
+    this.panes.forEach((pane, i) =>
+      pane.update(events.length === 0 ? events : events.filter((e) => e.pane === i), frameDt, !this.reducedMotion.matches, i === 0 ? ghost : null, alpha),
+    );
   }
 }
 
@@ -136,8 +204,8 @@ export class UiScene extends Phaser.Scene {
   create() {
     const platform = platformOf(this);
     const style = { fontFamily: 'sans-serif', color: CREAM, align: 'center' };
-    this.title = this.add.text(0, 0, `Liano v${version}\nPhaser ${Phaser.VERSION}: the game runs, drawn as text for now`, { ...style, fontSize: '40px' }).setOrigin(0.5);
-    this.status = this.add.text(0, 0, '', { ...style, fontSize: '26px', lineSpacing: 8 }).setOrigin(0.5, 0);
+    this.title = this.add.text(0, 0, `Liano v${version} · Phaser ${Phaser.VERSION}: the world is drawn; the HUD comes in M6`, { ...style, fontSize: '22px' }).setOrigin(0.5);
+    this.status = this.add.text(0, 0, '', { ...style, fontSize: '18px', lineSpacing: 4 }).setOrigin(0.5, 0);
     this.paused = this.add.text(0, 0, 'Paused', { ...style, fontSize: '56px', fontStyle: 'bold' }).setOrigin(0.5);
     this.controls = this.add.container(0, 0);
     this.muteIcon = this.add.graphics();
@@ -155,8 +223,8 @@ export class UiScene extends Phaser.Scene {
     platform.on('fullscreen', (active) => drawFullscreenIcon(this.fullscreenIcon, active));
     followLayout(this, (layout, camera) => {
       const { view } = layout;
-      this.title.setPosition(view.width / 2, layout.bandTop + 200);
-      this.status.setPosition(view.width / 2, layout.bandTop + 300);
+      this.title.setPosition(view.width / 2, layout.bandTop + 70);
+      this.status.setPosition(view.width / 2, layout.bandTop + 90);
       this.paused.setPosition(layout.panels.paused.x, layout.panels.paused.y - 120);
       this.controls.setPosition(layout.insets.left, layout.insets.top).setScale(layout.ui);
       // Text is drawn at the camera's zoom: rasterized at it, it stays sharp.

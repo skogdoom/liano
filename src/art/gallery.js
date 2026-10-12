@@ -120,6 +120,8 @@ function pixiFrame(piece, i, box, w, h, zoom) {
   app.renderer.resize(w, h);
   const world = new Container();
   const g = new Graphics();
+  // A see-through piece: Pixi blends each shape on its own at the Graphics' alpha.
+  g.alpha = piece.alpha ?? 1;
   piece.frames[i](zoomed(g, zoom));
   // Nothing to draw (a wing seen edge on): the renderer would leave the last picture.
   if (g.bounds.width === 0 || g.bounds.height === 0) {

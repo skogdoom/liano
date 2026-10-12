@@ -14,7 +14,9 @@ export function generateArt(pieces) {
     const recorded = piece.frames.map((draw) => {
       const g = new RecordingGraphics();
       draw(g);
-      return g.instructions;
+      // A see-through piece: every shape at its share of its alpha, blending on its own.
+      if (piece.alpha === undefined) return g.instructions;
+      return g.instructions.map((ins) => ({ ...ins, style: { ...ins.style, alpha: ins.style.alpha * piece.alpha } }));
     });
     const box = piece.box ?? unionBox(recorded.map((instructions) => bounds(instructions)));
     const contract = {
@@ -26,6 +28,7 @@ export function generateArt(pieces) {
       box,
       scale: piece.scale,
       tint: piece.tint,
+      ...(piece.alpha !== undefined && { alpha: piece.alpha }),
       ...(piece.fps !== undefined && { fps: piece.fps }),
       ...(piece.attach && { attach: piece.attach }),
       ...(piece.hitbox && { hitbox: piece.hitbox }),

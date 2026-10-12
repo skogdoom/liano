@@ -75,7 +75,9 @@ for (const scale of ATLAS_SCALES) {
   for (const set of sets) {
     const cells = pieces
       .filter((p) => p.set === set && p.kind !== 'tile')
-      .flatMap((piece) => piece.frames.map((_, i) => ({ piece, i, name: frameName(piece, i), ...cellOf(piece, scale) })));
+      // Strips go on each set's first page: Phaser 4.2.1's Rope draws from a multi-page
+      // atlas's first image whatever page its frame is on.
+      .flatMap((piece) => piece.frames.map((_, i) => ({ piece, i, name: frameName(piece, i), first: piece.kind === 'strip', ...cellOf(piece, scale) })));
     if (cells.length === 0) continue;
     const pages = pack(cells, { width, maxHeight: MAX_PAGE, padding: PADDING });
     const textures = pages.map((page, n) => {

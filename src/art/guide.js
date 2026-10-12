@@ -12,6 +12,7 @@ function row(piece) {
   const traits = [
     piece.kind !== 'sprite' && piece.kind,
     piece.tint && 'tinted',
+    piece.alpha !== undefined && `see-through (${Math.round(piece.alpha * 100)} %)`,
     piece.fps && `${piece.fps} fps`,
     piece.attach && `joins: ${Object.keys(piece.attach).join(', ')}`,
     piece.hitbox && 'hitbox',
@@ -62,6 +63,8 @@ build then uses yours instead of the generated one; nothing else changes.
   at a rate, \`"fps"\`.
 - **Tinted** pieces (the backdrop, the temple) are multiplied by the time of day's colour:
   draw them as they look by day.
+- **See-through** pieces (the shadow monkey and its lianas) are drawn as they show: each
+  shape at the given share of its opacity, so the shapes behind show through.
 - **Strips** (ropes, vines, necks) are bent along a curve: draw them straight along +x.
   **Tiles** (the backdrop layers) repeat sideways: their left and right edges must meet.
   **Slices** (panels) keep their corners and stretch their edges and middle.

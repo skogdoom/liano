@@ -1,23 +1,10 @@
 import { Container, Graphics } from 'pixi.js';
 import { SCREEN_WIDTH } from '../config.js';
-import { LianaState } from '../sim/liana.js';
-import { MAX_STEP_TURN, blend } from './interpolate.js';
-import { LIANA_PALETTES, leafLayout, upright, tipFlashOn, drawLiana } from '../views/liana.js';
+import { LIANA_PALETTES, drawLiana, drawnState, flashingLianas, leafLayout, lianaPlacement, lianaVisible } from '../views/liana.js';
 
 // The parts both versions share (pure: no Pixi) are in views/liana.js.
 export * from '../views/liana.js';
 
-// What a liana looks like right now; it is only redrawn when this changes. Resting
-// lianas never change, and a swinging one is straight, so it is drawn once hanging
-// straight down from the origin and turned about its anchor (see LianaView.update):
-// only the lianas settling after a release redraw each frame.
-function drawnState(liana, flash) {
-  if (liana.state === LianaState.IDLE) return 'idle';
-  if (liana.state === LianaState.SWINGING) return `swinging:${flash}`;
-  return `${liana.state}:${liana.angle}:${liana.angularVelocity}:${flash}`;
-}
-
-// One Graphics per liana, kept while the liana exists and hidden when off-screen.
 export class LianaView {
   // `palette`: one of LIANA_PALETTES. `side`: for one of a pair of liana sets (shared
   // screen), the side its lianas bow to at rest; 0 for a single set.
@@ -32,9 +19,8 @@ export class LianaView {
   // `monkeys` light up the end of the liana they are slipping towards. `alpha`: how far
   // between the previous sim step and the current one to draw (see interpolate.js).
   update(lianas, cameraX, viewWidth = SCREEN_WIDTH, monkeys = [], alpha = 1) {
-    const margin = 500;
     const seen = new Set();
-    const flashing = new Set(monkeys.filter((m) => tipFlashOn(m.tipTime)).map((m) => m.liana));
+    const flashing = flashingLianas(monkeys);
     for (const liana of lianas) {
       seen.add(liana);
       let entry = this.entries.get(liana);
@@ -43,23 +29,17 @@ export class LianaView {
         this.entries.set(liana, entry);
         this.view.addChild(entry.g);
       }
-      const visible = liana.x >= cameraX - margin && liana.x <= cameraX + viewWidth + margin;
+      const visible = lianaVisible(liana, cameraX, viewWidth);
       entry.g.visible = visible;
       if (!visible) continue;
       const flash = flashing.has(liana);
       const state = drawnState(liana, flash);
+      const place = lianaPlacement(liana, alpha);
       // Swinging: only the turn changes each frame, about the anchor.
-      if (liana.state === LianaState.SWINGING) entry.g.rotation = -blend(liana.prevAngle, liana.angle, alpha, MAX_STEP_TURN);
+      entry.g.rotation = place.rotation;
       if (state === entry.drawn) continue;
-      if (liana.state === LianaState.SWINGING) {
-        entry.g.position.set(liana.x, liana.anchorY);
-        entry.g.rotation = -blend(liana.prevAngle, liana.angle, alpha, MAX_STEP_TURN);
-        drawLiana(entry.g.clear(), upright(liana), entry.layout, flash, this.palette);
-      } else {
-        entry.g.position.set(0, 0);
-        entry.g.rotation = 0;
-        drawLiana(entry.g.clear(), liana, entry.layout, flash, this.palette);
-      }
+      entry.g.position.set(place.x, place.y);
+      drawLiana(entry.g.clear(), place.drawn, entry.layout, flash, this.palette);
       entry.drawn = state;
       this.redraws++;
     }

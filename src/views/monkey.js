@@ -1,3 +1,7 @@
+import { MonkeyState } from '../sim/monkey.js';
+import { SWING_OMEGA } from '../sim/liana.js';
+import { blend } from '../render/interpolate.js';
+
 // The monkey: what both versions draw from (no Pixi here). Colours, sizes, the drawing
 // functions (the Pixi view draws with them, and the art pieces are generated from them),
 // and where things go and how they move. The Pixi view is render/monkeyView.js.
@@ -103,3 +107,58 @@ export const POSES = {
   airborne: { armBack: 2.1, armFront: -2.1, legBack: 0.6, legFront: -0.6 },
   dead: { armBack: 2.7, armFront: -2.7, legBack: 0.9, legFront: -0.9 },
 };
+
+// How a monkey shows, frame by frame (the view-model both versions draw from): where it
+// is, the way it faces, the body's turn (eased towards its target, spinning when dead),
+// the limbs' turns, whether its eyes are crossed, and how see-through it is (blinking
+// while invulnerable after a respawn).
+export class MonkeyPose {
+  constructor() {
+    this.facing = 1;
+    this.rotation = 0;
+    this.blinkTime = 0;
+    this.monkey = null;
+  }
+
+  // `alpha`: how far between the previous sim step and the current one to draw (see
+  // interpolate.js); the shadow's frames carry no previous position and are drawn as they
+  // are. Returns { x, y, facing, rotation, limbs, dead, alpha }.
+  update(monkey, dt, blinking = false, alpha = 1) {
+    this.blinkTime = blinking ? this.blinkTime + dt : 0;
+    const seeThrough = blinking && Math.floor(this.blinkTime * INVULNERABLE_BLINK * 2) % 2;
+    if (monkey !== this.monkey) {
+      // New run: snap instead of easing from the previous monkey.
+      this.monkey = monkey;
+      this.rotation = this.#targetRotation(monkey);
+    }
+    const between = alpha < 1 && monkey.prevX !== undefined;
+    const x = between ? blend(monkey.prevX, monkey.x, alpha) : monkey.x;
+    const y = between ? blend(monkey.prevY, monkey.y, alpha) : monkey.y;
+
+    if (monkey.state === MonkeyState.HANGING) this.facing = monkey.liana.swingDir;
+    else if (monkey.state === MonkeyState.AIRBORNE && monkey.vx !== 0) this.facing = Math.sign(monkey.vx);
+
+    if (monkey.state === MonkeyState.DEAD) {
+      this.rotation += DEAD_SPIN * dt;
+    } else {
+      const target = this.#targetRotation(monkey);
+      this.rotation += (target - this.rotation) * (1 - Math.exp(-ROTATION_EASE * dt));
+    }
+    const limbs = POSES[monkey.state === MonkeyState.HANGING ? 'hanging' : monkey.state === MonkeyState.DEAD ? 'dead' : 'airborne'];
+    return { x, y, facing: this.facing, rotation: this.rotation, limbs, dead: monkey.state === MonkeyState.DEAD, alpha: seeThrough ? 0.3 : 1 };
+  }
+
+  // Body rotation in the mirrored (facing) frame.
+  #targetRotation(monkey) {
+    if (monkey.state === MonkeyState.HANGING) {
+      // Align "up" with the rope, trailing slightly behind the swing.
+      const { angle, angularVelocity } = monkey.liana;
+      return this.facing * (-angle + (HANG_LAG * angularVelocity) / SWING_OMEGA);
+    }
+    if (monkey.state === MonkeyState.AIRBORNE) {
+      // Tilt nose-down as the flight descends.
+      return 0.5 * Math.atan2(monkey.vy, Math.abs(monkey.vx));
+    }
+    return this.rotation;
+  }
+}

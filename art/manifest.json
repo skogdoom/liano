@@ -130,7 +130,7 @@
         "w": 40,
         "h": 50
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/monkey.p1.tail.svg"
@@ -147,7 +147,7 @@
         "w": 20,
         "h": 32
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/monkey.p1.leg.svg"
@@ -164,7 +164,7 @@
         "w": 18,
         "h": 39
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/monkey.p1.arm.svg"
@@ -181,7 +181,7 @@
         "w": 28,
         "h": 30
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "attach": {
         "armBack": [
@@ -216,7 +216,7 @@
         "w": 34,
         "h": 24
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/monkey.p1.head.svg"
@@ -233,7 +233,7 @@
         "w": 40,
         "h": 50
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/monkey.p2.tail.svg"
@@ -250,7 +250,7 @@
         "w": 20,
         "h": 32
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/monkey.p2.leg.svg"
@@ -267,7 +267,7 @@
         "w": 18,
         "h": 39
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/monkey.p2.arm.svg"
@@ -284,7 +284,7 @@
         "w": 28,
         "h": 30
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "attach": {
         "armBack": [
@@ -319,7 +319,7 @@
         "w": 34,
         "h": 24
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/monkey.p2.head.svg"
@@ -336,8 +336,9 @@
         "w": 40,
         "h": 50
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
+      "alpha": 0.36,
       "frames": [
         "generated/monkey.shadow.tail.svg"
       ]
@@ -353,8 +354,9 @@
         "w": 20,
         "h": 32
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
+      "alpha": 0.36,
       "frames": [
         "generated/monkey.shadow.leg.svg"
       ]
@@ -370,8 +372,9 @@
         "w": 18,
         "h": 39
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
+      "alpha": 0.36,
       "frames": [
         "generated/monkey.shadow.arm.svg"
       ]
@@ -387,8 +390,9 @@
         "w": 28,
         "h": 30
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
+      "alpha": 0.36,
       "attach": {
         "armBack": [
           -7,
@@ -422,8 +426,9 @@
         "w": 34,
         "h": 24
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
+      "alpha": 0.36,
       "frames": [
         "generated/monkey.shadow.head.svg"
       ]
@@ -439,11 +444,30 @@
         "w": 18,
         "h": 12
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/monkey.eyes.0.svg",
         "generated/monkey.eyes.1.svg"
+      ]
+    },
+    {
+      "key": "monkey.shadow.eyes",
+      "purpose": "The shadow monkey's eyes, see-through: open (frame 0), and crossed after a fall (frame 1).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -9,
+        "y": -17,
+        "w": 18,
+        "h": 12
+      },
+      "scale": 2,
+      "tint": false,
+      "alpha": 0.36,
+      "frames": [
+        "generated/monkey.shadow.eyes.0.svg",
+        "generated/monkey.shadow.eyes.1.svg"
       ]
     },
     {
@@ -475,7 +499,7 @@
         "w": 19,
         "h": 12
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/liana.green.leaf.0.svg",
@@ -511,7 +535,7 @@
         "w": 19,
         "h": 12
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/liana.gold.leaf.0.svg",
@@ -520,7 +544,7 @@
     },
     {
       "key": "liana.shadow.rope",
-      "purpose": "The rope of the shadow monkey's lianas: a straight strip 420 px along +x from the anchor (the origin), bent along the swinging rope.",
+      "purpose": "The rope of the shadow monkey's lianas (see-through): a straight strip 420 px along +x from the anchor (the origin), bent along the swinging rope.",
       "kind": "strip",
       "set": "main",
       "box": {
@@ -531,6 +555,7 @@
       },
       "scale": 2,
       "tint": false,
+      "alpha": 0.36,
       "length": 420,
       "frames": [
         "generated/liana.shadow.rope.svg"
@@ -538,7 +563,7 @@
     },
     {
       "key": "liana.shadow.leaf",
-      "purpose": "A leaf on the shadow monkey's lianas, 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf.",
+      "purpose": "A leaf on the shadow monkey's lianas (see-through), 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf.",
       "kind": "sprite",
       "set": "main",
       "box": {
@@ -547,8 +572,9 @@
         "w": 19,
         "h": 12
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
+      "alpha": 0.36,
       "frames": [
         "generated/liana.shadow.leaf.0.svg",
         "generated/liana.shadow.leaf.1.svg"

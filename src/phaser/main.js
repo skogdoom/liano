@@ -21,8 +21,8 @@ import { canvasSize, viewCamera } from './view.js';
 
 // The Phaser version of the game (see PHASER_PLAN.md). The platform holds the layout,
 // pause, full screen, input and sound for the scenes (scenes.js); the game runs as in
-// the Pixi version (driver.js). M3: the scenes draw an empty frame and a readout of the
-// game; drawing the game itself comes in M5 and M6.
+// the Pixi version (driver.js). The play scene draws the worlds (M5); until M6 the UI
+// scene shows a readout of the game instead of the HUD and panels.
 
 let game = null;
 // Anything that breaks from here on, startup included, shows a reload message instead
@@ -196,8 +196,12 @@ const driver = createDriver({
   pause,
   sound,
   prefetch,
-  onStep() {
+  // Presses wait until the main set of the art is in (it holds the obstacles).
+  ready: () => platform.world !== undefined,
+  onStep(dt) {
+    platform.world?.sync();
     if (theGame.mode !== layoutMode) layout();
+    platform.world?.stepCameras(dt);
   },
   onDebugToggle: () => (platform.debug = !platform.debug),
   onMuteToggle: toggleMute,

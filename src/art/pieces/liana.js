@@ -1,7 +1,7 @@
 import { LIANA_LENGTH } from '../../config.js';
 import { LIANA_PALETTES, TIP_FLASH } from '../../views/liana.js';
 import { leafPoints } from '../../render/shapes.js';
-import { SHADOW_LIANA } from '../../views/shadow.js';
+import { SHADOW_ALPHA, SHADOW_LIANA } from '../../views/shadow.js';
 
 // A liana: the rope and the tip flash are straight strips along +x, bent along the rope's
 // points by the rig; a round cap reaches half the width past each end. Each liana's
@@ -19,15 +19,18 @@ const strip = (g, length, layers) => {
 };
 const leaf = (g, color) => g.poly(leafPoints(0, 0, 0, LEAF_REFERENCE, LEAF_REFERENCE * 0.5)).fill(color);
 
+// The shadow's lianas are see-through (SHADOW_ALPHA), shape by shape as the Pixi version
+// draws them, so their pieces are drawn so.
 const COLOURINGS = [
-  ['green', LIANA_PALETTES[0], 'boot', 'the lianas'],
-  ['gold', LIANA_PALETTES[1], 'main', "player 2's own lianas in shared screen"],
-  ['shadow', SHADOW_LIANA, 'main', "the shadow monkey's lianas"],
+  ['green', LIANA_PALETTES[0], 'boot', 'the lianas', {}],
+  ['gold', LIANA_PALETTES[1], 'main', "player 2's own lianas in shared screen", {}],
+  ['shadow', SHADOW_LIANA, 'main', "the shadow monkey's lianas (see-through)", { alpha: SHADOW_ALPHA }],
 ];
 
 export const LIANA_PIECES = [
-  ...COLOURINGS.flatMap(([name, palette, set, whose]) => [
+  ...COLOURINGS.flatMap(([name, palette, set, whose, seeThrough]) => [
     {
+      ...seeThrough,
       key: `liana.${name}.rope`,
       set,
       purpose: `The rope of ${whose}: a straight strip ${LIANA_LENGTH} px along +x from the anchor (the origin), bent along the swinging rope.`,
@@ -39,8 +42,11 @@ export const LIANA_PIECES = [
       frames: [(g) => strip(g, LIANA_LENGTH, [[ROPE_WIDTH, palette.ropeDark], [4, palette.rope]])],
     },
     {
+      ...seeThrough,
       key: `liana.${name}.leaf`,
       set,
+      // Turned per leaf: rasterized at twice the density, like the rope.
+      scale: 2,
       purpose: `A leaf on ${whose}, ${LEAF_REFERENCE} px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf.`,
       frames: [(g) => leaf(g, palette.leaf), (g) => leaf(g, palette.leafDark)],
     },

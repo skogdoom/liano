@@ -2,6 +2,7 @@ import { TIP_WARNING_TIME } from '../config.js';
 import { LianaState, SWING_OMEGA } from '../sim/liana.js';
 import { mixSeed, mulberry32 } from '../sim/rng.js';
 import { leafPoints } from '../render/shapes.js';
+import { MAX_STEP_TURN, blend } from '../render/interpolate.js';
 
 // Lianas: what both versions draw from (no Pixi here). Colours, sizes, the drawing
 // functions (the Pixi view draws with them, and the art pieces are generated from them),
@@ -112,3 +113,31 @@ export function drawLiana(g, liana, layout, flash, palette) {
     g.stroke({ width: 5, color: TIP_FLASH, cap: 'round', join: 'round' });
   }
 }
+
+// Lianas this far off either side of the view are not drawn.
+export const LIANA_MARGIN = 500;
+export const lianaVisible = (liana, cameraX, viewWidth) => liana.x >= cameraX - LIANA_MARGIN && liana.x <= cameraX + viewWidth + LIANA_MARGIN;
+
+// The lianas whose end is lit: those `monkeys` are slipping towards the tip of.
+export const flashingLianas = (monkeys) => new Set(monkeys.filter((m) => tipFlashOn(m.tipTime)).map((m) => m.liana));
+
+// Where a liana's drawing goes and the liana to draw it from. A swinging liana is
+// straight: drawn upright from the origin and turned about its anchor, its turn `alpha`
+// of the way between the previous sim step and the current one (see interpolate.js).
+// Others are drawn where they are.
+export function lianaPlacement(liana, alpha = 1) {
+  if (liana.state !== LianaState.SWINGING) return { x: 0, y: 0, rotation: 0, drawn: liana };
+  return { x: liana.x, y: liana.anchorY, rotation: -blend(liana.prevAngle, liana.angle, alpha, MAX_STEP_TURN), drawn: upright(liana) };
+}
+
+// What a liana looks like right now; it is only redrawn when this changes. Resting
+// lianas never change, and a swinging one is straight, so it is drawn once hanging
+// straight down from the origin and turned about its anchor (see lianaPlacement):
+// only the lianas settling after a release redraw each frame.
+export function drawnState(liana, flash) {
+  if (liana.state === LianaState.IDLE) return 'idle';
+  if (liana.state === LianaState.SWINGING) return `swinging:${flash}`;
+  return `${liana.state}:${liana.angle}:${liana.angularVelocity}:${flash}`;
+}
+
+// One Graphics per liana, kept while the liana exists and hidden when off-screen.
