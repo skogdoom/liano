@@ -52,8 +52,14 @@ function cellSvg(piece, i, { x, y, w, h, zoom }) {
 
 const render = (svg) => new Resvg(svg, { shapeRendering: 2, imageRendering: 0 }).render().asPng();
 
-rmSync(out, { recursive: true, force: true });
+// The folder is updated in place (a running dev server keeps watching it); files from an
+// earlier build that this one does not write are removed at the end.
 mkdirSync(new URL('tiles/', out), { recursive: true });
+const written = new Set();
+const write = (name, data) => {
+  writeFileSync(new URL(name, out), data);
+  written.add(name);
+};
 const sizes = {};
 const pieces = manifest.pieces;
 const sets = [...new Set(pieces.map((p) => p.set))];
@@ -69,7 +75,7 @@ for (const scale of ATLAS_SCALES) {
     const textures = pages.map((page, n) => {
       const image = `${set}@${scale}x-${n}.png`;
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${page.width}" height="${page.height}">${page.cells.map((c) => cellSvg(c.piece, c.i, c)).join('')}</svg>`;
-      writeFileSync(new URL(image, out), render(svg));
+      write(image, render(svg));
       sizes[image] = `${page.width} × ${page.height}`;
       return {
         image,
@@ -86,7 +92,7 @@ for (const scale of ATLAS_SCALES) {
         })),
       };
     });
-    writeFileSync(new URL(`${set}@${scale}x.json`, out), JSON.stringify({ textures }));
+    write(`${set}@${scale}x.json`, JSON.stringify({ textures }));
   }
 }
 
@@ -94,7 +100,7 @@ for (const scale of ATLAS_SCALES) {
 for (const piece of pieces.filter((p) => p.kind === 'tile')) {
   const cell = { x: 0, y: 0, ...cellOf(piece, 1) };
   const image = `tiles/${piece.key}@1x.png`;
-  writeFileSync(new URL(image, out), render(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}">${cellSvg(piece, 0, cell)}</svg>`));
+  write(image, render(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}">${cellSvg(piece, 0, cell)}</svg>`));
   sizes[image] = `${cell.w} × ${cell.h}`;
 }
 
@@ -127,7 +133,15 @@ const catalog = {
     }),
   ),
 };
-writeFileSync(new URL('pieces.json', out), JSON.stringify(catalog));
+write('pieces.json', JSON.stringify(catalog));
+// For the gallery: which frames are custom, and the contracts.
+write('custom.json', JSON.stringify(custom.replace));
+write('manifest.json', JSON.stringify(manifest));
+for (const dir of ['', 'tiles/']) {
+  for (const name of readdirSync(new URL(dir, out))) {
+    if (name !== 'tiles' && !written.has(dir + name)) rmSync(new URL(dir + name, out));
+  }
+}
 const replaced = Object.keys(custom.replace).length;
 console.log(
   `public/art/: ${pieces.length} pieces${replaced ? ` (${replaced} frames custom)` : ''} in ${Math.round(performance.now() - start)} ms\n` +
