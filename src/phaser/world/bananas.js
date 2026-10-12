@@ -1,5 +1,5 @@
 import { HEART_GLINT, POP_FONT, POP_RISE, POP_TIME, bananaPose, bananaShape, popAlpha, popLook } from '../../views/banana.js';
-import { setTextOrigin, textStyle } from '../text.js';
+import { makeText, setTextOrigin } from '../text.js';
 import { makeContainer } from './build.js';
 
 // The bananas (and hearts) still to take in the Phaser version, and the "+1" rising where
@@ -72,8 +72,8 @@ export class BananaLayer {
 
   // A pop's text at (x, y), centred.
   pop(look, x, y) {
-    const style = textStyle({ family: POP_FONT.family, size: POP_FONT.size, weight: POP_FONT.weight, fill: look.fill, stroke: look.stroke, strokeWidth: POP_FONT.stroke, resolution: this.textResolution });
-    const text = setTextOrigin(this.scene.make.text({ x, y, text: look.text, style }, false));
+    const options = { family: POP_FONT.family, size: POP_FONT.size, weight: POP_FONT.weight, fill: look.fill, stroke: look.stroke, strokeWidth: POP_FONT.stroke, resolution: this.textResolution };
+    const text = setTextOrigin(makeText(this.scene, look.text, options)).setPosition(x, y);
     this.view.add(text);
     return text;
   }

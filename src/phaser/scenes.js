@@ -6,6 +6,7 @@ import { FULLSCREEN_HIT, MUTE_HIT } from '../controls.js';
 import { MODES } from '../sim/match.js';
 import { Art, CATALOG, queueCatalog, queueSet } from './art.js';
 import { applyViewCamera, rectCamera } from './view.js';
+import { Hud } from './hud.js';
 import { WorldPane } from './world/pane.js';
 
 // The Phaser version's scenes (PHASER_PLAN.md, M2): Boot loads the art and starts the
@@ -234,7 +235,11 @@ export class UiScene extends Phaser.Scene {
     this.fullscreenIcon.visible = platform.fullscreenButton;
     drawFullscreenIcon(this.fullscreenIcon, platform.fullscreen.active);
     platform.on('fullscreen', (active) => drawFullscreenIcon(this.fullscreenIcon, active));
+    // Top right: the scores, banana counts and hearts.
+    this.hud = new Hud(this, platform.art);
+    this.add.existing(this.hud.view);
     followLayout(this, (layout, camera) => {
+      this.hud.resize(layout, camera.zoom);
       const { view } = layout;
       this.title.setPosition(view.width / 2, layout.bandTop + 70);
       this.status.setPosition(view.width / 2, layout.bandTop + 90);
@@ -251,6 +256,7 @@ export class UiScene extends Phaser.Scene {
     const platform = platformOf(this);
     this.paused.visible = platform.pause.paused;
     if (platform.game) {
+      this.hud.update(platform.game);
       this.status.setText(
         readout(platform.game, { debug: platform.debug, fps: platform.fpsMeter, sound: platform.sound, artLoad: platform.artLoad, inputType: platform.input?.lastType }),
       );

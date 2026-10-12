@@ -689,7 +689,7 @@
         "w": 28,
         "h": 23
       },
-      "scale": 1,
+      "scale": 1.8,
       "tint": false,
       "frames": [
         "generated/heart.hud.0.svg",
@@ -707,7 +707,7 @@
         "w": 27,
         "h": 21
       },
-      "scale": 1,
+      "scale": 1.8,
       "tint": false,
       "frames": [
         "generated/banana.hud.svg"
@@ -724,7 +724,7 @@
         "w": 31,
         "h": 24
       },
-      "scale": 1,
+      "scale": 1.8,
       "tint": false,
       "frames": [
         "generated/banana.results.svg"
@@ -741,7 +741,7 @@
         "w": 66,
         "h": 66
       },
-      "scale": 1,
+      "scale": 1.8,
       "tint": false,
       "slices": {
         "left": 20,
@@ -764,7 +764,7 @@
         "w": 26,
         "h": 30
       },
-      "scale": 1,
+      "scale": 1.8,
       "tint": false,
       "frames": [
         "generated/ui.arrow.svg"
@@ -781,7 +781,7 @@
         "w": 26,
         "h": 40
       },
-      "scale": 1,
+      "scale": 1.8,
       "tint": false,
       "frames": [
         "generated/ui.speaker.svg"
@@ -798,7 +798,7 @@
         "w": 42,
         "h": 42
       },
-      "scale": 1,
+      "scale": 1.8,
       "tint": false,
       "frames": [
         "generated/ui.speakerWaves.svg"
@@ -815,7 +815,7 @@
         "w": 28,
         "h": 30
       },
-      "scale": 1,
+      "scale": 1.8,
       "tint": false,
       "frames": [
         "generated/ui.speakerCross.svg"
@@ -832,7 +832,7 @@
         "w": 48,
         "h": 48
       },
-      "scale": 1,
+      "scale": 1.8,
       "tint": false,
       "frames": [
         "generated/ui.fullscreen.0.svg",

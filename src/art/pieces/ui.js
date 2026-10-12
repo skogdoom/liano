@@ -1,6 +1,7 @@
 import { FULLSCREEN_STROKES, drawCorners } from '../../render/fullscreenButton.js';
 import { drawSpeaker, drawSpeakerCross, drawSpeakerWaves } from '../../render/muteButton.js';
 import { PANEL_RADIUS, drawArrow, drawPanel } from '../../render/overlays.js';
+import { MAX_UI_SCALE } from '../../config.js';
 
 // The HUD and the overlays: the panels behind the title, results and pause texts (a
 // 9-slice: the corners stay as they are and the edges stretch), the arrow at the top edge
@@ -14,7 +15,8 @@ const fullscreenIcon = (inward) => (g) => {
   return g;
 };
 
-const ui = { set: 'boot' };
+// Enlarged with the layout's `ui` scale (portrait phones).
+const ui = { set: 'boot', scale: MAX_UI_SCALE };
 
 export const UI_PIECES = [
   {
