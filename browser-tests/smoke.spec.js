@@ -23,6 +23,9 @@ test('the Pixi version plays: Space starts a run', async ({ page }) => {
   await page.goto(`${DEV}?engine=pixi`);
   await started(page, errors);
   expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
+  // Presses count only while running and not just after resuming (pause.js): a page
+  // that started hidden, as on a busy CI runner, ignores them for a moment.
+  await page.waitForFunction(() => window.__liano.pause.acceptsInput());
   await page.keyboard.press('Space');
   await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');
   expect(errors).toEqual([]);
