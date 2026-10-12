@@ -1,3 +1,4 @@
+import { buildMovingRig, MOVING_RIGS } from './moving.js';
 import { buildStaticRig, STATIC_RIGS } from './obstacles.js';
 
 // The obstacles of a world in the Phaser version (as the Pixi ObstacleViews): a rig per
@@ -12,6 +13,7 @@ export class ObstacleLayer {
 
   // Builds the rig for `o`, or null for the kinds the Phaser version does not draw yet.
   build(o) {
+    if (o.moving && MOVING_RIGS[o.type]) return buildMovingRig(this.scene, this.art, o);
     if (STATIC_RIGS[o.type]) return buildStaticRig(this.scene, this.art, o);
     return null;
   }

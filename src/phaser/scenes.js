@@ -113,7 +113,7 @@ export class PlayScene extends Phaser.Scene {
     const { game, layout } = this.platform;
     if (!this.panes.length) return;
     const zoom = game.mode === 'shared' ? SHARED_ZOOM : 1;
-    paneLayouts(layout, this.panes.length, zoom).forEach((pane, i) => this.panes[i].resize(pane));
+    paneLayouts(layout, this.panes.length, zoom).forEach((pane, i) => this.panes[i].resize(pane, this.platform.camera.zoom));
   }
 
   // A pane per world, rebuilt when the mode or match changes the worlds. In split screen

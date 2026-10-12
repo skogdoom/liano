@@ -2,7 +2,7 @@ import { SPIKE_SCENARIOS } from './spikeScenarios.js';
 import { WORLD_SCENARIOS } from './worldScenarios.js';
 
 // The scenarios the parity page draws with both versions (see main.js). Each draws the
-// same picture twice: `pixi(world, PIXI)` into a Pixi container and `phaser(scene, zoom)`
+// same picture twice: `pixi(world, PIXI, zoom)` into a Pixi container and `phaser(scene, zoom)`
 // in a Phaser scene (after `preload(scene, zoom)`, if given), on a canvas of `width` ×
 // `height` at each of its `zooms` (default [1]; 2 is a 2× screen), seeing the world from
 // `scroll` (the top-left corner, in world units; default [0, 0]) over `background`.

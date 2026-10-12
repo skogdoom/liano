@@ -2,6 +2,7 @@ import { DEATH_SHAKE_PX, DEATH_SHAKE_TIME } from '../../config.js';
 import { Camera, cameraTarget } from '../../render/camera.js';
 import { blend } from '../../render/interpolate.js';
 import { Shake } from '../../render/shake.js';
+import { BananaLayer } from './bananas.js';
 import { LianaSetRig } from './lianas.js';
 import { ObstacleLayer } from './obstacleLayer.js';
 import { MonkeyRig } from './monkey.js';
@@ -10,7 +11,7 @@ import { ShadowRig } from './shadow.js';
 // One world drawn in one rect of the view, as the Pixi Pane (render/pane.js): the whole
 // view in single player, a strip per player in split screen. `scene` is what the death
 // shake moves; in it, back to front, the world (scrolled by the camera: the obstacles,
-// the lianas, then the shadow and the monkeys). M5 adds the bananas and backdrop; M6 the
+// the lianas, the bananas, then the shadow and the monkeys). M5d adds the backdrop; M6 the
 // clip and the debug view.
 const FURS = ['p1', 'p2'];
 const COLOURINGS = ['green', 'gold'];
@@ -24,12 +25,13 @@ export class WorldPane {
     this.worldLayer = scene.make.container({}, false);
     this.obstacles = new ObstacleLayer(scene, art);
     this.lianaLayer = scene.make.container({}, false);
+    this.bananas = new BananaLayer(scene, art);
     this.monkeyLayer = scene.make.container({}, false);
     this.lianaSets = [];
     this.monkeys = [];
     this.shadow = new ShadowRig(scene, art);
     this.monkeyLayer.add(this.shadow.view);
-    this.worldLayer.add([this.obstacles.view, this.lianaLayer, this.monkeyLayer]);
+    this.worldLayer.add([this.obstacles.view, this.lianaLayer, this.bananas.view, this.monkeyLayer]);
     this.scene.add(this.worldLayer);
     this.view.add(this.scene);
     this.ownCamera = new Camera();
@@ -39,8 +41,10 @@ export class WorldPane {
     this.layout = null;
   }
 
-  // `pane` is one of paneLayouts(): where it goes and how its world is drawn.
-  resize(pane) {
+  // `pane` is one of paneLayouts(): where it goes and how its world is drawn. `zoom`:
+  // device pixels per view unit (the camera's), for text.
+  resize(pane, zoom = 1) {
+    this.bananas.setTextResolution(zoom * pane.scale);
     this.layout = pane;
     this.view.setPosition(pane.x, pane.y);
     this.scene.setScale(pane.scale);
@@ -97,6 +101,7 @@ export class WorldPane {
     this.worldLayer.x = -cameraX;
     this.obstacles.update(world.obstacles.values(), world.time);
     world.lianaSets.forEach((set, i) => this.lianaSets[i].update(set.values(), cameraX, layout.view.width, world.monkeys, alpha));
+    this.bananas.update(world, events, dt);
     world.monkeys.forEach((m, i) => this.monkeys[i].update(m, dt, world.isInvulnerable(i), alpha));
     this.shadow.update(ghost, dt);
   }

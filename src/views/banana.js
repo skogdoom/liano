@@ -79,3 +79,17 @@ export function drawGlint(g, size) {
 
 export const HEART_POP = 0xff7a90;
 export const HEART_POP_EDGE = 0x7a1426;
+
+// How a banana (or a heart) still to take shows at world time `t`: bobbing gently and
+// rocking, its glint fading in and out over half of every 1.6 s.
+export function bananaPose(banana, t) {
+  const phase = banana.gap * 1.7;
+  return { x: banana.x, y: banana.y + 3 * Math.sin(t * 3 + phase), rotation: 0.15 * Math.sin(t * 2 + phase), glint: Math.max(0, Math.sin(t * 4 + phase)) };
+}
+
+// The "+1" (or "+1 ♥") that rises from a banana (or heart) taken: its text, colours and
+// size; it starts 10 px above it, rises POP_RISE px/s and fades out over POP_TIME.
+export const POP_RISE = 40;
+export const POP_FONT = { family: 'sans-serif', size: 26, weight: 'bold', stroke: 4 };
+export const popLook = (heart) => (heart ? { text: '+1 ♥', fill: HEART_POP, stroke: HEART_POP_EDGE } : { text: '+1', fill: PEEL, stroke: TIP });
+export const popAlpha = (age) => Math.max(0, 1 - age / POP_TIME);

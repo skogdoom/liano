@@ -96,8 +96,8 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `banana.body` | 44 × 34 | 1 | joins: glint | A banana to take, about its centre (the origin): curved, with a ridge, a stem and a dark tip. It bobs and rocks. |
-| `banana.glint` | 18 × 18 | 1 |  | A four-pointed glint on a banana (or a heart), about its centre; it fades in and out. |
+| `banana.body` | 44 × 34 | 2 | joins: glint | A banana to take, about its centre (the origin): curved, with a ridge, a stem and a dark tip. It bobs and rocks. |
+| `banana.glint` | 18 × 18 | 2 |  | A four-pointed glint on a banana (or a heart), about its centre; it fades in and out. |
 | `banana.hud` | 27 × 21 | 1 |  | The banana by each player's banana count in the HUD (11 px), about its centre. |
 | `banana.results` | 31 × 24 | 1 |  | The banana by the bananas taken on the results (13 px), about its centre. |
 
@@ -105,7 +105,7 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `heart.field` | 40 × 32 | 1 | joins: glint | A heart to take (a banana turned into a life), 17 px across about its centre. |
+| `heart.field` | 40 × 32 | 2 | joins: glint | A heart to take (a banana turned into a life), 17 px across about its centre. |
 | `heart.hud.0` … `.1` | 28 × 23 | 1 |  | A heart in the HUD, 11 px across about its centre: a life left (frame 0), a life lost (frame 1, an outline). |
 
 ### ui

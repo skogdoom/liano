@@ -1,6 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
 import { drawHeart } from './heartView.js';
-import { PEEL, TIP, POP_TIME, drawBanana, HEART_GLINT, drawGlint, HEART_POP, HEART_POP_EDGE } from '../views/banana.js';
+import { HEART_GLINT, POP_FONT, POP_RISE, POP_TIME, bananaPose, drawBanana, drawGlint, popAlpha, popLook } from '../views/banana.js';
 
 // The parts both versions share (pure: no Pixi) are in views/banana.js.
 export * from '../views/banana.js';
@@ -37,14 +37,14 @@ export class BananaViews {
         drawGlint(glint, 8);
         glint.position.set(spot.x, spot.y);
         view.addChild(body, glint);
-        entry = { view, glint, phase: banana.gap * 1.7, heart: banana.heart };
+        entry = { view, glint, heart: banana.heart };
         this.views.set(banana, entry);
         this.view.addChild(view);
       }
-      entry.view.position.set(banana.x, banana.y + 3 * Math.sin(t * 3 + entry.phase));
-      entry.view.rotation = 0.15 * Math.sin(t * 2 + entry.phase);
-      // It fades in and out over half of every 1.6 s.
-      entry.glint.alpha = Math.max(0, Math.sin(t * 4 + entry.phase));
+      const pose = bananaPose(banana, t);
+      entry.view.position.set(pose.x, pose.y);
+      entry.view.rotation = pose.rotation;
+      entry.glint.alpha = pose.glint;
     }
     for (const [banana, entry] of this.views) {
       if (seen.has(banana)) continue;
@@ -56,15 +56,16 @@ export class BananaViews {
       if (e.type !== 'banana' && e.type !== 'heart') continue;
       const banana = world.bananas.get(e.gap);
       if (!banana) continue;
-      const heart = e.type === 'heart';
+      const look = popLook(e.type === 'heart');
       const text = new Text({
-        text: heart ? '+1 ♥' : '+1',
+        text: look.text,
         style: {
-          fontFamily: 'sans-serif',
-          fontSize: 26,
-          fontWeight: 'bold',
-          fill: heart ? HEART_POP : PEEL,
-          stroke: { color: heart ? HEART_POP_EDGE : TIP, width: 4 },
+          fontFamily: POP_FONT.family,
+          fontSize: POP_FONT.size,
+          fontWeight: POP_FONT.weight,
+          fill: look.fill,
+          // Round joins, as Phaser draws every text stroke (PHASER_PLAN.md, M5c).
+          stroke: { color: look.stroke, width: POP_FONT.stroke, join: 'round' },
         },
       });
       text.anchor.set(0.5);
@@ -74,8 +75,8 @@ export class BananaViews {
     }
     for (const pop of this.pops) {
       pop.age += dt;
-      pop.text.y -= 40 * dt;
-      pop.text.alpha = Math.max(0, 1 - pop.age / POP_TIME);
+      pop.text.y -= POP_RISE * dt;
+      pop.text.alpha = popAlpha(pop.age);
     }
     for (const pop of this.pops.filter((p) => p.age >= POP_TIME)) pop.text.destroy();
     this.pops = this.pops.filter((p) => p.age < POP_TIME);

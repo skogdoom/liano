@@ -609,7 +609,7 @@
         "w": 44,
         "h": 34
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "attach": {
         "glint": [
@@ -632,7 +632,7 @@
         "w": 18,
         "h": 18
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "frames": [
         "generated/banana.glint.svg"
@@ -649,7 +649,7 @@
         "w": 40,
         "h": 32
       },
-      "scale": 1,
+      "scale": 2,
       "tint": false,
       "attach": {
         "glint": [

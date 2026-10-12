@@ -9,7 +9,10 @@ import { MonkeyView, PALETTES } from '../render/monkeyView.js';
 import { ShadowView } from '../render/shadowView.js';
 import { Liana } from '../sim/liana.js';
 import { MonkeyState } from '../sim/monkey.js';
-import { BRANCH_DECORATIONS, Obstacle } from '../sim/obstacle.js';
+import { BRANCH_DECORATIONS, MOVING_TYPES, Obstacle } from '../sim/obstacle.js';
+import { createObstacle } from '../sim/generator.js';
+import { BananaLayer } from '../phaser/world/bananas.js';
+import { BananaViews } from '../render/bananaView.js';
 import { ObstacleLayer } from '../phaser/world/obstacleLayer.js';
 import { ObstacleViews } from '../render/obstacleViews.js';
 
@@ -79,6 +82,95 @@ const obstacleScenario = (id, title, type, decoration, t = 1.37) =>
     phaser(scene, zoom) {
       const layer = new ObstacleLayer(scene, artFor(scene, zoom));
       layer.update(obstacleRow(type, decoration), t);
+      scene.add.existing(layer.view);
+    },
+  });
+
+// The `k`th obstacle of a moving kind the generator makes (over seeds and gaps), at a few
+// times, each in a view round it.
+function movingObstacle(type, k) {
+  let found = 0;
+  for (let seed = 1; seed < 60; seed++) {
+    for (let gap = 1; gap < 300; gap++) {
+      const o = createObstacle(seed, gap);
+      if (o?.type === type && found++ === k) return o;
+    }
+  }
+  throw new Error(`No ${type}`);
+}
+const MOVING_TIMES = [0.4, 1.37, 2.9];
+const movingScenario = (type, k) => {
+  const width = 360;
+  const at = (o, t) => {
+    o.setTime(t);
+    return o;
+  };
+  // Side by side at each time: each copy moved along x so they do not overlap.
+  const copies = () =>
+    MOVING_TIMES.map((t, i) => {
+      const o = at(movingObstacle(type, k), t);
+      o.baseX += i * width - o.x + width / 2;
+      return at(o, t);
+    });
+  return withArt({
+    id: `world.moving.${type}${k ? `.${k}` : ''}`,
+    title: `A ${type} at three moments`,
+    width: MOVING_TIMES.length * width,
+    scroll: [0, CANOPY_BOTTOM],
+    height: FLOOR_Y - CANOPY_BOTTOM,
+    pixi(world) {
+      const views = new ObstacleViews();
+      views.update(copies());
+      world.addChild(views.view);
+    },
+    phaser(scene, zoom) {
+      const layer = new ObstacleLayer(scene, artFor(scene, zoom));
+      layer.update(copies());
+      scene.add.existing(layer.view);
+    },
+  });
+};
+
+// Bananas and a heart still to take, bobbing, and the "+1" and "+1 ♥" rising from two
+// just taken.
+function bananaWorld() {
+  const bananas = new Map(
+    [
+      [1, 80, 120, false],
+      [2, 200, 160, false],
+      [3, 320, 110, true],
+      [4, 440, 150, false],
+      [5, 560, 130, true],
+    ].map(([gap, x, y, heart]) => [gap, { gap, x, y, heart }]),
+  );
+  const world = { time: 1.1, bananas, bananaAt: (gap) => gap !== 4 && gap !== 5 };
+  const events = [
+    { type: 'banana', gap: 4 },
+    { type: 'heart', gap: 5 },
+  ];
+  return { world, events };
+}
+const bananaScenario = () =>
+  withArt({
+    id: 'world.bananas',
+    // Half a view (the game has a banana in about every other gap): still far more bananas
+    // and pops in it than the game ever shows.
+    title: 'Bananas and a heart to take, and the +1 and +1 ♥ rising from two taken',
+    width: 1280,
+    height: 360,
+    pixi(world, pixi, zoom) {
+      const views = new BananaViews();
+      const { world: w, events } = bananaWorld();
+      views.update(w, events, 0.25);
+      // As sharp as the game draws text: at the screen's density.
+      for (const pop of views.pops) pop.text.resolution = zoom;
+      world.addChild(views.view);
+    },
+    phaser(scene, zoom) {
+      const layer = new BananaLayer(scene, artFor(scene, zoom));
+      layer.setTextResolution(zoom);
+      const { world: w, events } = bananaWorld();
+      layer.update(w, events, 0.25);
       scene.add.existing(layer.view);
     },
   });
@@ -179,4 +271,6 @@ export const WORLD_SCENARIOS = [
   obstacleScenario('world.rocks', 'Rocks, hanging and standing', 'rock', null),
   obstacleScenario('world.beehives', 'Beehives with their bees, hanging and standing', 'beehive', null),
   ...BRANCH_DECORATIONS.map((decoration) => obstacleScenario(`world.decoration.${decoration}`, `Branches with a ${decoration}`, 'branch', decoration)),
+  ...MOVING_TYPES.flatMap((type) => [0, 1].map((k) => movingScenario(type, k))),
+  bananaScenario(),
 ];
