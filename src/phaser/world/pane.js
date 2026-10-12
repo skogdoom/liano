@@ -14,7 +14,8 @@ import { makeContainer } from './build.js';
 // view in single player, a strip per player in split screen. `scene` is what the death
 // shake moves; in it, back to front: the sky and the parallax layers, the world
 // (scrolled by the camera: the obstacles, the lianas, the bananas, then the shadow and
-// the monkeys), the canopy strip and the floor. M6 adds the clip and the debug view.
+// the monkeys), the canopy strip and the floor. The play scene's camera for the pane
+// clips it (PlayScene.placeCameras). M6 adds the debug view.
 const FURS = ['p1', 'p2'];
 const COLOURINGS = ['green', 'gold'];
 

@@ -49,6 +49,8 @@ for (const [width, height, ratio] of SHAPES) {
     const layout = layoutFor(width, height);
     const expected = viewCamera(layout, r);
     await expect.poll(() => page.evaluate(() => window.__liano.camera)).toEqual(expected);
+    // The world is drawn once the main art set is in (until then the view is black).
+    await page.waitForFunction(() => window.__liano.platform.world?.panes.length > 0);
     const canvas = await page.evaluate(() => {
       const { canvas: c } = window.__liano.app;
       return { width: c.width, height: c.height, css: [c.style.width, c.style.height] };

@@ -65,6 +65,44 @@ test('the Phaser version starts a run on a tap, but not on a tap on the mute but
   expect(errors).toEqual([]);
 });
 
+test('the Phaser version clips each split-screen pane: the lower one draws nothing over the upper one', async ({ page }) => {
+  const errors = await phaser(page);
+  await page.keyboard.press('Digit3');
+  await expect.poll(() => page.evaluate(() => window.__liano.game.worlds.length)).toBe(2);
+  await page.keyboard.press('Space');
+  await expect.poll(() => state(page)).toBe('PLAYING');
+  // The two worlds start alike, so the panes show the same picture (but for the monkeys'
+  // furs). Unclipped, the lower pane's backdrop (which reaches far above its band for
+  // taller views) covered the upper pane with its sky and trees.
+  const shares = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const { app, camera, layout } = window.__liano;
+        const half = (layout.view.height / 2) * camera.zoom;
+        app.renderer.snapshot((image) => {
+          const canvas = document.createElement('canvas');
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const context = canvas.getContext('2d');
+          context.drawImage(image, 0, 0);
+          resolve(
+            // Rows below the title's text, which is over the upper pane only.
+            [0.55, 0.7, 0.85].map((f) => {
+              const y = Math.floor(camera.y + f * half);
+              const a = context.getImageData(0, y, canvas.width, 1).data;
+              const b = context.getImageData(0, Math.floor(y + half), canvas.width, 1).data;
+              let same = 0;
+              for (let i = 0; i < a.length; i += 4) if (Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2])) <= 8) same++;
+              return same / (a.length / 4);
+            }),
+          );
+        });
+      }),
+  );
+  for (const share of shares) expect(share).toBeGreaterThan(0.95);
+  expect(errors).toEqual([]);
+});
+
 test('the Phaser version starts its sound at the first gesture, plays on Phaser’s context, and mutes on M', async ({ page }) => {
   const errors = await phaser(page);
   expect(await page.evaluate(() => window.__liano.sound.status)).toBe('locked');

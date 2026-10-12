@@ -477,6 +477,7 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
 - **The Phaser version draws the world**: per world a pane (`src/phaser/world/`). Behind is the backdrop (the sky, the far, mid and near layers). Then the obstacles with their decorations, the lianas, the monkeys, the shadow and the bananas. In front are the canopy and the floor. The death shake, the camera scroll and the interpolation between steps work as in the Pixi panes. The HUD and the overlays are M6.
   - Each rig places its pieces in the order the Pixi view draws them.
   - A run waits for the main art set (agreed after M4): a press before it is in starts the run once it arrives.
+  - **Each pane has a Phaser camera** whose viewport is the pane's rect (`rectCamera` in `src/phaser/view.js`), so it clips the pane and draws only it. This was planned for M6, but split screen needs it now: the lower pane's backdrop reaches far above its band (for taller views) and covered the upper pane, monkey included. A browser test checks that the two split panes show the same picture at the start.
 - **View-models** (`src/views/`, no Pixi; both versions draw from them):
   - the monkey's pose;
   - each liana's placement, culling and lit end;

@@ -29,6 +29,30 @@ export function viewCamera(layout, ratio) {
   };
 }
 
+// The camera for a rect of the view (`rect`: x, y, width and height in view units), on
+// the canvas as `placement` (a viewCamera) puts the view: its viewport covers the rect,
+// snapped to whole pixels, so it clips to it; zoom and scroll draw every view point
+// where `placement` does.
+export function rectCamera(placement, rect) {
+  const { zoom } = placement;
+  // Rounded as viewCamera rounds (the float error trimmed first: an edge on a half pixel
+  // must land on the view's own edge).
+  const at = (v, origin, scroll) => Math.round(Number((origin + (v - scroll) * zoom).toFixed(6)));
+  const left = at(rect.x, placement.x, placement.scrollX);
+  const top = at(rect.y, placement.y, placement.scrollY);
+  const right = at(rect.x + rect.width, placement.x, placement.scrollX);
+  const bottom = at(rect.y + rect.height, placement.y, placement.scrollY);
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+    zoom,
+    scrollX: placement.scrollX + (left - placement.x) / zoom,
+    scrollY: placement.scrollY + (top - placement.y) / zoom,
+  };
+}
+
 // Points `camera` (a Phaser camera) at the view as `viewCamera` places it.
 export function applyViewCamera(camera, placement) {
   camera

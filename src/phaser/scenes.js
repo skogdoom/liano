@@ -5,7 +5,7 @@ import { paneLayouts } from '../layout.js';
 import { FULLSCREEN_HIT, MUTE_HIT } from '../controls.js';
 import { MODES } from '../sim/match.js';
 import { Art, CATALOG, queueCatalog, queueSet } from './art.js';
-import { applyViewCamera } from './view.js';
+import { applyViewCamera, rectCamera } from './view.js';
 import { WorldPane } from './world/pane.js';
 
 // The Phaser version's scenes (PHASER_PLAN.md, M2): Boot loads the art and starts the
@@ -80,6 +80,10 @@ export class PlayScene extends Phaser.Scene {
     this.platform = platform;
     this.panes = [];
     this.paneWorlds = null;
+    // Each pane is drawn by a camera of its own (see placeCameras); the main camera, which
+    // follows the view, draws nothing.
+    this.paneCameras = [];
+    this.cameras.main.setVisible(false);
     // Screen shake is off for players who ask for reduced motion.
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     followLayout(this, () => this.layoutPanes());
@@ -106,7 +110,23 @@ export class PlayScene extends Phaser.Scene {
     const { game, layout } = this.platform;
     if (!this.panes.length) return;
     const zoom = game.mode === 'shared' ? SHARED_ZOOM : 1;
-    paneLayouts(layout, this.panes.length, zoom).forEach((pane, i) => this.panes[i].resize(pane, this.platform.camera.zoom));
+    const layouts = paneLayouts(layout, this.panes.length, zoom);
+    layouts.forEach((pane, i) => this.panes[i].resize(pane, this.platform.camera.zoom));
+    this.placeCameras(layouts);
+  }
+
+  // A camera per pane, its viewport the pane's rect: it clips the pane, as the Pixi panes'
+  // masks do (in split screen the lower pane's backdrop, which reaches far above the band
+  // for taller views, must not cover the upper pane), and draws only that pane.
+  placeCameras(layouts) {
+    while (this.paneCameras.length < this.panes.length) this.paneCameras.push(this.cameras.add(0, 0, 1, 1));
+    for (const pane of this.panes) pane.view.cameraFilter = 0;
+    this.paneCameras.forEach((camera, i) => {
+      camera.setVisible(i < this.panes.length);
+      if (i >= this.panes.length) return;
+      applyViewCamera(camera, rectCamera(this.platform.camera, layouts[i]));
+      camera.ignore(this.panes.filter((_, j) => j !== i).map((pane) => pane.view));
+    });
   }
 
   // A pane per world, rebuilt when the mode or match changes the worlds. In split screen
