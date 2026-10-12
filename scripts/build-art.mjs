@@ -15,6 +15,10 @@ const root = new URL('../art/', import.meta.url);
 const out = new URL('../public/art/', import.meta.url);
 const PADDING = 2;
 const MAX_PAGE = 4096;
+// Texture memory (RGBA, 4 bytes a pixel) the game may load at the 2× scale, every set and
+// tile together (PHASER_PLAN.md, R2: the iPhone 13 mini's limit). The build fails over it.
+const BUDGET_MB = 120;
+const BUDGET_SCALE = 2;
 
 const start = performance.now();
 const manifest = JSON.parse(readFileSync(new URL('manifest.json', root), 'utf8'));
@@ -61,6 +65,7 @@ const write = (name, data) => {
   written.add(name);
 };
 const sizes = {};
+const memory = Object.fromEntries(ATLAS_SCALES.map((s) => [s, 0])); // bytes per atlas scale, tiles included
 const pieces = manifest.pieces;
 const sets = [...new Set(pieces.map((p) => p.set))];
 
@@ -77,6 +82,7 @@ for (const scale of ATLAS_SCALES) {
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${page.width}" height="${page.height}">${page.cells.map((c) => cellSvg(c.piece, c.i, c)).join('')}</svg>`;
       write(image, render(svg));
       sizes[image] = `${page.width} × ${page.height}`;
+      memory[scale] += page.width * page.height * 4;
       return {
         image,
         format: 'RGBA8888',
@@ -102,6 +108,7 @@ for (const piece of pieces.filter((p) => p.kind === 'tile')) {
   const image = `tiles/${piece.key}@1x.png`;
   write(image, render(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}">${cellSvg(piece, 0, cell)}</svg>`));
   sizes[image] = `${cell.w} × ${cell.h}`;
+  for (const scale of ATLAS_SCALES) memory[scale] += cell.w * cell.h * 4;
 }
 
 // Where everything is, for the game: per piece its contract (and what a sidecar changes)
@@ -147,5 +154,10 @@ console.log(
   `public/art/: ${pieces.length} pieces${replaced ? ` (${replaced} frames custom)` : ''} in ${Math.round(performance.now() - start)} ms\n` +
     Object.entries(sizes)
       .map(([name, size]) => `  ${name.padEnd(28)} ${size}`)
-      .join('\n'),
+      .join('\n') +
+    `\ntexture memory: ${ATLAS_SCALES.map((s) => `${(memory[s] / 1e6).toFixed(0)} MB at ${s}×`).join(', ')} (budget ${BUDGET_MB} MB at ${BUDGET_SCALE}×)`,
 );
+if (memory[BUDGET_SCALE] > BUDGET_MB * 1e6) {
+  console.error(`The art needs ${(memory[BUDGET_SCALE] / 1e6).toFixed(0)} MB of texture memory at ${BUDGET_SCALE}×, over the budget of ${BUDGET_MB} MB.`);
+  process.exit(1);
+}

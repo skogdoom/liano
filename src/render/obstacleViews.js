@@ -1255,7 +1255,7 @@ export function drawBee(g, x = 0, y = 0) {
 //   2  mossy grey-green stone, serpent heads on the stairs, moss and ferns
 //   3  dark basalt, gold inlay and two braziers whose flames flicker
 // A staircase climbs the middle of the front, from the jungle to the shrine's door.
-const TEMPLE_STYLES = [
+export const TEMPLE_STYLES = [
   { stone: 0xd8ceb0, light: 0xefe8d2, dark: 0xa89d7d, deep: 0x4a4332 },
   { stone: 0xc78a55, light: 0xe2ab78, dark: 0x9a6334, deep: 0x4a2c18 },
   { stone: 0x8c9f89, light: 0xaabda6, dark: 0x667a64, deep: 0x2f3a31 },
@@ -1273,6 +1273,8 @@ const FLAME_CORE = 0xffe27a;
 const GLOW = 0xff8a2a;
 const GLOW_LAYERS = 16;
 const HAZE = 0x183222;
+// The greens of the leaves and moss on a temple, as its pieces' frames.
+export const TEMPLE_GREENS = { FRINGE_DEEP, BUSH, FRINGE, BUSH_LIGHT, LEAF_DARK, LEAF, MOSS, MOSS_LIGHT };
 
 function drawTemple(g, o, rand, hangs, view) {
   const style = TEMPLE_STYLES[o.variant ?? 0];
@@ -1565,7 +1567,7 @@ const PURPLE_DARK = 0x5e2f8f;
 const PURPLE_BELLY = 0xe9d8f7;
 
 // The colours of the flying birds (body, wing and tail, belly): red, blue and purple.
-const BIRD_COLORS = [
+export const BIRD_COLORS = [
   [BIRD, BIRD_DARK, BIRD_BELLY],
   [BLUE, BLUE_DARK, BLUE_BELLY],
   [PURPLE, PURPLE_DARK, PURPLE_BELLY],
@@ -1833,6 +1835,23 @@ function buildObstacle(o) {
   animate(0);
   return { view, update: (time) => animate(time) };
 }
+
+// The colours of the lines that pieces build from straight segments and round joints
+// (PHASER_PLAN.md, M4): legs, twigs, stems, vines and threads.
+export const LINE_COLORS = {
+  vine: VINE,
+  stalk: STALK,
+  snake: SNAKE,
+  spiderLeg: SPIDER_LEG,
+  thread: THREAD,
+  monkeyFur: FUR,
+  twig: TWIG_DARK,
+  twigLight: TWIG_LIGHT,
+  coconutStem: COCONUT_DARK,
+  flowerStem: FLOWER_STEM,
+  leafDark: LEAF_DARK,
+  moss: MOSS,
+};
 
 // How dark the stage is, 0 (day) to 1 (night), from its tint: the brighter the tint, the less.
 export function darknessOf(tint) {

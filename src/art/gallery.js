@@ -9,12 +9,16 @@ import { PIECES } from './pieces/index.js';
 // contract and the guides. Results on `window.__gallery` for the browser tests.
 //
 // What counts as identical (PHASER_PLAN.md, section 1) is for scenes. A small piece's cell
-// is mostly antialiased edge, where rasterizers always differ a little, so a frame is
-// judged by its solid patches of difference only; the share is judged over all frames
-// together (as the pieces cover a scene).
+// is mostly antialiased edge, where rasterizers always differ a little, so the pieces are
+// judged as if they covered a scene together: the share of differing pixels and the solid
+// patches per million over all frames. A frame fails on its own if its solid patches
+// alone would fail a scene: a 1280 × 720 view at the atlas's density (per million of its
+// own few pixels, a single solid pixel would).
+const SCENE_PIXELS = 1280 * 720;
 
 const params = new URLSearchParams(location.search);
 const scale = ATLAS_SCALES.includes(Number(params.get('scale'))) ? Number(params.get('scale')) : 2;
+const frameSolidLimit = (PARITY.solidPerMillion * SCENE_PIXELS * scale ** 2) / 1e6;
 const guides = params.get('guides') !== 'off';
 const only = params.get('piece');
 const BACKGROUND = 0x4a8060;
@@ -86,15 +90,44 @@ function drawGuides(context, contract, zoom) {
 const app = new Application();
 await app.init({ width: 64, height: 64, preference: 'webgl', antialias: true, resolution: 1, background: BACKGROUND, preserveDrawingBuffer: true, autoStart: false });
 
+// A Graphics that draws everything `zoom` times larger. Pixi builds a drawing's triangles
+// in its own units, so a container scaled up shows a small round end or join as the few
+// corners it was built with; drawn at the final size, it is as round as in the atlas.
+const SCALED_ARGS = { rect: 4, roundRect: 5, circle: 3, ellipse: 4, moveTo: 2, lineTo: 2, quadraticCurveTo: 4, bezierCurveTo: 6, arc: 3 };
+function zoomed(g, zoom) {
+  const proxy = new Proxy(g, {
+    get(target, name) {
+      const value = target[name];
+      if (typeof value !== 'function') return value;
+      return (...args) => {
+        if (name in SCALED_ARGS) args = args.map((a, k) => (k < SCALED_ARGS[name] ? a * zoom : a));
+        else if (name === 'poly') args = [args[0].map((a) => a * zoom), ...args.slice(1)];
+        else if (name === 'stroke') {
+          const style = typeof args[0] === 'number' ? { color: args[0] } : (args[0] ?? {});
+          args = [{ ...style, width: (style.width ?? 1) * zoom }];
+        }
+        const result = value.apply(target, args);
+        return result === target ? proxy : result;
+      };
+    },
+  });
+  return proxy;
+}
+
 // The game's drawing of one frame, in a w × h cell at `zoom` px per unit, the cell's
 // corner at `box`'s.
 function pixiFrame(piece, i, box, w, h, zoom) {
   app.renderer.resize(w, h);
   const world = new Container();
   const g = new Graphics();
-  piece.frames[i](g);
+  piece.frames[i](zoomed(g, zoom));
+  // Nothing to draw (a wing seen edge on): the renderer would leave the last picture.
+  if (g.bounds.width === 0 || g.bounds.height === 0) {
+    g.destroy();
+    const blank = canvasOf(w, h);
+    return { canvas: blank.canvas, data: blank.context.getImageData(0, 0, w, h).data };
+  }
   world.addChild(g);
-  world.scale.set(zoom);
   world.position.set(-box.x * zoom, -box.y * zoom);
   app.stage.removeChildren();
   app.stage.addChild(world);
@@ -161,7 +194,7 @@ for (const piece of PIECES) {
     const result = compareImages(drawn.data, builtData);
     const solid = solidPixels(result, w);
     const custom = customs.has(name);
-    const pass = custom || (solid / result.pixels) * 1e6 <= PARITY.solidPerMillion;
+    const pass = custom || solid <= frameSolidLimit;
     results.push({ key: piece.key, frame: i, name, custom, share: result.share, differing: result.differing, solid, pixels: result.pixels, pass });
     const diff = canvasOf(w, h, view);
     diff.context.putImageData(new ImageData(result.diff, w, h), 0, 0);
@@ -176,12 +209,15 @@ for (const piece of PIECES) {
 }
 const failed = results.filter((r) => !r.pass);
 const generated = results.filter((r) => !r.custom);
-const share = generated.reduce((n, r) => n + r.differing, 0) / Math.max(1, generated.reduce((n, r) => n + r.pixels, 0));
-const sharePass = share < PARITY.share;
+const total = Math.max(1, generated.reduce((n, r) => n + r.pixels, 0));
+const share = generated.reduce((n, r) => n + r.differing, 0) / total;
+const solidPerMillion = (generated.reduce((n, r) => n + r.solid, 0) / total) * 1e6;
+const sharePass = share < PARITY.share && solidPerMillion <= PARITY.solidPerMillion;
 const summary = document.getElementById('summary');
 summary.textContent =
-  `${PIECES.length} pieces, ${results.length} frames at ${scale}×: ${(share * 100).toFixed(2)} % of all their pixels differ (limit ${PARITY.share * 100} %); ` +
-  (failed.length ? `${failed.length} frames with solid patches: ${failed.map((r) => r.name).join(', ')}.` : 'no solid patches.');
+  `${PIECES.length} pieces, ${results.length} frames at ${scale}×: ${(share * 100).toFixed(2)} % of all their pixels differ (limit ${PARITY.share * 100} %), ` +
+  `${solidPerMillion.toFixed(1)} solid per million (limit ${PARITY.solidPerMillion}); ` +
+  (failed.length ? `${failed.length} frames with solid patches over ${frameSolidLimit.toFixed(0)} px: ${failed.map((r) => r.name).join(', ')}.` : `no frame with solid patches over ${frameSolidLimit.toFixed(0)} px.`);
 summary.className = failed.length || !sharePass ? 'fail' : 'pass';
-window.__gallery = { scale, share, pass: sharePass && failed.length === 0, frames: results };
+window.__gallery = { scale, share, solidPerMillion, pass: sharePass && failed.length === 0, frames: results };
 document.documentElement.dataset.gallery = 'done';

@@ -5,6 +5,10 @@ import { generateArt } from '../src/art/generate.js';
 import { DEFAULT_STROKE, RecordingGraphics } from '../src/art/recorder.js';
 import { PIECES } from '../src/art/pieces/index.js';
 import { TAIL_FRAMES, TAIL_SWISH, tailFrameFor, tailSwishOf } from '../src/art/pieces/branch.js';
+import { BAT_LOOK_NAMES, BIRD_LOOKS, flipbook } from '../src/art/pieces/decorations.js';
+import { FLAME_HEIGHT, FLAME_SWAY, TEMPLE_BASE_Y, TEMPLE_LOOKS, flameFrameFor } from '../src/art/pieces/temple.js';
+import { BAT_LOOKS, BIRD_COLORS, ROCK_VARIANTS, TEMPLE_STYLES } from '../src/render/obstacleViews.js';
+import { TEMPLE_VARIANTS } from '../src/config.js';
 import { bounds, elements, guideLayer, shapeD, toSvg, unionBox } from '../src/art/svg.js';
 import { definePiece, definePieces, frameName } from '../src/art/piece.js';
 import { atlasScaleFor, cellOf, placement } from '../src/art/catalog.js';
@@ -143,6 +147,53 @@ describe('the panther’s tail', () => {
     expect(tailSwishOf(TAIL_FRAMES - 1)).toBe(TAIL_SWISH);
     expect(tailFrameFor(-100)).toBe(0);
     expect(tailFrameFor(100)).toBe(TAIL_FRAMES - 1);
+  });
+});
+
+describe('flipbooks', () => {
+  it('picks the frame nearest a value, within the flipbook', () => {
+    const book = flipbook(9, -1, 1);
+    for (let frame = 0; frame < 9; frame++) expect(book.frameFor(book.valueOf(frame))).toBe(frame);
+    expect([book.valueOf(0), book.valueOf(8)]).toEqual([-1, 1]);
+    expect(book.frameFor(0.12)).toBe(4);
+    expect(book.frameFor(0.13)).toBe(5);
+    expect([book.frameFor(-5), book.frameFor(5)]).toEqual([0, 8]);
+  });
+
+  it('gives each sway and height of a flame a frame of its own', () => {
+    const frames = new Set();
+    for (let i = 0; i < FLAME_SWAY.frames; i++) {
+      for (let j = 0; j < FLAME_HEIGHT.frames; j++) frames.add(flameFrameFor(FLAME_SWAY.valueOf(i), FLAME_HEIGHT.valueOf(j)));
+    }
+    expect([...frames].sort((a, b) => a - b)).toEqual([...Array(FLAME_SWAY.frames * FLAME_HEIGHT.frames).keys()]);
+    const flame = PIECES.find((p) => p.key === 'temple.flame');
+    expect(flame.frames).toHaveLength(frames.size);
+  });
+});
+
+describe('the pieces', () => {
+  const keys = new Set(PIECES.map((p) => p.key));
+
+  it('cover every look the game picks from', () => {
+    expect(BIRD_LOOKS).toHaveLength(BIRD_COLORS.length);
+    expect(BAT_LOOK_NAMES).toHaveLength(BAT_LOOKS.length);
+    expect(TEMPLE_LOOKS).toHaveLength(TEMPLE_STYLES.length);
+    expect(TEMPLE_LOOKS).toHaveLength(TEMPLE_VARIANTS);
+    for (const look of BIRD_LOOKS) for (const part of ['body', 'tail', 'head']) expect(keys.has(`perchedBird.${look}.${part}`)).toBe(true);
+    for (const look of BIRD_LOOKS) for (const part of ['body', 'wing']) expect(keys.has(`bird.${look}.${part}`)).toBe(true);
+    for (const look of BAT_LOOK_NAMES) for (const part of ['body', 'wing']) expect(keys.has(`bat.${look}.${part}`)).toBe(true);
+    for (const look of BAT_LOOK_NAMES) for (const part of ['body', 'eyes', 'ear']) expect(keys.has(`hangingBat.${look}.${part}`)).toBe(true);
+    expect(PIECES.find((p) => p.key === 'rock.body').frames).toHaveLength(ROCK_VARIANTS);
+  });
+
+  it('split the temple where its base starts, the base repeating from there', () => {
+    for (const look of TEMPLE_LOOKS) {
+      const piece = (part) => PIECES.find((p) => p.key === `temple.${look}.${part}`);
+      const top = piece('top').box;
+      expect(top.y + top.h).toBe(TEMPLE_BASE_Y);
+      expect(piece('baseTop').box.y).toBe(TEMPLE_BASE_Y);
+      expect(piece('base').box.h).toBe(piece('baseTop').box.h);
+    }
   });
 });
 
