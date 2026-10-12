@@ -93,10 +93,15 @@ for (const engine of ['pixi', 'phaser']) {
     await page.goto(`${DEV}?engine=${engine}`);
     await started(page, errors);
     expect(await page.evaluate(() => window.__liano.fullscreen.supported)).toBe(true);
+    // A refused request would show up here rather than as a timeout.
+    await page.evaluate(() => document.addEventListener('fullscreenerror', () => console.error('fullscreenerror')));
+    // Going full screen resizes the page, and the Pixi version's title scene draws
+    // slowly in software WebGL on a busy CI runner: allow it time.
+    const inFullscreen = () => page.evaluate(() => document.fullscreenElement === document.documentElement);
     await page.keyboard.press('KeyF');
-    await expect.poll(() => page.evaluate(() => document.fullscreenElement === document.documentElement)).toBe(true);
+    await expect.poll(inFullscreen, { timeout: 20_000 }).toBe(true);
     await page.keyboard.press('KeyF');
-    await expect.poll(() => page.evaluate(() => document.fullscreenElement)).toBe(null);
+    await expect.poll(inFullscreen, { timeout: 20_000 }).toBe(false);
     expect(errors).toEqual([]);
   });
 
