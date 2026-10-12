@@ -12,7 +12,7 @@ function pixelsAt(page, points) {
   return page.evaluate(
     (points) =>
       new Promise((resolve) => {
-        window.__liano.game.renderer.snapshot((image) => {
+        window.__liano.app.renderer.snapshot((image) => {
           const canvas = document.createElement('canvas');
           canvas.width = image.width;
           canvas.height = image.height;
@@ -52,7 +52,7 @@ for (const [width, height, ratio] of SHAPES) {
     const expected = viewCamera(layout, r);
     await expect.poll(() => page.evaluate(() => window.__liano.camera)).toEqual(expected);
     const canvas = await page.evaluate(() => {
-      const { canvas: c } = window.__liano.game;
+      const { canvas: c } = window.__liano.app;
       return { width: c.width, height: c.height, css: [c.style.width, c.style.height] };
     });
     expect(canvas).toEqual({ ...canvasSize(width, height, r), css: [`${width}px`, `${height}px`] });
@@ -62,7 +62,8 @@ for (const [width, height, ratio] of SHAPES) {
     const points = [
       [x + 2, y + 2],
       [x + w - 3, y + h - 3],
-      [x + Math.round(w / 2), band],
+      // Beside the readout text, which is centred.
+      [x + 4, band],
     ];
     const bars = [];
     if (x > 2) bars.push([1, y + 2], [canvas.width - 2, y + 2]);
@@ -109,7 +110,7 @@ for (const engine of ['pixi', 'phaser']) {
     const errors = collectErrors(page);
     await page.goto(`${DEV}?engine=${engine}`);
     await started(page, errors);
-    const gl = engine === 'pixi' ? 'window.__liano.app.renderer.gl' : 'window.__liano.game.renderer.gl';
+    const gl = 'window.__liano.app.renderer.gl';
     await page.evaluate(`window.__lose = ${gl}.getExtension('WEBGL_lose_context'); window.__lose.loseContext()`);
     await expect(page.locator('#notice')).toHaveClass(/shown/);
     expect(await page.evaluate(() => window.__liano.pause.reason)).toBe('graphics');
@@ -138,15 +139,21 @@ test('the Phaser version goes full screen from a tap on its button, on release',
   expect(errors).toEqual([]);
 });
 
-test('the Phaser version pauses on P and resumes on P', async ({ page }) => {
+test('the Phaser version pauses a run on P and resumes on P', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto(`${DEV}?engine=phaser`);
   await started(page, errors);
+  await page.waitForFunction(() => window.__liano.input && window.__liano.pause.acceptsInput());
+  // Not on the title screen: only a run pauses.
   await page.keyboard.press('KeyP');
-  expect(await page.evaluate(() => window.__liano.pause.reason)).toBe('manual');
-  await expect.poll(() => page.evaluate(() => window.__liano.game.scene.getScene('ui').paused.visible)).toBe(true);
-  await page.keyboard.press('KeyP');
+  await page.keyboard.press('Space');
+  await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');
   expect(await page.evaluate(() => window.__liano.pause.paused)).toBe(false);
+  await page.keyboard.press('KeyP');
+  await expect.poll(() => page.evaluate(() => window.__liano.pause.reason)).toBe('manual');
+  await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').paused.visible)).toBe(true);
+  await page.keyboard.press('KeyP');
+  await expect.poll(() => page.evaluate(() => window.__liano.pause.paused)).toBe(false);
   expect(errors).toEqual([]);
 });
 
@@ -155,7 +162,7 @@ test('the Phaser version follows a change of pixel ratio (a window moved to anot
   await page.setViewportSize({ width: 1000, height: 600 });
   await page.goto(`${DEV}?engine=phaser`);
   await started(page, errors);
-  expect(await page.evaluate(() => window.__liano.game.canvas.width)).toBe(1000);
+  expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1000);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1000, height: 600, deviceScaleFactor: 2, mobile: false });
   expect(await page.evaluate(() => window.devicePixelRatio)).toBe(2);
@@ -163,8 +170,8 @@ test('the Phaser version follows a change of pixel ratio (a window moved to anot
   // media query, so a resize event stands in for it here; watching the query is unit
   // tested (tests/screen.test.js).
   await page.evaluate(() => window.dispatchEvent(new Event('resize')));
-  await expect.poll(() => page.evaluate(() => window.__liano.game.canvas.width)).toBe(2000);
+  await expect.poll(() => page.evaluate(() => window.__liano.app.canvas.width)).toBe(2000);
   expect(await page.evaluate(() => window.__liano.camera)).toEqual(viewCamera(layoutFor(1000, 600), 2));
-  expect(await page.evaluate(() => window.__liano.game.canvas.style.width)).toBe('1000px');
+  expect(await page.evaluate(() => window.__liano.app.canvas.style.width)).toBe('1000px');
   expect(errors).toEqual([]);
 });

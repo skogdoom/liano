@@ -1,18 +1,13 @@
 import { Application, Container, Graphics } from 'pixi.js';
-import {
-  SIM_DT,
-  MAX_FRAME_DT,
-  MAX_RESOLUTION,
-  SHARED_ZOOM,
-} from './config.js';
-import { createFixedStepLoop } from './loop.js';
+import { MAX_RESOLUTION, SHARED_ZOOM } from './config.js';
+import { createDriver } from './driver.js';
 import { createInput } from './input.js';
 import { Game } from './sim/game.js';
 import { World } from './sim/world.js';
 import { ObstaclePrefetch } from './obstaclePrefetch.js';
 import { createPause } from './pause.js';
 import { layoutFor, paneLayouts } from './layout.js';
-import { MODES, MODE_ORDER } from './sim/match.js';
+import { MODES } from './sim/match.js';
 import { createFullscreen, bindFullscreenControls } from './fullscreen.js';
 import { Overlays } from './render/overlays.js';
 import { Pane } from './render/pane.js';
@@ -22,7 +17,6 @@ import { FpsMeter } from './render/fpsMeter.js';
 import { MuteButton } from './render/muteButton.js';
 import { FullscreenButton } from './render/fullscreenButton.js';
 import { SoundPlayer } from './audio/player.js';
-import { soundsFor } from './audio/sounds.js';
 import { createFatalOverlay, createNotice, isOwnError } from './fatal.js';
 import { blockBrowserGestures, isHomeScreenApp, pixelRatio as screenPixelRatio, safeAreaReader, watchScreen } from './screen.js';
 import { controlsPoint as pointInControls } from './controls.js';
@@ -225,23 +219,15 @@ function syncPanes() {
 }
 syncPanes();
 
-// Action roles, in the order the loop applies them within a step (see KEYS).
-const ROLES = ['start', 'primary', 'p1', 'p2', 'menu'];
-
-const loop = createFixedStepLoop({
-  dt: SIM_DT,
-  maxFrameDt: MAX_FRAME_DT,
-  step(dt) {
-    const pick = input.consumeModePick();
-    if (pick && game.selectMode(MODE_ORDER[pick - 1])) input.clear();
-    for (const role of ROLES) {
-      // A press that changes the state (starts or restarts a run) is the step's last.
-      if (input.consumePress(role) && game.press(role)) {
-        input.clear();
-        break;
-      }
-    }
-    game.step(dt);
+// The game itself: presses, toggles, pause, prefetch and sounds (driver.js); this file
+// draws it.
+const driver = createDriver({
+  game,
+  input,
+  pause,
+  sound,
+  prefetch,
+  onStep(dt) {
     syncPanes();
     // The two-player modes use a different frame.
     if (game.mode !== layoutMode) {
@@ -250,33 +236,17 @@ const loop = createFixedStepLoop({
     }
     for (const pane of panes) pane.stepCamera(dt);
   },
+  onDebugToggle: () => debugOverlay.toggle(),
+  onMuteToggle: toggleMute,
 });
+const { loop } = driver;
 
 // Frame rate and times, for the debug view (D): fed every frame, whether it is shown or not.
 const fpsMeter = new FpsMeter();
 
 function frame(ticker) {
   fpsMeter.tick(performance.now());
-  if (input.consumeDebugToggle()) debugOverlay.toggle();
-  if (input.consumeMuteToggle()) toggleMute();
-  // G turns slipping on and off, anywhere (paused too).
-  if (input.consumeSlipToggle()) game.toggleSlip();
-  // H turns lives on and off for single player, on the title screen.
-  if (input.consumeLivesToggle()) game.toggleLives();
-  // S turns the shadow monkey on and off for single player, on the title screen.
-  if (input.consumeShadowToggle()) game.toggleShadow();
-  // P pauses a run, and resumes whatever it paused.
-  if (input.consumePauseToggle() && (game.pausable || pause.reason === 'manual')) pause.toggle('manual');
-  // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
-  const paused = pause.paused;
-  if (paused) input.clear(); // a press made just before pausing must not act on resume
-  const frameDt = paused ? 0 : Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
-  // The part of a step the accumulator holds: the camera and monkeys are drawn that far on.
-  const alpha = loop.advance(frameDt);
-  prefetch.update(game.worlds.map((w) => w.obstacles));
-  sound.setPaused(paused);
-  const events = game.takeEvents();
-  for (const recipe of soundsFor(events)) sound.play(recipe);
+  const { frameDt, alpha, events } = driver.frame(ticker.deltaMS);
   const ghost = game.shadowFrame();
   // Most frames have no events: do not make an array per pane for nothing.
   panes.forEach((pane, i) =>

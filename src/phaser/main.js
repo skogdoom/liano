@@ -1,25 +1,37 @@
 import Phaser from 'phaser';
 import { MAX_RESOLUTION } from '../config.js';
-import { FULLSCREEN_HIT, controlsPoint, inside } from '../controls.js';
+import { FULLSCREEN_HIT, MUTE_HIT, controlsPoint, inside } from '../controls.js';
+import { createDriver } from '../driver.js';
 import { createFatalOverlay, createNotice, isOwnError } from '../fatal.js';
 import { bindFullscreenControls } from '../fullscreen.js';
+import { createInput } from '../input.js';
 import { layoutFor } from '../layout.js';
+import { ObstaclePrefetch } from '../obstaclePrefetch.js';
 import { createPause } from '../pause.js';
 import { blockBrowserGestures, isHomeScreenApp, pixelRatio, safeAreaReader, watchScreen } from '../screen.js';
+import { Game } from '../sim/game.js';
+import { MODES } from '../sim/match.js';
+import { World } from '../sim/world.js';
+import { FpsMeter } from '../render/fpsMeter.js';
 import { createPhaserFullscreen } from './fullscreen.js';
+import { phaserKeys, phaserPointers } from './input.js';
 import { BootScene, PlayScene, UiScene } from './scenes.js';
+import { createPhaserSoundPlayer } from './sound.js';
 import { canvasSize, viewCamera } from './view.js';
 
-// The Phaser version of the game (see PHASER_PLAN.md). M2: the platform, which holds
-// the layout, pause and full screen for the scenes (scenes.js); they draw an empty frame
-// so far. The game itself comes in the later milestones.
+// The Phaser version of the game (see PHASER_PLAN.md). The platform holds the layout,
+// pause, full screen, input and sound for the scenes (scenes.js); the game runs as in
+// the Pixi version (driver.js). M3: the scenes draw an empty frame and a readout of the
+// game; drawing the game itself comes in M5 and M6.
 
 let game = null;
 // Anything that breaks from here on, startup included, shows a reload message instead
 // of a frozen canvas, and stops the game's loop rather than failing every frame.
 const fatal = createFatalOverlay(document);
+let sound = null;
 const fail = (error) => {
   game?.loop.sleep();
+  sound?.setPaused(true);
   fatal.show(error);
 };
 window.addEventListener('error', (event) => {
@@ -36,8 +48,8 @@ game = new Phaser.Game({
   backgroundColor: '#000000',
   banner: false,
   render: { antialias: true },
-  // Sound comes with M3; until then Phaser must not open an audio context of its own.
-  audio: { noAudio: true },
+  // Several fingers each count as a press (2P on one screen), as in the Pixi version.
+  input: { activePointers: 4 },
   // The game's own fixed-step loop needs the real frame times.
   fps: { smoothStep: false },
   // The canvas has `ratio` device pixels per CSS pixel and is shown at its CSS size
@@ -58,10 +70,31 @@ const platform = new Phaser.Events.EventEmitter();
 game.registry.set('platform', platform);
 blockBrowserGestures(game.canvas);
 
+// Obstacles ahead are generated in a worker (see ObstaclePrefetch).
+function createObstacleWorker() {
+  try {
+    return new Worker(new URL('../obstacleWorker.js', import.meta.url), { type: 'module' });
+  } catch {
+    return null;
+  }
+}
+const prefetch = new ObstaclePrefetch(createObstacleWorker());
+// The game starts without slipping (G turns it on).
+const theGame = new Game({
+  slip: false,
+  // Split screen's worlds share the match seed, and so the prefetched gaps.
+  createWorld: (options) => {
+    if (options.seed !== prefetch.seed) prefetch.reset(options.seed);
+    return new World({ ...options, makeObstacle: prefetch.makeObstacle, makeBanana: prefetch.makeBanana });
+  },
+});
+platform.game = theGame;
+
 // The layout for the window (layout.js) and the camera that shows the view on the
-// canvas (view.js); scenes follow the 'layout' event. The two-player frame comes with
-// the modes (M6).
+// canvas (view.js); scenes follow the 'layout' event. The two-player modes use the
+// 16:9 frame.
 const safeAreaInsets = safeAreaReader(document);
+let layoutMode = theGame.mode;
 function layout() {
   const w = window.innerWidth;
   const h = window.innerHeight;
@@ -73,7 +106,8 @@ function layout() {
   // Phaser leaves the style alone when the zoom is 1).
   game.canvas.style.width = `${w}px`;
   game.canvas.style.height = `${h}px`;
-  platform.layout = layoutFor(w, h, safeAreaInsets());
+  layoutMode = theGame.mode;
+  platform.layout = layoutFor(w, h, safeAreaInsets(), { fixed: MODES[theGame.mode].players > 1 });
   platform.camera = viewCamera(platform.layout, r);
   platform.emit('layout', platform.layout, platform.camera);
 }
@@ -81,18 +115,10 @@ const queueLayout = watchScreen(window, layout);
 layout();
 
 // Paused while the window is unfocused or hidden, the graphics context is lost, or the
-// player pressed P (pause.js, as in the Pixi version). Phaser itself stops its loop
-// while the page is hidden.
-//
-// P is read from the DOM: Phaser 4.2.1's keyboard plugin hands a scene every key event
-// of the frame again with each new one, so two presses in one frame toggle twice (see
-// the M2 report). The game's input, which M3 moves onto Phaser, has to deal with that;
-// then P pauses only a run, as in the Pixi version.
+// player pressed P during a run (pause.js, as in the Pixi version). Phaser itself stops
+// its loop while the page is hidden.
 const pause = createPause(window, document);
 platform.pause = pause;
-window.addEventListener('keydown', (event) => {
-  if (event.code === 'KeyP' && !event.repeat) pause.toggle('manual');
-});
 
 // A lost graphics context (common when a phone backgrounds the page) pauses the game
 // until Phaser restores it, with its textures; if it does not come back, offer a reload.
@@ -126,11 +152,67 @@ if (platform.fullscreenButton) {
   bindFullscreenControls(window, game.canvas, fullscreen, { hit: onButton });
 }
 
+// Sound: the recipes through Phaser's sound manager (sound.js). It starts at the first
+// user gesture (browsers block audio before one); later gestures resume it if the
+// browser suspended it, or replace a context that stays stuck.
+sound = createPhaserSoundPlayer(game.sound);
+platform.sound = sound;
+for (const type of ['keydown', 'pointerdown', 'pointerup', 'touchend']) {
+  window.addEventListener(type, () => sound.unlock(), { capture: true });
+}
+function toggleMute() {
+  sound.setMuted(!sound.muted);
+  platform.emit('mute', sound.muted);
+}
+
+// The game's input on Phaser's keyboard and pointers (input.js), read through the UI
+// scene, which is always running. Presses count only while running, and not just after
+// resuming (see pause.js). A tap on the mute button toggles sound instead, and one on
+// the full-screen button is handled by its own controls.
+const ui = await new Promise((resolve) => platform.once('ui', resolve));
+const buttonAt = (hit, event) =>
+  inside(hit, controlsPoint(platform.layout, game.canvas.getBoundingClientRect(), event.clientX, event.clientY));
+const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+const input = createInput(phaserKeys(ui.input.keyboard), phaserPointers(ui.input), {
+  initialType: coarsePointer ? 'touch' : 'keyboard',
+  accepts: () => pause.acceptsInput(),
+  intercept: (event) => {
+    if (platform.fullscreenButton && buttonAt(FULLSCREEN_HIT, event)) return true;
+    if (!buttonAt(MUTE_HIT, event)) return false;
+    toggleMute();
+    return true;
+  },
+});
+platform.input = input;
+
+// The game, as in the Pixi version (driver.js), once per Phaser step. The two-player
+// modes change the frame. D shows more in the readout until the debug view (M6).
+const fpsMeter = new FpsMeter();
+platform.fpsMeter = fpsMeter;
+platform.debug = false;
+const driver = createDriver({
+  game: theGame,
+  input,
+  pause,
+  sound,
+  prefetch,
+  onStep() {
+    if (theGame.mode !== layoutMode) layout();
+  },
+  onDebugToggle: () => (platform.debug = !platform.debug),
+  onMuteToggle: toggleMute,
+});
+game.events.on(Phaser.Core.Events.STEP, (time, delta) => {
+  fpsMeter.tick(performance.now());
+  platform.frame = driver.frame(delta);
+});
+
 // Hooks for inspecting and driving the game from the browser console and tests.
 if (import.meta.env.DEV) {
   window.__liano = {
-    game, engine: 'phaser', platform, pause, fullscreen, fatal,
+    app: game, engine: 'phaser', platform, pause, fullscreen, fatal, sound, input, driver,
     get layout() { return platform.layout; },
     get camera() { return platform.camera; },
+    get game() { return theGame; },
   };
 }

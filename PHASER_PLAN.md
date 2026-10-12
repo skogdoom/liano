@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is next.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass follows M5). M4 is next.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -336,6 +336,46 @@ The atlas rigs hold 60 fps under the stress load, where Pixi drops to 50, and na
 - **Audio** on Phaser's `WebAudioSoundManager`: our recipes (`audio/recipes.js`, unchanged) connect to its `destination`; mute, pause, volume, unlock and resume handled by Phaser, plus the extra recovery we had to add (rebuilding a context that stays suspended, the clock check) if Phaser's own handling doesn't cover the cases we hit; the debug `sound` line kept.
 - **Done when:** the player, sounds and recipes tests pass adapted; an offline render of every sound matches the current one sample for sample (the same recipes, so it should); a manual pass on desktop Chrome, Firefox, Safari and the iPhone 13 mini confirms sound survives tab switches and reloads.
 
+**M3 report (version 3.0.0-dev.4; the manual sound pass is done in Safari on macOS, the rest follows M5).**
+- **The game runs in the Phaser version.** What both versions do apart from drawing moved out of the Pixi `main.js` into `src/driver.js`:
+  - presses applied at sim-step boundaries;
+  - the toggle keys;
+  - pause (P pauses only a run);
+  - the obstacle prefetch;
+  - the sounds for each frame's events.
+
+  It is unit tested, and the Pixi version uses it unchanged in behaviour. The Phaser version runs it on every Phaser step. Until M5 and M6 draw the game, its UI scene shows a readout: mode, state, score, the settings, the keys and, with D, the frame rate and the sound's state. Stand-in mute and full-screen buttons sit where the Pixi version's are. The two-player modes switch to the 16:9 frame.
+- **Input on Phaser** (`src/phaser/input.js`). Phaser's keyboard and pointers become the event sources `input.js` reads, so its rules hold unchanged:
+  - key repeat ignored;
+  - Space kept from scrolling;
+  - the toggles;
+  - presses queued for the next step;
+  - no presses while paused or just after resuming;
+  - taps on the buttons kept out.
+
+  Each key event is passed on once, against the replay found in M2. Phaser reads mouse and touch events, so each pointer is described as a pointer event: the kind, the button, and the touch's own page position. Phaser allows one touch pointer by default; the game asks for 4, since every finger is a press, as in the Pixi version. F and the full-screen button stay on DOM events, which keeps the request inside the gesture (`fullscreen.js`, shared).
+- **Sound on Phaser** (`src/phaser/sound.js`). The recipes (`audio/recipes.js`, unchanged) play through Phaser's audio context and its master mute and volume nodes. Phaser unlocks the context at the first gesture, and mute is Phaser's mute node. The player itself (`audio/player.js`) gained a few hooks and is otherwise the same code in both versions.
+  - **Pause:** Phaser resumes a suspended context every frame while the game has focus, which would undo the game's pause and mute. The player sets the flag Phaser keeps for a lost focus while the context is to stay suspended.
+  - **Recovery:** a context that stays stuck is replaced at the next gesture through Phaser's `setAudioContext`, which also makes new master nodes; mute is applied to them again.
+  - **Refusals:** Phaser calls `resume()` and `suspend()` without handling a refusal, which would reach the error screen; the player marks them as handled.
+- **Findings:**
+  - Phaser's `mute` reads its mute node's current value. A suspended context never updates it, so it can read `false` while muted. Nothing in the game reads it.
+  - Chromium's offline rendering is not bit-for-bit repeatable: two renders of the same graph differ by up to 6e-8, one 24-bit step. "Sample for sample" is therefore checked as within 1e-6, far below a 16-bit step (3e-5).
+  - Phaser creates its audio context at boot, before any gesture. Browsers log a warning for that, not an error.
+- **Tests:**
+  - Unit tests: the driver (8), the input adapter (7, including two presses in one frame), the Phaser sound player (5). The player tests stand unchanged.
+  - Browser tests (`browser-tests/game.spec.js`):
+    - the Phaser version plays: Space starts a run, Esc goes back to the title, 2 picks the shared mode and its frame;
+    - two P presses in one frame count once each;
+    - a tap starts a run, but a tap on the mute button mutes instead;
+    - the sound starts at the first gesture on Phaser's context, plays, and mute keeps the context suspended;
+    - every recipe rendered offline through the Phaser path matches the Pixi path (15 sounds, the largest difference under 1e-6).
+  - CI runs the browser tests one at a time: two software-rendered pages at once starved each other on the runner.
+- **Manual sound pass:** done in Safari on macOS. Space, the crash on a fall, tab switches, reloads and M all work. The rest moves to after M5, when the game is drawn: the pling needs a banana to be caught, and Chrome, Firefox and the iPhone 13 mini still need checking. How it is done:
+  1. Run `npm run dev:host` and open the printed address with `?engine=phaser` on desktop Chrome, Firefox and Safari, and on the iPhone 13 mini.
+  2. Start a run and let the monkey fall, which plays the crash; take bananas, which play the pling.
+  3. Switch tabs and back, lock and unlock the phone, and reload; the sounds should still play. D shows the sound's state.
+
 ### M4. The asset pipeline: generated, replaceable art (L)
 
 - **Inventory**: every object kind, its pieces, what varies per object and how each maps (section 5); the cases that can't match exactly, with their diffs, for approval.
@@ -355,7 +395,7 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
 - **M5b, static obstacles and decorations.** Branch (with the nine decorations), thorn bush, rock, beehive, the vines and trunks, the day and night decoration sets, the hanging bats and owls.
 - **M5c, moving obstacles and bananas.** Spider with its thread, snake, bird, blue bird, purple bird, bat, circling bat (their wing, leg and eye animation as flipbooks and joints), bees, bananas with the glint, "+1" and "+1 ♥" pops, the heart on the field.
 - **M5d, the temple and the world around it.** The four temple looks, the stage tint, haze, moss, the fires (flicker, additive glow, fire kept untinted), then the backdrop: sky bands, the three parallax layers, canopy, floor, the stage and time-of-day tint transitions, dawn.
-- **Done when:** each part's parity-tool scenarios are inside the tolerance, its view-model tests pass, and the frame-time and memory budgets still hold with everything on screen.
+- **Done when:** each part's parity-tool scenarios are inside the tolerance, its view-model tests pass, and the frame-time and memory budgets still hold with everything on screen. After M5c (bananas drawn): the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini).
 
 ### M6. Panes, HUD, overlays and the three modes (L)
 

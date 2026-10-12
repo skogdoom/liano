@@ -3,9 +3,6 @@ import { MUTE_HIT, inside } from '../controls.js';
 
 const CREAM = 0xf4e7c5;
 const OUTLINE = 0x2a1a0c;
-// Tap target in logical pixels: larger than the icon, since a phone shows the game
-// at about half size. The fullscreen button's starts where it ends.
-
 // Speaker icon in the top-left corner; tap or click it (or press M) to mute.
 export class MuteButton {
   constructor() {
