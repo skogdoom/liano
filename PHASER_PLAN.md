@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done but for two parity exceptions for the owner to accept (its report). M6 is next.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is next.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -489,7 +489,7 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
 - **Parity: 103 scenarios, 94 inside the limits.**
   - Every object passes: each obstacle kind and decoration (hanging and standing, at scale 1 and 1.3), each moving kind (two of each, at three moments), the monkeys, the lianas (between steps too), the shadow and the bananas, at 1× and 2× (`world.*`, 64 scenarios). M1's spike scenarios pass too.
   - The whole-pane scenes (`scene.*`) pass at dusk and night, and by day at 1×: a run, the same run further on, each temple look, and the fire at dusk.
-  - The nine that fail are all by day, and they are the two exceptions below.
+  - The nine that fail are all by day, and they are the two exceptions below (accepted).
   - The browser tests in CI run them all (in about two minutes). Every object scenario must pass, and every scene but the exceptions; the exceptions must stay no worse than measured (under 1.5 % and 160 solid per million). The parity page's `?only=` takes several prefixes, comma-separated.
 
   | Scene | 1× share, solid per million | 2× share, solid per million |
@@ -497,11 +497,11 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
   | `scene.day`, `scene.ahead` | pass | 0.38–0.41 %, **66–140** |
   | `scene.temple.0–3.day` | **1.00–1.22 %**, 5–23 (look 2 passes) | 0.72–0.79 %, **73–76** |
 
-- **Exceptions, for the owner to accept:**
+- **Exceptions, accepted by the owner after M5:**
   1. **The far and mid layers by day on 2× screens** (all the 2× failures). Their tiles are 1× (decided in M1, where the far layer alone measured 59 solid pixels at 2×). Stretched, they soften the trunks' long straight edges, which Pixi draws hard at any density. With those two layers hidden, the same scenes pass (0–5 per million).
      - Making both tiles 2× would add 85 MB: 190 MB at 2×, over the 120 MB budget.
      - Possible later (M7): draw the trunks as stretched pieces apart from the tiles. That gives hard edges at any density, at little memory. The far trunks are rectangles, but the mid trunks lean and have stubs, so they would need pieces of their own.
-     - Proposed: accept as is.
+     - Accepted as is; the trunk pieces stay an option for M7.
   2. **The temple by day at 1×**: 1.17–1.22 % of pixels differ (look 2: 1.00 %), all rims. The solid patches are within the limit.
      - Cause: the stone has many long edges, light against dark. A sprite between pixels samples between texels, so its edge spreads over two pixels where Pixi's covers one.
      - Tried:
@@ -509,7 +509,7 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
        - the camera on a whole pixel: 1.01–1.08 %;
        - the stone at scale 1 instead of the 1.3 the game draws it up to: 0.88–1.01 %. This breaks the contract (section 5): stage 4's temples would be stretched.
      - None passes; the stone stays at its contract's scale, rasterized at 1× density (17 MB less at 1× than the 2× density try).
-     - Proposed: accept.
+     - Accepted.
 - **Decisions in M5:**
   - **Front tiles up to 2×** (this changes M1's "tiles at 1×"). The near, canopy and floor layers are dark against light, and their 1× edges failed at 2×. The near layer is now two strips, under the canopy (100 px) and along the floor (124 px); the middle was empty. The far and mid tiles stay at 1×.
   - **Twice the density** for pieces that turn or sit between pixels: the monkey's parts, liana leaves, decorations, the panther, bees, the banana, heart and glint, and the temple's leaves and vines. A piece's contract may say so (`density`: at least that many pixels per unit at its scale).
@@ -548,9 +548,7 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
   | Phaser, split screen | 1.8 ms, 3.7 ms | 225 |
 
   Phaser draws two to three times as many frames in the same time, at a similar cost per frame. M7 measures on the iPhone 13 mini.
-- **Still to do**:
-  - the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini), by the owner;
-  - the owner's decision on the two exceptions.
+- **Still to do**: the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini), by the owner.
 
 ### M6. Panes, HUD, overlays and the three modes (L)
 

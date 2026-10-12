@@ -57,8 +57,8 @@ test('the parity page draws every object identically with both versions', async 
   expect(results.filter((result) => !result.pass).map((result) => result.id)).toEqual([]);
 });
 
-// The whole panes by day are the exceptions of M5's report (PHASER_PLAN.md), for the
-// owner to accept: on 2× screens the far and mid layers' trunks are soft (their tiles are
+// The whole panes by day are the exceptions of M5's report (PHASER_PLAN.md), accepted by
+// the owner: on 2× screens the far and mid layers' trunks are soft (their tiles are
 // 1×), and at 1× the temple's stone edges spread a little (rims only). They must stay no
 // worse than measured; every other scene must pass.
 const SCENE_EXCEPTIONS = [
