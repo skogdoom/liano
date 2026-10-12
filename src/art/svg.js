@@ -102,13 +102,43 @@ export function elements(instructions) {
 }
 
 // A complete SVG document of `box` = { x, y, w, h } (in the drawing's own units: the
-// piece's origin is at (-x, -y) in the picture), from recorded instructions.
-export function toSvg(instructions, box) {
+// piece's origin is at (-x, -y) in the picture), from recorded instructions, with a
+// hidden layer of `guides` (see guideLayer) for whoever replaces the art.
+export function toSvg(instructions, box, guides = '') {
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${num(box.w)}" height="${num(box.h)}" viewBox="${num(box.x)} ${num(box.y)} ${num(box.w)} ${num(box.h)}">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${num(box.w)}" height="${num(box.h)}" viewBox="${num(box.x)} ${num(box.y)} ${num(box.w)} ${num(box.h)}">` +
     elements(instructions).join('') +
+    guides +
     '</svg>\n'
   );
+}
+
+// A hidden layer (a hidden group, and a hidden layer in Inkscape) showing what a
+// replacement has to keep: the piece's box, its origin (where the game places it), its
+// attachment points (where other pieces join it), the hitbox (for obstacles: gameplay,
+// which the art does not change) and, for a 9-slice panel, the slice lines. Thin lines
+// that keep their width at any zoom.
+export function guideLayer({ box, attach = {}, hitbox = [], slices = null }) {
+  const thin = 'fill="none" vector-effect="non-scaling-stroke" stroke-width="1"';
+  const parts = [
+    `<rect x="${num(box.x)}" y="${num(box.y)}" width="${num(box.w)}" height="${num(box.h)}" ${thin} stroke="#00b7ff" stroke-dasharray="4 3"><title>box</title></rect>`,
+    `<path d="M-4 0 H4 M0 -4 V4" ${thin} stroke="#ff00ff"><title>origin</title></path>`,
+  ];
+  for (const shape of hitbox) {
+    const d = shape.r !== undefined ? ellipseD(shape.dx, shape.dy, shape.r, shape.r) : `M${num(shape.dx)} ${num(shape.dy)} h${num(shape.w)} v${num(shape.h)} h${num(-shape.w)} Z`;
+    parts.push(`<path d="${d}" ${thin} stroke="#33dd33"><title>hitbox</title></path>`);
+  }
+  for (const [name, [x, y]] of Object.entries(attach)) {
+    parts.push(`<circle cx="${num(x)}" cy="${num(y)}" r="2" ${thin} stroke="#ff9900"><title>attach: ${name}</title></circle>`);
+  }
+  if (slices) {
+    const { left, right, top, bottom } = slices;
+    const xs = [box.x + left, box.x + box.w - right];
+    const ys = [box.y + top, box.y + box.h - bottom];
+    const d = [...xs.map((x) => `M${num(x)} ${num(box.y)} V${num(box.y + box.h)}`), ...ys.map((y) => `M${num(box.x)} ${num(y)} H${num(box.x + box.w)}`)].join(' ');
+    parts.push(`<path d="${d}" ${thin} stroke="#ffd000" stroke-dasharray="2 2"><title>slices</title></path>`);
+  }
+  return `<g id="guides" inkscape:groupmode="layer" inkscape:label="Guides" display="none" style="display:none">${parts.join('')}</g>`;
 }
 
 // A box around everything recorded: shapes, curve control points (which bound the

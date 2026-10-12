@@ -12,15 +12,18 @@ import { leafPoints, mixColor } from './shapes.js';
 
 export const TILE = 2048;
 export const FLOOR_Y = WORLD_HEIGHT - 60;
-const CANOPY_BOTTOM = 34;
+export const CANOPY_BOTTOM = 34;
 
 // Taller views (portrait, 4:3) show this much forest above the world band and
 // undergrowth below it.
 export const EXTEND_UP = 1000;
-const EXTEND_DOWN = 1600;
+export const EXTEND_DOWN = 1600;
 
 const SKY_TOP = 0x10261a;
 const SKY_BOTTOM = 0x4a8060;
+// The sky is SKY_BANDS bands of colour, from the top of the view to the floor.
+export const SKY_BANDS = 32;
+export const skyBand = (i) => mixColor(SKY_TOP, SKY_BOTTOM, i / (SKY_BANDS - 1));
 
 class ParallaxLayer {
   constructor(context, factor) {
@@ -50,13 +53,13 @@ function wrapped(x, draw) {
 }
 
 // Extends past the screen edges so the death shake never uncovers the letterbox.
-const SKY_MARGIN = 24;
+export const SKY_MARGIN = 24;
 
 // The sky gradient, from the top of the view (`top`, a world y) to the floor, then
 // flat down to the bottom of the view; `width` is the view width.
 function drawSky(g, top, width, bottom) {
   g.clear();
-  const bands = 32;
+  const bands = SKY_BANDS;
   const start = Math.min(top, 0);
   const h = (FLOOR_Y - start) / bands;
   const x = -SKY_MARGIN;
@@ -64,7 +67,7 @@ function drawSky(g, top, width, bottom) {
   for (let i = 0; i < bands; i++) {
     const y = start + i * h;
     const from = i === 0 ? y - SKY_MARGIN : y;
-    g.rect(x, from, w, y + h - from + 1).fill(mixColor(SKY_TOP, SKY_BOTTOM, i / (bands - 1)));
+    g.rect(x, from, w, y + h - from + 1).fill(skyBand(i));
   }
   return g.rect(x, FLOOR_Y, w, Math.max(bottom, WORLD_HEIGHT) - FLOOR_Y + SKY_MARGIN).fill(SKY_BOTTOM);
 }
@@ -111,7 +114,13 @@ export function drawFarLayer(ctx) {
 
 // Mid: darker trunks with a few branch stubs.
 function midLayer() {
-  const ctx = new GraphicsContext();
+  return new ParallaxLayer(drawMidLayer(new GraphicsContext()), MID_FACTOR);
+}
+
+export const MID_FACTOR = 0.4;
+
+// One tile of the mid layer.
+export function drawMidLayer(ctx) {
   const rand = mulberry32(202);
   const trunk = 0x223d2b;
   for (let i = 0; i < 9; i++) {
@@ -127,12 +136,18 @@ function midLayer() {
       }
     });
   }
-  return new ParallaxLayer(ctx, 0.4);
+  return ctx;
 }
 
 // Near: ferns along the floor and leaf clumps under the canopy.
 function nearLayer() {
-  const ctx = new GraphicsContext();
+  return new ParallaxLayer(drawNearLayer(new GraphicsContext()), NEAR_FACTOR);
+}
+
+export const NEAR_FACTOR = 0.7;
+
+// One tile of the near layer.
+export function drawNearLayer(ctx) {
   const rand = mulberry32(303);
   const leaf = 0x1b3624;
   for (let i = 0; i < 22; i++) {
@@ -156,12 +171,16 @@ function nearLayer() {
       }
     });
   }
-  return new ParallaxLayer(ctx, 0.7);
+  return ctx;
 }
 
 // Front, moving with the world: the canopy strip the lianas hang from.
 function canopyLayer() {
-  const ctx = new GraphicsContext();
+  return new ParallaxLayer(drawCanopyLayer(new GraphicsContext()), 1);
+}
+
+// One tile of the canopy strip.
+export function drawCanopyLayer(ctx) {
   const rand = mulberry32(404);
   const dark = 0x0f2517;
   const light = 0x1d4429;
@@ -184,13 +203,17 @@ function canopyLayer() {
     const r = 10 + top() * 10;
     wrapped(x, (px) => ctx.circle(px, -SKY_MARGIN - 0.3 * r, r).fill(dark));
   }
-  return new ParallaxLayer(ctx, 1);
+  return ctx;
 }
 
 // Front, moving with the world: the dark jungle floor. Falling in here ends the run.
 // It reaches EXTEND_DOWN below the band, for taller views.
 function floorLayer() {
-  const ctx = new GraphicsContext();
+  return new ParallaxLayer(drawFloorLayer(new GraphicsContext()), 1);
+}
+
+// One tile of the floor.
+export function drawFloorLayer(ctx) {
   const rand = mulberry32(505);
   const floor = 0x0a140d;
   const growth = 0x0f1e14;
@@ -204,7 +227,7 @@ function floorLayer() {
     const r = 14 + rand() * 16;
     wrapped(x, (px) => ctx.circle(px, FLOOR_Y + 6, r).fill(growth));
   }
-  return new ParallaxLayer(ctx, 1);
+  return ctx;
 }
 
 // Multiplied over the whole background per stage: day, late afternoon, dusk, night, and

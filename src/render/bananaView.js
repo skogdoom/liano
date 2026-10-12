@@ -14,6 +14,19 @@ const POP_TIME = 0.8; // s
 // Bananas are drawn a little larger than their hitbox, which with the monkey's makes
 // pickups generous anyway. Returns where a glint goes: on the body, near the stem.
 export function drawBanana(g, r = BANANA_RADIUS * 1.4) {
+  const { stem, body, ridge, tip, glint } = bananaShape(r);
+  g.poly(stem).fill(STEM);
+  g.poly(body).fill(PEEL);
+  g.moveTo(ridge[0], ridge[1]);
+  for (let i = 2; i < ridge.length; i += 2) g.lineTo(ridge[i], ridge[i + 1]);
+  g.stroke({ width: Math.max(0.06 * r, 1), color: RIDGE, alpha: 0.7, cap: 'round' });
+  g.circle(tip.x, tip.y, 0.06 * r).fill(TIP);
+  return glint;
+}
+
+// The banana's outlines (flat point lists: the stem, the body and the ridge line), its tip
+// and where its glint goes.
+export function bananaShape(r = BANANA_RADIUS * 1.4) {
   const radius = 1.25 * r; // of the arc along the middle of the banana
   const centreY = -0.95 * r;
   const tilt = -0.45;
@@ -48,22 +61,18 @@ export function drawBanana(g, r = BANANA_RADIUS * 1.4) {
   const stemWidth = 0.07 * r;
   const stemLength = 0.28 * r;
   const stem = [at(from, stemWidth), at(from, stemWidth, stemLength), at(from, -stemWidth, stemLength), at(from, -stemWidth)];
-  g.poly(flat(stem)).fill(STEM);
-  g.poly(flat(body)).fill(PEEL);
-  const line = flat(ridge);
-  g.moveTo(line[0], line[1]);
-  for (let i = 2; i < line.length; i += 2) g.lineTo(line[i], line[i + 1]);
-  g.stroke({ width: Math.max(0.06 * r, 1), color: RIDGE, alpha: 0.7, cap: 'round' });
   const [tipX, tipY] = at(to, 0);
-  g.circle(tipX + dx, tipY + dy, 0.06 * r).fill(TIP);
   const [glintX, glintY] = at(from + (to - from) * 0.28, 0.04 * r);
-  return { x: glintX + dx, y: glintY + dy };
+  return { stem: flat(stem), body: flat(body), ridge: flat(ridge), tip: { x: tipX + dx, y: tipY + dy }, glint: { x: glintX + dx, y: glintY + dy } };
 }
 
+// Where the glint goes on a heart that took a banana's place.
+export const HEART_GLINT = { x: -5, y: -5 };
+
 // A four-pointed glint.
-function drawGlint(g, size) {
+export function drawGlint(g, size) {
   const s = size * 0.25;
-  g.poly([0, -size, s, -s, size, 0, s, s, 0, size, -s, s, -size, 0, -s, -s]).fill(GLINT);
+  return g.poly([0, -size, s, -s, size, 0, s, s, 0, size, -s, s, -size, 0, -s, -s]).fill(GLINT);
 }
 
 const HEART_POP = 0xff7a90;
@@ -95,7 +104,7 @@ export class BananaViews {
       if (!entry) {
         const view = new Container();
         const body = new Graphics();
-        const spot = banana.heart ? { x: -5, y: -5 } : drawBanana(body);
+        const spot = banana.heart ? HEART_GLINT : drawBanana(body);
         if (banana.heart) drawHeart(body, 17);
         const glint = new Graphics();
         drawGlint(glint, 8);

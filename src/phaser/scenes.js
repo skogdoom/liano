@@ -3,6 +3,7 @@ import { version } from '../../package.json';
 import { WORLD_HEIGHT } from '../config.js';
 import { FULLSCREEN_HIT, MUTE_HIT } from '../controls.js';
 import { MODES } from '../sim/match.js';
+import { Art, CATALOG, queueCatalog, queueSet } from './art.js';
 import { applyViewCamera } from './view.js';
 
 // The Phaser version's scenes (PHASER_PLAN.md, M2): Boot loads the art and starts the
@@ -32,18 +33,40 @@ function followLayout(scene, onLayout = () => {}) {
   place();
 }
 
+// Loads the art (art.js): the catalog, then the boot set of atlases at the scale the
+// screen needs (device pixels per world unit: the camera's zoom), then starts the other
+// scenes and loads the main set behind them. The platform gets `art` (an Art) and emits
+// 'art' with the set's name as each set comes in; `artLoad` keeps the times taken.
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('boot');
   }
 
-  // The atlases come with the art pipeline (M4): the set for the screen's pixel ratio,
-  // a small boot set first.
-  preload() {}
+  preload() {
+    this.started = performance.now();
+    queueCatalog(this.load);
+  }
 
   create() {
-    this.scene.launch('ui');
-    this.scene.start('play');
+    const platform = platformOf(this);
+    const catalog = this.cache.json.get(CATALOG);
+    const scale = Art.scaleFor(platform.camera.zoom);
+    platform.art = new Art(catalog, scale);
+    platform.artLoad = { scale, sets: [] };
+    const loadSet = (set, then) => {
+      queueSet(this.load, catalog, set, scale);
+      this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+        platform.artLoad.sets.push({ set, ms: Math.round(performance.now() - this.started) });
+        platform.emit('art', set);
+        then?.();
+      });
+      this.load.start();
+    };
+    loadSet('boot', () => {
+      this.scene.launch('ui');
+      this.scene.launch('play');
+      loadSet('main');
+    });
   }
 }
 
@@ -93,7 +116,7 @@ function drawMuteIcon(g, muted) {
 
 // What the game is doing, as text, until the game is drawn (M5, M6). With `debug` (D),
 // the frame rate and the sound's state too.
-export function readout(game, { debug = false, fps = null, sound = null, inputType = 'keyboard' } = {}) {
+export function readout(game, { debug = false, fps = null, sound = null, artLoad = null, inputType = 'keyboard' } = {}) {
   const press = inputType === 'touch' ? 'Tap' : 'Space';
   const lines = [
     `${MODES[game.mode].label}  ${game.state}  score ${game.score}  best ${game.best}  stage ${game.stage}`,
@@ -101,6 +124,7 @@ export function readout(game, { debug = false, fps = null, sound = null, inputTy
     `${press}: start or let go  1 2 3: mode  Esc: title  P: pause  M: mute  D: details`,
   ];
   if (debug) lines.push(`${fps?.describe() ?? ''}  sound ${sound?.details ?? '—'}`);
+  if (debug && artLoad) lines.push(`art ${artLoad.scale}×: ${artLoad.sets.map((s) => `${s.set} in ${s.ms} ms`).join(', ') || 'loading'}`);
   return lines.join('\n');
 }
 
@@ -147,7 +171,7 @@ export class UiScene extends Phaser.Scene {
     this.paused.visible = platform.pause.paused;
     if (platform.game) {
       this.status.setText(
-        readout(platform.game, { debug: platform.debug, fps: platform.fpsMeter, sound: platform.sound, inputType: platform.input?.lastType }),
+        readout(platform.game, { debug: platform.debug, fps: platform.fpsMeter, sound: platform.sound, artLoad: platform.artLoad, inputType: platform.input?.lastType }),
       );
     }
   }

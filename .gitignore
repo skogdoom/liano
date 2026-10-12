@@ -4,3 +4,4 @@ dist-bench/
 test-results/
 playwright-report/
 art/build/
+public/art/

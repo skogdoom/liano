@@ -17,22 +17,79 @@ const EYE = 0x1c1008;
 
 // Where the gripping hand holds the liana, above the head along the rope.
 const GRIP_HAND = { x: 0, y: -25 };
-const SHOULDER = { x: 7, y: -1 };
-const ARM_LENGTH = 21;
-const LEG_LENGTH = 12;
+export const SHOULDER = { x: 7, y: -1 };
+// The limbs' pivots (shoulders and hips), and their lengths and widths.
+export const LIMBS = {
+  armBack: { x: -SHOULDER.x, y: SHOULDER.y },
+  armFront: { x: SHOULDER.x, y: SHOULDER.y },
+  legBack: { x: -6, y: 15 },
+  legFront: { x: 6, y: 15 },
+};
+export const ARM = { length: 21, width: 5 };
+export const LEG = { length: 12, width: 6 };
 // Body tilt behind the swing, per unit of angular speed (fraction of full speed).
 const HANG_LAG = 0.15;
 const ROTATION_EASE = 14; // 1/s
 const DEAD_SPIN = 7; // rad/s
 
 // A limb drawn pointing down (+y) from its pivot; rotation swings it around.
-function limb(length, width, color, endColor) {
-  return new Graphics()
-    .moveTo(0, 0)
-    .lineTo(0, length)
-    .stroke({ width, color, cap: 'round' })
-    .circle(0, length, width * 0.7)
-    .fill(endColor);
+export function drawLimb(g, { length, width }, color, endColor) {
+  return g.moveTo(0, 0).lineTo(0, length).stroke({ width, color, cap: 'round' }).circle(0, length, width * 0.7).fill(endColor);
+}
+export const drawArm = (g, { fur, skin }) => drawLimb(g, ARM, fur, skin);
+export const drawLeg = (g, { fur, furDark }) => drawLimb(g, LEG, fur, furDark);
+
+// The monkey's parts, each drawn on its own (also as pieces for the Phaser version), in
+// the colours of a palette (PALETTES, or the shadow's).
+export function drawMonkeyTail(g, { furDark }) {
+  return g
+    .moveTo(-8, 14)
+    .bezierCurveTo(-24, 24, -34, 6, -26, -5)
+    .bezierCurveTo(-21, -12, -12, -8, -16, -2)
+    .stroke({ width: 4, color: furDark, cap: 'round' });
+}
+
+export function drawTorso(g, { fur, skin }) {
+  return g.ellipse(0, 6, 13, 14).fill(fur).ellipse(0, 9, 8, 9).fill(skin);
+}
+
+export function drawMonkeyHead(g, { fur, skin }) {
+  return g
+    .circle(-11, -14, 5)
+    .fill(fur)
+    .circle(11, -14, 5)
+    .fill(fur)
+    .circle(-11, -14, 2.5)
+    .fill(skin)
+    .circle(11, -14, 2.5)
+    .fill(skin)
+    .circle(0, -10, 11)
+    .fill(fur)
+    .ellipse(0, -8, 8, 7)
+    .fill(skin)
+    .ellipse(0, -4.5, 4.5, 3)
+    .fill(0xf0c894)
+    .circle(-1.3, -5.5, 0.8)
+    .fill(EYE)
+    .circle(1.3, -5.5, 0.8)
+    .fill(EYE);
+}
+
+export function drawMonkeyEyes(g) {
+  return g.circle(-3.5, -11, 1.8).fill(EYE).circle(3.5, -11, 1.8).fill(EYE);
+}
+
+export function drawDeadEyes(g) {
+  return g
+    .moveTo(-5.5, -13)
+    .lineTo(-1.5, -9)
+    .moveTo(-1.5, -13)
+    .lineTo(-5.5, -9)
+    .moveTo(1.5, -13)
+    .lineTo(5.5, -9)
+    .moveTo(5.5, -13)
+    .lineTo(1.5, -9)
+    .stroke({ width: 1.6, color: EYE, cap: 'round' });
 }
 
 // Rotation that points a downward limb from `from` towards `to`.
@@ -49,57 +106,26 @@ const POSES = {
 };
 
 export class MonkeyView {
-  constructor({ fur: FUR, furDark: FUR_DARK, skin: SKIN } = PALETTES[0]) {
+  constructor(palette = PALETTES[0]) {
     this.view = new Container();
     this.body = new Container();
     this.view.addChild(this.body);
 
-    const tail = new Graphics()
-      .moveTo(-8, 14)
-      .bezierCurveTo(-24, 24, -34, 6, -26, -5)
-      .bezierCurveTo(-21, -12, -12, -8, -16, -2)
-      .stroke({ width: 4, color: FUR_DARK, cap: 'round' });
+    const tail = drawMonkeyTail(new Graphics(), palette);
+    const limb = (draw, at) => {
+      const g = draw(new Graphics(), palette);
+      g.position.set(at.x, at.y);
+      return g;
+    };
+    this.legBack = limb(drawLeg, LIMBS.legBack);
+    this.legFront = limb(drawLeg, LIMBS.legFront);
+    this.armBack = limb(drawArm, LIMBS.armBack);
+    this.armFront = limb(drawArm, LIMBS.armFront);
 
-    this.legBack = limb(LEG_LENGTH, 6, FUR, FUR_DARK);
-    this.legBack.position.set(-6, 15);
-    this.legFront = limb(LEG_LENGTH, 6, FUR, FUR_DARK);
-    this.legFront.position.set(6, 15);
-    this.armBack = limb(ARM_LENGTH, 5, FUR, SKIN);
-    this.armBack.position.set(-SHOULDER.x, SHOULDER.y);
-    this.armFront = limb(ARM_LENGTH, 5, FUR, SKIN);
-    this.armFront.position.set(SHOULDER.x, SHOULDER.y);
-
-    const torso = new Graphics().ellipse(0, 6, 13, 14).fill(FUR).ellipse(0, 9, 8, 9).fill(SKIN);
-    const head = new Graphics()
-      .circle(-11, -14, 5)
-      .fill(FUR)
-      .circle(11, -14, 5)
-      .fill(FUR)
-      .circle(-11, -14, 2.5)
-      .fill(SKIN)
-      .circle(11, -14, 2.5)
-      .fill(SKIN)
-      .circle(0, -10, 11)
-      .fill(FUR)
-      .ellipse(0, -8, 8, 7)
-      .fill(SKIN)
-      .ellipse(0, -4.5, 4.5, 3)
-      .fill(0xf0c894)
-      .circle(-1.3, -5.5, 0.8)
-      .fill(EYE)
-      .circle(1.3, -5.5, 0.8)
-      .fill(EYE);
-    this.eyes = new Graphics().circle(-3.5, -11, 1.8).fill(EYE).circle(3.5, -11, 1.8).fill(EYE);
-    this.deadEyes = new Graphics()
-      .moveTo(-5.5, -13)
-      .lineTo(-1.5, -9)
-      .moveTo(-1.5, -13)
-      .lineTo(-5.5, -9)
-      .moveTo(1.5, -13)
-      .lineTo(5.5, -9)
-      .moveTo(5.5, -13)
-      .lineTo(1.5, -9)
-      .stroke({ width: 1.6, color: EYE, cap: 'round' });
+    const torso = drawTorso(new Graphics(), palette);
+    const head = drawMonkeyHead(new Graphics(), palette);
+    this.eyes = drawMonkeyEyes(new Graphics());
+    this.deadEyes = drawDeadEyes(new Graphics());
 
     this.body.addChild(tail, this.legBack, this.legFront, this.armBack, torso, head, this.eyes, this.deadEyes, this.armFront);
     this.facing = 1;

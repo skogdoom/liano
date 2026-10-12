@@ -13,7 +13,7 @@ export const LIANA_PALETTES = [
 // In shared screen the two players' lianas hang from the same anchors; at rest they
 // bow this far to opposite sides (px), so both show.
 const PAIR_CURVE = 8;
-const TIP_FLASH = 0xffd23f;
+export const TIP_FLASH = 0xffd23f;
 // Where along the rope (fraction of its length) the tip warning starts.
 const TIP_FLASH_FROM = 0.55;
 const SEGMENTS = 14;

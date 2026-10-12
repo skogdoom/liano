@@ -175,3 +175,21 @@ test('the Phaser version follows a change of pixel ratio (a window moved to anot
   expect(await page.evaluate(() => window.__liano.app.canvas.style.width)).toBe('1000px');
   expect(errors).toEqual([]);
 });
+
+for (const [ratio, scale] of [
+  [1, 1],
+  [2, 2],
+]) {
+  test(`the Phaser version loads its art at ${scale}× on a ${ratio}× screen: the boot set, then the main set`, async ({ browser }) => {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: ratio });
+    const errors = collectErrors(page);
+    await page.goto(`${DEV}?engine=phaser`);
+    await started(page, errors);
+    await expect.poll(() => page.evaluate(() => window.__liano.platform.artLoad?.sets.map((s) => s.set))).toEqual(['boot', 'main']);
+    expect(await page.evaluate(() => window.__liano.platform.art.scale)).toBe(scale);
+    // A piece from each set is in Phaser's textures.
+    expect(await page.evaluate(() => ['liana.green.rope', 'panther.body'].map((key) => window.__liano.app.textures.get(`art.${window.__liano.platform.art.piece(key).set}`).has(key)))).toEqual([true, true]);
+    expect(errors).toEqual([]);
+    await page.close();
+  });
+}

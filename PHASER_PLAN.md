@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass follows M5). M4 is next.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass follows M5). M4 is done. M5 is next.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -118,7 +118,7 @@ M4 lists every object kind with its pieces and how each kind of variety maps. Wh
 
 **Overrides.** A custom piece goes in `art/custom/<key>.svg` or `<key>.png` (a PNG at least twice the logical size). An optional `<key>.json` beside it may change the frame count, frame rate or pivot within the limits the contract allows. A validator (`npm run art:check`, also run in CI) checks size, aspect, frames and padding, and warns where the art strays far from the hitbox. The hitboxes don't change with the art: they are gameplay.
 
-**Atlases.** The build rasterizes every piece (the custom one if present, else the generated one) and packs them into texture atlases at 1× and 2× (the pixel-ratio cap), sized for the iPhone 13 mini's texture limit. The game loads the set that matches the screen: a small boot set (title, monkey, first stage) first, the rest during the title. Atlases are build output, not committed. Pieces from one atlas are drawn in one batch, so there should be fewer draw calls than today.
+**Atlases.** The build rasterizes every piece (the custom one if present, else the generated one) and packs them into texture atlases at 1×, 2× and 4× (picked by device pixels per world unit; 4× for large windows on desktops), sized for the iPhone 13 mini's texture limit. The game loads the set that matches the screen: a small boot set (title, monkey, first stage) first, the rest during the title. Atlases are build output, not committed. Pieces from one atlas are drawn in one batch, so there should be fewer draw calls than today.
 
 **Tools.** An art gallery page (dev only) shows every piece with its contract: the default and any custom version side by side, flipbooks playing, hitbox and pivot overlays, and the piece in a game scene. `art/README.md`, generated from the manifest, is the guide for an artist.
 
@@ -387,12 +387,88 @@ The atlas rigs hold 60 fps under the stress load, where Pixi drops to 50, and na
 - **The art gallery page** and the generated `art/README.md`.
 - **Done when:** every piece is generated and shown in the gallery; the gallery shapes are within the parity tolerance (section 1); the recorder, writer, manifest and validator tests pass in Node; replacing one piece with a placeholder in a test build shows in the game with no code change; atlas sizes and load time are inside the budgets.
 
+**M4 inventory** (from the drawing code; how each kind of variety maps to pieces, section 5). *Exact*: the rig reproduces the drawing up to antialiasing. *Close*: a continuous change approximated, checked against the parity limit.
+
+| Object | Pieces | Variety and how it maps |
+|---|---|---|
+| Liana (3 palettes: green, gold, shadow grey) | rope strip, tip flash strip, leaf (light, dark) | Bent rope (M1); leaves placed per liana. Exact. |
+| Monkey (2 palettes + shadow) | tail, torso, head, eyes, dead eyes, arm, leg | Limbs turn about their pivots, body turns, facing flips, blink alpha. Exact. |
+| Branch | body, bark line, trunk | Bark lines placed and stretched (M1); trunk stretched. Exact. |
+| Supports (vines, trunks, stems, ledges) | vine strip and end, trunk, stem, hive trunk, sling, ledge | Trunks and stems stretched; a vine from the canopy is a strip bent along its curve, with round ends. Exact (vines close). |
+| Thorn bush | bush circles, highlight, thorn | Thorns placed and turned per bush. Exact. |
+| Rock | 24 outlines (body with facets), ledge, stem | **Decided after M4's inventory: a fixed set of 24 outlines**, one picked per gap in both versions (a random outline per gap cannot be pre-rendered). Exact. |
+| Beehive | nest, bee body, bee wing | Bees placed per frame, wings beat (scale). Exact. |
+| Temple (4 looks) | per look: the top (shrine, tiers, the stairs on them, the look's details and braziers), the base's first repeat, the base and stairs repeats; flame flipbook (7 sways × 7 heights), glow; haze; moss, vine, leaf (8 greens) | Base and stairs stacked down to the floor, the last copy cropped; moss and leaves placed; vines along their curves; the glow scaled and added. Exact, vines and the flame close; the last rows above the floor close (under the fringe). |
+| Decorations: panther | as M1 | Exact (tail flipbook). |
+| bird | tail, body, head (3 colourings) | Head and tail turn. Exact. |
+| snake | coil band (trunk, limb), tail (trunk, limb), scale mark, neck strip and end, head, tongue | Limb bands stretched across to the limb's thickness, the neck a strip along its curve. Close. |
+| hanging monkey | arms, leg segment and end, body, tail flipbook (13), eyes | Legs from a segment and round ends. Exact (the tail close). |
+| nest (3 states) | back, front, rim, twigs (dark, light, rim) with ends, egg, shell, chick, beak flipbook (9), cap, leaf | Twigs from segments and round ends; the egg rocks. Exact (the beak close). |
+| hanging bat (4 looks) | body, ear flipbook (9), eyes (shut, open) | Close (the ear's twitch in 9 steps). |
+| owl | body, skull, face disc, eye, pupil, beak | Face and pupils slide, blink. Exact. |
+| flowers | stem, leaf (2 greens), petal, heart (white, tinted per colour) | Stems stretched (a quadratic curve stays itself under scaling, its line and ends a little thinner along it), petals placed. Close. |
+| coconuts | frond, stem segment and end, nut (with highlight and eyes), hair | Nuts scaled, hairs placed and turned; the stem's bend is round instead of mitred. Close at the bend. |
+| Spider | body, leg segment and joint, thread | Legs from two turned segments and round joints (exactly the drawn line); thread stretched. Exact. |
+| Snake (moving) | stalk strip and end, stalk leaf (2 sides), coil, head | Head flips; the stalk bent along its curve. Exact (the stalk close). |
+| Birds (red, blue, purple) | body, wing flipbook (33) | Close (the wing in 33 steps). |
+| Bats (4 looks, flying and circling) | body, wing flipbook (41) | Close (the wing in 41 steps). |
+| Banana, heart | banana, glint, field heart, HUD heart (filled, outline), HUD and results bananas | Exact. |
+| Backdrop | sky (32 bands, stretched), far, mid, near, canopy and floor tiles, floor fill | Tiles at 1× (M1); tinted. Exact (the sky's band edges blend when stretched). |
+| HUD and overlays | panel (9-slice), banana icon, off-screen arrow, mute and full-screen icons | Text stays Phaser Text. Exact. |
+| Debug view | | Phaser Graphics (dev only). |
+
+**M4 report (version 3.0.0-dev.5).**
+- **Every picture is a piece.** 173 pieces, 591 frames, generated into `art/generated/` (SVG, committed) with `art/manifest.json`, from the game's own drawing code. The inventory above is updated with what each piece became. The definitions are in `src/art/pieces/`.
+  - To get there, the drawing code was split into exported functions, one per piece, with placement and pose computed apart from drawing. The Pixi version is unchanged: `scripts/dev/dump-views.mjs` records everything the Pixi views draw (every obstacle and decoration at two scales, every temple look by day and night, the moving obstacles at several times, games in each mode), and the dump was the same after every step.
+  - Rocks come in **24 outlines**, one picked per gap in both versions (decided after the inventory).
+  - Obstacles are **not tinted**, as today; the temple and the backdrop are. The temple's flames and glow are not.
+  - Lines (legs, twigs, a coconut's stem) are a straight **segment** piece, stretched and turned, plus a round **joint** piece at each end and corner: together exactly a line with round ends and joins. Curves (vines, stalks, the snake's neck) are strips bent along the curve, with joints for their round ends.
+  - The temple's base and stairs reach the floor, which depends on how high the temple stands. They are pictures that repeat (92 px of base, 8 steps of stairs), stacked down to the floor with the last one cropped. The fixed part above them is one picture per look.
+  - The haze is soft, so it is rasterized at half the scale, and only its top half is kept (the floor hides the rest). The floor tile keeps only its top 74 px; below it a stretched square of the floor's colour.
+- **Atlases at 1×, 2× and 4×.** The scale is picked by device pixels per world unit (the layout's scale × the pixel ratio), allowing 1.25× upscaling. On a laptop or desktop with a large window this exceeds 2: 1920 px wide at a ratio of 2 is 3 px per unit. So a 4× set was added; phones use 1× or 2×.
+- **Texture memory** (atlases and tiles, one scale loaded at a time): **48 MB at 1×, 86 MB at 2×**, 234 MB at 4×. The build reports it, and **fails** over 120 MB at 2× (the budget) or 300 MB at 4× (a ceiling, agreed after M4, so the desktop set cannot grow unnoticed). The tiles are 35 MB of that; the top of each tall layer could still become a small repeating tile if the phone needs less (section 6).
+- **Load times** (Chromium in the CI container, dev server, not the phone): the boot set in 0.26 s at 1× and 0.45 s at 2×; the main set behind the title in 0.6 s and 1.7 s. M7 measures the start on the iPhone 13 mini against the 1.5 s budget.
+  - Boot set: the backdrop, player 1's monkey, the green lianas, bananas, hearts and the UI.
+  - Main set: everything else. **Agreed after M4:** in M5 a run waits for the main set (Space pressed before it is in starts the run as soon as it arrives). If M7 finds the wait noticeable on the phone, the first stage's obstacles move to the boot set.
+- **Runtime helpers** (`src/phaser/art.js`, unit tested):
+  - images with their pivot, flipbook frames, strips bent along a rope (M1), tiles;
+  - `column` stacks a repeating piece down to a depth;
+  - `nineSlice` makes a panel (9-slice);
+  - `glow` adds a piece's light to what is behind it;
+  - `tint` tints the pieces of a group that take the stage tint and leaves the others.
+- **The gallery** (`art.html`, at `?scale=1|2|4`) shows every piece and frame from the built atlases next to the game's drawing of it, with the difference and the guides. Results:
+
+  | Atlas scale | Pixels differing | Solid per million | Frames over their limit |
+  |---|---|---|---|
+  | 1× | 0.40 % | 0 | none |
+  | 2× | 0.40 % | 2.9 | none |
+  | 4× | 0.22 % | 15.9 | none |
+
+  How it judges: the share and the solid patches per million are taken over all frames together, as if the pieces covered a scene (limits 1 % and 25). A single frame fails if its solid patches alone would fail a 1280 × 720 view at that density (23 px at 1×, 92 at 2×, 369 at 4×). Judged per million of its own few thousand pixels, one solid pixel would fail it.
+
+  The game's drawing is made at the final size, because Pixi builds a drawing's triangles in its own units, and a container scaled up shows their corners. An empty frame (a bird's wing seen edge on) is compared with an empty cell.
+
+  What is left are rasterizer differences on tiny round shapes: Pixi cuts a very sharp round join short (the bats' wing tips) and starts an arc's round end differently (the speaker's waves). That is up to 30 solid pixels at 4× in such a frame. The atlas has the true round shape. The browser test checks the gallery at 2×.
+- **The art guide**, `art/README.md`, is written by `npm run art` from the manifest: how to replace a piece, and every piece's contract (files, box, scale, kind, tint, joins, hitbox, purpose). A test checks it is up to date.
+- **Replacement drill** (`scripts/dev/replacement-drill.mjs`). Placeholders replaced one piece of each kind: plain (`branch.body`), flipbook (`panther.tail`, all 16 frames), joint (`monkey.p1.arm`, with a pivot sidecar), stretch (`branch.trunk`), rope (`liana.green.rope`) and tinted tile (`backdrop.far`, as PNGs at 2×).
+  - `art:check` accepted them. It warned that the branch placeholder strays past the hitbox, and refused a picture in the wrong aspect; the build stopped on that too.
+  - The build used the placeholders. The gallery marked the 21 frames custom and still passed.
+  - The parity page's Phaser rigs showed them with no code change: the trunk stretched, each tail frame its own colour, the rope bent, the backdrop tinted at dusk.
+  - Then the drill was reverted. M7 runs it again on the finished rigs.
+- **Close, not exact**, as listed in the inventory (**accepted after M4**, as is the gallery's judging above). Each is within the gallery's limits; M5's scene parity measures them in place, and one that fails there gets more frames, a closer reference size or a piece of its own:
+  - quantized motion: the wings, flame, tails, the bat's ear and the chick's beak;
+  - stretched curves: vines, stalks, flower stems, the snake's coil bands;
+  - the coconut stem's bend;
+  - the stretched sky;
+  - the temple's last base rows at the floor;
+  - the haze at half scale.
+
 ### M5. World rendering (L, in four parts)
 
 For each part: rigs built from the M4 pieces, a view-model (tested in Node) and a Phaser adapter.
 
 - **M5a, the monkey and the lianas.** Monkey (poses, body rotation easing, facing, blink, the death spin, the two-player palettes), lianas (rest, swinging, settling, tip flash, the shared-screen pair that bows apart, golden and green sets), interpolation between steps, the shadow monkey and its fading grey lianas.
-- **M5b, static obstacles and decorations.** Branch (with the nine decorations), thorn bush, rock, beehive, the vines and trunks, the day and night decoration sets, the hanging bats and owls.
+- **M5b, static obstacles and decorations.** Obstacles are in the main art set: a run waits for it (agreed after M4). Branch (with the nine decorations), thorn bush, rock, beehive, the vines and trunks, the day and night decoration sets, the hanging bats and owls.
 - **M5c, moving obstacles and bananas.** Spider with its thread, snake, bird, blue bird, purple bird, bat, circling bat (their wing, leg and eye animation as flipbooks and joints), bees, bananas with the glint, "+1" and "+1 ♥" pops, the heart on the field.
 - **M5d, the temple and the world around it.** The four temple looks, the stage tint, haze, moss, the fires (flicker, additive glow, fire kept untinted), then the backdrop: sky bands, the three parallax layers, canopy, floor, the stage and time-of-day tint transitions, dawn.
 - **Done when:** each part's parity-tool scenarios are inside the tolerance, its view-model tests pass, and the frame-time and memory budgets still hold with everything on screen. After M5c (bananas drawn): the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini).
@@ -461,7 +537,7 @@ Everything below must work on the Phaser renderer as on v2.3:
 Every question from the first two drafts is answered in section 1. New questions that come up during a milestone are added here and asked before that milestone's PR is merged into `phaser`.
 
 From M1:
-1. ~~**The iPhone 13 mini numbers.**~~ Answered: in the M1 report (a go). To measure again, on a computer on the same network as the phone run `npm ci`, `npm run art:atlas`, `npm run spike:bench`. Then, in Safari on the phone, open the printed network address followed by `spike/bench.html?engine=atlas&branches=4&lianas=4` (or `engine=pixi`). The `result` line comes after 12 s.
+1. ~~**The iPhone 13 mini numbers.**~~ Answered: in the M1 report (a go). To measure again, on a computer on the same network as the phone run `npm ci`, `npm run art:build`, `npm run spike:bench`. Then, in Safari on the phone, open the printed network address followed by `spike/bench.html?engine=atlas&branches=4&lianas=4` (or `engine=pixi`). The `result` line comes after 12 s.
 2. ~~**Solid patches as part of "identical"?**~~ Accepted: a scenario also fails with more than 25 solid pixels per million (section 1). The spike's correct rigs score 0–16 per million; the magenta eyes 640; the rope's flat ends 49 (1×) and 142 (2×).
 3. ~~**The texture budget.**~~ Accepted: 120 MB at a pixel ratio of 2 (section 6).
 
