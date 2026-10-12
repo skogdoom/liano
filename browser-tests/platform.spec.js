@@ -188,7 +188,7 @@ for (const [ratio, scale] of [
     await expect.poll(() => page.evaluate(() => window.__liano.platform.artLoad?.sets.map((s) => s.set))).toEqual(['boot', 'main']);
     expect(await page.evaluate(() => window.__liano.platform.art.scale)).toBe(scale);
     // A piece from each set is in Phaser's textures.
-    expect(await page.evaluate(() => ['liana.rope', 'panther.body'].map((key) => window.__liano.app.textures.get(`art.${window.__liano.platform.art.piece(key).set}`).has(key)))).toEqual([true, true]);
+    expect(await page.evaluate(() => ['liana.green.rope', 'panther.body'].map((key) => window.__liano.app.textures.get(`art.${window.__liano.platform.art.piece(key).set}`).has(key)))).toEqual([true, true]);
     expect(errors).toEqual([]);
     await page.close();
   });

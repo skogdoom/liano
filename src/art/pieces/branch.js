@@ -25,7 +25,8 @@ export const tailFrameFor = (swish) =>
 export const TRUNK_REFERENCE = 100; // px from the top of the trunk to its bottom (straight sides: stretched)
 export const BARK_LINE_LENGTH = 14;
 
-const obstacle = { scale: OBSTACLE_SCALE, tint: true };
+// Obstacles are not tinted with the stage (only the temple and the backdrop are).
+const obstacle = { scale: OBSTACLE_SCALE };
 
 export const BRANCH_PIECES = [
   {

@@ -34,11 +34,26 @@ const BEE = 0xffd23f;
 const BEE_STRIPE = 0x2a1f12;
 const BEE_WING = 0xf4fbff;
 
-function vine(g, x, fromY, toY, sway) {
-  g.moveTo(x, fromY)
-    .bezierCurveTo(x + sway, fromY + (toY - fromY) * 0.35, x - sway, fromY + (toY - fromY) * 0.7, x, toY)
-    .stroke({ width: 3, color: VINE, cap: 'round' });
+// A vine an obstacle hangs from: from the canopy (`fromY`) down to `toY`, swaying by
+// `sway` either way; the cubic curve, and the line drawn along it.
+export const VINE_WIDTH = 3;
+export const vineCurve = (x, fromY, toY, sway) => [
+  [x, fromY],
+  [x + sway, fromY + (toY - fromY) * 0.35],
+  [x - sway, fromY + (toY - fromY) * 0.7],
+  [x, toY],
+];
+export function drawVineLine(g, from, to) {
+  return g.moveTo(...from).lineTo(...to).stroke({ width: VINE_WIDTH, color: VINE, cap: 'round' });
 }
+function vine(g, x, fromY, toY, sway) {
+  const [p0, p1, p2, p3] = vineCurve(x, fromY, toY, sway);
+  g.moveTo(...p0)
+    .bezierCurveTo(...p1, ...p2, ...p3)
+    .stroke({ width: VINE_WIDTH, color: VINE, cap: 'round' });
+}
+// Where a hanging obstacle's vines start: the canopy, in its local coordinates.
+export const canopyY = (o) => (CANOPY_Y - o.y) / o.scale;
 
 // From topY down past the floor line; y in the obstacle's local coordinates.
 function trunk(g, o, x, topY, width) {
@@ -50,8 +65,19 @@ export const trunkBottom = (o) => (FLOOR_Y + 20 - o.y) / o.scale;
 
 // A trunk `width` wide at the top, from `topY` down to `bottom`, flaring by 5 px a side.
 export function drawTrunk(g, x, topY, bottom, width) {
-  return g.poly([x - width / 2, topY, x + width / 2, topY, x + width / 2 + 5, bottom, x - width / 2 - 5, bottom]).fill(SUPPORT_TRUNK);
+  return drawStem(g, x, topY, bottom, width / 2, width / 2 + 5);
 }
+
+// A stem or trunk centred on `x` from `topY` down to `bottom`, `halfTop` either side of
+// its centre at the top and `halfBottom` at the bottom. (Straight sides: as a piece it is
+// drawn to a reference length and stretched.)
+export function drawStem(g, x, topY, bottom, halfTop, halfBottom) {
+  return g.poly([x - halfTop, topY, x + halfTop, topY, x + halfBottom, bottom, x - halfBottom, bottom]).fill(SUPPORT_TRUNK);
+}
+// The stems thorn bushes and rocks stand on (5 px wide either side at the top, 8 at the
+// bottom), and the trunk beside a low beehive (6 and 10).
+export const STEM = { halfTop: 5, halfBottom: 8 };
+export const HIVE_TRUNK = { x: 36, halfTop: 6, halfBottom: 10 };
 
 // Hitbox: rect 160 × 24 centred. A limb tapering from a cut trunk stub on the left,
 // with a leaf tuft near the tip, and the decoration it carries, if any (see addDecoration).
@@ -62,8 +88,8 @@ function drawBranch(g, o, rand, hangs, view) {
   const right = box.dx + box.w;
   const top = box.dy;
   if (hangs) {
-    vine(g, left + 30, (CANOPY_Y - o.y) / o.scale, top + 2, 8);
-    vine(g, right - 45, (CANOPY_Y - o.y) / o.scale, top + 4, -8);
+    vine(g, left + 30, canopyY(o), top + 2, 8);
+    vine(g, right - 45, canopyY(o), top + 4, -8);
   } else {
     trunk(g, o, BRANCH_TRUNK_X, 0, BRANCH_TRUNK_WIDTH);
   }
@@ -129,33 +155,59 @@ export function branchTop(x) {
 // right at random.
 function drawPerchedBird(rand) {
   const bird = new Container();
-  const [fur, dark, belly] = BIRD_COLORS[Math.floor(rand() * BIRD_COLORS.length)];
-  const dir = rand() < 0.5 ? 1 : -1;
+  const { look, dir, x, phase } = perchedBird(rand);
+  const colors = BIRD_COLORS[look];
   bird.scale.x = dir;
-  bird.position.set(-52 + rand() * 56, branchTop(0));
-  const phase = rand() * 6.3;
-  const body = new Graphics();
-  body.ellipse(0, -9, 10, 8).fill(fur);
-  body.ellipse(1.5, -6.5, 6, 5).fill(belly);
-  body.ellipse(-2, -10, 7, 4.5).fill(dark);
-  body.moveTo(-1, -1).lineTo(-1, 0).moveTo(3, -1).lineTo(3, 0).stroke({ width: 1.5, color: SPARROW_BEAK });
-  const tail = new Graphics();
-  tail.poly([0, 0, -11, -3, -10, 3]).fill(dark);
-  tail.position.set(-7, -10);
-  const head = new Graphics();
-  head.circle(0, 0, 6).fill(fur);
-  head.poly([5, -1.5, 11, 0.5, 5, 2.5]).fill(SPARROW_BEAK);
-  head.circle(2, -1.5, 1.5).fill(EYE).circle(2.5, -1.5, 0.8).fill(PUPIL);
-  head.position.set(6, -16);
+  bird.position.set(x, branchTop(0));
+  const body = drawPerchedBirdBody(new Graphics(), colors);
+  const tail = drawPerchedBirdTail(new Graphics(), colors);
+  tail.position.set(PERCHED_BIRD.tail.x, PERCHED_BIRD.tail.y);
+  const head = drawPerchedBirdHead(new Graphics(), colors);
+  head.position.set(PERCHED_BIRD.head.x, PERCHED_BIRD.head.y);
   bird.addChild(tail, body, head);
   const animate = (t) => {
-    // A peck every couple of seconds: the head dips forward and comes back up.
-    const peck = Math.max(0, Math.sin(t * 2.1 + phase)) ** 10;
-    head.rotation = peck * 0.9;
-    head.y = -16 + peck * 3;
-    tail.rotation = 0.14 * Math.sin(t * 3.3 + phase);
+    const pose = perchedBirdPose(t, phase);
+    head.rotation = pose.head;
+    head.y = pose.headY;
+    tail.rotation = pose.tail;
   };
   return { part: bird, animate };
+}
+
+// A perched bird's colouring (one of BIRD_COLORS), the way it faces, where along the
+// branch it sits and its animation's phase, from the decoration's random stream.
+export function perchedBird(rand) {
+  const look = Math.floor(rand() * BIRD_COLORS.length);
+  const dir = rand() < 0.5 ? 1 : -1;
+  const x = -52 + rand() * 56;
+  return { look, dir, x, phase: rand() * 6.3 };
+}
+
+// Where the tail and the head join the body.
+export const PERCHED_BIRD = { tail: { x: -7, y: -10 }, head: { x: 6, y: -16 } };
+
+// A peck every couple of seconds (the head dips forward and comes back up), and the tail
+// flicking.
+export function perchedBirdPose(t, phase) {
+  const peck = Math.max(0, Math.sin(t * 2.1 + phase)) ** 10;
+  return { head: peck * 0.9, headY: -16 + peck * 3, tail: 0.14 * Math.sin(t * 3.3 + phase) };
+}
+
+export function drawPerchedBirdBody(g, [fur, dark, belly]) {
+  g.ellipse(0, -9, 10, 8).fill(fur);
+  g.ellipse(1.5, -6.5, 6, 5).fill(belly);
+  g.ellipse(-2, -10, 7, 4.5).fill(dark);
+  return g.moveTo(-1, -1).lineTo(-1, 0).moveTo(3, -1).lineTo(3, 0).stroke({ width: 1.5, color: SPARROW_BEAK });
+}
+
+export function drawPerchedBirdTail(g, [, dark]) {
+  return g.poly([0, 0, -11, -3, -10, 3]).fill(dark);
+}
+
+export function drawPerchedBirdHead(g, [fur]) {
+  g.circle(0, 0, 6).fill(fur);
+  g.poly([5, -1.5, 11, 0.5, 5, 2.5]).fill(SPARROW_BEAK);
+  return g.circle(2, -1.5, 1.5).fill(EYE).circle(2.5, -1.5, 0.8).fill(PUPIL);
 }
 
 const SMOOTH = (a, b, x) => {
@@ -171,18 +223,50 @@ const COIL_SPACING = 13;
 
 function drawPerchedSnake(rand, { hangs = false } = {}) {
   const snake = new Container();
-  snake.scale.x = rand() < 0.5 ? 1 : -1;
+  const coil = perchedSnake(rand, hangs);
+  snake.scale.x = coil.dir;
+  snake.position.set(coil.x, coil.y);
+  const g = new Graphics();
+  const neck = new Graphics();
+  const head = new Graphics();
+  snake.addChild(g, neck, head);
+  drawSnakeTail(g, coil.tailRoot, coil.pole);
+  for (const [k, band] of coil.bands.entries()) {
+    drawSnakeBand(g, band);
+    // Darker scale marks across the band, and a lighter edge where it turns the corner.
+    const mid = [(band.from[0] + band.to[0]) / 2 + (coil.pole ? 0 : 0.5), (band.from[1] + band.to[1]) / 2];
+    drawSnakeMark(g, mid, 2);
+    drawSnakeMark(g, k % 2 ? band.from : band.to, 1.6);
+  }
+  const animate = (t) => {
+    const pose = perchedSnakePose(coil, t);
+    drawSnakeNeck(neck.clear(), pose.neck);
+    head.position.set(pose.head.x, pose.head.y);
+    head.rotation = pose.head.rotation;
+    drawSnakeHead(head.clear());
+    if (pose.tongue) drawSnakeTongue(head);
+  };
+  return { part: snake, animate };
+}
+
+// A snake coiled round the branch, from the decoration's random stream: which way it faces,
+// whether it is round the trunk (`pole`) or the limb, its coils' bands across the wood
+// ({ from, to, bulge }), where its tail starts and its neck rises, and its phase. Local
+// frame: the head faces +x; on the limb the origin is the top of the wood and the snake
+// runs along it; on the pole it is the trunk's axis and the snake runs down it.
+export function perchedSnake(rand, hangs) {
+  const dir = rand() < 0.5 ? 1 : -1;
   const pole = !hangs && rand() < 0.5;
   const coils = 3 + Math.floor(rand() * 2);
   const phase = rand() * 6.3;
-  // Local frame: the head faces +x. On the limb the origin is the top of the wood and the
-  // snake runs along it; on the pole it is the trunk's axis and the snake runs down it.
   let reach;
   let thick;
   let at;
+  let x;
+  let y;
   if (pole) {
     thick = 26;
-    snake.position.set(-OBSTACLE_HITBOXES.branch[0].w / 2 + 14, 0);
+    [x, y] = [-OBSTACLE_HITBOXES.branch[0].w / 2 + 14, 0];
     const top = 40 + rand() * 40;
     at = (k) => ({ along: top + (coils - 1 - k) * COIL_SPACING, across: 0 });
     reach = (along) => ({ x: 0, y: along });
@@ -190,14 +274,10 @@ function drawPerchedSnake(rand, { hangs = false } = {}) {
     const centre = -40 + rand() * 50;
     // The limb tapers: 24 px at the stub, 14 at the tip.
     thick = 24 - (10 * (centre + 80)) / 142;
-    snake.position.set(centre, branchTop(centre));
+    [x, y] = [centre, branchTop(centre)];
     at = (k) => ({ along: (k - (coils - 1) / 2) * COIL_SPACING, across: 0 });
     reach = (along) => ({ x: along, y: 0 });
   }
-  const g = new Graphics();
-  const neck = new Graphics();
-  const head = new Graphics();
-  snake.addChild(g, neck, head);
   // Where the strand crosses the wood: from one edge to the other, slanting.
   const band = (k) => {
     const { along } = at(k);
@@ -206,44 +286,58 @@ function drawPerchedSnake(rand, { hangs = false } = {}) {
     return { from: [r.x - 4, -1], to: [r.x + 4, thick + 1], bulge: [r.x + 2.5, thick / 2] };
   };
   const bands = Array.from({ length: coils }, (_, k) => band(k));
-  // Tail: the lower end tapers away past the last coil on the front.
-  const tailRoot = bands[0].to;
-  const tailTip = pole ? [tailRoot[0] - 4, tailRoot[1] + 16] : [tailRoot[0] - 15, tailRoot[1] + 4];
+  return { dir, pole, coils, phase, thick, x, y, bands, tailRoot: bands[0].to, neckRoot: bands[coils - 1].from };
+}
+
+// The neck (from its root to the head, a curve) and the head (where, turned how) at time
+// `t`, swaying; and whether the tongue flicks.
+export function perchedSnakePose({ pole, neckRoot, phase }, t) {
+  const sway = Math.sin(t * 1.5 + phase);
+  const [rx, ry] = neckRoot;
+  const hx = pole ? 20 + 2 * sway : rx + 12 + 2 * sway;
+  const hy = pole ? ry - 12 + sway : ry - 18 + 1.5 * sway;
+  return {
+    neck: { from: [rx, ry], control: [pole ? rx + 14 : rx - 1, pole ? ry - 2 : ry - 14], to: [hx, hy] },
+    head: { x: hx, y: hy, rotation: -0.35 + 0.08 * sway },
+    tongue: (t * 0.9 + phase) % 1 < 0.14,
+  };
+}
+
+// The tail: the lower end tapers away past the last coil on the front, from `root`.
+export function drawSnakeTail(g, root, pole) {
+  const tailTip = pole ? [root[0] - 4, root[1] + 16] : [root[0] - 15, root[1] + 4];
   const tailSteps = 8;
   for (let i = 0; i < tailSteps; i++) {
     const u0 = i / tailSteps;
     const u1 = (i + 1) / tailSteps;
-    const pt = (u) => [tailRoot[0] + (tailTip[0] - tailRoot[0]) * u, tailRoot[1] + (tailTip[1] - tailRoot[1]) * u + (pole ? 0 : -3 * Math.sin(u * Math.PI))];
+    const pt = (u) => [root[0] + (tailTip[0] - root[0]) * u, root[1] + (tailTip[1] - root[1]) * u + (pole ? 0 : -3 * Math.sin(u * Math.PI))];
     const [a, b] = [pt(u0), pt(u1)];
     g.moveTo(a[0], a[1]).lineTo(b[0], b[1]).stroke({ width: 7 - 5 * u1, color: SNAKE, cap: 'round' });
   }
-  for (const [k, b] of bands.entries()) {
-    g.moveTo(b.from[0], b.from[1]).quadraticCurveTo(b.bulge[0], b.bulge[1], b.to[0], b.to[1]).stroke({ width: 8, color: SNAKE, cap: 'round' });
-    // Darker scale marks across the band, and a lighter edge where it turns the corner.
-    const mid = [(b.from[0] + b.to[0]) / 2 + (pole ? 0 : 0.5), (b.from[1] + b.to[1]) / 2];
-    g.circle(mid[0], mid[1], 2).fill(SNAKE_DARK);
-    g.circle(k % 2 ? b.from[0] : b.to[0], k % 2 ? b.from[1] : b.to[1], 1.6).fill(SNAKE_DARK);
-  }
-  const neckRoot = bands[coils - 1].from;
-  const animate = (t) => {
-    const sway = Math.sin(t * 1.5 + phase);
-    const [rx, ry] = neckRoot;
-    const hx = pole ? 20 + 2 * sway : rx + 12 + 2 * sway;
-    const hy = pole ? ry - 12 + sway : ry - 18 + 1.5 * sway;
-    neck.clear()
-      .moveTo(rx, ry)
-      .quadraticCurveTo(pole ? rx + 14 : rx - 1, pole ? ry - 2 : ry - 14, hx, hy)
-      .stroke({ width: 7, color: SNAKE, cap: 'round' });
-    head.position.set(hx, hy);
-    head.rotation = -0.35 + 0.08 * sway;
-    head.clear();
-    head.ellipse(2, 0, 7, 4.8).fill(SNAKE);
-    head.circle(4, -1.8, 1.4).fill(PUPIL);
-    if ((t * 0.9 + phase) % 1 < 0.14) {
-      head.moveTo(9, 0).lineTo(15, 0).lineTo(18, -2.5).moveTo(15, 0).lineTo(18, 2.5).stroke({ width: 1.2, color: TONGUE });
-    }
-  };
-  return { part: snake, animate };
+  return g;
+}
+
+// A coil's band across the wood.
+export const SNAKE_BAND_WIDTH = 8;
+export function drawSnakeBand(g, { from, to, bulge }) {
+  return g.moveTo(from[0], from[1]).quadraticCurveTo(bulge[0], bulge[1], to[0], to[1]).stroke({ width: SNAKE_BAND_WIDTH, color: SNAKE, cap: 'round' });
+}
+
+export function drawSnakeMark(g, [x, y], r) {
+  return g.circle(x, y, r).fill(SNAKE_DARK);
+}
+
+export const SNAKE_NECK_WIDTH = 7;
+export function drawSnakeNeck(g, { from, control, to }) {
+  return g.moveTo(...from).quadraticCurveTo(...control, ...to).stroke({ width: SNAKE_NECK_WIDTH, color: SNAKE, cap: 'round' });
+}
+
+export function drawSnakeHead(g) {
+  return g.ellipse(2, 0, 7, 4.8).fill(SNAKE).circle(4, -1.8, 1.4).fill(PUPIL);
+}
+
+export function drawSnakeTongue(g) {
+  return g.moveTo(9, 0).lineTo(15, 0).lineTo(18, -2.5).moveTo(15, 0).lineTo(18, 2.5).stroke({ width: 1.2, color: TONGUE });
 }
 
 const FUR = 0x7d7468;
@@ -256,51 +350,87 @@ const FACE = 0xe6d0b2;
 function drawHangingMonkey(rand) {
   const monkey = new Container();
   const [box] = OBSTACLE_HITBOXES.branch;
-  const cx = -32 + rand() * 36;
-  monkey.position.set(cx, box.dy + box.h - 1);
-  monkey.scale.x = rand() < 0.5 ? 1 : -1;
-  const phase = rand() * 6.3;
+  const { x, dir, phase } = hangingMonkey(rand);
+  monkey.position.set(x, box.dy + box.h - 1);
+  monkey.scale.x = dir;
   // Everything hangs from the hands at (0, 0): the pendulum swings about that point.
   const swing = new Container();
   monkey.addChild(swing);
-  const arms = new Graphics();
-  for (const side of [-1, 1]) arms.moveTo(side * 4, 1).lineTo(side * 7.5, 18).stroke({ width: 4.2, color: FUR, cap: 'round' });
-  for (const side of [-1, 1]) arms.circle(side * 4, 1, 2.6).fill(FUR_DARK);
+  const arms = drawHangingMonkeyArms(new Graphics());
   const tail = new Graphics();
   const legs = new Graphics();
-  const body = new Graphics();
-  body.ellipse(0, 36, 9.5, 12.5).fill(FUR);
-  body.ellipse(0, 38, 5.8, 8).fill(FACE);
-  body.circle(-8.2, 19, 3).fill(FUR_DARK).circle(8.2, 19, 3).fill(FUR_DARK);
-  body.circle(0, 21, 8.4).fill(FUR);
-  body.ellipse(0, 22.5, 5.4, 4.8).fill(FACE);
+  const body = drawHangingMonkeyBody(new Graphics());
   const eyes = new Graphics();
   swing.addChild(tail, legs, body, arms, eyes);
   const animate = (t) => {
-    swing.rotation = 0.13 * Math.sin(t * 1.7 + phase);
-    // Legs kick out and back, out of step.
+    const pose = hangingMonkeyPose(t, phase);
+    swing.rotation = pose.swing;
     legs.clear();
-    for (const side of [-1, 1]) {
-      const k = 0.35 * Math.sin(t * 2.6 + phase + (side > 0 ? 1.6 : 0));
-      const x = side * 5;
-      legs.moveTo(x, 44).lineTo(x + side * 2 + 9 * Math.sin(k), 44 + 11 * Math.cos(k)).stroke({ width: 4.2, color: FUR, cap: 'round' });
-    }
-    // A tail that curls out and up, uncurling a little as it swings.
-    const curl = 3 * Math.sin(t * 2.2 + phase);
-    tail.clear();
-    tail
-      .moveTo(5, 45)
-      .bezierCurveTo(16 + curl, 47, 21 + curl, 36, 14 - curl, 31)
-      .stroke({ width: 3.4, color: FUR_DARK, cap: 'round' });
-    // Eyes, shut for a moment every few seconds.
-    const blink = (t * 0.33 + phase) % 1 < 0.04;
-    eyes.clear();
-    for (const side of [-1, 1]) {
-      if (blink) eyes.moveTo(side * 3.6 - 1.4, 20.5).lineTo(side * 3.6 + 1.4, 20.5).stroke({ width: 1, color: PUPIL });
-      else eyes.circle(side * 3.6, 20.5, 1.5).fill(PUPIL);
-    }
+    for (const leg of pose.legs) drawHangingMonkeyLeg(legs, leg.from, leg.to);
+    drawHangingMonkeyTail(tail.clear(), pose.curl);
+    drawHangingMonkeyEyes(eyes.clear(), pose.blink);
   };
   return { part: monkey, animate };
+}
+
+// Where along the branch the monkey hangs, the way it faces and its animation's phase.
+export function hangingMonkey(rand) {
+  const x = -32 + rand() * 36;
+  const dir = rand() < 0.5 ? 1 : -1;
+  return { x, dir, phase: rand() * 6.3 };
+}
+
+// The pose at time `t`: the swing, the legs kicking out and back out of step (each a line
+// from its hip), the tail's curl (±3) and whether it blinks.
+export function hangingMonkeyPose(t, phase) {
+  const legs = [-1, 1].map((side) => {
+    const k = 0.35 * Math.sin(t * 2.6 + phase + (side > 0 ? 1.6 : 0));
+    const x = side * 5;
+    return { from: [x, 44], to: [x + side * 2 + 9 * Math.sin(k), 44 + 11 * Math.cos(k)] };
+  });
+  return {
+    swing: 0.13 * Math.sin(t * 1.7 + phase),
+    legs,
+    curl: 3 * Math.sin(t * 2.2 + phase),
+    blink: (t * 0.33 + phase) % 1 < 0.04,
+  };
+}
+export const HANGING_MONKEY_CURL = 3;
+
+export function drawHangingMonkeyArms(g) {
+  for (const side of [-1, 1]) g.moveTo(side * 4, 1).lineTo(side * 7.5, 18).stroke({ width: 4.2, color: FUR, cap: 'round' });
+  for (const side of [-1, 1]) g.circle(side * 4, 1, 2.6).fill(FUR_DARK);
+  return g;
+}
+
+export function drawHangingMonkeyBody(g) {
+  g.ellipse(0, 36, 9.5, 12.5).fill(FUR);
+  g.ellipse(0, 38, 5.8, 8).fill(FACE);
+  g.circle(-8.2, 19, 3).fill(FUR_DARK).circle(8.2, 19, 3).fill(FUR_DARK);
+  g.circle(0, 21, 8.4).fill(FUR);
+  return g.ellipse(0, 22.5, 5.4, 4.8).fill(FACE);
+}
+
+export const HANGING_MONKEY_LEG_WIDTH = 4.2;
+export function drawHangingMonkeyLeg(g, from, to) {
+  return g.moveTo(...from).lineTo(...to).stroke({ width: HANGING_MONKEY_LEG_WIDTH, color: FUR, cap: 'round' });
+}
+
+// A tail that curls out and up, uncurling a little as it swings.
+export function drawHangingMonkeyTail(g, curl) {
+  return g
+    .moveTo(5, 45)
+    .bezierCurveTo(16 + curl, 47, 21 + curl, 36, 14 - curl, 31)
+    .stroke({ width: 3.4, color: FUR_DARK, cap: 'round' });
+}
+
+// Eyes, shut for a moment every few seconds.
+export function drawHangingMonkeyEyes(g, blink) {
+  for (const side of [-1, 1]) {
+    if (blink) g.moveTo(side * 3.6 - 1.4, 20.5).lineTo(side * 3.6 + 1.4, 20.5).stroke({ width: 1, color: PUPIL });
+    else g.circle(side * 3.6, 20.5, 1.5).fill(PUPIL);
+  }
+  return g;
 }
 
 const TWIG = 0x8b6a3d;
@@ -321,91 +451,151 @@ export const NEST_STATES = ['empty', 'egg', 'hatched'];
 // Returns the state too.
 function drawNest(rand) {
   const nest = new Container();
-  nest.scale.x = rand() < 0.5 ? 1 : -1;
-  const cx = -46 + rand() * 50;
+  const { dir, x: cx, state, phase, twigs, rimTwigs } = nestPlacement(rand);
+  nest.scale.x = dir;
   nest.position.set(cx, branchTop(cx));
-  const state = NEST_STATES[Math.floor(rand() * NEST_STATES.length)];
-  const phase = rand() * 6.3;
 
   // The back of the bowl and its dark inside, the contents, then the front wall, so the
   // contents sit in the nest.
-  const back = new Graphics();
-  back.ellipse(0, -9, 19, 7.5).fill(TWIG_DARK).ellipse(0, -9.5, 15, 5.5).fill(NEST_INSIDE);
+  const back = drawNestBack(new Graphics());
   const contents = new Container();
-  const front = new Graphics();
-  front
-    .moveTo(-19, -9)
-    .quadraticCurveTo(-21, 3, 0, 4)
-    .quadraticCurveTo(21, 3, 19, -9)
-    .quadraticCurveTo(0, -3, -19, -9)
-    .fill(TWIG);
-  // Twigs woven across the front, and a few stuck out of the rim.
-  for (let i = 0; i < 7; i++) {
-    const x = -14 + rand() * 28;
-    const y = -4 + rand() * 6;
-    const len = 8 + rand() * 7;
-    const tilt = (rand() - 0.5) * 0.5;
-    front
-      .moveTo(x - len / 2, y - tilt * len)
-      .lineTo(x + len / 2, y + tilt * len)
-      .stroke({ width: 1.2, color: i % 3 ? TWIG_DARK : TWIG_LIGHT, cap: 'round' });
-  }
-  // (The ones that stick out of the rim go behind the contents.)
-  for (let i = 0; i < 4; i++) {
-    const x = -17 + rand() * 34;
-    const lean = (rand() - 0.5) * 7;
-    back.moveTo(x, -8).lineTo(x + lean, -13 - rand() * 3).stroke({ width: 1.4, color: TWIG_DARK, cap: 'round' });
-  }
-  front.moveTo(-19, -9).quadraticCurveTo(0, -3, 19, -9).stroke({ width: 2, color: TWIG_DARK, cap: 'round' });
+  const front = drawNestFront(new Graphics());
+  // Twigs woven across the front, and a few stuck out of the rim (behind the contents).
+  for (const twig of twigs) drawNestTwig(front, twig);
+  for (const twig of rimTwigs) drawNestRimTwig(back, twig);
+  drawNestRim(front);
   nest.addChild(back, contents, front);
 
   let animate = () => {};
   if (state === 'egg') {
-    const egg = new Graphics();
-    egg.ellipse(0, 0, 5.8, 7.4).fill(EGG);
-    egg.ellipse(-1.8, -2.4, 1.8, 2.8).fill({ color: 0xffffff, alpha: 0.65 });
-    for (const [x, y] of [[2, 1.5], [-2, 3], [3, -2.5], [0, -4.5]]) egg.circle(x, y, 0.8).fill(EGG_SPECK);
-    egg.position.set(0, -11);
+    const egg = drawNestEgg(new Graphics());
+    egg.position.set(NEST_PARTS.egg.x, NEST_PARTS.egg.y);
     contents.addChild(egg);
-    // It rocks a little now and then.
     animate = (t) => {
-      const rock = Math.max(0, Math.sin(t * 0.8 + phase)) ** 14;
-      egg.rotation = rock * 0.12 * Math.sin(t * 24);
+      egg.rotation = eggRock(t, phase);
     };
   } else if (state === 'hatched') {
-    const shell = new Graphics();
-    shell.poly([-6, -2, -6, 3, 0, 6, 6, 3, 6, -2, 4, -4, 2, -1, 0, -4, -2, -1, -4, -4]).fill(SHELL);
-    shell.position.set(0, -9);
+    const shell = drawNestShell(new Graphics());
+    shell.position.set(NEST_PARTS.shell.x, NEST_PARTS.shell.y);
     const chick = new Container();
-    const body = new Graphics();
-    body.circle(0, 0, 6.6).fill(CHICK);
-    body.ellipse(-4.5, 1.5, 2.4, 3.2).fill(CHICK_DARK);
-    body.poly([-1.5, -6, 0, -10, 1.5, -6.2]).fill(CHICK);
-    body.circle(2.4, -1.6, 1.3).fill(PUPIL);
+    const body = drawChick(new Graphics());
     const beak = new Graphics();
     chick.addChild(body, beak);
-    chick.position.set(0, -15);
-    const cap = new Graphics();
-    cap.poly([-6, 0, -4, -4, -2, -1, 0, -5, 2, -1, 4, -4, 6, 0, 5, 3, -5, 3]).fill(SHELL);
-    cap.position.set(10.5, -9.5);
-    cap.rotation = 0.5;
+    chick.position.set(NEST_PARTS.chick.x, NEST_PARTS.chick.y);
+    const cap = drawNestCap(new Graphics());
+    cap.position.set(NEST_PARTS.cap.x, NEST_PARTS.cap.y);
+    cap.rotation = NEST_PARTS.cap.rotation;
     contents.addChild(shell, chick, cap);
     animate = (t) => {
-      // Bobbing up and down, and peeping: the beak opens and closes in bursts.
-      chick.y = -15 + 1.2 * Math.sin(t * 3.4 + phase);
-      chick.rotation = 0.1 * Math.sin(t * 2.3 + phase);
-      const open = (t * 0.6 + phase) % 1 < 0.35 ? 0.5 + 0.5 * Math.sin(t * 16) : 0;
-      beak.clear();
-      beak.poly([5.5, -2.5 - open * 2, 11, -1 - open * 2.5, 5.5, -0.8]).fill(BEAK);
-      beak.poly([5.5, -0.4, 10, 1 + open * 2.5, 5.5, 1.6]).fill(BEAK);
+      const pose = chickPose(t, phase);
+      chick.y = pose.y;
+      chick.rotation = pose.rotation;
+      drawChickBeak(beak.clear(), pose.open);
     };
   } else {
-    // Empty: a dry leaf curled in the bottom.
-    const leaf = new Graphics();
-    leaf.poly(leafPoints(-3, -8, -0.3, 10, 4)).fill(LEAF_DARK);
-    contents.addChild(leaf);
+    contents.addChild(drawNestLeaf(new Graphics()));
   }
   return { part: nest, animate, state };
+}
+
+// Which way the nest faces, where it sits, what it holds, its animation's phase, and its
+// twigs (across the front: { x, y, len, tilt, light }; out of the rim: { x, lean, rise }),
+// from the decoration's random stream.
+export function nestPlacement(rand) {
+  const dir = rand() < 0.5 ? 1 : -1;
+  const x = -46 + rand() * 50;
+  const state = NEST_STATES[Math.floor(rand() * NEST_STATES.length)];
+  const phase = rand() * 6.3;
+  const twigs = [];
+  for (let i = 0; i < 7; i++) {
+    const tx = -14 + rand() * 28;
+    const ty = -4 + rand() * 6;
+    const len = 8 + rand() * 7;
+    const tilt = (rand() - 0.5) * 0.5;
+    twigs.push({ x: tx, y: ty, len, tilt, light: i % 3 === 0 });
+  }
+  const rimTwigs = [];
+  for (let i = 0; i < 4; i++) {
+    const rx = -17 + rand() * 34;
+    const lean = (rand() - 0.5) * 7;
+    rimTwigs.push({ x: rx, lean, rise: -13 - rand() * 3 });
+  }
+  return { dir, x, state, phase, twigs, rimTwigs };
+}
+
+// Where the contents sit in the nest.
+export const NEST_PARTS = { egg: { x: 0, y: -11 }, shell: { x: 0, y: -9 }, chick: { x: 0, y: -15 }, cap: { x: 10.5, y: -9.5, rotation: 0.5 } };
+
+export function drawNestBack(g) {
+  return g.ellipse(0, -9, 19, 7.5).fill(TWIG_DARK).ellipse(0, -9.5, 15, 5.5).fill(NEST_INSIDE);
+}
+
+export function drawNestFront(g) {
+  return g.moveTo(-19, -9).quadraticCurveTo(-21, 3, 0, 4).quadraticCurveTo(21, 3, 19, -9).quadraticCurveTo(0, -3, -19, -9).fill(TWIG);
+}
+
+// A twig across the front (as a piece: `len` long along +x from the origin, and turned).
+export function drawNestTwig(g, { x, y, len, tilt, light }) {
+  return g
+    .moveTo(x - len / 2, y - tilt * len)
+    .lineTo(x + len / 2, y + tilt * len)
+    .stroke({ width: 1.2, color: light ? TWIG_LIGHT : TWIG_DARK, cap: 'round' });
+}
+
+// A twig stuck out of the rim.
+export function drawNestRimTwig(g, { x, lean, rise }) {
+  return g.moveTo(x, -8).lineTo(x + lean, rise).stroke({ width: 1.4, color: TWIG_DARK, cap: 'round' });
+}
+
+export function drawNestRim(g) {
+  return g.moveTo(-19, -9).quadraticCurveTo(0, -3, 19, -9).stroke({ width: 2, color: TWIG_DARK, cap: 'round' });
+}
+
+export function drawNestEgg(g) {
+  g.ellipse(0, 0, 5.8, 7.4).fill(EGG);
+  g.ellipse(-1.8, -2.4, 1.8, 2.8).fill({ color: 0xffffff, alpha: 0.65 });
+  for (const [x, y] of [[2, 1.5], [-2, 3], [3, -2.5], [0, -4.5]]) g.circle(x, y, 0.8).fill(EGG_SPECK);
+  return g;
+}
+
+// The egg rocks a little now and then.
+export function eggRock(t, phase) {
+  const rock = Math.max(0, Math.sin(t * 0.8 + phase)) ** 14;
+  return rock * 0.12 * Math.sin(t * 24);
+}
+
+export function drawNestShell(g) {
+  return g.poly([-6, -2, -6, 3, 0, 6, 6, 3, 6, -2, 4, -4, 2, -1, 0, -4, -2, -1, -4, -4]).fill(SHELL);
+}
+
+export function drawChick(g) {
+  g.circle(0, 0, 6.6).fill(CHICK);
+  g.ellipse(-4.5, 1.5, 2.4, 3.2).fill(CHICK_DARK);
+  g.poly([-1.5, -6, 0, -10, 1.5, -6.2]).fill(CHICK);
+  return g.circle(2.4, -1.6, 1.3).fill(PUPIL);
+}
+
+// Bobbing up and down, and peeping: the beak opens (0 to 1) and closes in bursts.
+export function chickPose(t, phase) {
+  return {
+    y: -15 + 1.2 * Math.sin(t * 3.4 + phase),
+    rotation: 0.1 * Math.sin(t * 2.3 + phase),
+    open: (t * 0.6 + phase) % 1 < 0.35 ? 0.5 + 0.5 * Math.sin(t * 16) : 0,
+  };
+}
+
+export function drawChickBeak(g, open) {
+  g.poly([5.5, -2.5 - open * 2, 11, -1 - open * 2.5, 5.5, -0.8]).fill(BEAK);
+  return g.poly([5.5, -0.4, 10, 1 + open * 2.5, 5.5, 1.6]).fill(BEAK);
+}
+
+export function drawNestCap(g) {
+  return g.poly([-6, 0, -4, -4, -2, -1, 0, -5, 2, -1, 4, -4, 6, 0, 5, 3, -5, 3]).fill(SHELL);
+}
+
+// An empty nest: a dry leaf curled in the bottom.
+export function drawNestLeaf(g) {
+  return g.poly(leafPoints(-3, -8, -0.3, 10, 4)).fill(LEAF_DARK);
 }
 
 const PANTHER = 0x1d1d27;
@@ -502,44 +692,68 @@ export function drawPantherEyes(g, shut) {
 function drawHangingBat(rand) {
   const bat = new Container();
   const [box] = OBSTACLE_HITBOXES.branch;
-  const cx = -38 + rand() * 46;
-  bat.position.set(cx, box.dy + box.h - 1);
-  bat.scale.x = rand() < 0.5 ? 1 : -1;
-  const phase = rand() * 6.3;
-  const look = batLook(rand);
+  const { x, dir, phase, look } = hangingBat(rand);
+  bat.position.set(x, box.dy + box.h - 1);
+  bat.scale.x = dir;
   // Everything hangs from the feet at (0, 0).
   const swing = new Container();
   bat.addChild(swing);
-  const g = new Graphics();
-  // Feet gripping the limb, a furry body, and the wings folded round it: a cloak with
-  // scalloped edges and a ridge down the middle.
+  const g = drawHangingBatBody(new Graphics(), look);
+  const eyes = new Graphics();
+  const ears = new Graphics();
+  swing.addChild(g, ears, eyes);
+  const animate = (t) => {
+    const pose = hangingBatPose(t, phase);
+    swing.rotation = pose.swing;
+    drawHangingBatEyes(eyes.clear(), look, pose.open);
+    drawHangingBatEar(ears.clear(), look, pose.twitch);
+  };
+  return { part: bat, animate };
+}
+
+// Where along the branch the bat hangs, the way it faces, its animation's phase and its
+// look (one of BAT_LOOKS).
+export function hangingBat(rand) {
+  const x = -38 + rand() * 46;
+  const dir = rand() < 0.5 ? 1 : -1;
+  const phase = rand() * 6.3;
+  return { x, dir, phase, look: batLook(rand) };
+}
+
+// The pose at time `t`: the sway, the eyes (shut mostly, opening red for a moment every
+// few seconds) and an ear's twitch (0 to 1, now and then).
+export function hangingBatPose(t, phase) {
+  return {
+    swing: 0.07 * Math.sin(t * 1.3 + phase),
+    open: (t * 0.22 + phase) % 1 < 0.12,
+    twitch: Math.max(0, Math.sin(t * 1.7 + phase * 3)) ** 16,
+  };
+}
+
+// Feet gripping the limb, a furry body, and the wings folded round it: a cloak with
+// scalloped edges and a ridge down the middle; the head at the bottom, ears pointing down.
+export function drawHangingBatBody(g, look) {
   const earLength = 9 * look.ear;
   g.moveTo(-3, 1).lineTo(-3.5, 6).moveTo(3, 1).lineTo(3.5, 6).stroke({ width: 2, color: look.dark, cap: 'round' });
   g.ellipse(0, 14, 7.6, 11).fill(look.fur);
   g.poly([-9, 7, -11, 20, -6, 28, -2, 24, 0, 29, 2, 24, 6, 28, 11, 20, 9, 7, 0, 3]).fill(look.wing);
   g.moveTo(0, 5).lineTo(0, 26).stroke({ width: 1, color: look.dark, alpha: 0.7 });
   g.moveTo(-5, 9).quadraticCurveTo(-8, 18, -5.5, 25).moveTo(5, 9).quadraticCurveTo(8, 18, 5.5, 25).stroke({ width: 1.2, color: look.dark, alpha: 0.6 });
-  // The head at the bottom, ears pointing down.
   if (look.collar !== null) g.ellipse(0, 27, 6.5, 3.5).fill(look.collar);
   g.poly([-6.5, 29, -9, 29 + earLength, -2.5, 33]).fill(look.dark).poly([6.5, 29, 9, 29 + earLength, 2.5, 33]).fill(look.dark);
   g.circle(0, 31, 6).fill(look.fur);
-  g.poly([-1.5, 35, 0, 38.5, 1.5, 35]).fill(look.dark);
-  const eyes = new Graphics();
-  const ears = new Graphics();
-  swing.addChild(g, ears, eyes);
-  const animate = (t) => {
-    swing.rotation = 0.07 * Math.sin(t * 1.3 + phase);
-    // Eyes: shut mostly, opening red for a moment every few seconds.
-    const open = (t * 0.22 + phase) % 1 < 0.12;
-    eyes.clear();
-    if (open) eyes.circle(-2.4, 30.5, 1.5).fill(look.eye).circle(2.4, 30.5, 1.5).fill(look.eye);
-    else eyes.moveTo(-3.8, 30.5).lineTo(-1.2, 30.5).moveTo(1.2, 30.5).lineTo(3.8, 30.5).stroke({ width: 0.9, color: look.dark });
-    // An ear twitches now and then.
-    const twitch = Math.max(0, Math.sin(t * 1.7 + phase * 3)) ** 16;
-    ears.clear();
-    ears.poly([6.5, 29, 9 + 2 * twitch, 29 + earLength - 3 * twitch, 2.5, 33]).fill(look.fur);
-  };
-  return { part: bat, animate };
+  return g.poly([-1.5, 35, 0, 38.5, 1.5, 35]).fill(look.dark);
+}
+
+export function drawHangingBatEyes(g, look, open) {
+  if (open) return g.circle(-2.4, 30.5, 1.5).fill(look.eye).circle(2.4, 30.5, 1.5).fill(look.eye);
+  return g.moveTo(-3.8, 30.5).lineTo(-1.2, 30.5).moveTo(1.2, 30.5).lineTo(3.8, 30.5).stroke({ width: 0.9, color: look.dark });
+}
+
+// The ear that twitches, over the body's: `twitch` 0 (still) to 1.
+export function drawHangingBatEar(g, look, twitch) {
+  const earLength = 9 * look.ear;
+  return g.poly([6.5, 29, 9 + 2 * twitch, 29 + earLength - 3 * twitch, 2.5, 33]).fill(look.fur);
 }
 
 // The colours flowers come in; each flower in a cluster picks its own.
@@ -554,41 +768,77 @@ const FLOWER_HEART_DARK = 0xb8691f;
 // Returns the colours too.
 function drawFlowers(rand) {
   const flowers = new Container();
-  flowers.scale.x = rand() < 0.5 ? 1 : -1;
-  const cx = -40 + rand() * 40;
+  const { dir, x: cx, plants } = flowerCluster(rand);
+  flowers.scale.x = dir;
   flowers.position.set(cx, branchTop(cx));
-  const count = 3 + Math.floor(rand() * 3);
-  const colors = [];
   const stems = [];
-  for (let i = 0; i < count; i++) {
-    const x = (i - (count - 1) / 2) * 10 + (rand() - 0.5) * 4;
-    const height = 11 + rand() * 9;
-    const color = FLOWER_COLORS[Math.floor(rand() * FLOWER_COLORS.length)];
-    colors.push(color);
+  for (const p of plants) {
     const plant = new Container();
-    plant.position.set(x, 1);
+    plant.position.set(p.x, 1);
     const g = new Graphics();
     // A stem, a leaf or two, and the head: five or six petals round a heart.
-    g.moveTo(0, 0).quadraticCurveTo(1.5, -height / 2, 0, -height).stroke({ width: 1.6, color: FLOWER_STEM, cap: 'round' });
-    const leafAt = height * (0.3 + rand() * 0.2);
-    g.poly(leafPoints(0, -leafAt, -0.6 - rand() * 0.5, 7, 3)).fill(FLOWER_STEM);
-    if (rand() < 0.5) g.poly(leafPoints(0, -leafAt * 0.55, Math.PI + 0.6 + rand() * 0.5, 6, 2.6)).fill(LEAF_DARK);
-    const petals = 5 + Math.floor(rand() * 2);
-    const r = 2.5 + rand() * 1.1;
-    const turn = rand() * 6.3;
-    for (let p = 0; p < petals; p++) {
-      const a = turn + (p / petals) * Math.PI * 2;
-      g.circle(Math.cos(a) * r * 1.2, -height + Math.sin(a) * r * 1.2, r * 0.82).fill(color);
-    }
-    g.circle(0, -height, r * 0.62).fill(color === 0xffd23f ? FLOWER_HEART_DARK : FLOWER_HEART);
+    drawFlowerStem(g, p.height);
+    drawFlowerLeaf(g, p.leaf);
+    if (p.leaf2) drawFlowerLeaf(g, p.leaf2);
+    for (const petal of p.petals) drawPetal(g, petal);
+    drawFlowerHeart(g, p.heart);
     plant.addChild(g);
     flowers.addChild(plant);
-    stems.push({ plant, phase: rand() * 6.3, speed: 1.3 + rand() * 0.8 });
+    stems.push({ plant, phase: p.phase, speed: p.speed });
   }
   const animate = (t) => {
-    for (const s of stems) s.plant.rotation = 0.1 * Math.sin(t * s.speed + s.phase);
+    for (const s of stems) s.plant.rotation = flowerSway(t, s);
   };
-  return { part: flowers, animate, colors };
+  return { part: flowers, animate, colors: plants.map((p) => p.color) };
+}
+
+// A cluster of three to five flowers, from the decoration's random stream: which way it
+// faces, where it grows, and per flower where it stands, its height and colour, its leaves
+// ({ y, angle, length, width, color }), its petals ({ x, y, r, color }), its heart
+// ({ y, r, color }) and how it sways.
+export function flowerCluster(rand) {
+  const dir = rand() < 0.5 ? 1 : -1;
+  const x = -40 + rand() * 40;
+  const count = 3 + Math.floor(rand() * 3);
+  const plants = [];
+  for (let i = 0; i < count; i++) {
+    const px = (i - (count - 1) / 2) * 10 + (rand() - 0.5) * 4;
+    const height = 11 + rand() * 9;
+    const color = FLOWER_COLORS[Math.floor(rand() * FLOWER_COLORS.length)];
+    const leafAt = height * (0.3 + rand() * 0.2);
+    const leaf = { y: -leafAt, angle: -0.6 - rand() * 0.5, length: 7, width: 3, color: FLOWER_STEM };
+    const leaf2 = rand() < 0.5 ? { y: -leafAt * 0.55, angle: Math.PI + 0.6 + rand() * 0.5, length: 6, width: 2.6, color: LEAF_DARK } : null;
+    const petalCount = 5 + Math.floor(rand() * 2);
+    const r = 2.5 + rand() * 1.1;
+    const turn = rand() * 6.3;
+    const petals = [];
+    for (let p = 0; p < petalCount; p++) {
+      const a = turn + (p / petalCount) * Math.PI * 2;
+      petals.push({ x: Math.cos(a) * r * 1.2, y: -height + Math.sin(a) * r * 1.2, r: r * 0.82, color });
+    }
+    const heart = { y: -height, r: r * 0.62, color: color === 0xffd23f ? FLOWER_HEART_DARK : FLOWER_HEART };
+    plants.push({ x: px, height, color, leaf, leaf2, petals, heart, phase: rand() * 6.3, speed: 1.3 + rand() * 0.8 });
+  }
+  return { dir, x, plants };
+}
+
+export const flowerSway = (t, { phase, speed }) => 0.1 * Math.sin(t * speed + phase);
+
+// A stem `height` tall from the origin, curving a little.
+export function drawFlowerStem(g, height) {
+  return g.moveTo(0, 0).quadraticCurveTo(1.5, -height / 2, 0, -height).stroke({ width: 1.6, color: FLOWER_STEM, cap: 'round' });
+}
+
+export function drawFlowerLeaf(g, { y, angle, length, width, color }) {
+  return g.poly(leafPoints(0, y, angle, length, width)).fill(color);
+}
+
+export function drawPetal(g, { x = 0, y = 0, r, color }) {
+  return g.circle(x, y, r).fill(color);
+}
+
+export function drawFlowerHeart(g, { y = 0, r, color }) {
+  return g.circle(0, y, r).fill(color);
 }
 
 const COCONUT = 0x6b4a2b;
@@ -601,43 +851,79 @@ const COCONUT_LIGHT = 0x9a7448;
 function drawCoconuts(rand) {
   const bunch = new Container();
   const [box] = OBSTACLE_HITBOXES.branch;
-  const cx = -34 + rand() * 40;
+  const { x: cx, dir, nuts } = coconutBunch(rand);
   bunch.position.set(cx, box.dy + box.h - 1);
-  bunch.scale.x = rand() < 0.5 ? 1 : -1;
+  bunch.scale.x = dir;
   // The frond the stems spring from, tucked against the limb.
-  const frond = new Graphics();
-  frond.poly(leafPoints(0, 1, Math.PI * 0.5 + 0.9, 20, 5)).fill(LEAF_DARK);
-  frond.poly(leafPoints(0, 1, Math.PI * 0.5 - 0.9, 20, 5)).fill(LEAF);
-  frond.poly(leafPoints(0, 1, Math.PI * 0.5 + 0.2, 14, 4)).fill(LEAF);
-  bunch.addChild(frond);
+  bunch.addChild(drawCoconutFrond(new Graphics()));
+  const swaying = [];
+  for (const n of nuts) {
+    const nut = new Container();
+    nut.position.set(n.x * 0.4, 1);
+    const g = new Graphics();
+    // The stem, then the nut with a few hairs on its outline, a highlight and the eyes.
+    drawCoconutStem(g, n);
+    for (const a of n.hairs) drawCoconutHair(g, n, a);
+    drawCoconut(g, n);
+    nut.addChild(g);
+    bunch.addChild(nut);
+    swaying.push({ nut, phase: n.phase, speed: n.speed });
+  }
+  const animate = (t) => {
+    for (const n of swaying) n.nut.rotation = coconutSway(t, n);
+  };
+  return { part: bunch, animate, count: nuts.length };
+}
+
+// A bunch of two or three coconuts, from the decoration's random stream: where it hangs,
+// which way it faces, and per nut how far out it hangs (`x`, its stem from 0.4 x), how far
+// down (`drop`), its radius, the angles of the hairs on its outline and how it sways.
+export function coconutBunch(rand) {
+  const x = -34 + rand() * 40;
+  const dir = rand() < 0.5 ? 1 : -1;
   const count = 2 + Math.floor(rand() * 2);
   const nuts = [];
   for (let i = 0; i < count; i++) {
     const side = count === 2 ? (i ? 1 : -1) : i - 1;
-    const x = side * 12.5 + (rand() - 0.5) * 2;
+    const nx = side * 12.5 + (rand() - 0.5) * 2;
     const drop = 8 + rand() * 6 + (side === 0 ? 8 : 0);
     const r = 6.4 + rand() * 1.2;
-    const nut = new Container();
-    nut.position.set(x * 0.4, 1);
-    const g = new Graphics();
-    // The stem, then the nut with a few hairs on its outline, a highlight and the eyes.
-    g.moveTo(0, 0).lineTo((x - x * 0.4) * 0.5, drop * 0.6).lineTo(x - x * 0.4, drop).stroke({ width: 1.8, color: COCONUT_DARK, cap: 'round' });
-    const nx = x - x * 0.4;
-    for (let a = rand() * 0.3; a < Math.PI * 2; a += 0.28 + rand() * 0.14) {
-      g.moveTo(nx + Math.cos(a) * r * 0.95, drop + r + Math.sin(a) * r * 0.95)
-        .lineTo(nx + Math.cos(a) * (r + 1.1), drop + r + Math.sin(a) * (r + 1.1)).stroke({ width: 0.7, color: COCONUT_DARK, alpha: 0.8 });
-    }
-    g.circle(nx, drop + r, r).fill(COCONUT);
-    g.ellipse(nx - r * 0.35, drop + r - r * 0.4, r * 0.28, r * 0.42).fill({ color: COCONUT_LIGHT, alpha: 0.85 });
-    for (const [ex, ey] of [[-0.28, 0.18], [0.28, 0.18], [0, 0.5]]) g.circle(nx + ex * r, drop + r * 0.35 + ey * r * 0.5, r * 0.13).fill(COCONUT_DARK);
-    nut.addChild(g);
-    bunch.addChild(nut);
-    nuts.push({ nut, phase: rand() * 6.3, speed: 1.1 + rand() * 0.7 });
+    const hairs = [];
+    for (let a = rand() * 0.3; a < Math.PI * 2; a += 0.28 + rand() * 0.14) hairs.push(a);
+    nuts.push({ x: nx, drop, r, hairs, phase: rand() * 6.3, speed: 1.1 + rand() * 0.7 });
   }
-  const animate = (t) => {
-    for (const n of nuts) n.nut.rotation = 0.09 * Math.sin(t * n.speed + n.phase);
-  };
-  return { part: bunch, animate, count };
+  return { x, dir, nuts };
+}
+
+export const coconutSway = (t, { phase, speed }) => 0.09 * Math.sin(t * speed + phase);
+
+export function drawCoconutFrond(g) {
+  g.poly(leafPoints(0, 1, Math.PI * 0.5 + 0.9, 20, 5)).fill(LEAF_DARK);
+  g.poly(leafPoints(0, 1, Math.PI * 0.5 - 0.9, 20, 5)).fill(LEAF);
+  return g.poly(leafPoints(0, 1, Math.PI * 0.5 + 0.2, 14, 4)).fill(LEAF);
+}
+
+// The stem from the frond to the top of the nut.
+export function drawCoconutStem(g, { x, drop }) {
+  return g.moveTo(0, 0).lineTo((x - x * 0.4) * 0.5, drop * 0.6).lineTo(x - x * 0.4, drop).stroke({ width: 1.8, color: COCONUT_DARK, cap: 'round' });
+}
+
+// A hair at angle `a` on the nut's outline.
+export function drawCoconutHair(g, { x, drop, r }, a) {
+  const nx = x - x * 0.4;
+  return g
+    .moveTo(nx + Math.cos(a) * r * 0.95, drop + r + Math.sin(a) * r * 0.95)
+    .lineTo(nx + Math.cos(a) * (r + 1.1), drop + r + Math.sin(a) * (r + 1.1))
+    .stroke({ width: 0.7, color: COCONUT_DARK, alpha: 0.8 });
+}
+
+// The nut: brown, a highlight and the three dark "eyes" at the top.
+export function drawCoconut(g, { x, drop, r }) {
+  const nx = x - x * 0.4;
+  g.circle(nx, drop + r, r).fill(COCONUT);
+  g.ellipse(nx - r * 0.35, drop + r - r * 0.4, r * 0.28, r * 0.42).fill({ color: COCONUT_LIGHT, alpha: 0.85 });
+  for (const [ex, ey] of [[-0.28, 0.18], [0.28, 0.18], [0, 0.5]]) g.circle(nx + ex * r, drop + r * 0.35 + ey * r * 0.5, r * 0.13).fill(COCONUT_DARK);
+  return g;
 }
 
 const OWL = 0x8a6a48;
@@ -652,56 +938,89 @@ const OWL_BEAK = 0xe0993a;
 // a moment now and then, and it puffs a little as it breathes. For the night.
 function drawOwl(rand) {
   const owl = new Container();
-  owl.scale.x = rand() < 0.5 ? 1 : -1;
-  const cx = -46 + rand() * 50;
-  owl.position.set(cx, branchTop(cx));
-  const phase = rand() * 6.3;
+  const { dir, x, phase } = owlPlacement(rand);
+  owl.scale.x = dir;
+  owl.position.set(x, branchTop(x));
 
-  const body = new Graphics();
-  body.moveTo(-4.5, -1).lineTo(-4.5, 1.5).moveTo(-2, -1).lineTo(-2, 1.5).moveTo(2, -1).lineTo(2, 1.5).moveTo(4.5, -1).lineTo(4.5, 1.5);
-  body.stroke({ width: 1.6, color: OWL_BEAK, cap: 'round' });
-  body.ellipse(0, -14, 11.5, 14).fill(OWL);
-  body.ellipse(0, -12.5, 7.6, 10.8).fill(OWL_BELLY);
-  for (const [x, y] of [[-3, -19], [3, -19], [0, -14.5], [-4, -10], [4, -10], [0, -6.5]]) {
-    body.moveTo(x - 2, y - 1.4).lineTo(x, y + 0.8).lineTo(x + 2, y - 1.4).stroke({ width: 1, color: OWL, cap: 'round' });
-  }
-  // Folded wings down the sides, with a few pale flecks.
-  body.ellipse(-9.2, -13, 4.2, 10.5).fill(OWL_DARK).ellipse(9.2, -13, 4.2, 10.5).fill(OWL_DARK);
-  for (const [x, y] of [[-9.5, -17], [-8.5, -11], [9.5, -17], [8.5, -11]]) body.circle(x, y, 0.9).fill(OWL_BELLY);
-
+  const body = drawOwlBody(new Graphics());
   const head = new Container();
-  head.position.set(0, -27);
-  const skull = new Graphics();
-  skull.circle(0, 0, 10.6).fill(OWL);
-  skull.poly([-9, -5, -9.5, -15, -3.5, -9]).fill(OWL_DARK).poly([9, -5, 9.5, -15, 3.5, -9]).fill(OWL_DARK);
+  head.position.set(OWL_HEAD.x, OWL_HEAD.y);
+  const skull = drawOwlSkull(new Graphics());
   const face = new Container();
-  const disc = new Graphics();
-  disc.circle(-4.6, 0.5, 6.3).fill(OWL_FACE).circle(4.6, 0.5, 6.3).fill(OWL_FACE);
-  disc.poly([-1.2, -2.5, 1.2, -2.5, 0, 0.2]).fill(OWL_DARK);
+  const disc = drawOwlDisc(new Graphics());
   const eyes = new Graphics();
-  const beak = new Graphics();
-  beak.poly([-1.8, 1.2, 1.8, 1.2, 0, 5.2]).fill(OWL_BEAK);
+  const beak = drawOwlBeak(new Graphics());
   face.addChild(disc, eyes, beak);
   head.addChild(skull, face);
   owl.addChild(body, head);
 
   const animate = (t) => {
-    body.scale.y = 1 + 0.025 * Math.sin(t * 1.5 + phase);
-    // The face slides to one side and the other, as if the head were turning.
-    const turn = Math.sin(t * 0.55 + phase);
-    face.x = 3.4 * turn;
-    head.rotation = 0.06 * turn;
-    // Big yellow eyes with a pupil that leads the turn; a blink every few seconds.
-    const blink = (t * 0.27 + phase) % 1 < 0.04;
+    const pose = owlPose(t, phase);
+    body.scale.y = pose.breath;
+    face.x = pose.faceX;
+    head.rotation = pose.head;
     eyes.clear();
-    for (const side of [-1, 1]) {
-      const x = side * 4.6;
-      if (blink) eyes.moveTo(x - 3, 0.5).lineTo(x + 3, 0.5).stroke({ width: 1.2, color: OWL_DARK, cap: 'round' });
-      else eyes.circle(x, 0.5, 3.8).fill(OWL_EYE).circle(x + turn * 1.4, 0.5, 1.9).fill(PUPIL);
-    }
+    for (const side of [-1, 1]) drawOwlEye(eyes, side * 4.6, pose.blink, pose.turn);
   };
   return { part: owl, animate };
 }
+
+// The way the owl faces, where along the branch it perches and its animation's phase.
+export function owlPlacement(rand) {
+  const dir = rand() < 0.5 ? 1 : -1;
+  const x = -46 + rand() * 50;
+  return { dir, x, phase: rand() * 6.3 };
+}
+
+// Where the head sits on the body.
+export const OWL_HEAD = { x: 0, y: -27 };
+
+// The pose at time `t`: it puffs a little as it breathes, the face slides to one side and
+// the other as if the head were turning (`turn`, -1 to 1), and it blinks now and then.
+export function owlPose(t, phase) {
+  const turn = Math.sin(t * 0.55 + phase);
+  return { breath: 1 + 0.025 * Math.sin(t * 1.5 + phase), turn, faceX: 3.4 * turn, head: 0.06 * turn, blink: (t * 0.27 + phase) % 1 < 0.04 };
+}
+
+// Round and brown on its feet, a pale chevroned belly, the wings folded down the sides.
+export function drawOwlBody(g) {
+  g.moveTo(-4.5, -1).lineTo(-4.5, 1.5).moveTo(-2, -1).lineTo(-2, 1.5).moveTo(2, -1).lineTo(2, 1.5).moveTo(4.5, -1).lineTo(4.5, 1.5);
+  g.stroke({ width: 1.6, color: OWL_BEAK, cap: 'round' });
+  g.ellipse(0, -14, 11.5, 14).fill(OWL);
+  g.ellipse(0, -12.5, 7.6, 10.8).fill(OWL_BELLY);
+  for (const [x, y] of [[-3, -19], [3, -19], [0, -14.5], [-4, -10], [4, -10], [0, -6.5]]) {
+    g.moveTo(x - 2, y - 1.4).lineTo(x, y + 0.8).lineTo(x + 2, y - 1.4).stroke({ width: 1, color: OWL, cap: 'round' });
+  }
+  // Folded wings down the sides, with a few pale flecks.
+  g.ellipse(-9.2, -13, 4.2, 10.5).fill(OWL_DARK).ellipse(9.2, -13, 4.2, 10.5).fill(OWL_DARK);
+  for (const [x, y] of [[-9.5, -17], [-8.5, -11], [9.5, -17], [8.5, -11]]) g.circle(x, y, 0.9).fill(OWL_BELLY);
+  return g;
+}
+
+// The head with its ear tufts.
+export function drawOwlSkull(g) {
+  g.circle(0, 0, 10.6).fill(OWL);
+  return g.poly([-9, -5, -9.5, -15, -3.5, -9]).fill(OWL_DARK).poly([9, -5, 9.5, -15, 3.5, -9]).fill(OWL_DARK);
+}
+
+// The pale face round the eyes.
+export function drawOwlDisc(g) {
+  g.circle(-4.6, 0.5, 6.3).fill(OWL_FACE).circle(4.6, 0.5, 6.3).fill(OWL_FACE);
+  return g.poly([-1.2, -2.5, 1.2, -2.5, 0, 0.2]).fill(OWL_DARK);
+}
+
+export function drawOwlBeak(g) {
+  return g.poly([-1.8, 1.2, 1.8, 1.2, 0, 5.2]).fill(OWL_BEAK);
+}
+
+// One eye at `x`: big and yellow with a pupil that leads the turn, or shut.
+export function drawOwlEye(g, x, blink, turn) {
+  if (blink) return g.moveTo(x - 3, 0.5).lineTo(x + 3, 0.5).stroke({ width: 1.2, color: OWL_DARK, cap: 'round' });
+  return g.circle(x, 0.5, 3.8).fill(OWL_EYE).circle(x + turn * 1.4, 0.5, 1.9).fill(PUPIL);
+}
+export const drawOwlEyeball = (g) => g.circle(0, 0.5, 3.8).fill(OWL_EYE);
+export const drawOwlPupil = (g) => g.circle(0, 0.5, 1.9).fill(PUPIL);
+export const drawOwlShutEye = (g) => g.moveTo(-3, 0.5).lineTo(3, 0.5).stroke({ width: 1.2, color: OWL_DARK, cap: 'round' });
 
 export const DECORATIONS = {
   bird: drawPerchedBird,
@@ -724,12 +1043,25 @@ function addDecoration(view, o, hangs) {
 
 // Hitbox: three circles. A dark blob with a few highlights and thorns on its outline.
 function drawThornBush(g, o, rand, hangs) {
-  const circles = OBSTACLE_HITBOXES.thornBush;
-  if (hangs) vine(g, 0, (CANOPY_Y - o.y) / o.scale, -40, 10);
+  if (hangs) vine(g, 0, canopyY(o), THORN_VINE_END, 10);
   else {
-    g.poly([-5, 20, 5, 20, 8, (FLOOR_Y + 20 - o.y) / o.scale, -8, (FLOOR_Y + 20 - o.y) / o.scale]).fill(SUPPORT_TRUNK);
-    g.ellipse(0, 36, 30, 6).fill(SUPPORT_TRUNK);
+    drawStem(g, 0, 20, trunkBottom(o), STEM.halfTop, STEM.halfBottom);
+    drawThornBushMound(g);
   }
+  for (const t of thornBushThorns(rand)) drawThorn(g, t);
+  drawThornBushBody(g);
+}
+export const THORN_VINE_END = -40;
+
+// The mound a standing thorn bush grows from.
+export function drawThornBushMound(g) {
+  return g.ellipse(0, 36, 30, 6).fill(SUPPORT_TRUNK);
+}
+
+// Where the thorns stick out of a bush's outline, at random: { x, y, a } each, `a` the
+// direction they point.
+export function thornBushThorns(rand) {
+  const circles = OBSTACLE_HITBOXES.thornBush;
   const inOther = (x, y, self) =>
     circles.some((c) => c !== self && (x - c.dx) ** 2 + (y - c.dy) ** 2 < (c.r - 1) ** 2);
   const thorns = [];
@@ -740,13 +1072,22 @@ function drawThornBush(g, o, rand, hangs) {
       if (!inOther(x, y, c)) thorns.push({ x, y, a });
     }
   }
-  for (const t of thorns) {
-    const nx = Math.cos(t.a);
-    const ny = Math.sin(t.a);
-    g.poly([t.x - ny * 3.5, t.y + nx * 3.5, t.x + nx * 7, t.y + ny * 7, t.x + ny * 3.5, t.y - nx * 3.5]).fill(THORN);
-  }
+  return thorns;
+}
+
+// A thorn at (x, y) pointing along `a` (as a piece: at the origin, pointing along +x).
+export function drawThorn(g, { x = 0, y = 0, a = 0 } = {}) {
+  const nx = Math.cos(a);
+  const ny = Math.sin(a);
+  return g.poly([x - ny * 3.5, y + nx * 3.5, x + nx * 7, y + ny * 7, x + ny * 3.5, y - nx * 3.5]).fill(THORN);
+}
+
+// The bush itself: three dark circles with a highlight each.
+export function drawThornBushBody(g) {
+  const circles = OBSTACLE_HITBOXES.thornBush;
   for (const c of circles) g.circle(c.dx, c.dy, c.r).fill(BUSH);
   for (const c of circles) g.circle(c.dx - c.r * 0.3, c.dy - c.r * 0.3, c.r * 0.45).fill(BUSH_LIGHT);
+  return g;
 }
 
 // Rocks come in ROCK_VARIANTS outlines, one picked per gap (PHASER_PLAN.md, M4: a random
@@ -764,12 +1105,24 @@ function drawRock(g, o, rand, hangs) {
 function drawRockSupport(g, o, hangs) {
   const [{ r }] = OBSTACLE_HITBOXES.rock;
   if (hangs) {
-    vine(g, 0, (CANOPY_Y - o.y) / o.scale, -r + 4, 9);
-    g.moveTo(-r + 3, -8).quadraticCurveTo(0, 2, r - 3, -8).stroke({ width: 3, color: VINE });
+    vine(g, 0, canopyY(o), -r + 4, 9);
+    drawRockSling(g);
   } else {
-    g.poly([-5, r - 4, 5, r - 4, 8, (FLOOR_Y + 20 - o.y) / o.scale, -8, (FLOOR_Y + 20 - o.y) / o.scale]).fill(SUPPORT_TRUNK);
-    g.roundRect(-r - 4, r - 6, 2 * r + 8, 10, 4).fill(BARK_DARK);
+    drawStem(g, 0, r - 4, trunkBottom(o), STEM.halfTop, STEM.halfBottom);
+    drawRockLedge(g);
   }
+}
+
+// The vine's loop round a hanging rock.
+export function drawRockSling(g) {
+  const [{ r }] = OBSTACLE_HITBOXES.rock;
+  return g.moveTo(-r + 3, -8).quadraticCurveTo(0, 2, r - 3, -8).stroke({ width: 3, color: VINE });
+}
+
+// The ledge a standing rock sits on.
+export function drawRockLedge(g) {
+  const [{ r }] = OBSTACLE_HITBOXES.rock;
+  return g.roundRect(-r - 4, r - 6, 2 * r + 8, 10, 4).fill(BARK_DARK);
 }
 
 // The rock itself, in outline `variant` (0 to ROCK_VARIANTS - 1): grey, with a lit and a
@@ -801,29 +1154,54 @@ export function drawRockBody(g, variant) {
 // bees buzz around it (scenery: only the nest is the hitbox). Returns the bees'
 // animation.
 function drawBeehive(g, o, rand, hangs, view) {
-  const circles = OBSTACLE_HITBOXES.beehive;
-  const top = circles[0].dy - circles[0].r;
-  const bottom = circles[2].dy + circles[2].r;
+  const top = hiveTop();
   if (hangs) {
-    vine(g, 0, (CANOPY_Y - o.y) / o.scale, top + 2, 7);
+    vine(g, 0, canopyY(o), top + 2, 7);
   } else {
     // A trunk beside it with an arm over it, and the nest on a rope from the arm.
-    const floor = (FLOOR_Y + 20 - o.y) / o.scale;
     const armY = top - 12;
-    g.poly([30, armY - 6, 42, armY - 6, 46, floor, 26, floor]).fill(SUPPORT_TRUNK);
-    g.moveTo(34, armY).quadraticCurveTo(14, armY - 8, -4, armY - 1).stroke({ width: 7, color: SUPPORT_TRUNK, cap: 'round' });
-    g.moveTo(0, armY).lineTo(0, top + 3).stroke({ width: 2.5, color: VINE, cap: 'round' });
+    drawStem(g, HIVE_TRUNK.x, armY - 6, trunkBottom(o), HIVE_TRUNK.halfTop, HIVE_TRUNK.halfBottom);
+    drawHiveArm(g);
   }
-  // The nest.
-  const outline = (grow = 0) => {
-    const k = 1 + grow;
-    g.moveTo(0, top * k)
-      .bezierCurveTo(12 * k, top * k, 22 * k, -18 * k, 23 * k, 0)
-      .bezierCurveTo(24 * k, 16 * k, 14 * k, bottom * k, 0, bottom * k)
-      .bezierCurveTo(-14 * k, bottom * k, -24 * k, 16 * k, -23 * k, 0)
-      .bezierCurveTo(-22 * k, -18 * k, -12 * k, top * k, 0, top * k);
+  drawHiveNest(g);
+
+  const bees = new Graphics();
+  view.addChild(bees);
+  const swarm = beeSwarm(rand);
+  return (t) => {
+    bees.clear();
+    for (const bee of swarm) {
+      const { x, y, wing } = beeAt(bee, t);
+      // A round yellow body with a dark stripe and two wings that beat.
+      drawBeeWing(bees, x - 2.5, y - 3, wing);
+      drawBeeWing(bees, x + 2.5, y - 3, wing);
+      drawBee(bees, x, y);
+    }
   };
-  outline();
+}
+
+// The top and bottom of a beehive's nest (its hitbox's three stacked circles).
+const hiveTop = () => OBSTACLE_HITBOXES.beehive[0].dy - OBSTACLE_HITBOXES.beehive[0].r;
+const hiveBottom = () => OBSTACLE_HITBOXES.beehive[2].dy + OBSTACLE_HITBOXES.beehive[2].r;
+
+// The arm over a low beehive, from the trunk beside it, and the rope the nest hangs on.
+export function drawHiveArm(g) {
+  const top = hiveTop();
+  const armY = top - 12;
+  g.moveTo(34, armY).quadraticCurveTo(14, armY - 8, -4, armY - 1).stroke({ width: 7, color: SUPPORT_TRUNK, cap: 'round' });
+  return g.moveTo(0, armY).lineTo(0, top + 3).stroke({ width: 2.5, color: VINE, cap: 'round' });
+}
+
+// The nest: a teardrop in gold paper bands with a dark entrance at the bottom.
+export function drawHiveNest(g) {
+  const circles = OBSTACLE_HITBOXES.beehive;
+  const top = hiveTop();
+  const bottom = hiveBottom();
+  g.moveTo(0, top)
+    .bezierCurveTo(12, top, 22, -18, 23, 0)
+    .bezierCurveTo(24, 16, 14, bottom, 0, bottom)
+    .bezierCurveTo(-14, bottom, -24, 16, -23, 0)
+    .bezierCurveTo(-22, -18, -12, top, 0, top);
   g.fill(HIVE).stroke({ width: 2, color: HIVE_EDGE, join: 'round' });
   // Paper bands: arcs across the nest, as wide as the hitbox is at that height.
   const half = (y) => Math.max(...circles.map((c) => Math.sqrt(Math.max(0, c.r ** 2 - (y - c.dy) ** 2))));
@@ -833,31 +1211,37 @@ function drawBeehive(g, o, rand, hangs, view) {
   }
   g.ellipse(-8, -8, 7, 13).fill({ color: HIVE_LIGHT, alpha: 0.8 });
   g.ellipse(8, 14, 6, 11).fill({ color: HIVE_DARK, alpha: 0.5 });
-  g.ellipse(0, bottom - 6, 6.5, 4.5).fill(BEE_STRIPE);
+  return g.ellipse(0, bottom - 6, 6.5, 4.5).fill(BEE_STRIPE);
+}
 
-  const bees = new Graphics();
-  view.addChild(bees);
-  const swarm = Array.from({ length: 5 }, () => ({
+// The bees round a nest: five, each on its own loop.
+export function beeSwarm(rand) {
+  return Array.from({ length: 5 }, () => ({
     speed: 1.6 + rand() * 1.6,
     phase: rand() * Math.PI * 2,
     rx: 30 + rand() * 12,
     ry: 20 + rand() * 20,
     cy: 2 + rand() * 12,
   }));
-  return (t) => {
-    bees.clear();
-    for (const b of swarm) {
-      const a = b.speed * t + b.phase;
-      const x = b.rx * Math.cos(a);
-      const y = b.cy + b.ry * Math.sin(a * 1.7);
-      // A round yellow body with a dark stripe and two wings that beat.
-      const beat = 0.5 + 0.5 * Math.sin(t * 60 + b.phase);
-      bees.ellipse(x - 2.5, y - 3, 2.6, 1.2 + 1.4 * beat).fill({ color: BEE_WING, alpha: 0.8 });
-      bees.ellipse(x + 2.5, y - 3, 2.6, 1.2 + 1.4 * beat).fill({ color: BEE_WING, alpha: 0.8 });
-      bees.ellipse(x, y, 4, 3).fill(BEE);
-      bees.rect(x - 0.8, y - 3, 1.6, 6).fill(BEE_STRIPE);
-    }
-  };
+}
+
+// Where a bee is at time `t`, and how open its wings are (their half height).
+export function beeAt(b, t) {
+  const a = b.speed * t + b.phase;
+  const beat = 0.5 + 0.5 * Math.sin(t * 60 + b.phase);
+  return { x: b.rx * Math.cos(a), y: b.cy + b.ry * Math.sin(a * 1.7), wing: 1.2 + 1.4 * beat };
+}
+export const BEE_WING_MAX = 2.6;
+
+// A bee's wing at (x, y), `half` high (as a piece: at its widest, BEE_WING_MAX, about the
+// origin, and squeezed).
+export function drawBeeWing(g, x = 0, y = 0, half = BEE_WING_MAX) {
+  return g.ellipse(x, y, 2.6, half).fill({ color: BEE_WING, alpha: 0.8 });
+}
+
+// A bee's body at (x, y): yellow with a dark stripe.
+export function drawBee(g, x = 0, y = 0) {
+  return g.ellipse(x, y, 4, 3).fill(BEE).rect(x - 0.8, y - 3, 1.6, 6).fill(BEE_STRIPE);
 }
 
 // Hitbox: the stepped pyramid in OBSTACLE_HITBOXES.temple (a shrine, three tiers and a base

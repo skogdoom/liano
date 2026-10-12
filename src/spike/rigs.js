@@ -73,18 +73,18 @@ export class LianaRig {
     this.art = art;
     this.layout = layout;
     this.view = scene.add.container(0, 0);
-    this.rope = art.rope(scene, 'liana.rope');
+    this.rope = art.rope(scene, 'liana.green.rope');
     this.flash = art.rope(scene, 'liana.flash');
-    this.leaves = layout.leaves.map((leaf) => art.image(scene, 'liana.leaf', leaf.dark ? 1 : 0));
+    this.leaves = layout.leaves.map((leaf) => art.image(scene, 'liana.green.leaf', leaf.dark ? 1 : 0));
     this.view.add([this.rope, ...this.leaves, this.flash]);
   }
 
   update(liana, flashing) {
     const { points, leaves, flash } = lianaShape(liana, this.layout);
-    this.art.bend(this.rope, 'liana.rope', points);
+    this.art.bend(this.rope, 'liana.green.rope', points);
     this.flash.visible = flashing;
     if (flashing) this.art.bend(this.flash, 'liana.flash', flash);
-    const unit = this.art.unit('liana.leaf');
+    const unit = this.art.unit('liana.green.leaf');
     leaves.forEach((leaf, i) => {
       this.leaves[i].setPosition(leaf.x, leaf.y);
       this.leaves[i].rotation = leaf.angle;
