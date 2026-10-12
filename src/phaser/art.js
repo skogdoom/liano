@@ -9,6 +9,7 @@ const BASE = `${import.meta.env.BASE_URL}art/`;
 export const CATALOG = 'art.catalog';
 const atlasKey = (set) => `art.${set}`;
 const tileKey = (key) => `tile.${key}`;
+const BLEND_ADD = 1; // Phaser.BlendModes.ADD
 
 // Queues the catalog on a scene's loader.
 export function queueCatalog(load) {
@@ -64,14 +65,73 @@ export class Art {
     return 1 / this.at(key).zoom;
   }
 
-  // A piece (frame `frame`) as an Image, not yet added to a display list.
+  // A piece (frame `frame`) as an Image, not yet added to a display list. It remembers
+  // its piece (`artKey`), for tint().
   image(scene, key, frame = 0) {
     const p = this.piece(key);
     const at = this.table[key];
-    return scene.make
+    const image = scene.make
       .image({ key: atlasKey(p.set), frame: at.frames[frame] }, false)
       .setOrigin(at.anchor[0], at.anchor[1])
       .setScale(1 / at.zoom);
+    image.artKey = key;
+    return image;
+  }
+
+  // A piece whose light is added to what is behind it (the temple's glow).
+  glow(scene, key, frame = 0) {
+    return this.image(scene, key, frame).setBlendMode(BLEND_ADD);
+  }
+
+  // A piece that repeats downwards (the temple's base and stairs): copies stacked from its
+  // origin down to `height` units below it, the last one cropped there. Images, not yet
+  // added; each sits where the drawing put that repeat.
+  column(scene, key, height, frame = 0) {
+    const { box } = this.piece(key);
+    const { zoom } = this.at(key);
+    const images = [];
+    for (let y = 0; y < height; y += box.h) {
+      const image = this.image(scene, key, frame).setPosition(0, y);
+      const left = height - y;
+      if (left < box.h) image.setCrop(0, 0, image.frame.width, Math.round(left * zoom));
+      images.push(image);
+    }
+    return images;
+  }
+
+  // A 9-slice piece (a panel) as a NineSlice of `width` × `height` units, its box's size:
+  // the corners keep their size, the edges and the middle stretch. Its origin is the box's
+  // top left corner.
+  nineSlice(scene, key, width, height) {
+    const p = this.piece(key);
+    const at = this.table[key];
+    const z = at.zoom;
+    const { left, right, top, bottom } = p.slices;
+    const panel = scene.make.nineslice(
+      {
+        key: atlasKey(p.set),
+        frame: at.frames[0],
+        width: width * z,
+        height: height * z,
+        leftWidth: left * z,
+        rightWidth: right * z,
+        topHeight: top * z,
+        bottomHeight: bottom * z,
+      },
+      false,
+    );
+    panel.setOrigin(0, 0).setScale(1 / z);
+    panel.artKey = key;
+    return panel;
+  }
+
+  // Tints the pieces among `objects` that take the stage tint with `color` (the others
+  // keep their own colours: the obstacles, the temple's fire). Containers are gone into.
+  tint(objects, color) {
+    for (const object of objects) {
+      if (object.list) this.tint(object.list, color);
+      else if (object.artKey && this.piece(object.artKey).tint) object.setTint(color);
+    }
   }
 
   // Shows frame `frame` of a flipbook piece on an image made by image().
@@ -95,7 +155,9 @@ export class Art {
   tile(scene, key, width) {
     const p = this.piece(key);
     const height = p.box.h;
-    return scene.make.tileSprite({ x: 0, y: p.box.y, width, height, key: tileKey(key) }, false).setOrigin(0, 0);
+    const tile = scene.make.tileSprite({ x: 0, y: p.box.y, width, height, key: tileKey(key) }, false).setOrigin(0, 0);
+    tile.artKey = key;
+    return tile;
   }
 }
 

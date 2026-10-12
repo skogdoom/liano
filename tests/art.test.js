@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { Graphics } from 'pixi.js';
 import { generateArt } from '../src/art/generate.js';
+import { artGuide } from '../src/art/guide.js';
 import { DEFAULT_STROKE, RecordingGraphics } from '../src/art/recorder.js';
 import { PIECES } from '../src/art/pieces/index.js';
 import { TAIL_FRAMES, TAIL_SWISH, tailFrameFor, tailSwishOf } from '../src/art/pieces/branch.js';
@@ -12,7 +13,7 @@ import { TEMPLE_VARIANTS } from '../src/config.js';
 import { bounds, elements, guideLayer, shapeD, toSvg, unionBox } from '../src/art/svg.js';
 import { definePiece, definePieces, frameName } from '../src/art/piece.js';
 import { atlasScaleFor, cellOf, placement } from '../src/art/catalog.js';
-import { bendStrip } from '../src/phaser/art.js';
+import { Art, bendStrip } from '../src/phaser/art.js';
 import { drawLiana, leafLayout, LIANA_PALETTES } from '../src/render/lianaView.js';
 import { Liana } from '../src/sim/liana.js';
 
@@ -129,6 +130,13 @@ describe('the generated art', () => {
     expect(readdirSync(dir).sort()).toEqual(Object.keys(files).sort());
     for (const [name, svg] of Object.entries(files)) expect(readFileSync(new URL(name, dir), 'utf8'), name).toBe(svg);
     expect(readFileSync(new URL('../art/manifest.json', import.meta.url), 'utf8')).toBe(manifest);
+    expect(readFileSync(new URL('../art/README.md', import.meta.url), 'utf8')).toBe(artGuide(manifest));
+  });
+
+  it('lists every piece in the art guide', () => {
+    const { manifest } = generateArt(PIECES);
+    const guide = artGuide(manifest);
+    for (const piece of PIECES) expect(guide, piece.key).toContain(`\`${piece.key}`);
   });
 
   it('gives every piece a box with room in it', () => {
@@ -194,6 +202,56 @@ describe('the pieces', () => {
       expect(piece('baseTop').box.y).toBe(TEMPLE_BASE_Y);
       expect(piece('base').box.h).toBe(piece('baseTop').box.h);
     }
+  });
+});
+
+describe('making pieces in the Phaser version', () => {
+  // A stand-in for a scene's object maker: records what is made and how it is set up.
+  const made = [];
+  const object = (type, config) => {
+    const o = { type, config, frame: { width: 40, height: 20 }, calls: [] };
+    for (const name of ['setOrigin', 'setScale', 'setPosition', 'setCrop', 'setBlendMode', 'setTint']) {
+      o[name] = (...args) => {
+        o.calls.push([name, ...args]);
+        return o;
+      };
+    }
+    made.push(o);
+    return o;
+  };
+  const scene = { make: { image: (c) => object('image', c), nineslice: (c) => object('nineslice', c) } };
+  const at = (frames, anchor = [0, 0]) => ({ 2: { frames, anchor, zoom: 2, size: [40, 20] } });
+  const catalog = {
+    pieces: {
+      base: { kind: 'sprite', set: 'main', box: { x: -10, y: 0, w: 20, h: 10 }, tint: true, at: at(['base']) },
+      glow: { kind: 'sprite', set: 'main', box: { x: -10, y: -5, w: 20, h: 10 }, tint: false, at: at(['glow'], [0.5, 0.5]) },
+      panel: { kind: 'slice', set: 'boot', box: { x: -1, y: -1, w: 66, h: 66 }, slices: { left: 20, right: 20, top: 20, bottom: 20 }, tint: false, at: at(['panel']) },
+    },
+  };
+  const art = new Art(catalog, 2);
+
+  it('stacks a repeating piece down to a depth, cropping the last copy', () => {
+    const images = art.column(scene, 'base', 25);
+    expect(images.map((i) => i.calls.find((c) => c[0] === 'setPosition'))).toEqual([['setPosition', 0, 0], ['setPosition', 0, 10], ['setPosition', 0, 20]]);
+    expect(images.map((i) => i.calls.find((c) => c[0] === 'setCrop'))).toEqual([undefined, undefined, ['setCrop', 0, 0, 40, 10]]);
+  });
+
+  it('makes a 9-slice panel in units, its slices scaled with the atlas', () => {
+    const panel = art.nineSlice(scene, 'panel', 300, 100);
+    expect(panel.config).toMatchObject({ key: 'art.boot', frame: 'panel', width: 600, height: 200, leftWidth: 40, rightWidth: 40, topHeight: 40, bottomHeight: 40 });
+    expect(panel.calls).toContainEqual(['setScale', 0.5]);
+  });
+
+  it('adds a glow to what is behind it', () => {
+    expect(art.glow(scene, 'glow').calls).toContainEqual(['setBlendMode', 1]);
+  });
+
+  it('tints only the pieces that take the stage tint, inside containers too', () => {
+    const base = art.image(scene, 'base');
+    const glow = art.image(scene, 'glow');
+    art.tint([{ list: [base, { list: [glow] }] }], 0x6474b4);
+    expect(base.calls).toContainEqual(['setTint', 0x6474b4]);
+    expect(glow.calls.some((c) => c[0] === 'setTint')).toBe(false);
   });
 });
 
