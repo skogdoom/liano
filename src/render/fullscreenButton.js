@@ -8,8 +8,7 @@ const ARM = 12;
 
 // Four corner brackets: in the corners pointing out to enter full screen, pulled in
 // and pointing at the corners to leave it.
-function corners(inward, style) {
-  const g = new Graphics();
+export function drawCorners(g, inward, style) {
   for (const [cx, cy, dx, dy] of [
     [0, 0, 1, 1],
     [SIZE, 0, -1, 1],
@@ -26,9 +25,13 @@ function corners(inward, style) {
 }
 
 // A cream icon over a dark outline, like the speaker.
+export const FULLSCREEN_STROKES = [
+  { width: 7, color: OUTLINE },
+  { width: 4, color: CREAM },
+];
 function icon(inward) {
   const view = new Container();
-  view.addChild(corners(inward, { width: 7, color: OUTLINE }), corners(inward, { width: 4, color: CREAM }));
+  view.addChild(...FULLSCREEN_STROKES.map((style) => drawCorners(new Graphics(), inward, style)));
   return view;
 }
 

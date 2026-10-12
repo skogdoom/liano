@@ -34,13 +34,19 @@ function text(content, size, { color = CREAM, weight = 'normal' } = {}) {
 function panel(cx, cy, width, height, shiftY = 0) {
   const view = new Container();
   view.position.set(cx, cy);
-  view.addChild(
-    new Graphics()
-      .roundRect(-width / 2, -height / 2 + shiftY, width, height, 18)
-      .fill({ color: PANEL, alpha: 0.72 })
-      .stroke({ width: 2, color: CREAM, alpha: 0.25 }),
-  );
+  view.addChild(drawPanel(new Graphics(), -width / 2, -height / 2 + shiftY, width, height));
   return view;
+}
+
+// A panel's rounded rectangle: see-through dark, with a faint edge.
+export const PANEL_RADIUS = 18;
+export function drawPanel(g, x, y, width, height) {
+  return g.roundRect(x, y, width, height, PANEL_RADIUS).fill({ color: PANEL, alpha: 0.72 }).stroke({ width: 2, color: CREAM, alpha: 0.25 });
+}
+
+// The off-screen arrow, its tip at the origin, pointing up.
+export function drawArrow(g) {
+  return g.poly([0, 0, 11, 16, 4, 16, 4, 26, -4, 26, -4, 16, -11, 16]).fill(CREAM).stroke({ width: 2, color: 0x2a1a0c, join: 'round' });
 }
 
 function place(parent, child, y) {
@@ -101,10 +107,7 @@ class StageBanner {
 // Arrow at the top edge, at the monkey's x, while it is above the view.
 class OffscreenIndicator {
   constructor() {
-    this.view = new Graphics()
-      .poly([0, 0, 11, 16, 4, 16, 4, 26, -4, 26, -4, 16, -11, 16])
-      .fill(CREAM)
-      .stroke({ width: 2, color: 0x2a1a0c, join: 'round' });
+    this.view = drawArrow(new Graphics());
     this.view.y = 8;
   }
 

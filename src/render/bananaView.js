@@ -61,9 +61,9 @@ export function drawBanana(g, r = BANANA_RADIUS * 1.4) {
 }
 
 // A four-pointed glint.
-function drawGlint(g, size) {
+export function drawGlint(g, size) {
   const s = size * 0.25;
-  g.poly([0, -size, s, -s, size, 0, s, s, 0, size, -s, s, -size, 0, -s, -s]).fill(GLINT);
+  return g.poly([0, -size, s, -s, size, 0, s, s, 0, size, -s, s, -size, 0, -s, -s]).fill(GLINT);
 }
 
 const HEART_POP = 0xff7a90;

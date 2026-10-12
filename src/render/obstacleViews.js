@@ -1279,80 +1279,22 @@ function drawTemple(g, o, rand, hangs, view) {
   const [shrine, tierA, tierB, tierC, base] = OBSTACLE_HITBOXES.temple;
   const floor = (FLOOR_Y + 20 - o.y) / o.scale;
 
-  // The tiers, from the base up: stone with a lit top edge, a shadow under it and courses
-  // of blocks (joints staggered course by course).
-  for (const r of [base, tierC, tierB, tierA]) {
-    const bottom = r === base ? floor : r.dy + r.h;
-    g.rect(r.dx, r.dy, r.w, bottom - r.dy).fill(style.stone);
-    g.rect(r.dx, r.dy, r.w, 6).fill(style.light);
-    g.rect(r.dx, r.dy + 6, r.w, 4).fill({ color: style.dark, alpha: 0.5 });
-    const course = 23;
-    for (let y = r.dy + course, row = 0; y < bottom; y += course, row++) {
-      g.moveTo(r.dx, y).lineTo(r.dx + r.w, y).stroke({ width: 1.2, color: style.dark, alpha: 0.45 });
-      for (let x = r.dx + (row % 2 ? 17 : 0) + 34; x < r.dx + r.w; x += 34) {
-        g.moveTo(x, y - course).lineTo(x, y).stroke({ width: 1.2, color: style.dark, alpha: 0.3 });
-      }
-    }
-  }
-  // The base is a platform of mouldings and recessed panels, a row each side of the stairs.
-  const half = -base.dx;
-  for (let y = base.dy + 40; y < floor - 20; y += 92) {
-    g.rect(base.dx, y, base.w, 7).fill(style.light).rect(base.dx, y + 7, base.w, 4).fill({ color: style.dark, alpha: 0.6 });
-    for (const side of [-1, 1]) {
-      const x = side < 0 ? base.dx + 18 : 44;
-      const w = half - 18 - 44;
-      g.rect(x, y + 26, w, 52).fill({ color: style.dark, alpha: 0.28 });
-      g.rect(x, y + 26, w, 3).fill({ color: style.dark, alpha: 0.5 }).rect(x, y + 75, w, 3).fill({ color: style.light, alpha: 0.35 });
-    }
-  }
-  // The staircase up the middle, with a low wall each side: wide enough for the monkey, its
-  // steps about a quarter of its height.
-  const stairs = { x: -30, y: tierA.dy, w: 60 };
-  g.rect(stairs.x - 8, stairs.y, 8, floor - stairs.y).fill(style.dark);
-  g.rect(stairs.x + stairs.w, stairs.y, 8, floor - stairs.y).fill(style.dark);
-  g.rect(stairs.x, stairs.y, stairs.w, floor - stairs.y).fill(style.dark);
-  for (let y = stairs.y; y < floor; y += 12) g.rect(stairs.x, y, stairs.w, 7).fill(style.light);
-
-  // The shrine: the walls, a corbelled doorway taller than the monkey and a dark roof slab.
-  g.rect(shrine.dx, shrine.dy, shrine.w, shrine.h).fill(style.stone);
-  g.rect(shrine.dx - 4, shrine.dy, shrine.w + 8, 9).fill(style.dark);
-  g.rect(shrine.dx - 4, shrine.dy, shrine.w + 8, 3).fill(style.light);
-  const comb = o.variant === 1;
-  const doorTop = comb ? 26 : 18;
-  g.poly([-22, shrine.h, -22, doorTop + 10, -17, doorTop + 10, -17, doorTop + 5, -11, doorTop + 5, -11, doorTop, 11, doorTop, 11, doorTop + 5, 17, doorTop + 5, 17, doorTop + 10, 22, doorTop + 10, 22, shrine.h]).fill(style.deep);
-  g.rect(-26, doorTop - 4, 52, 4).fill(style.light);
-  g.rect(shrine.dx, shrine.dy + shrine.h - 5, shrine.w, 5).fill(style.dark);
+  // The tiers, from the base up, then the base's rows of panels, the stairs and the shrine.
+  drawTempleTier(g, style, base, floor);
+  for (const r of [tierC, tierB, tierA]) drawTempleTier(g, style, r);
+  for (const y of templePanelRows(floor)) drawTemplePanels(g, style, y);
+  drawTempleStairs(g, style, TEMPLE_STAIRS.y, floor);
+  drawTempleShrine(g, style, o.variant ?? 0);
 
   let animate = null;
-  if (o.variant === 0) {
-    // A stepped fret, a row of little squares, across the top of the shrine.
-    for (let x = shrine.dx + 7; x < shrine.dx + shrine.w - 9; x += 14) g.rect(x, 12, 8, 6).fill(style.dark).rect(x + 2, 14, 4, 2).fill(style.stone);
-  } else if (comb) {
-    // A tall roof comb: a wall over the shrine, with three square windows.
-    g.rect(-32, shrine.dy, 64, 18).fill(style.dark);
-    g.rect(-32, shrine.dy, 64, 4).fill(style.light);
-    for (const x of [-22, -6, 10]) g.rect(x, 7, 12, 9).fill(style.deep);
-  } else if (o.variant === 2) {
-    // Serpent heads on the stair walls, looking out, and moss and ferns on the tiers.
-    for (const side of [-1, 1]) {
-      const x = side * (stairs.w / 2 + 4);
-      g.ellipse(x, tierA.dy - 2, 11, 8.5).fill(style.stone).stroke({ width: 1.5, color: style.dark });
-      g.circle(x + side * 3, tierA.dy - 4.5, 2.4).fill(0xffe27a).circle(x + side * 3, tierA.dy - 4.5, 1).fill(style.deep);
-      g.poly([x + side * 9, tierA.dy + 1, x + side * 15, tierA.dy + 6, x + side * 7, tierA.dy + 5]).fill(0xf1ead8);
-    }
-    for (const r of [tierA, tierB, tierC]) {
-      g.poly(leafPoints(r.dx + 10, r.dy + 5, -1.1, 22, 7)).fill(MOSS).poly(leafPoints(r.dx + r.w - 10, r.dy + 5, -2.0, 22, 7)).fill(MOSS_LIGHT);
-    }
+  if (o.variant === 0) drawTempleFret(g, style);
+  else if (o.variant === 1) drawTempleComb(g, style);
+  else if (o.variant === 2) {
+    for (const side of [-1, 1]) drawTempleSerpent(g, style, side);
+    for (const r of [tierA, tierB, tierC]) drawTempleTierFerns(g, r, [MOSS, MOSS_LIGHT], 22, 7, 10, 5, [-1.1, -2.0]);
   } else {
-    // Gold inlay: a band across the middle tier and a frame round the doorway, and a
-    // brazier on each end of the first tier, its flame flickering.
-    g.rect(tierB.dx, tierB.dy + 16, tierB.w, 6).fill(GOLD);
-    for (let x = tierB.dx + 10; x < tierB.dx + tierB.w - 10; x += 22) g.rect(x, tierB.dy + 26, 10, 5).fill(GOLD);
-    g.rect(-26, doorTop - 4, 52, 3).fill(GOLD).rect(-24, doorTop - 1, 3, shrine.h - doorTop - 1).fill(GOLD).rect(21, doorTop - 1, 3, shrine.h - doorTop - 1).fill(GOLD);
-    const spots = [-66, 66];
-    for (const x of spots) {
-      g.poly([x - 11, tierA.dy, x - 7, tierA.dy - 12, x + 7, tierA.dy - 12, x + 11, tierA.dy]).fill(style.deep).rect(x - 13, tierA.dy - 16, 26, 5).fill(GOLD);
-    }
+    drawTempleGold(g);
+    for (const x of TEMPLE_BRAZIERS) drawTempleBrazier(g, style, x);
     // The fire is not tinted with the stone (see ObstacleViews.update): it stays bright in the
     // dark stages and, there, lights up the stone round each brazier with a warm glow
     // (added to what is behind it), flickering with the flame.
@@ -1368,54 +1310,233 @@ function drawTemple(g, o, rand, hangs, view) {
       flames.clear();
       glow.clear();
       const dark = view.darkness ?? 0;
-      spots.forEach((x, i) => {
-        const k = 0.5 + 0.5 * Math.sin(t * 9 + phase + i * 2.1);
-        const sway = 3 * Math.sin(t * 6 + phase + i);
-        const top = tierA.dy - 16 - 20 - 9 * k;
-        if (dark > 0) {
-          const flicker = 0.85 + 0.15 * k;
-          // Many thin layers, so there are no rings to see.
-          for (let j = 0; j < GLOW_LAYERS; j++) {
-            glow.circle(x, tierA.dy - 34, (10 + 4.2 * j) * (0.95 + 0.05 * k)).fill({ color: GLOW, alpha: (0.035 * dark * flicker * (GLOW_LAYERS - j / 2)) / GLOW_LAYERS });
-          }
-        }
-        flames.poly([x - 8, tierA.dy - 16, x - 5 + sway * 0.3, top + 13, x + sway, top, x + 5 + sway * 0.3, top + 13, x + 8, tierA.dy - 16]).fill(FLAME);
-        flames.poly([x - 4, tierA.dy - 16, x + sway * 0.5, top + 12, x + 4, tierA.dy - 16]).fill(FLAME_CORE);
+      TEMPLE_BRAZIERS.forEach((x, i) => {
+        const flame = templeFlame(t, phase, i);
+        if (dark > 0) drawTempleGlow(glow, x, dark * flame.flicker, flame.reach);
+        drawTempleFlame(flames, x, flame);
       });
     };
   }
 
   // Overgrowth, on every look: moss along the tiers, vines hanging from their edges, ferns
   // on the corners.
-  for (const r of [tierA, tierB, tierC]) {
-    for (let i = 0; i < 3; i++) {
-      const x = r.dx + 14 + rand() * (r.w - 28);
-      if (Math.abs(x) < stairs.w / 2 + 12) continue;
-      g.ellipse(x, r.dy + 5, 10 + rand() * 12, 4.5).fill({ color: i % 2 ? MOSS : MOSS_LIGHT, alpha: o.variant === 2 ? 1 : 0.8 });
-      if (rand() < 0.7) g.moveTo(x, r.dy + 8).quadraticCurveTo(x + (rand() - 0.5) * 8, r.dy + 22, x + (rand() - 0.5) * 6, r.dy + 28 + rand() * 14).stroke({ width: 2, color: MOSS });
+  const overgrowth = templeOvergrowth(rand);
+  for (const [k, r] of [tierA, tierB, tierC].entries()) {
+    for (const moss of overgrowth[k]) {
+      drawTempleMoss(g, moss, o.variant === 2 ? 1 : 0.8);
+      if (moss.vine) drawTempleVine(g, moss.vine);
     }
-    g.poly(leafPoints(r.dx + 4, r.dy + 6, -0.9, 26, 8)).fill(LEAF_DARK).poly(leafPoints(r.dx + r.w - 4, r.dy + 6, -2.2, 26, 8)).fill(LEAF);
+    drawTempleTierFerns(g, r, [LEAF_DARK, LEAF], 26, 8, 4, 6, [-0.9, -2.2]);
   }
 
   // The rest is buried: a haze rising from the ground, thickest at the bottom, and a thick
   // fringe of ferns and leaves across the foot of the temple, wider than the temple itself,
   // as if it carried on down into the jungle.
-  // Soft on every side (nested ellipses, no edges to see), so it reads as mist and not as a
-  // box round the temple.
-  const hazeTop = floor - 250;
-  const HAZE_STEPS = 16;
-  for (let i = 0; i < HAZE_STEPS; i++) {
-    const u = 1 - i / HAZE_STEPS;
-    g.ellipse(0, floor + 30, 90 + 240 * u, 30 + (floor + 30 - hazeTop - 30) * u).fill({ color: HAZE, alpha: 0.04 });
+  drawTempleHaze(g, floor);
+  for (const leaf of templeFringe(rand)) drawTempleLeaf(g, { ...leaf, y: floor + 14 });
+  return animate;
+}
+
+// A tier (`r`, a rect of the hitbox) down to `bottom`: stone with a lit top edge, a shadow
+// under it and courses of blocks (joints staggered course by course).
+export const TEMPLE_COURSE = 23;
+export const TEMPLE_JOINT = 34;
+export function drawTempleTier(g, style, r, bottom = r.dy + r.h) {
+  g.rect(r.dx, r.dy, r.w, bottom - r.dy).fill(style.stone);
+  g.rect(r.dx, r.dy, r.w, 6).fill(style.light);
+  g.rect(r.dx, r.dy + 6, r.w, 4).fill({ color: style.dark, alpha: 0.5 });
+  const course = TEMPLE_COURSE;
+  for (let y = r.dy + course, row = 0; y < bottom; y += course, row++) {
+    g.moveTo(r.dx, y).lineTo(r.dx + r.w, y).stroke({ width: 1.2, color: style.dark, alpha: 0.45 });
+    for (let x = r.dx + (row % 2 ? 17 : 0) + TEMPLE_JOINT; x < r.dx + r.w; x += TEMPLE_JOINT) {
+      g.moveTo(x, y - course).lineTo(x, y).stroke({ width: 1.2, color: style.dark, alpha: 0.3 });
+    }
   }
+  return g;
+}
+
+// The base is a platform of mouldings and recessed panels, a row each side of the stairs,
+// every TEMPLE_PANEL_ROW down to `floor`. A row (`y` its top) is 78 high.
+export const TEMPLE_PANEL_ROW = 92;
+export function templePanelRows(floor) {
+  const base = OBSTACLE_HITBOXES.temple[4];
+  const rows = [];
+  for (let y = base.dy + 40; y < floor - 20; y += TEMPLE_PANEL_ROW) rows.push(y);
+  return rows;
+}
+
+export function drawTemplePanels(g, style, y) {
+  const base = OBSTACLE_HITBOXES.temple[4];
+  const half = -base.dx;
+  g.rect(base.dx, y, base.w, 7).fill(style.light).rect(base.dx, y + 7, base.w, 4).fill({ color: style.dark, alpha: 0.6 });
+  for (const side of [-1, 1]) {
+    const x = side < 0 ? base.dx + 18 : 44;
+    const w = half - 18 - 44;
+    g.rect(x, y + 26, w, 52).fill({ color: style.dark, alpha: 0.28 });
+    g.rect(x, y + 26, w, 3).fill({ color: style.dark, alpha: 0.5 }).rect(x, y + 75, w, 3).fill({ color: style.light, alpha: 0.35 });
+  }
+  return g;
+}
+
+// The staircase up the middle, with a low wall each side: wide enough for the monkey, its
+// steps (every TEMPLE_STEP) about a quarter of its height. From the first tier to `bottom`.
+export const TEMPLE_STAIRS = { x: -30, y: OBSTACLE_HITBOXES.temple[1].dy, w: 60, wall: 8 };
+export const TEMPLE_STEP = 12;
+export function drawTempleStairs(g, style, top, bottom) {
+  const { x, w, wall } = TEMPLE_STAIRS;
+  g.rect(x - wall, top, wall, bottom - top).fill(style.dark);
+  g.rect(x + w, top, wall, bottom - top).fill(style.dark);
+  g.rect(x, top, w, bottom - top).fill(style.dark);
+  for (let y = top; y < bottom; y += TEMPLE_STEP) g.rect(x, y, w, 7).fill(style.light);
+  return g;
+}
+
+// The shrine: the walls, a corbelled doorway taller than the monkey and a dark roof slab.
+// The doorway is lower under a roof comb (look 1).
+export const templeDoorTop = (variant) => (variant === 1 ? 26 : 18);
+export function drawTempleShrine(g, style, variant) {
+  const shrine = OBSTACLE_HITBOXES.temple[0];
+  g.rect(shrine.dx, shrine.dy, shrine.w, shrine.h).fill(style.stone);
+  g.rect(shrine.dx - 4, shrine.dy, shrine.w + 8, 9).fill(style.dark);
+  g.rect(shrine.dx - 4, shrine.dy, shrine.w + 8, 3).fill(style.light);
+  const doorTop = templeDoorTop(variant);
+  g.poly([-22, shrine.h, -22, doorTop + 10, -17, doorTop + 10, -17, doorTop + 5, -11, doorTop + 5, -11, doorTop, 11, doorTop, 11, doorTop + 5, 17, doorTop + 5, 17, doorTop + 10, 22, doorTop + 10, 22, shrine.h]).fill(style.deep);
+  g.rect(-26, doorTop - 4, 52, 4).fill(style.light);
+  g.rect(shrine.dx, shrine.dy + shrine.h - 5, shrine.w, 5).fill(style.dark);
+  return g;
+}
+
+// Look 0: a stepped fret, a row of little squares, across the top of the shrine.
+export function drawTempleFret(g, style) {
+  const shrine = OBSTACLE_HITBOXES.temple[0];
+  for (let x = shrine.dx + 7; x < shrine.dx + shrine.w - 9; x += 14) g.rect(x, 12, 8, 6).fill(style.dark).rect(x + 2, 14, 4, 2).fill(style.stone);
+  return g;
+}
+
+// Look 1: a tall roof comb, a wall over the shrine, with three square windows.
+export function drawTempleComb(g, style) {
+  const shrine = OBSTACLE_HITBOXES.temple[0];
+  g.rect(-32, shrine.dy, 64, 18).fill(style.dark);
+  g.rect(-32, shrine.dy, 64, 4).fill(style.light);
+  for (const x of [-22, -6, 10]) g.rect(x, 7, 12, 9).fill(style.deep);
+  return g;
+}
+
+// Look 2: a serpent head on a stair wall (`side` -1 left, 1 right), looking out.
+export function drawTempleSerpent(g, style, side) {
+  const tierA = OBSTACLE_HITBOXES.temple[1];
+  const x = side * (TEMPLE_STAIRS.w / 2 + 4);
+  g.ellipse(x, tierA.dy - 2, 11, 8.5).fill(style.stone).stroke({ width: 1.5, color: style.dark });
+  g.circle(x + side * 3, tierA.dy - 4.5, 2.4).fill(0xffe27a).circle(x + side * 3, tierA.dy - 4.5, 1).fill(style.deep);
+  g.poly([x + side * 9, tierA.dy + 1, x + side * 15, tierA.dy + 6, x + side * 7, tierA.dy + 5]).fill(0xf1ead8);
+  return g;
+}
+
+// A leaf on each end of a tier (`r`), `inset` from its corners and `drop` below its top,
+// at the two angles, in the two colours.
+export function drawTempleTierFerns(g, r, [left, right], length, width, inset, drop, [a, b]) {
+  return g.poly(leafPoints(r.dx + inset, r.dy + drop, a, length, width)).fill(left).poly(leafPoints(r.dx + r.w - inset, r.dy + drop, b, length, width)).fill(right);
+}
+
+// Look 3: gold inlay, a band across the middle tier and a frame round the doorway.
+export function drawTempleGold(g) {
+  const [shrine, , tierB] = OBSTACLE_HITBOXES.temple;
+  const doorTop = templeDoorTop(3);
+  g.rect(tierB.dx, tierB.dy + 16, tierB.w, 6).fill(GOLD);
+  for (let x = tierB.dx + 10; x < tierB.dx + tierB.w - 10; x += 22) g.rect(x, tierB.dy + 26, 10, 5).fill(GOLD);
+  g.rect(-26, doorTop - 4, 52, 3).fill(GOLD).rect(-24, doorTop - 1, 3, shrine.h - doorTop - 1).fill(GOLD).rect(21, doorTop - 1, 3, shrine.h - doorTop - 1).fill(GOLD);
+  return g;
+}
+
+// Look 3: a brazier on each end of the first tier (at x), its flame flickering.
+export const TEMPLE_BRAZIERS = [-66, 66];
+export function drawTempleBrazier(g, style, x) {
+  const tierA = OBSTACLE_HITBOXES.temple[1];
+  return g.poly([x - 11, tierA.dy, x - 7, tierA.dy - 12, x + 7, tierA.dy - 12, x + 11, tierA.dy]).fill(style.deep).rect(x - 13, tierA.dy - 16, 26, 5).fill(GOLD);
+}
+
+// Brazier `i`'s flame at time `t`: how it sways, how high its tip is, and the glow's
+// brightness (`flicker`) and size (`reach`, a scale) with it.
+export function templeFlame(t, phase, i) {
+  const tierA = OBSTACLE_HITBOXES.temple[1];
+  const k = 0.5 + 0.5 * Math.sin(t * 9 + phase + i * 2.1);
+  return { sway: 3 * Math.sin(t * 6 + phase + i), top: tierA.dy - 16 - 20 - 9 * k, flicker: 0.85 + 0.15 * k, reach: 0.95 + 0.05 * k };
+}
+
+export function drawTempleFlame(g, x, { sway, top }) {
+  const base = OBSTACLE_HITBOXES.temple[1].dy - 16;
+  g.poly([x - 8, base, x - 5 + sway * 0.3, top + 13, x + sway, top, x + 5 + sway * 0.3, top + 13, x + 8, base]).fill(FLAME);
+  g.poly([x - 4, base, x + sway * 0.5, top + 12, x + 4, base]).fill(FLAME_CORE);
+  return g;
+}
+
+// The glow round a brazier at x: many thin layers, so there are no rings to see. Its
+// alpha is `strength` (darkness by flicker) times the full glow's, and it is `reach` its
+// size; added to what is behind it.
+export function drawTempleGlow(g, x, strength, reach = 1) {
+  const y = OBSTACLE_HITBOXES.temple[1].dy - 34;
+  for (let j = 0; j < GLOW_LAYERS; j++) {
+    g.circle(x, y, (10 + 4.2 * j) * reach).fill({ color: GLOW, alpha: (0.035 * strength * (GLOW_LAYERS - j / 2)) / GLOW_LAYERS });
+  }
+  return g;
+}
+
+// The moss and vines on the three tiers (from the top), from the decoration's random
+// stream: a few patches of moss on each, none over the stairs, most with a vine hanging
+// from them ({ from, control, to }).
+export function templeOvergrowth(rand) {
+  const [, ...tiers] = OBSTACLE_HITBOXES.temple;
+  return tiers.slice(0, 3).map((r) => {
+    const patches = [];
+    for (let i = 0; i < 3; i++) {
+      const x = r.dx + 14 + rand() * (r.w - 28);
+      if (Math.abs(x) < TEMPLE_STAIRS.w / 2 + 12) continue;
+      const moss = { x, y: r.dy + 5, rx: 10 + rand() * 12, color: i % 2 ? MOSS : MOSS_LIGHT };
+      if (rand() < 0.7) moss.vine = { from: [x, r.dy + 8], control: [x + (rand() - 0.5) * 8, r.dy + 22], to: [x + (rand() - 0.5) * 6, r.dy + 28 + rand() * 14] };
+      patches.push(moss);
+    }
+    return patches;
+  });
+}
+
+export const TEMPLE_MOSS_RY = 4.5;
+export function drawTempleMoss(g, { x, y, rx, color }, alpha) {
+  return g.ellipse(x, y, rx, TEMPLE_MOSS_RY).fill({ color, alpha });
+}
+
+export const TEMPLE_VINE_WIDTH = 2;
+export function drawTempleVine(g, { from, control, to }) {
+  return g.moveTo(...from).quadraticCurveTo(...control, ...to).stroke({ width: TEMPLE_VINE_WIDTH, color: MOSS });
+}
+
+// The haze over the foot of the temple, round (0, floor + 30): soft on every side (nested
+// ellipses, no edges to see), so it reads as mist and not as a box round the temple.
+export const TEMPLE_HAZE = { rx: 330, ry: 280, steps: 16 };
+export function drawTempleHaze(g, floor) {
+  for (let i = 0; i < TEMPLE_HAZE.steps; i++) {
+    const u = 1 - i / TEMPLE_HAZE.steps;
+    g.ellipse(0, floor + 30, 90 + 240 * u, 30 + 250 * u).fill({ color: HAZE, alpha: 0.04 });
+  }
+  return g;
+}
+
+// The fringe of ferns and leaves across the foot of the temple, from the decoration's
+// random stream: leaves ({ x, a, length, width, color }) rising from the floor, wider than
+// the temple.
+export function templeFringe(rand) {
+  const leaves = [];
   for (let x = -300; x <= 300; x += 15 + rand() * 9) {
     const length = 45 + rand() * 40;
     for (const a of [-Math.PI / 2 - 0.45 - rand() * 0.3, -Math.PI / 2 + 0.45 + rand() * 0.3]) {
-      g.poly(leafPoints(x, floor + 14, a, length, 11 + rand() * 6)).fill(rand() < 0.5 ? FRINGE_DEEP : BUSH);
+      leaves.push({ x, a, length, width: 11 + rand() * 6, color: rand() < 0.5 ? FRINGE_DEEP : BUSH });
     }
-    g.poly(leafPoints(x + 6, floor + 14, -Math.PI / 2 + (rand() - 0.5) * 0.5, length * 0.8, 10)).fill(rand() < 0.5 ? FRINGE : BUSH_LIGHT);
+    leaves.push({ x: x + 6, a: -Math.PI / 2 + (rand() - 0.5) * 0.5, length: length * 0.8, width: 10, color: rand() < 0.5 ? FRINGE : BUSH_LIGHT });
   }
-  return animate;
+  return leaves;
+}
+
+export function drawTempleLeaf(g, { x, y, a, length, width, color }) {
+  return g.poly(leafPoints(x, y, a, length, width)).fill(color);
 }
 
 const DRAW = { branch: drawBranch, thornBush: drawThornBush, rock: drawRock, beehive: drawBeehive, temple: drawTemple };
@@ -1467,24 +1588,47 @@ function buildSpider(o) {
   const body = new Container();
   const legs = new Graphics();
   const g = new Graphics();
+  drawSpiderBody(g);
+  body.addChild(legs, g);
+  const animate = (t) => {
+    drawSpiderThread(thread.clear(), o.x, CANOPY_Y - 40, o.y - 14 * o.scale);
+    drawSpiderLegs(legs.clear(), spiderLegs(t));
+  };
+  return { parts: [thread, body], body, animate };
+}
+
+export function drawSpiderBody(g) {
   g.circle(0, 5, 13).fill(SPIDER).circle(0, -9, 8).fill(SPIDER);
   g.poly([0, -2, 4, 5, 0, 12, -4, 5]).fill(SPIDER_MARK);
   for (const [x, y] of [[-3, -12], [3, -12], [-5, -8], [5, -8]]) g.circle(x, y, 1.6).fill(EYE);
-  body.addChild(legs, g);
-  const animate = (t) => {
-    thread.clear().moveTo(o.x, CANOPY_Y - 40).lineTo(o.x, o.y - 14 * o.scale).stroke({ width: 1.5, color: THREAD, alpha: 0.8 });
-    legs.clear();
-    for (const side of [-1, 1]) {
-      for (let i = 0; i < 4; i++) {
-        const a = -0.9 + i * 0.55 + 0.12 * Math.sin(t * 9 + i * 1.7 + side);
-        const kx = side * (9 + 9 * Math.cos(a));
-        const ky = -4 + 12 * Math.sin(a) - 6;
-        legs.moveTo(side * 5, -3 + i * 3).lineTo(kx, ky).lineTo(kx + side * 6, ky + 12);
-      }
+  return g;
+}
+
+// The thread from the canopy down to the spider, at x from y `top` to `bottom` (world).
+export const SPIDER_THREAD_WIDTH = 1.5;
+export function drawSpiderThread(g, x, top, bottom) {
+  return g.moveTo(x, top).lineTo(x, bottom).stroke({ width: SPIDER_THREAD_WIDTH, color: THREAD, alpha: 0.8 });
+}
+
+// The eight legs at time `t`, wriggling: each from its shoulder on the body out to a
+// knee and down to a foot.
+export function spiderLegs(t) {
+  const legs = [];
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 4; i++) {
+      const a = -0.9 + i * 0.55 + 0.12 * Math.sin(t * 9 + i * 1.7 + side);
+      const kx = side * (9 + 9 * Math.cos(a));
+      const ky = -4 + 12 * Math.sin(a) - 6;
+      legs.push({ shoulder: [side * 5, -3 + i * 3], knee: [kx, ky], foot: [kx + side * 6, ky + 12] });
     }
-    legs.stroke({ width: 2.5, color: SPIDER_LEG, cap: 'round', join: 'round' });
-  };
-  return { parts: [thread, body], body, animate };
+  }
+  return legs;
+}
+
+export const SPIDER_LEG_WIDTH = 2.5;
+export function drawSpiderLegs(g, legs) {
+  for (const { shoulder, knee, foot } of legs) g.moveTo(...shoulder).lineTo(...knee).lineTo(...foot);
+  return g.stroke({ width: SPIDER_LEG_WIDTH, color: SPIDER_LEG, cap: 'round', join: 'round' });
 }
 
 // Hitbox: circle r 18. Coils around a stalk standing from the floor; the head points
@@ -1493,98 +1637,114 @@ function buildSnake(o) {
   const top = o.baseY - o.motion.ay - 40;
   const stalk = new Graphics();
   const bottom = FLOOR_Y + 20;
-  stalk.moveTo(o.baseX, bottom).bezierCurveTo(o.baseX - 6, bottom - 120, o.baseX + 6, top + 80, o.baseX, top).stroke({ width: 7, color: STALK, cap: 'round' });
-  for (let y = top + 30; y < bottom - 20; y += 46) {
-    const side = Math.round(y / 46) % 2 ? 1 : -1;
-    stalk.poly(leafPoints(o.baseX, y, side > 0 ? -0.5 : Math.PI + 0.5, 16, 8)).fill(side > 0 ? LEAF : LEAF_DARK);
-  }
+  drawSnakeStalk(stalk, o.baseX, top, bottom);
+  for (const leaf of snakeStalkLeaves(top, bottom)) drawSnakeStalkLeaf(stalk, o.baseX, leaf);
   const body = new Container();
   const coil = new Graphics();
-  for (let i = 0; i < 3; i++) {
-    const y = -8 + i * 9;
-    coil.moveTo(-15, y).quadraticCurveTo(0, y + 7, 15, y + 2).stroke({ width: 9, color: i % 2 ? SNAKE_DARK : SNAKE, cap: 'round' });
-  }
-  coil.moveTo(-13, 17).quadraticCurveTo(0, 22, 12, 16).stroke({ width: 3, color: SNAKE_BELLY, cap: 'round' });
+  drawSnakeCoil(coil);
   const head = new Graphics();
-  head.moveTo(-15, -8).quadraticCurveTo(-8, -18, 0, -18).stroke({ width: 8, color: SNAKE, cap: 'round' });
-  head.ellipse(4, -19, 9, 6.5).fill(SNAKE);
-  head.circle(7, -21, 1.8).fill(PUPIL);
-  head.moveTo(12, -19).lineTo(18, -19).lineTo(21, -22).moveTo(18, -19).lineTo(21, -16).stroke({ width: 1.2, color: TONGUE });
+  drawClimbingSnakeHead(head);
   body.addChild(coil, head);
   const animate = (t) => {
-    const u = (2 * Math.PI * t) / o.motion.period + o.motion.phase;
-    // y = baseY + ay·cos u: climbing while sin u > 0.
-    head.scale.y = Math.sin(u) >= 0 ? 1 : -1;
+    head.scale.y = snakeClimbs(o, t) ? 1 : -1;
   };
   return { parts: [stalk, body], body, animate };
 }
 
-// Hitbox: circle r 16. Flaps as it flies and faces the way it patrols.
+// y = baseY + ay·cos u: climbing while sin u > 0.
+export function snakeClimbs(o, t) {
+  const u = (2 * Math.PI * t) / o.motion.period + o.motion.phase;
+  return Math.sin(u) >= 0;
+}
+
+// The stalk the snake climbs, at x from the floor (`bottom`) up to `top` (world), a gentle S.
+export const SNAKE_STALK_WIDTH = 7;
+export function drawSnakeStalk(g, x, top, bottom) {
+  return g.moveTo(x, bottom).bezierCurveTo(x - 6, bottom - 120, x + 6, top + 80, x, top).stroke({ width: SNAKE_STALK_WIDTH, color: STALK, cap: 'round' });
+}
+
+// The leaves up the stalk: one every 46 px, on alternate sides ({ y, side }).
+export function snakeStalkLeaves(top, bottom) {
+  const leaves = [];
+  for (let y = top + 30; y < bottom - 20; y += 46) leaves.push({ y, side: Math.round(y / 46) % 2 ? 1 : -1 });
+  return leaves;
+}
+
+export function drawSnakeStalkLeaf(g, x, { y, side }) {
+  return g.poly(leafPoints(x, y, side > 0 ? -0.5 : Math.PI + 0.5, 16, 8)).fill(side > 0 ? LEAF : LEAF_DARK);
+}
+
+export function drawSnakeCoil(g) {
+  for (let i = 0; i < 3; i++) {
+    const y = -8 + i * 9;
+    g.moveTo(-15, y).quadraticCurveTo(0, y + 7, 15, y + 2).stroke({ width: 9, color: i % 2 ? SNAKE_DARK : SNAKE, cap: 'round' });
+  }
+  return g.moveTo(-13, 17).quadraticCurveTo(0, 22, 12, 16).stroke({ width: 3, color: SNAKE_BELLY, cap: 'round' });
+}
+
+// The neck and head, pointing up; flipped to point down.
+export function drawClimbingSnakeHead(g) {
+  g.moveTo(-15, -8).quadraticCurveTo(-8, -18, 0, -18).stroke({ width: 8, color: SNAKE, cap: 'round' });
+  g.ellipse(4, -19, 9, 6.5).fill(SNAKE);
+  g.circle(7, -21, 1.8).fill(PUPIL);
+  return g.moveTo(12, -19).lineTo(18, -19).lineTo(21, -22).moveTo(18, -19).lineTo(21, -16).stroke({ width: 1.2, color: TONGUE });
+}
+
+// The flying birds: each one's colours (body, wing and tail, belly), tail, crest (if any),
+// how fast it flaps, and its wing (from its root, `front` its front corner, out to a tip
+// `reach` across and `rise` up at full lift).
+export const FLYING_BIRDS = {
+  bird: { colors: BIRD_COLORS[0], tail: [-12, -2, -22, -8, -21, 2, -12, 4], crest: null, flap: 16, wing: { front: 4, reach: 6, rise: 14 } },
+  blueBird: { colors: BIRD_COLORS[1], tail: [-12, -1, -23, -7, -22, 3, -12, 4], crest: [5, -11, 4, -18, 9, -12], flap: 13, wing: { front: 5, reach: 7, rise: 16 } },
+  purpleBird: { colors: BIRD_COLORS[2], tail: [-12, -2, -24, -9, -22, 0, -24, 5, -12, 4], crest: [6, -11, 5, -17, 10, -12], flap: 14, wing: { front: 5, reach: 7, rise: 15 } },
+};
+
+export function drawFlyingBirdBody(g, { colors: [fur, dark, belly], tail, crest }) {
+  g.poly(tail).fill(dark);
+  g.ellipse(-1, 0, 13, 10).fill(fur);
+  g.ellipse(1, 4, 9, 5).fill(belly);
+  g.circle(9, -5, 7).fill(fur);
+  if (crest) g.poly(crest).fill(dark);
+  g.poly([14, -7, 22, -4, 14, -2]).fill(BEAK);
+  return g.circle(10, -7, 2.4).fill(EYE).circle(10.8, -7, 1.2).fill(PUPIL);
+}
+
+// The wing at `lift` (-1 down to 1 up).
+export function drawFlyingBirdWing(g, { colors: [, dark], wing: { front, reach, rise } }, lift) {
+  return g.poly([-8, -3, front, -3, -2 - reach * lift, -3 - rise * lift]).fill(dark);
+}
+
+// A flying bird's pose at time `t`: which way it faces, its pitch and its wing's lift.
+//   bird        faces the way it patrols
+//   blueBird    faces left or right by gap; nose up while climbing (y decreasing), down
+//               while diving
+//   purpleBird  faces the way it flies and tilts its nose along the circle
+export function flyingBirdPose(o, t) {
+  const { flap } = FLYING_BIRDS[o.type];
+  const lift = Math.sin(t * flap);
+  if (o.type === 'blueBird') {
+    const facing = o.gap % 2 === 0 ? 1 : -1;
+    return { facing, rotation: facing * Math.max(-0.6, Math.min(0.6, o.vyAt(t) / 320)), lift };
+  }
+  const facing = o.vxAt(t) >= 0 ? 1 : -1;
+  return { facing, rotation: o.type === 'purpleBird' ? facing * Math.max(-0.5, Math.min(0.5, o.vyAt(t) / 400)) : null, lift };
+}
+
+// Hitbox: circle r 16. A bird, flapping as it flies (see FLYING_BIRDS and flyingBirdPose):
+// red, patrolling; blue, with a pale belly and a small crest, flying up and down; purple,
+// with a pale belly and a tail feather, flying in circles.
 function buildBird(o) {
+  const kind = FLYING_BIRDS[o.type];
   const body = new Container();
   const g = new Graphics();
-  g.poly([-12, -2, -22, -8, -21, 2, -12, 4]).fill(BIRD_DARK);
-  g.ellipse(-1, 0, 13, 10).fill(BIRD);
-  g.ellipse(1, 4, 9, 5).fill(BIRD_BELLY);
-  g.circle(9, -5, 7).fill(BIRD);
-  g.poly([14, -7, 22, -4, 14, -2]).fill(BEAK);
-  g.circle(10, -7, 2.4).fill(EYE).circle(10.8, -7, 1.2).fill(PUPIL);
+  drawFlyingBirdBody(g, kind);
   const wing = new Graphics();
   body.addChild(g, wing);
   const animate = (t) => {
-    body.scale.set(o.vxAt(t) >= 0 ? o.scale : -o.scale, o.scale);
-    const lift = Math.sin(t * 16);
-    wing.clear().poly([-8, -3, 4, -3, -2 - 6 * lift, -3 - 14 * lift]).fill(BIRD_DARK);
-  };
-  return { parts: [body], body, animate };
-}
-
-// Hitbox: circle r 16. A blue bird with a pale belly and a small crest. It flies up and
-// down with its nose pitched along the climb or the dive, and faces left or right by
-// gap, flapping as it goes.
-function buildBlueBird(o) {
-  const facing = o.gap % 2 === 0 ? 1 : -1;
-  const body = new Container();
-  const g = new Graphics();
-  g.poly([-12, -1, -23, -7, -22, 3, -12, 4]).fill(BLUE_DARK);
-  g.ellipse(-1, 0, 13, 10).fill(BLUE);
-  g.ellipse(1, 4, 9, 5).fill(BLUE_BELLY);
-  g.circle(9, -5, 7).fill(BLUE);
-  g.poly([5, -11, 4, -18, 9, -12]).fill(BLUE_DARK);
-  g.poly([14, -7, 22, -4, 14, -2]).fill(BEAK);
-  g.circle(10, -7, 2.4).fill(EYE).circle(10.8, -7, 1.2).fill(PUPIL);
-  const wing = new Graphics();
-  body.addChild(g, wing);
-  const animate = (t) => {
-    body.scale.set(facing * o.scale, o.scale);
-    // Nose up while climbing (y decreasing), down while diving.
-    body.rotation = facing * Math.max(-0.6, Math.min(0.6, o.vyAt(t) / 320));
-    const lift = Math.sin(t * 13);
-    wing.clear().poly([-8, -3, 5, -3, -2 - 7 * lift, -3 - 16 * lift]).fill(BLUE_DARK);
-  };
-  return { parts: [body], body, animate };
-}
-
-// Hitbox: circle r 16. A purple bird with a pale belly and a tail feather, flying in
-// circles. It faces the way it is flying and tilts its nose along the circle.
-function buildPurpleBird(o) {
-  const body = new Container();
-  const g = new Graphics();
-  g.poly([-12, -2, -24, -9, -22, 0, -24, 5, -12, 4]).fill(PURPLE_DARK);
-  g.ellipse(-1, 0, 13, 10).fill(PURPLE);
-  g.ellipse(1, 4, 9, 5).fill(PURPLE_BELLY);
-  g.circle(9, -5, 7).fill(PURPLE);
-  g.poly([6, -11, 5, -17, 10, -12]).fill(PURPLE_DARK);
-  g.poly([14, -7, 22, -4, 14, -2]).fill(BEAK);
-  g.circle(10, -7, 2.4).fill(EYE).circle(10.8, -7, 1.2).fill(PUPIL);
-  const wing = new Graphics();
-  body.addChild(g, wing);
-  const animate = (t) => {
-    const facing = o.vxAt(t) >= 0 ? 1 : -1;
-    body.scale.set(facing * o.scale, o.scale);
-    body.rotation = facing * Math.max(-0.5, Math.min(0.5, o.vyAt(t) / 400));
-    const lift = Math.sin(t * 14);
-    wing.clear().poly([-8, -3, 5, -3, -2 - 7 * lift, -3 - 15 * lift]).fill(PURPLE_DARK);
+    const pose = flyingBirdPose(o, t);
+    body.scale.set(pose.facing * o.scale, o.scale);
+    if (pose.rotation !== null) body.rotation = pose.rotation;
+    drawFlyingBirdWing(wing.clear(), kind, pose.lift);
   };
   return { parts: [body], body, animate };
 }
@@ -1594,10 +1754,30 @@ function buildPurpleBird(o) {
 // like the bird; the one that flies in circles (the purple bird's night replacement)
 // also pitches its nose along the circle.
 function buildBat(o) {
-  const look = batLook(mulberry32(mixSeed(0xba7, o.gap)));
-  const circles = o.type === 'circleBat';
+  const look = flyingBatLook(o.gap);
   const body = new Container();
   const g = new Graphics();
+  drawFlyingBatBody(g, look);
+  const wing = new Graphics();
+  body.addChild(wing, g);
+  const animate = (t) => {
+    const pose = flyingBatPose(o, t);
+    body.scale.set(pose.facing * o.scale, o.scale);
+    if (pose.rotation !== null) body.rotation = pose.rotation;
+    drawFlyingBatWing(wing.clear(), look, pose.lift);
+  };
+  return { parts: [body], body, animate };
+}
+
+export const flyingBatLook = (gap) => batLook(mulberry32(mixSeed(0xba7, gap)));
+
+export function flyingBatPose(o, t) {
+  const facing = o.vxAt(t) >= 0 ? 1 : -1;
+  const rotation = o.type === 'circleBat' ? facing * Math.max(-0.5, Math.min(0.5, o.vyAt(t) / 400)) : null;
+  return { facing, rotation, lift: Math.sin(t * 22) };
+}
+
+export function drawFlyingBatBody(g, look) {
   const ear = look.ear;
   g.ellipse(-2, 1, 10, 7.5).fill(look.fur);
   if (look.collar !== null) g.ellipse(4, 0, 4, 6.5).fill(look.collar);
@@ -1605,33 +1785,26 @@ function buildBat(o) {
   g.poly([5, -6, 6, -6 - 8 * ear, 10, -7]).fill(look.dark).poly([9, -6, 12, -6 - 7 * ear, 14, -4]).fill(look.dark);
   g.poly([14, -1, 19, 1, 14, 3]).fill(look.dark);
   g.circle(11, -3, 1.8).fill(look.eye);
-  g.poly([-11, 1, -18, 5, -12, 5]).fill(look.dark);
-  const wing = new Graphics();
-  body.addChild(wing, g);
-  const animate = (t) => {
-    const facing = o.vxAt(t) >= 0 ? 1 : -1;
-    body.scale.set(facing * o.scale, o.scale);
-    if (circles) body.rotation = facing * Math.max(-0.5, Math.min(0.5, o.vyAt(t) / 400));
-    // One wing seen from the side: an arm out to a tip, and a scalloped membrane from
-    // the tip back to the body.
-    const lift = Math.sin(t * 22);
-    const root = [-3, 4];
-    const tip = [(-23 - 3 * Math.abs(lift)) * look.span, (-5 - 22 * lift) * look.span];
-    const elbow = [-7, (-4 - 11 * lift) * look.span];
-    const along = (f, dx, dy) => [tip[0] + (root[0] - tip[0]) * f + dx, tip[1] + (root[1] - tip[1]) * f + dy];
-    const edge = [along(0.22, 3, 1), along(0.4, -1, 7), along(0.58, 3, 4), along(0.78, -1, 6)];
-    wing
-      .clear()
-      .poly([0, -3, ...elbow, ...tip, ...edge.flat(), ...root])
-      .fill(look.wing)
-      .poly([0, -3, ...elbow, ...tip])
-      .stroke({ width: 2.4, color: look.dark, cap: 'round', join: 'round' });
-    for (const e of [edge[1], edge[3]]) wing.moveTo(0, -3).lineTo(e[0], e[1]).stroke({ width: 1, color: look.dark, alpha: 0.7 });
-  };
-  return { parts: [body], body, animate };
+  return g.poly([-11, 1, -18, 5, -12, 5]).fill(look.dark);
 }
 
-const BUILD_MOVING = { spider: buildSpider, snake: buildSnake, bird: buildBird, bat: buildBat, circleBat: buildBat, blueBird: buildBlueBird, purpleBird: buildPurpleBird };
+// One wing seen from the side at `lift` (-1 down to 1 up): an arm out to a tip, and a
+// scalloped membrane from the tip back to the body.
+export function drawFlyingBatWing(g, look, lift) {
+  const root = [-3, 4];
+  const tip = [(-23 - 3 * Math.abs(lift)) * look.span, (-5 - 22 * lift) * look.span];
+  const elbow = [-7, (-4 - 11 * lift) * look.span];
+  const along = (f, dx, dy) => [tip[0] + (root[0] - tip[0]) * f + dx, tip[1] + (root[1] - tip[1]) * f + dy];
+  const edge = [along(0.22, 3, 1), along(0.4, -1, 7), along(0.58, 3, 4), along(0.78, -1, 6)];
+  g.poly([0, -3, ...elbow, ...tip, ...edge.flat(), ...root])
+    .fill(look.wing)
+    .poly([0, -3, ...elbow, ...tip])
+    .stroke({ width: 2.4, color: look.dark, cap: 'round', join: 'round' });
+  for (const e of [edge[1], edge[3]]) g.moveTo(0, -3).lineTo(e[0], e[1]).stroke({ width: 1, color: look.dark, alpha: 0.7 });
+  return g;
+}
+
+const BUILD_MOVING = { spider: buildSpider, snake: buildSnake, bird: buildBird, bat: buildBat, circleBat: buildBat, blueBird: buildBird, purpleBird: buildBird };
 
 // A view: `view` to add to the layer, and `update()` each frame.
 function buildObstacle(o) {
