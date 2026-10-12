@@ -13,7 +13,7 @@ import {
   drawMidLayer,
   drawNearLayer,
   skyBand,
-} from '../../render/background.js';
+} from '../../views/backdrop.js';
 
 // The backdrop: the sky, stretched to the view, and the layers, tiles that repeat sideways,
 // scrolled at their own speed. All tinted with the stage.

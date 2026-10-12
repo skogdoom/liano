@@ -1,7 +1,7 @@
 import { LIANA_LENGTH } from '../../config.js';
-import { LIANA_PALETTES, TIP_FLASH } from '../../render/lianaView.js';
+import { LIANA_PALETTES, TIP_FLASH } from '../../views/liana.js';
 import { leafPoints } from '../../render/shapes.js';
-import { SHADOW_LIANA } from '../../render/shadowView.js';
+import { SHADOW_LIANA } from '../../views/shadow.js';
 
 // A liana: the rope and the tip flash are straight strips along +x, bent along the rope's
 // points by the rig; a round cap reaches half the width past each end. Each liana's

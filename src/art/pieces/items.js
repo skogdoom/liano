@@ -1,5 +1,5 @@
-import { HEART_GLINT, bananaShape, drawBanana, drawGlint } from '../../render/bananaView.js';
-import { drawHeart } from '../../render/heartView.js';
+import { HEART_GLINT, bananaShape, drawBanana, drawGlint } from '../../views/banana.js';
+import { drawHeart } from '../../views/hearts.js';
 
 // What the monkeys collect, and the hearts and banana icons of the HUD and results.
 const { glint } = bananaShape();

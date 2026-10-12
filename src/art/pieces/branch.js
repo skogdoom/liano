@@ -8,7 +8,7 @@ import {
   drawPantherEyes,
   drawPantherTail,
   drawTrunk,
-} from '../../render/obstacleViews.js';
+} from '../../views/obstacles.js';
 
 // The branch and the panther on it. Obstacles grow to 1.3 by stage 4: their pieces are
 // rasterized for that scale.

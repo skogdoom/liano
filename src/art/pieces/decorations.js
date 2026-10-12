@@ -45,7 +45,7 @@ import {
   drawSnakeMark,
   drawSnakeTail,
   drawSnakeTongue,
-} from '../../render/obstacleViews.js';
+} from '../../views/obstacles.js';
 import { OBSTACLE_SCALE } from './branch.js';
 import { linePieces } from './lines.js';
 

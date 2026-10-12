@@ -10,8 +10,8 @@ import {
   drawMonkeyHead,
   drawMonkeyTail,
   drawTorso,
-} from '../../render/monkeyView.js';
-import { SHADOW_FUR } from '../../render/shadowView.js';
+} from '../../views/monkey.js';
+import { SHADOW_FUR } from '../../views/shadow.js';
 
 // The monkey, per palette: player 1 (brown), player 2 (ginger) and the shadow (grey,
 // drawn see-through). The body turns and faces either way; the limbs turn about their
