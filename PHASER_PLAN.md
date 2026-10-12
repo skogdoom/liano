@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0 is done (its report is under M0). M1 is done on desktop (its report is under M1); its go/no-go waits for the iPhone 13 mini numbers and the questions in section 11.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each); M1's phone numbers and the questions in section 11 are still open. M3 is next.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -269,6 +269,46 @@ That is 80–120 MB, so the proposed budget is **120 MB at a ratio of 2** (quest
 - Pause on blur or hidden, `P`, `Esc`, context loss and restore (pause, notice; the atlases upload again by themselves).
 - Fullscreen on Phaser's Scale Manager with the existing exceptions and the `pointerup` rule.
 - **Done when:** every layout shape (the cases `layout.test.js` covers, plus a phone, an iPad, portrait) draws a correct letterboxed empty frame; fullscreen and context-loss smoke tests pass; `layout`, `pause` and `fullscreen` tests pass, adapted.
+
+**M2 report (done, version 3.0.0-dev.3).**
+- **Shared with the Pixi version** (moved out of `main.js`, which now uses them; unit tested):
+  - `src/screen.js`: the pixel ratio, the safe-area probe, the once-a-frame screen-change watch (resize, rotation, the iOS address bar, a pixel-ratio change without a resize), the home-screen check and the gesture blocking.
+  - `src/controls.js`: the buttons' tap targets and where a pointer is among them.
+
+  `layout.js`, `pause.js` and `fullscreen.js` are used unchanged, so their tests stand as they are.
+- **The game** (`src/phaser/main.js`): WebGL, antialiased, Phaser's frame-time smoothing off. The Scale Manager in `NONE` mode with the M1 HiDPI method (`src/phaser/view.js`):
+  - the canvas is the window's CSS size times the pixel ratio (capped at 2), shown at the CSS size;
+  - each scene's camera has the layout's view as its viewport (whole pixels), zoomed by the layout's scale times the ratio;
+  - outside the viewport is the black background: the letterbox, with nothing drawn over it.
+
+  The view's corners land exactly where the Pixi version draws them, which is tested for 8 window shapes at 3 ratios.
+- **Scenes** (`src/phaser/scenes.js`):
+  - Boot: has the slot for loading the atlases (M4), then starts the others.
+  - Play: draws the empty frame (the view and the world band in it).
+  - UI: shows the version, "Paused", and a stand-in full-screen button.
+
+  They follow a `layout` event from the platform, which also holds the pause and full screen.
+- **Pause**: `pause.js` as in the Pixi version: blur, hidden, a lost context, and P. Phaser itself stops its loop while the page is hidden; on blur it keeps drawing, as the Pixi version does.
+- **Context loss**: Phaser's renderer events pause the game and show the notice; after 5 s without a restore, the error screen. Phaser uploads the textures again by itself.
+- **Full screen** through the Scale Manager (`src/phaser/fullscreen.js`):
+  - The whole page goes full screen (`fullscreenTarget` is the document's root), so the HTML overlays stay visible.
+  - Same interface as `fullscreen.js`, so the F key and the button's pointerup rule are shared.
+  - Phaser ignores a refused request's promise, which would reach the error screen, so the adapter makes the request and ignores the refusal.
+  - The home-screen app and iPhone Safari get no button.
+- **Errors**: an error anywhere shows the error screen and stops Phaser's loop. `window.__liano` has the game, the platform, the layout, the camera, the pause and full screen.
+- **Browser tests** (`browser-tests/platform.spec.js`, 15 tests), checking the snapshot's pixels where it matters:
+  - the letterboxed frame at 7 window shapes: 16:9, a phone in landscape, an ultra-wide with bars, an iPad, two portrait phones, 1.5×;
+  - following a resize to portrait, and a pixel-ratio change;
+  - F into and out of full screen, for both versions;
+  - the button's tap entering full screen on release;
+  - a lost and restored context, for both versions;
+  - P pausing and resuming.
+- **Found for M3**: Phaser 4.2.1's keyboard plugin queues a frame's key events and hands a scene the whole queue again with each new event. Its duplicate check compares only with the previous event, so two presses in one frame toggle twice. P is read from the DOM until then; the input adapter in M3 has to read keys so that each press counts once.
+- **Left for later**:
+  - Phaser's audio stays off until M3, which wires the sound.
+  - Esc is a game action (back to the title) and comes with the input (M3).
+  - The two-player frame and the shared zoom come with the panes and modes (M6); `layoutFor` and `paneLayouts` already cover them.
+  - Loading the atlases comes with the art pipeline (M4).
 
 ### M3. Input and audio on Phaser (M)
 

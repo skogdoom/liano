@@ -24,6 +24,8 @@ import { FullscreenButton } from './render/fullscreenButton.js';
 import { SoundPlayer } from './audio/player.js';
 import { soundsFor } from './audio/sounds.js';
 import { createFatalOverlay, createNotice, isOwnError } from './fatal.js';
+import { blockBrowserGestures, isHomeScreenApp, pixelRatio as screenPixelRatio, safeAreaReader, watchScreen } from './screen.js';
+import { controlsPoint as pointInControls } from './controls.js';
 
 // Anything that breaks from here on, startup included, shows a reload message
 // instead of a frozen canvas.
@@ -33,7 +35,7 @@ window.addEventListener('error', (event) => {
 });
 window.addEventListener('unhandledrejection', (event) => fatal.show(event.reason));
 
-const pixelRatio = () => Math.min(window.devicePixelRatio || 1, MAX_RESOLUTION);
+const pixelRatio = () => screenPixelRatio(window, MAX_RESOLUTION);
 
 const app = new Application();
 await app.init({
@@ -56,17 +58,8 @@ const root = new Container();
 const letterbox = new Graphics();
 app.stage.addChild(root, letterbox);
 
-// Safe-area insets (notch, home indicator) in CSS pixels, read from a hidden probe.
-const safeAreaProbe = document.createElement('div');
-safeAreaProbe.style.cssText =
-  'position:fixed;visibility:hidden;pointer-events:none;' +
-  'padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
-document.body.appendChild(safeAreaProbe);
-function safeAreaInsets() {
-  const style = getComputedStyle(safeAreaProbe);
-  const px = (value) => parseFloat(value) || 0;
-  return { top: px(style.paddingTop), right: px(style.paddingRight), bottom: px(style.paddingBottom), left: px(style.paddingLeft) };
-}
+// Safe-area insets (notch, home indicator) in CSS pixels.
+const safeAreaInsets = safeAreaReader(document);
 
 let current = null; // the current layout
 let layoutMode = null; // the mode it was made for
@@ -98,39 +91,11 @@ function layout() {
   controls.scale.set(current.ui);
   debugOverlay.screenView.position.set(current.insets.left, current.insets.top);
 }
-// Re-layout on window resizes, rotation, and the iOS address bar showing or hiding,
-// at most once per frame.
-let layoutQueued = false;
-function queueLayout() {
-  if (layoutQueued) return;
-  layoutQueued = true;
-  requestAnimationFrame(() => {
-    layoutQueued = false;
-    layout();
-  });
-}
-window.addEventListener('resize', queueLayout);
-window.addEventListener('orientationchange', queueLayout);
-window.visualViewport?.addEventListener('resize', queueLayout);
-// The pixel ratio can change without a resize (a window moved to another screen).
-function watchPixelRatio() {
-  window
-    .matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
-    .addEventListener('change', () => (queueLayout(), watchPixelRatio()), { once: true });
-}
-watchPixelRatio();
+// Re-layout whenever the screen changes shape, at most once per frame.
+const queueLayout = watchScreen(window, () => layout());
 
-// Block browser gestures on the game: double-tap zoom, iOS pinch, and the
-// long-press menu.
-for (const type of ['dblclick', 'gesturestart', 'contextmenu']) {
-  app.canvas.addEventListener(type, (event) => event.preventDefault());
-}
-// iOS Safari still acts on quick taps (in landscape it briefly shifts the page under
-// the tab bar) unless the touch events themselves are cancelled; pointer events,
-// which the game reads, arrive before them and are unaffected.
-for (const type of ['touchstart', 'touchmove', 'touchend']) {
-  app.canvas.addEventListener(type, (event) => event.preventDefault(), { passive: false });
-}
+// Block browser gestures on the game (double-tap zoom, pinch, the long-press menu).
+blockBrowserGestures(app.canvas);
 
 // Back to front: the panes (one per world: the sky and parallax layers, the world,
 // the canopy strip and floor band), then HUD and overlays.
@@ -201,18 +166,11 @@ function toggleMute() {
 }
 
 // Position of a pointer event in the buttons' coordinates (see `controls`).
-function controlsPoint(event) {
-  const rect = app.canvas.getBoundingClientRect();
-  const x = (event.clientX - rect.left - root.x) / root.scale.x;
-  const y = (event.clientY - rect.top - root.y) / root.scale.y;
-  return { x: (x - controls.x) / controls.scale.x, y: (y - controls.y) / controls.scale.y };
-}
+const controlsPoint = (event) => pointInControls(current, app.canvas.getBoundingClientRect(), event.clientX, event.clientY);
 
 // Full screen via the button or F, where the browser allows it for pages. The
 // home-screen app is already full screen, so it gets neither.
-const homeScreenApp =
-  window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches ||
-  navigator.standalone === true;
+const homeScreenApp = isHomeScreenApp(window);
 const fullscreen = createFullscreen(document, {
   onChange: (active) => {
     fullscreenButton.update(active);

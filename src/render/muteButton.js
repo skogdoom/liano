@@ -1,10 +1,10 @@
 import { Container, Graphics } from 'pixi.js';
+import { MUTE_HIT, inside } from '../controls.js';
 
 const CREAM = 0xf4e7c5;
 const OUTLINE = 0x2a1a0c;
 // Tap target in logical pixels: larger than the icon, since a phone shows the game
 // at about half size. The fullscreen button's starts where it ends.
-const HIT = { x: 0, y: 0, w: 90, h: 90 };
 
 // Speaker icon in the top-left corner; tap or click it (or press M) to mute.
 export class MuteButton {
@@ -31,7 +31,7 @@ export class MuteButton {
   }
 
   contains(x, y) {
-    return x >= HIT.x && x <= HIT.x + HIT.w && y >= HIT.y && y <= HIT.y + HIT.h;
+    return inside(MUTE_HIT, { x, y });
   }
 
   update(muted) {
