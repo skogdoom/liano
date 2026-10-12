@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each); M1's phone numbers and the questions in section 11 are still open. M3 is next.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). Two questions from M1 are still open (section 11). M3 is next.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -132,7 +132,7 @@ The weakest device is an **iPhone 13 mini**: A15 chip, 4 GB of memory, a 60 Hz s
 
 - **Frame rate:** a steady 60 fps in every mode, split screen included: no frames over 34 ms in a normal run (the debug view's `slow` counter), and the JS part of a frame no more than about twice today's.
 - **Start:** a playable title within about 1.5 s of the page loading (once cached), loading and decoding the boot atlas included.
-- **Texture memory:** a budget set in the M1 spike, aimed well under 150 MB at a pixel ratio of 2. iOS reloads a page whose memory grows too large, and WebGL textures count towards it. The texture size limit is read on the phone in M1; until then the plan assumes 4096 pixels.
+- **Texture memory:** a budget set in the M1 spike, aimed well under 150 MB at a pixel ratio of 2. iOS reloads a page whose memory grows too large, and WebGL textures count towards it. The phone's texture size limit, read in M1, is 16384 pixels.
 - **Memory over time:** no growth of the post-GC heap over 30 game-minutes (measured in Chrome, which reports the heap; Safari doesn't).
 
 Measuring on the phone: the debug view's frame line (`fps`, `worst`, `slow`) works in Safari; Safari's Web Inspector (from a Mac) gives timelines and memory. CI runs the browser tests in Chromium only, so anything WebKit-specific is caught on the phone.
@@ -259,7 +259,27 @@ That is 80–120 MB, so the proposed budget is **120 MB at a ratio of 2** (quest
 - the upper part of each backdrop tile (only seen in tall portrait views) becomes a smaller repeating tile;
 - mostly empty layers are trimmed.
 
-**Go/no-go.** On desktop it is a go: less JS per frame than today, fewer draw calls, a fast start, parity within the limit everywhere and replacement with no code change. The phone numbers are needed to close M1 (question 1): the frame rate, `slow`, the JS time, the texture size limit and the start time on the iPhone 13 mini.
+**On the iPhone 13 mini** (Safari, landscape, a pixel ratio of 2, the bench built for production and served from a computer on the same network):
+
+| | fps | worst frame | `slow` | JS per frame | Draw calls |
+|---|---|---|---|---|---|
+| Atlas rigs, 4 branches + 4 lianas (about a game screen) | 60 | 17 ms | 0 | 3.5 ms | 10 |
+| Atlas rigs, 24 + 24 | 60 | 20 ms | 0 | 5.8 ms | 50 |
+| Pixi (today), 4 + 4 | 60 | 17 ms | 1 | about 3 ms (one frame's reading) | 19 |
+| Pixi (today), 24 + 24 | 50 | 27 ms | 1 | (one frame's reading only) | 99 |
+| Native Phaser Graphics, 4 + 4 | 4 | 260 ms | 44 | 255 ms | 5 |
+
+Other numbers from the phone:
+- The texture size limit is **16384** pixels (the plan had assumed 4096).
+- Loading and decoding the 2× art took 42–52 ms.
+- The pages started 9–10 s after navigation. That is the 1.7 MB bench bundle, which holds both libraries, fetched over Wi‑Fi on a first load; it says nothing about the game's start, which M7 measures on the real build.
+
+The atlas rigs hold 60 fps under the stress load, where Pixi drops to 50, and native Graphics is unusable on the phone.
+
+**Go/no-go: go.**
+- The section 6 frame-rate budget is met with room to spare.
+- The texture size limit is no constraint.
+- Parity is within the limit everywhere, and art can be replaced with no code change.
 
 ### M2. Platform: Game, Scenes, Scale, lifecycle (M)
 
@@ -401,7 +421,7 @@ Everything below must work on the Phaser renderer as on v2.3:
 Every question from the first two drafts is answered in section 1. New questions that come up during a milestone are added here and asked before that milestone's PR is merged into `phaser`.
 
 From M1:
-1. **The iPhone 13 mini numbers.** On a computer on the same network as the phone: `npm ci`, `npm run art:atlas`, `npm run spike:bench`. Then, in Safari on the phone, open the printed network address followed by `spike/bench.html`. The page shows the frame rate, `worst`, `slow`, the JS time per frame, draw calls, texture memory, the texture size limit and the start time. Use the buttons to try `engine` pixi, atlas and native. After 12 s a `result` line appears. Wanted: those lines for pixi and atlas, and the texture size limit. Fewer objects make a fairer game-like load: add `&branches=4&lianas=4` to the address.
+1. ~~**The iPhone 13 mini numbers.**~~ Answered: in the M1 report (a go). To measure again, on a computer on the same network as the phone run `npm ci`, `npm run art:atlas`, `npm run spike:bench`. Then, in Safari on the phone, open the printed network address followed by `spike/bench.html?engine=atlas&branches=4&lianas=4` (or `engine=pixi`). The `result` line comes after 12 s.
 2. **Solid patches as part of "identical"?** Proposed: a scenario also fails with more than 25 solid pixels per million. The spike's correct rigs score 0–16 per million; the magenta eyes 640; the rope's flat ends 49 (1×) and 142 (2×).
 3. **The texture budget**: 120 MB at a pixel ratio of 2, as estimated in the M1 report?
 
