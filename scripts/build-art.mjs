@@ -15,10 +15,11 @@ const root = new URL('../art/', import.meta.url);
 const out = new URL('../public/art/', import.meta.url);
 const PADDING = 2;
 const MAX_PAGE = 4096;
-// Texture memory (RGBA, 4 bytes a pixel) the game may load at the 2× scale, every set and
-// tile together (PHASER_PLAN.md, R2: the iPhone 13 mini's limit). The build fails over it.
-const BUDGET_MB = 120;
-const BUDGET_SCALE = 2;
+// Texture memory (RGBA, 4 bytes a pixel) the game may load at an atlas scale, every set
+// and tile together. The build fails over a limit: 120 MB at 2× is the budget for the
+// iPhone 13 mini (PHASER_PLAN.md, section 6).
+// Only large desktop windows load the 4× set; its ceiling keeps it from growing unnoticed.
+const LIMITS_MB = { 2: 120, 4: 300 };
 
 const start = performance.now();
 const manifest = JSON.parse(readFileSync(new URL('manifest.json', root), 'utf8'));
@@ -155,9 +156,8 @@ console.log(
     Object.entries(sizes)
       .map(([name, size]) => `  ${name.padEnd(28)} ${size}`)
       .join('\n') +
-    `\ntexture memory: ${ATLAS_SCALES.map((s) => `${(memory[s] / 1e6).toFixed(0)} MB at ${s}×`).join(', ')} (budget ${BUDGET_MB} MB at ${BUDGET_SCALE}×)`,
+    `\ntexture memory: ${ATLAS_SCALES.map((s) => `${(memory[s] / 1e6).toFixed(0)} MB at ${s}×`).join(', ')} (limits ${Object.entries(LIMITS_MB).map(([s, mb]) => `${mb} MB at ${s}×`).join(', ')})`,
 );
-if (memory[BUDGET_SCALE] > BUDGET_MB * 1e6) {
-  console.error(`The art needs ${(memory[BUDGET_SCALE] / 1e6).toFixed(0)} MB of texture memory at ${BUDGET_SCALE}×, over the budget of ${BUDGET_MB} MB.`);
-  process.exit(1);
-}
+const over = Object.entries(LIMITS_MB).filter(([s, mb]) => memory[s] > mb * 1e6);
+for (const [s, mb] of over) console.error(`The art needs ${(memory[s] / 1e6).toFixed(0)} MB of texture memory at ${s}×, over the limit of ${mb} MB.`);
+if (over.length) process.exit(1);

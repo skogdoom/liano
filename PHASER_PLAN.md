@@ -426,10 +426,10 @@ The atlas rigs hold 60 fps under the stress load, where Pixi drops to 50, and na
   - The temple's base and stairs reach the floor, which depends on how high the temple stands. They are pictures that repeat (92 px of base, 8 steps of stairs), stacked down to the floor with the last one cropped. The fixed part above them is one picture per look.
   - The haze is soft, so it is rasterized at half the scale, and only its top half is kept (the floor hides the rest). The floor tile keeps only its top 74 px; below it a stretched square of the floor's colour.
 - **Atlases at 1×, 2× and 4×.** The scale is picked by device pixels per world unit (the layout's scale × the pixel ratio), allowing 1.25× upscaling. On a laptop or desktop with a large window this exceeds 2: 1920 px wide at a ratio of 2 is 3 px per unit. So a 4× set was added; phones use 1× or 2×.
-- **Texture memory** (atlases and tiles, one scale loaded at a time): **48 MB at 1×, 86 MB at 2×**, 234 MB at 4×. The build reports it, and **fails** if the 2× figure exceeds the 120 MB budget. The tiles are 35 MB of that; the top of each tall layer could still become a small repeating tile if the phone needs less (section 6).
+- **Texture memory** (atlases and tiles, one scale loaded at a time): **48 MB at 1×, 86 MB at 2×**, 234 MB at 4×. The build reports it, and **fails** over 120 MB at 2× (the budget) or 300 MB at 4× (a ceiling, agreed after M4, so the desktop set cannot grow unnoticed). The tiles are 35 MB of that; the top of each tall layer could still become a small repeating tile if the phone needs less (section 6).
 - **Load times** (Chromium in the CI container, dev server, not the phone): the boot set in 0.26 s at 1× and 0.45 s at 2×; the main set behind the title in 0.6 s and 1.7 s. M7 measures the start on the iPhone 13 mini against the 1.5 s budget.
   - Boot set: the backdrop, player 1's monkey, the green lianas, bananas, hearts and the UI.
-  - Main set: everything else. M5 must not show an obstacle before the main set is in; if a run can start sooner, the first stage's obstacles move to the boot set.
+  - Main set: everything else. **Agreed after M4:** in M5 a run waits for the main set (Space pressed before it is in starts the run as soon as it arrives). If M7 finds the wait noticeable on the phone, the first stage's obstacles move to the boot set.
 - **Runtime helpers** (`src/phaser/art.js`, unit tested):
   - images with their pivot, flipbook frames, strips bent along a rope (M1), tiles;
   - `column` stacks a repeating piece down to a depth;
@@ -455,7 +455,7 @@ The atlas rigs hold 60 fps under the stress load, where Pixi drops to 50, and na
   - The build used the placeholders. The gallery marked the 21 frames custom and still passed.
   - The parity page's Phaser rigs showed them with no code change: the trunk stretched, each tail frame its own colour, the rope bent, the backdrop tinted at dusk.
   - Then the drill was reverted. M7 runs it again on the finished rigs.
-- **Close, not exact**, as listed in the inventory. Each is within the gallery's limits; M5's scene parity measures them in place:
+- **Close, not exact**, as listed in the inventory (**accepted after M4**, as is the gallery's judging above). Each is within the gallery's limits; M5's scene parity measures them in place, and one that fails there gets more frames, a closer reference size or a piece of its own:
   - quantized motion: the wings, flame, tails, the bat's ear and the chick's beak;
   - stretched curves: vines, stalks, flower stems, the snake's coil bands;
   - the coconut stem's bend;
@@ -468,7 +468,7 @@ The atlas rigs hold 60 fps under the stress load, where Pixi drops to 50, and na
 For each part: rigs built from the M4 pieces, a view-model (tested in Node) and a Phaser adapter.
 
 - **M5a, the monkey and the lianas.** Monkey (poses, body rotation easing, facing, blink, the death spin, the two-player palettes), lianas (rest, swinging, settling, tip flash, the shared-screen pair that bows apart, golden and green sets), interpolation between steps, the shadow monkey and its fading grey lianas.
-- **M5b, static obstacles and decorations.** Branch (with the nine decorations), thorn bush, rock, beehive, the vines and trunks, the day and night decoration sets, the hanging bats and owls.
+- **M5b, static obstacles and decorations.** Obstacles are in the main art set: a run waits for it (agreed after M4). Branch (with the nine decorations), thorn bush, rock, beehive, the vines and trunks, the day and night decoration sets, the hanging bats and owls.
 - **M5c, moving obstacles and bananas.** Spider with its thread, snake, bird, blue bird, purple bird, bat, circling bat (their wing, leg and eye animation as flipbooks and joints), bees, bananas with the glint, "+1" and "+1 ♥" pops, the heart on the field.
 - **M5d, the temple and the world around it.** The four temple looks, the stage tint, haze, moss, the fires (flicker, additive glow, fire kept untinted), then the backdrop: sky bands, the three parallax layers, canopy, floor, the stage and time-of-day tint transitions, dawn.
 - **Done when:** each part's parity-tool scenarios are inside the tolerance, its view-model tests pass, and the frame-time and memory budgets still hold with everything on screen. After M5c (bananas drawn): the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini).
