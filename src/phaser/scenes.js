@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { version } from '../../package.json';
-import { SHARED_ZOOM, WORLD_HEIGHT } from '../config.js';
+import { SHARED_ZOOM } from '../config.js';
 import { paneLayouts } from '../layout.js';
 import { FULLSCREEN_HIT, MUTE_HIT } from '../controls.js';
 import { MODES } from '../sim/match.js';
@@ -14,12 +14,9 @@ import { WorldPane } from './world/pane.js';
 // (main.js) holds the layout, pause and full screen; scenes find it in the game's
 // registry.
 //
-// So far Play draws the worlds over a plain frame (until the backdrop, M5d), and UI a
-// readout of the game (readout below), "Paused", and stand-in mute and full-screen
-// buttons.
+// So far UI shows a readout of the game (readout below), "Paused", and stand-in mute and
+// full-screen buttons; the HUD and panels come in M6.
 
-const VIEW = 0x10261a;
-const BAND = 0x4a8060;
 const CREAM = '#f4e7c5';
 
 const platformOf = (scene) => scene.registry.get('platform');
@@ -85,11 +82,7 @@ export class PlayScene extends Phaser.Scene {
     this.paneWorlds = null;
     // Screen shake is off for players who ask for reduced motion.
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const frame = this.add.graphics();
-    followLayout(this, ({ view, bandTop }) => {
-      frame.clear().fillStyle(VIEW).fillRect(0, 0, view.width, view.height).fillStyle(BAND).fillRect(0, bandTop, view.width, WORLD_HEIGHT);
-      this.layoutPanes();
-    });
+    followLayout(this, () => this.layoutPanes());
     // The world is drawn once the main set of the art is in (obstacles are in it); until
     // then the game holds presses (see main.js).
     const start = () => {

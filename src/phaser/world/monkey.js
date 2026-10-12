@@ -1,4 +1,5 @@
 import { LIMBS, MonkeyPose } from '../../views/monkey.js';
+import { makeContainer } from './build.js';
 
 // A monkey in the Phaser version (PHASER_PLAN.md, M5a): the pieces of one fur (p1, p2 or
 // shadow) in the order the Pixi view stacks its parts, posed by the same MonkeyPose.
@@ -7,8 +8,8 @@ export class MonkeyRig {
     const piece = (part, frame = 0) => art.image(scene, `monkey.${fur}.${part}`, frame);
     const limb = (part, at) => piece(part).setPosition(at.x, at.y);
     this.art = art;
-    this.view = scene.make.container({}, false);
-    this.body = scene.make.container({}, false);
+    this.view = makeContainer(scene);
+    this.body = makeContainer(scene);
     this.legBack = limb('leg', LIMBS.legBack);
     this.legFront = limb('leg', LIMBS.legFront);
     this.armBack = limb('arm', LIMBS.armBack);

@@ -1,5 +1,5 @@
 import { Container, Graphics, GraphicsContext } from 'pixi.js';
-import { TILE, EXTEND_DOWN, drawSky, FAR_FACTOR, drawFarLayer, MID_FACTOR, drawMidLayer, NEAR_FACTOR, drawNearLayer, drawCanopyLayer, drawFloorLayer, STAGE_TINTS, TINT_TIME, tintBetween } from '../views/backdrop.js';
+import { FAR_FACTOR, MID_FACTOR, NEAR_FACTOR, STAGE_TINTS, StageTint, TILE, drawCanopyLayer, drawFarLayer, drawFloorLayer, drawMidLayer, drawNearLayer, drawSky, layerShift } from '../views/backdrop.js';
 
 // The parts both versions share (pure: no Pixi) are in views/backdrop.js.
 export * from '../views/backdrop.js';
@@ -19,8 +19,7 @@ class ParallaxLayer {
   }
 
   update(cameraX) {
-    const shift = (((cameraX * this.factor) % TILE) + TILE) % TILE;
-    this.view.x = -shift;
+    this.view.x = -layerShift(cameraX, this.factor);
   }
 }
 
@@ -64,19 +63,14 @@ export class Background {
     skyGroup.addChild(this.sky);
     this.back.addChild(skyGroup, this.far.view, this.mid.view, this.near.view);
     this.front.addChild(this.canopy.view, this.floor.view);
-    this.tint = { world: null, from: STAGE_TINTS[0], to: STAGE_TINTS[0], t: 1 };
+    this.stageTint = new StageTint();
     // The tint now, for the scenery that is drawn between the layers (the temple).
     this.color = STAGE_TINTS[0];
   }
 
   // Shifts the tint towards the stage's; a new world starts at once from the first.
   setStage(stage, world, dt) {
-    const target = STAGE_TINTS[(stage - 1) % STAGE_TINTS.length];
-    const tint = this.tint;
-    if (world !== tint.world) Object.assign(tint, { world, from: target, to: target, t: 1 });
-    else if (target !== tint.to) Object.assign(tint, { from: tintBetween(tint.from, tint.to, tint.t), to: target, t: 0 });
-    tint.t = Math.min(tint.t + dt / TINT_TIME, 1);
-    const color = tintBetween(tint.from, tint.to, tint.t);
+    const color = this.stageTint.update(stage, world, dt);
     this.color = color;
     this.back.tint = color;
     this.front.tint = color;

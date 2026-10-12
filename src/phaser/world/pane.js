@@ -2,17 +2,19 @@ import { DEATH_SHAKE_PX, DEATH_SHAKE_TIME } from '../../config.js';
 import { Camera, cameraTarget } from '../../render/camera.js';
 import { blend } from '../../render/interpolate.js';
 import { Shake } from '../../render/shake.js';
+import { BackdropRig } from './backdrop.js';
 import { BananaLayer } from './bananas.js';
 import { LianaSetRig } from './lianas.js';
 import { ObstacleLayer } from './obstacleLayer.js';
 import { MonkeyRig } from './monkey.js';
 import { ShadowRig } from './shadow.js';
+import { makeContainer } from './build.js';
 
 // One world drawn in one rect of the view, as the Pixi Pane (render/pane.js): the whole
 // view in single player, a strip per player in split screen. `scene` is what the death
-// shake moves; in it, back to front, the world (scrolled by the camera: the obstacles,
-// the lianas, the bananas, then the shadow and the monkeys). M5d adds the backdrop; M6 the
-// clip and the debug view.
+// shake moves; in it, back to front: the sky and the parallax layers, the world
+// (scrolled by the camera: the obstacles, the lianas, the bananas, then the shadow and
+// the monkeys), the canopy strip and the floor. M6 adds the clip and the debug view.
 const FURS = ['p1', 'p2'];
 const COLOURINGS = ['green', 'gold'];
 
@@ -21,18 +23,19 @@ export class WorldPane {
     this.phaser = scene;
     this.art = art;
     this.view = scene.add.container(0, 0);
-    this.scene = scene.make.container({}, false);
-    this.worldLayer = scene.make.container({}, false);
+    this.scene = makeContainer(scene);
+    this.worldLayer = makeContainer(scene);
     this.obstacles = new ObstacleLayer(scene, art);
-    this.lianaLayer = scene.make.container({}, false);
+    this.lianaLayer = makeContainer(scene);
     this.bananas = new BananaLayer(scene, art);
-    this.monkeyLayer = scene.make.container({}, false);
+    this.monkeyLayer = makeContainer(scene);
     this.lianaSets = [];
     this.monkeys = [];
     this.shadow = new ShadowRig(scene, art);
     this.monkeyLayer.add(this.shadow.view);
     this.worldLayer.add([this.obstacles.view, this.lianaLayer, this.bananas.view, this.monkeyLayer]);
-    this.scene.add(this.worldLayer);
+    this.backdrop = new BackdropRig(scene, art);
+    this.scene.add([this.backdrop.back, this.worldLayer, this.backdrop.front]);
     this.view.add(this.scene);
     this.ownCamera = new Camera();
     this.camera = this.ownCamera;
@@ -48,6 +51,7 @@ export class WorldPane {
     this.layout = pane;
     this.view.setPosition(pane.x, pane.y);
     this.scene.setScale(pane.scale);
+    this.backdrop.resize(pane);
     this.ownCamera.screenX = pane.camera.screenX;
     if (this.world && this.camera === this.ownCamera) this.camera.reset(this.#target());
   }
@@ -99,7 +103,9 @@ export class WorldPane {
     const cameraX = blend(camera.prevX, camera.x, alpha);
     this.cameraX = cameraX;
     this.worldLayer.x = -cameraX;
-    this.obstacles.update(world.obstacles.values(), world.time);
+    this.backdrop.update(cameraX);
+    const tint = this.backdrop.setStage(Math.max(...world.stages), world, dt);
+    this.obstacles.update(world.obstacles.values(), world.time, tint);
     world.lianaSets.forEach((set, i) => this.lianaSets[i].update(set.values(), cameraX, layout.view.width, world.monkeys, alpha));
     this.bananas.update(world, events, dt);
     world.monkeys.forEach((m, i) => this.monkeys[i].update(m, dt, world.isInvulnerable(i), alpha));

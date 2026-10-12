@@ -5,7 +5,7 @@
 Every picture in the game is a **piece**: a part of an object (a monkey's arm, a bird's
 wing, a temple's base) drawn by the game's own code. `npm run art` writes each piece's
 pictures into `generated/` as SVG, and the build turns them into the textures the game
-loads. There are 174 pieces, 593 pictures in all.
+loads. There are 175 pieces, 594 pictures in all.
 
 ## Replacing a piece
 
@@ -50,12 +50,13 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `backdrop.sky` | 1 × 128 | 1 | tinted | The sky: 32 bands of colour from the top of the view (dark) to the floor (light), 4 px each and 1 px wide; stretched to the view (the last band carries on below the floor). |
+| `backdrop.sky` | 4 × 128 | 1 | tinted | The sky: 32 bands of colour from the top of the view (dark) to the floor (light), 4 px each and 4 px wide; stretched to the view (the first band carries on above, the last below the floor). |
 | `backdrop.far` | 2048 × 1790 | 1 | tile, tinted | The far layer of the jungle: hazy tree trunks and canopy masses. One tile, repeating sideways. |
 | `backdrop.mid` | 2048 × 1670 | 1 | tile, tinted | The middle layer: darker trunks with a few branch stubs. One tile, repeating sideways. |
-| `backdrop.near` | 2048 × 684 | 1 | tile, tinted | The near layer: ferns along the floor and leaf clumps under the canopy. One tile, repeating sideways. |
-| `backdrop.canopy` | 2048 × 112 | 1 | tile, tinted | The canopy strip the lianas hang from, in front of the world, with a leafy top edge for taller views. One tile, repeating sideways. |
-| `backdrop.floor` | 2048 × 74 | 1 | tile, tinted | The top of the dark jungle floor, in front of the world: undergrowth along the floor line. One tile, repeating sideways; below it the floor is backdrop.floorFill, stretched down 1600 px below the band for taller views. |
+| `backdrop.nearTop` | 2048 × 100 | 2 | tile, tinted | The near layer under the canopy: clumps of leaves hanging down. One tile, repeating sideways. |
+| `backdrop.near` | 2048 × 124 | 2 | tile, tinted | The near layer along the floor: ferns. One tile, repeating sideways. |
+| `backdrop.canopy` | 2048 × 112 | 2 | tile, tinted | The canopy strip the lianas hang from, in front of the world, with a leafy top edge for taller views. One tile, repeating sideways. |
+| `backdrop.floor` | 2048 × 74 | 2 | tile, tinted | The top of the dark jungle floor, in front of the world: undergrowth along the floor line. One tile, repeating sideways; below it the floor is backdrop.floorFill, stretched down 1600 px below the band for taller views. |
 | `backdrop.floorFill` | 4 × 4 | 1 | tinted | The floor's colour below the undergrowth, a small square stretched to fill the rest of the floor. |
 
 ### monkey
@@ -305,7 +306,7 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 | `temple.vine` | 20 × 2 | 1.3 | strip, tinted | A vine hanging from a patch of moss. A straight strip 20 px along +x from the origin, 2 px across; bent along the curve. |
 | `temple.haze` | 662 × 241 | 0.65 | tinted | The green haze over the foot of the temple: the top half of nested soft ellipses, about their centre (the origin, 30 px below the temple's floor), down to 40 px above it, where the jungle floor covers it. |
 | `temple.flame.0` … `.48` | 18 × 31 | 1.3 |  | A brazier's flame (in the temple's coordinates, its brazier at x 0), in 7 × 7 frames: swayed from 3 px left to 3 px right, each from the lowest to the highest. |
-| `temple.glow` | 148 × 148 | 1.3 |  | The warm light round a brazier in the dark stages (in the temple's coordinates, its brazier at x 0); added to what is behind it, faded with the dark and scaled with the flame about its centre. |
+| `temple.glow` | 148 × 148 | 1.3 |  | A layer of the warm light round a brazier in the dark stages: a disc about its centre, at its largest. The glow is sixteen of them, each scaled and faded, added to what is behind it. |
 
 ### spider
 

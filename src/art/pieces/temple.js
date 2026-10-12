@@ -13,7 +13,7 @@ import {
   drawTempleComb,
   drawTempleFlame,
   drawTempleFret,
-  drawTempleGlow,
+  drawTempleGlowDisc,
   drawTempleGold,
   drawTempleHaze,
   drawTempleLeaf,
@@ -58,6 +58,8 @@ export const FLAME_HEIGHT = flipbook(7, 0, 1);
 export const flameFrameFor = (sway, k) => FLAME_SWAY.frameFor(sway) * FLAME_HEIGHT.frames + FLAME_HEIGHT.frameFor(k);
 
 const temple = { scale: OBSTACLE_SCALE, tint: true };
+// Placed between pixels and turned: rasterized at least at 2× (see piece.js).
+const fine = { ...temple, density: 2 };
 
 function drawTop(g, look) {
   const style = TEMPLE_STYLES[look];
@@ -120,7 +122,7 @@ const looks = TEMPLE_LOOKS.flatMap((name, look) => {
 export const TEMPLE_PIECES = [
   ...looks,
   {
-    ...temple,
+    ...fine,
     key: 'temple.leaf',
     purpose: `A leaf on a temple (the fringe of ferns at its foot, and on the corners of the tiers), ${TEMPLE_LEAF_REFERENCE} px from its base (the origin) along +x, in the greens ${TEMPLE_LEAF_COLORS.join(', ')} (one frame each); placed, turned and scaled per leaf.`,
     frames: Object.values(TEMPLE_GREENS).map((color) => (g) => drawTempleLeaf(g, { x: 0, y: 0, a: 0, length: TEMPLE_LEAF_REFERENCE, width: TEMPLE_LEAF_REFERENCE / 2, color })),
@@ -131,7 +133,7 @@ export const TEMPLE_PIECES = [
     purpose: `A patch of moss on a tier, ${TEMPLE_MOSS_REFERENCE} by ${TEMPLE_MOSS_RY} px (half) about its centre: dark (frame 0) and light (frame 1); stretched sideways.`,
     frames: [TEMPLE_GREENS.MOSS, TEMPLE_GREENS.MOSS_LIGHT].map((color) => (g) => drawTempleMoss(g, { x: 0, y: 0, rx: TEMPLE_MOSS_REFERENCE, color }, 1)),
   },
-  ...linePieces({ ...temple, key: 'temple.vine', curve: true, joints: false, width: TEMPLE_VINE_WIDTH, color: TEMPLE_GREENS.MOSS, purpose: 'A vine hanging from a patch of moss.' }),
+  ...linePieces({ ...fine, key: 'temple.vine', curve: true, joints: false, width: TEMPLE_VINE_WIDTH, color: TEMPLE_GREENS.MOSS, purpose: 'A vine hanging from a patch of moss.' }),
   {
     ...temple,
     key: 'temple.haze',
@@ -157,7 +159,7 @@ export const TEMPLE_PIECES = [
     ...temple,
     tint: false,
     key: 'temple.glow',
-    purpose: "The warm light round a brazier in the dark stages (in the temple's coordinates, its brazier at x 0); added to what is behind it, faded with the dark and scaled with the flame about its centre.",
-    frames: [(g) => drawTempleGlow(g, 0, 1, 1)],
+    purpose: "A layer of the warm light round a brazier in the dark stages: a disc about its centre, at its largest. The glow is sixteen of them, each scaled and faded, added to what is behind it.",
+    frames: [(g) => drawTempleGlowDisc(g)],
   },
 ];

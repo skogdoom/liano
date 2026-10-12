@@ -1048,11 +1048,12 @@ export function drawTempleBrazier(g, style, x) {
 }
 
 // Brazier `i`'s flame at time `t`: how it sways, how high its tip is, and the glow's
-// brightness (`flicker`) and size (`reach`, a scale) with it.
+// brightness (`flicker`) and size (`reach`, a scale) with it; `k` (0 to 1) is how high it
+// leaps, which all of these follow.
 export function templeFlame(t, phase, i) {
   const tierA = OBSTACLE_HITBOXES.temple[1];
   const k = 0.5 + 0.5 * Math.sin(t * 9 + phase + i * 2.1);
-  return { sway: 3 * Math.sin(t * 6 + phase + i), top: tierA.dy - 16 - 20 - 9 * k, flicker: 0.85 + 0.15 * k, reach: 0.95 + 0.05 * k };
+  return { k, sway: 3 * Math.sin(t * 6 + phase + i), top: tierA.dy - 16 - 20 - 9 * k, flicker: 0.85 + 0.15 * k, reach: 0.95 + 0.05 * k };
 }
 
 export function drawTempleFlame(g, x, { sway, top }) {
@@ -1066,11 +1067,21 @@ export function drawTempleFlame(g, x, { sway, top }) {
 // alpha is `strength` (darkness by flicker) times the full glow's, and it is `reach` its
 // size; added to what is behind it.
 export function drawTempleGlow(g, x, strength, reach = 1) {
-  const y = OBSTACLE_HITBOXES.temple[1].dy - 34;
-  for (let j = 0; j < GLOW_LAYERS; j++) {
-    g.circle(x, y, (10 + 4.2 * j) * reach).fill({ color: GLOW, alpha: (0.035 * strength * (GLOW_LAYERS - j / 2)) / GLOW_LAYERS });
-  }
+  for (const { radius, alpha } of templeGlowLayers(strength, reach)) g.circle(x, TEMPLE_GLOW_Y, radius).fill({ color: GLOW, alpha });
   return g;
+}
+
+// The glow's layers (as drawTempleGlow draws them): each a disc `radius` across at `alpha`
+// for a glow of `strength` (darkness by flicker) and `reach` (a scale), each added to what
+// is behind it, smallest first.
+export function templeGlowLayers(strength, reach = 1) {
+  return Array.from({ length: GLOW_LAYERS }, (_, j) => ({ radius: (10 + 4.2 * j) * reach, alpha: (0.035 * strength * (GLOW_LAYERS - j / 2)) / GLOW_LAYERS }));
+}
+export const TEMPLE_GLOW_Y = OBSTACLE_HITBOXES.temple[1].dy - 34;
+export const TEMPLE_GLOW_RADIUS = 10 + 4.2 * (GLOW_LAYERS - 1);
+// A layer of the glow at its largest, opaque (as a piece; scaled and faded per layer).
+export function drawTempleGlowDisc(g) {
+  return g.circle(0, 0, TEMPLE_GLOW_RADIUS).fill(GLOW);
 }
 
 // The moss and vines on the three tiers (from the top), from the decoration's random

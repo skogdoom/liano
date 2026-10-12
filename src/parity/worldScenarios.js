@@ -11,6 +11,11 @@ import { Liana } from '../sim/liana.js';
 import { MonkeyState } from '../sim/monkey.js';
 import { BRANCH_DECORATIONS, MOVING_TYPES, Obstacle } from '../sim/obstacle.js';
 import { createObstacle } from '../sim/generator.js';
+import { Game } from '../sim/game.js';
+import { World } from '../sim/world.js';
+import { layoutFor, paneLayouts } from '../layout.js';
+import { Pane } from '../render/pane.js';
+import { WorldPane } from '../phaser/world/pane.js';
 import { BananaLayer } from '../phaser/world/bananas.js';
 import { BananaViews } from '../render/bananaView.js';
 import { ObstacleLayer } from '../phaser/world/obstacleLayer.js';
@@ -175,6 +180,42 @@ const bananaScenario = () =>
     },
   });
 
+// A whole pane, the backdrop included: a run on a fixed level, a second in, drawn at
+// stage `stage` (its tint settled), the camera `ahead` px further on.
+function sceneWorld(stage, temple = null) {
+  const game = new Game({ slip: false, createWorld: (options) => new World({ ...options, seed: 4242 }) });
+  game.press('start');
+  for (let i = 0; i < Math.round(1 / SIM_DT); i++) game.step(SIM_DT);
+  const world = game.worlds[0];
+  world.stages = world.stages.map(() => stage);
+  // A temple in one of its looks in the second gap (where the game would have one).
+  if (temple !== null) world.obstacles.set(1, new Obstacle(1, 'temple', LIANA_SPACING * 1.5, 330, null, 1.3, null, temple));
+  return world;
+}
+const SCENE = { width: 1280, height: 720 };
+const sceneScenario = (id, title, stage, ahead = 0, temple = null) =>
+  withArt({
+    id,
+    title,
+    ...SCENE,
+    background: 0x000000,
+    pixi(view) {
+      const pane = new Pane();
+      pane.setWorld(sceneWorld(stage, temple), [0]);
+      pane.resize(paneLayouts(layoutFor(SCENE.width, SCENE.height), 1, 1)[0]);
+      pane.camera.x = pane.camera.prevX = pane.camera.x + ahead;
+      pane.update([], 10, false, null, 1);
+      view.addChild(pane.view);
+    },
+    phaser(scene, zoom) {
+      const pane = new WorldPane(scene, artFor(scene, zoom));
+      pane.setWorld(sceneWorld(stage, temple), [0]);
+      pane.resize(paneLayouts(layoutFor(SCENE.width, SCENE.height), 1, 1)[0], zoom);
+      pane.camera.x = pane.camera.prevX = pane.camera.x + ahead;
+      pane.update([], 10, false, null, 1);
+    },
+  });
+
 export const WORLD_SCENARIOS = [
   withArt({
     id: 'world.monkeys',
@@ -273,4 +314,15 @@ export const WORLD_SCENARIOS = [
   ...BRANCH_DECORATIONS.map((decoration) => obstacleScenario(`world.decoration.${decoration}`, `Branches with a ${decoration}`, 'branch', decoration)),
   ...MOVING_TYPES.flatMap((type) => [0, 1].map((k) => movingScenario(type, k))),
   bananaScenario(),
+  sceneScenario('scene.day', 'A run by day, the whole pane', 1),
+  sceneScenario('scene.ahead', 'The same run further on, by day', 1, 1500),
+  sceneScenario('scene.dusk', 'The same run at dusk (tinted)', 3, 700),
+  sceneScenario('scene.night', 'The same run at night', 4, 2200),
+  // The temple in each look, in the view as the game shows it (its foot buried in the
+  // floor, the canopy over the lianas), by day and at night; the one with the fire at dusk.
+  ...[0, 1, 2, 3].flatMap((look) => [
+    sceneScenario(`scene.temple.${look}.day`, `A temple, look ${look}, by day`, 1, 500, look),
+    sceneScenario(`scene.temple.${look}.night`, `A temple, look ${look}, at night`, 4, 500, look),
+  ]),
+  sceneScenario('scene.temple.3.dusk', 'A temple, look 3, at dusk: the fire lit', 3, 500, 3),
 ];

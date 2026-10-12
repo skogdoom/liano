@@ -341,10 +341,16 @@ describe('the catalog the game reads', () => {
     expect(atlasScaleFor(9)).toBe(4);
   });
 
-  it('sizes a frame’s cell by the piece’s scale and the atlas’s, tiles at 1× only', () => {
+  it('sizes a frame’s cell by the piece’s scale and the atlas’s (at least its density), tiles up to their scale', () => {
     const piece = { box: { x: -10, y: -4, w: 21, h: 9 }, scale: 1.3, frames: [0] };
     expect(cellOf(piece, 2)).toEqual({ zoom: 2.6, w: 55, h: 24 });
-    expect(cellOf({ ...piece, kind: 'tile' }, 4)).toEqual({ zoom: 1, w: 21, h: 9 });
+    expect(cellOf({ ...piece, density: 2 }, 1)).toEqual({ zoom: 2.6, w: 55, h: 24 });
+    expect(cellOf({ ...piece, density: 2 }, 4)).toEqual({ zoom: 5.2, w: 110, h: 47 });
+    const tile = { key: 'backdrop.x', kind: 'tile', box: { x: 0, y: 0, w: 21, h: 9 }, scale: 1, frames: [0] };
+    expect(cellOf(tile, 4)).toEqual({ zoom: 1, w: 21, h: 9 });
+    expect(cellOf({ ...tile, scale: 2 }, 1)).toEqual({ zoom: 1, w: 21, h: 9 });
+    expect(cellOf({ ...tile, scale: 2 }, 4)).toEqual({ zoom: 2, w: 42, h: 18 });
+    expect(placement({ ...tile, scale: 2 }, 4).image).toBe('tiles/backdrop.x@2x.png');
   });
 
   it('anchors a frame at the drawing’s origin, or at a custom pivot', () => {

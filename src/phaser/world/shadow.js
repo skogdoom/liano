@@ -1,5 +1,6 @@
 import { LianaSetRig } from './lianas.js';
 import { MonkeyRig } from './monkey.js';
+import { makeContainer } from './build.js';
 
 // The shadow monkey in the Phaser version (as the Pixi ShadowView): the grey monkey on
 // its own grey lianas, each liana fading in and out. They are see-through: the Pixi view
@@ -7,7 +8,7 @@ import { MonkeyRig } from './monkey.js';
 // they show at full opacity here.
 export class ShadowRig {
   constructor(scene, art) {
-    this.view = scene.make.container({}, false).setVisible(false);
+    this.view = makeContainer(scene).setVisible(false);
     this.lianas = new LianaSetRig(scene, art, 'shadow');
     this.monkey = new MonkeyRig(scene, art, 'shadow');
     this.view.add([this.lianas.view, this.monkey.view]);

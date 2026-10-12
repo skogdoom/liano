@@ -1,5 +1,6 @@
 import { LEAF_REFERENCE } from '../../art/pieces/liana.js';
 import { drawnState, flashingLianas, leafLayout, lianaPlacement, lianaShape, lianaVisible } from '../../views/liana.js';
+import { makeContainer } from './build.js';
 
 // The lianas of one set in the Phaser version (PHASER_PLAN.md, M5a), in one colouring of
 // the liana pieces: 'green', 'gold' (player 2's own in shared screen) or 'shadow'. Per
@@ -14,10 +15,10 @@ export class LianaSetRig {
     this.art = art;
     this.side = side;
     this.keys = { rope: `liana.${colouring}.rope`, leaf: `liana.${colouring}.leaf` };
-    this.view = scene.make.container({}, false);
-    this.ropes = scene.make.container({}, false);
-    this.leaves = scene.make.container({}, false);
-    this.flashes = scene.make.container({}, false);
+    this.view = makeContainer(scene);
+    this.ropes = makeContainer(scene);
+    this.leaves = makeContainer(scene);
+    this.flashes = makeContainer(scene);
     this.view.add([this.ropes, this.leaves, this.flashes]);
     this.entries = new Map(); // liana -> entry
     this.leafUnit = art.unit(this.keys.leaf);

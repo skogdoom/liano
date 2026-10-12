@@ -26,8 +26,6 @@ function pixelsAt(page, points) {
 }
 
 const BLACK = [0, 0, 0, 255];
-const VIEW = [0x10, 0x26, 0x1a, 255];
-const BAND = [0x4a, 0x80, 0x60, 255];
 
 // Window shapes: 16:9, wider (a phone in landscape), much wider (bars at the sides),
 // 4:3 (an iPad), portrait phones; at the pixel ratios the game uses (3 is capped at 2).
@@ -56,21 +54,23 @@ for (const [width, height, ratio] of SHAPES) {
       return { width: c.width, height: c.height, css: [c.style.width, c.style.height] };
     });
     expect(canvas).toEqual({ ...canvasSize(width, height, r), css: [`${width}px`, `${height}px`] });
-    // Inside the view: the frame, and the world band; outside it: black bars.
+    // Inside the view: the world (the sky at the top, the floor at the bottom, the jungle
+    // in the band), never black; outside it: black bars.
     const { x, y, width: w, height: h, zoom } = expected;
     const band = Math.round(y + (layout.bandTop + 360) * zoom);
     const points = [
       [x + 2, y + 2],
       [x + w - 3, y + h - 3],
-      // Beside the readout text, which is centred.
       [x + 4, band],
     ];
     const bars = [];
     if (x > 2) bars.push([1, y + 2], [canvas.width - 2, y + 2]);
     if (y > 2) bars.push([x + 2, 1], [x + 2, canvas.height - 2]);
     const pixels = await pixelsAt(page, [...points, ...bars]);
-    const inBand = (py) => py >= y + layout.bandTop * zoom && py < y + (layout.bandTop + 720) * zoom;
-    points.forEach(([, py], i) => expect(pixels[i], `view at ${points[i]}`).toEqual(inBand(py) ? BAND : VIEW));
+    points.forEach((point, i) => {
+      expect(pixels[i][3], `view at ${point}`).toBe(255);
+      expect(pixels[i], `view at ${point}`).not.toEqual(BLACK);
+    });
     bars.forEach((point, i) => expect(pixels[points.length + i], `bar at ${point}`).toEqual(BLACK));
     expect(errors).toEqual([]);
     await page.close();

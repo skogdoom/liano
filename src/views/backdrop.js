@@ -198,3 +198,41 @@ export function tintBetween(from, to, t) {
   const u = Math.min(Math.max(t, 0), 1);
   return mixColor(from, to, u * u * (3 - 2 * u));
 }
+
+// The background's tint as the stages change (the view-model both versions use): it eases
+// over TINT_TIME towards the tint of the stage `world` has reached; a new world starts at
+// once from its first. `color` is the tint now.
+export class StageTint {
+  constructor() {
+    this.state = { world: null, from: STAGE_TINTS[0], to: STAGE_TINTS[0], t: 1 };
+    this.color = STAGE_TINTS[0];
+  }
+
+  update(stage, world, dt) {
+    const target = STAGE_TINTS[(stage - 1) % STAGE_TINTS.length];
+    const tint = this.state;
+    if (world !== tint.world) Object.assign(tint, { world, from: target, to: target, t: 1 });
+    else if (target !== tint.to) Object.assign(tint, { from: tintBetween(tint.from, tint.to, tint.t), to: target, t: 0 });
+    tint.t = Math.min(tint.t + dt / TINT_TIME, 1);
+    this.color = tintBetween(tint.from, tint.to, tint.t);
+    return this.color;
+  }
+}
+
+// The sky for a view from `top` (a world y) to `bottom`, `width` wide: the bands run from
+// the top of the view (or the band's, if lower) to the floor, the first reaching
+// SKY_MARGIN higher and the last carrying on SKY_MARGIN past the bottom; all of them
+// SKY_MARGIN wider each side (the death shake must not uncover the letterbox).
+export function skyLayout(top, width, bottom) {
+  const start = Math.min(top, 0);
+  return {
+    x: -SKY_MARGIN,
+    w: width + 2 * SKY_MARGIN,
+    bands: { y: start, h: FLOOR_Y - start },
+    above: { y: start - SKY_MARGIN, h: SKY_MARGIN },
+    below: { y: FLOOR_Y, h: Math.max(bottom, WORLD_HEIGHT) - FLOOR_Y + SKY_MARGIN },
+  };
+}
+
+// How far a parallax layer is scrolled (0 to TILE) for a camera at `cameraX`.
+export const layerShift = (cameraX, factor) => (((cameraX * factor) % TILE) + TILE) % TILE;

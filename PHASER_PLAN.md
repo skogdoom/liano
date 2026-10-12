@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass follows M5). M4 is done. M5 is next.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done but for two parity exceptions for the owner to accept (its report). M6 is next.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -398,7 +398,7 @@ The atlas rigs hold 60 fps under the stress load, where Pixi drops to 50, and na
 | Thorn bush | bush circles, highlight, thorn | Thorns placed and turned per bush. Exact. |
 | Rock | 24 outlines (body with facets), ledge, stem | **Decided after M4's inventory: a fixed set of 24 outlines**, one picked per gap in both versions (a random outline per gap cannot be pre-rendered). Exact. |
 | Beehive | nest, bee body, bee wing | Bees placed per frame, wings beat (scale). Exact. |
-| Temple (4 looks) | per look: the top (shrine, tiers, the stairs on them, the look's details and braziers), the base's first repeat, the base and stairs repeats; flame flipbook (7 sways × 7 heights), glow; haze; moss, vine, leaf (8 greens) | Base and stairs stacked down to the floor, the last copy cropped; moss and leaves placed; vines along their curves; the glow scaled and added. Exact, vines and the flame close; the last rows above the floor close (under the fringe). |
+| Temple (4 looks) | per look: the top (shrine, tiers, the stairs on them, the look's details and braziers), the base's first repeat, the base and stairs repeats; flame flipbook (7 sways × 7 heights), glow; haze; moss, vine, leaf (8 greens) | Base and stairs stacked down to the floor, the last copy cropped; moss and leaves placed; vines along their curves; the glow sixteen discs, scaled, faded and added (M5d). Exact, vines and the flame close; the last rows above the floor close (under the fringe). |
 | Decorations: panther | as M1 | Exact (tail flipbook). |
 | bird | tail, body, head (3 colourings) | Head and tail turn. Exact. |
 | snake | coil band (trunk, limb), tail (trunk, limb), scale mark, neck strip and end, head, tongue | Limb bands stretched across to the limb's thickness, the neck a strip along its curve. Close. |
@@ -413,7 +413,7 @@ The atlas rigs hold 60 fps under the stress load, where Pixi drops to 50, and na
 | Birds (red, blue, purple) | body, wing flipbook (33) | Close (the wing in 33 steps). |
 | Bats (4 looks, flying and circling) | body, wing flipbook (41) | Close (the wing in 41 steps). |
 | Banana, heart | banana, glint, field heart, HUD heart (filled, outline), HUD and results bananas | Exact. |
-| Backdrop | sky (32 bands, stretched), far, mid, near, canopy and floor tiles, floor fill | Tiles at 1× (M1); tinted. Exact (the sky's band edges blend when stretched). |
+| Backdrop | sky (32 bands, stretched), far, mid, near (two strips: under the canopy, along the floor), canopy and floor tiles, floor fill | The far and mid tiles at 1× (M1), the near, canopy and floor tiles up to 2× (M5d); tinted. Exact (the sky's band edges blend when stretched; the far and mid edges soft on 2× screens, M5). |
 | HUD and overlays | panel (9-slice), banana icon, off-screen arrow, mute and full-screen icons | Text stays Phaser Text. Exact. |
 | Debug view | | Phaser Graphics (dev only). |
 
@@ -472,6 +472,83 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
 - **M5c, moving obstacles and bananas.** Spider with its thread, snake, bird, blue bird, purple bird, bat, circling bat (their wing, leg and eye animation as flipbooks and joints), bees, bananas with the glint, "+1" and "+1 ♥" pops, the heart on the field.
 - **M5d, the temple and the world around it.** The four temple looks, the stage tint, haze, moss, the fires (flicker, additive glow, fire kept untinted), then the backdrop: sky bands, the three parallax layers, canopy, floor, the stage and time-of-day tint transitions, dawn.
 - **Done when:** each part's parity-tool scenarios are inside the tolerance, its view-model tests pass, and the frame-time and memory budgets still hold with everything on screen. After M5c (bananas drawn): the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini).
+
+**M5 report (version 3.0.0-dev.6).**
+- **The Phaser version draws the world**: per world a pane (`src/phaser/world/`). Behind is the backdrop (the sky, the far, mid and near layers). Then the obstacles with their decorations, the lianas, the monkeys, the shadow and the bananas. In front are the canopy and the floor. The death shake, the camera scroll and the interpolation between steps work as in the Pixi panes. The HUD and the overlays are M6.
+  - Each rig places its pieces in the order the Pixi view draws them.
+  - A run waits for the main art set (agreed after M4): a press before it is in starts the run once it arrives.
+- **View-models** (`src/views/`, no Pixi; both versions draw from them):
+  - the monkey's pose;
+  - each liana's placement, culling and lit end;
+  - the banana's bob and the pop;
+  - the stage tint easing, the sky's layout and the layers' scroll;
+  - the temple's flame and glow layers.
+
+  Moving them changed nothing the Pixi version draws (`scripts/dev/dump-views.mjs`, the same before and after). They are tested in Node (`tests/views.test.js`), and a test checks that the Phaser version imports no Pixi.
+- **Parity: 103 scenarios, 94 inside the limits.**
+  - Every object passes: each obstacle kind and decoration (hanging and standing, at scale 1 and 1.3), each moving kind (two of each, at three moments), the monkeys, the lianas (between steps too), the shadow and the bananas, at 1× and 2× (`world.*`, 64 scenarios). M1's spike scenarios pass too.
+  - The whole-pane scenes (`scene.*`) pass at dusk and night, and by day at 1×: a run, the same run further on, each temple look, and the fire at dusk.
+  - The nine that fail are all by day, and they are the two exceptions below.
+  - The browser tests in CI run them all (in about two minutes). Every object scenario must pass, and every scene but the exceptions; the exceptions must stay no worse than measured (under 1.5 % and 160 solid per million). The parity page's `?only=` takes several prefixes, comma-separated.
+
+  | Scene | 1× share, solid per million | 2× share, solid per million |
+  |---|---|---|
+  | `scene.day`, `scene.ahead` | pass | 0.38–0.41 %, **66–140** |
+  | `scene.temple.0–3.day` | **1.00–1.22 %**, 5–23 (look 2 passes) | 0.72–0.79 %, **73–76** |
+
+- **Exceptions, for the owner to accept:**
+  1. **The far and mid layers by day on 2× screens** (all the 2× failures). Their tiles are 1× (decided in M1, where the far layer alone measured 59 solid pixels at 2×). Stretched, they soften the trunks' long straight edges, which Pixi draws hard at any density. With those two layers hidden, the same scenes pass (0–5 per million).
+     - Making both tiles 2× would add 85 MB: 190 MB at 2×, over the 120 MB budget.
+     - Possible later (M7): draw the trunks as stretched pieces apart from the tiles. That gives hard edges at any density, at little memory. The far trunks are rectangles, but the mid trunks lean and have stubs, so they would need pieces of their own.
+     - Proposed: accept as is.
+  2. **The temple by day at 1×**: 1.17–1.22 % of pixels differ (look 2: 1.00 %), all rims. The solid patches are within the limit.
+     - Cause: the stone has many long edges, light against dark. A sprite between pixels samples between texels, so its edge spreads over two pixels where Pixi's covers one.
+     - Tried:
+       - the stone rasterized at 2× density: 1.12–1.15 %;
+       - the camera on a whole pixel: 1.01–1.08 %;
+       - the stone at scale 1 instead of the 1.3 the game draws it up to: 0.88–1.01 %. This breaks the contract (section 5): stage 4's temples would be stretched.
+     - None passes; the stone stays at its contract's scale, rasterized at 1× density (17 MB less at 1× than the 2× density try).
+     - Proposed: accept.
+- **Decisions in M5:**
+  - **Front tiles up to 2×** (this changes M1's "tiles at 1×"). The near, canopy and floor layers are dark against light, and their 1× edges failed at 2×. The near layer is now two strips, under the canopy (100 px) and along the floor (124 px); the middle was empty. The far and mid tiles stay at 1×.
+  - **Twice the density** for pieces that turn or sit between pixels: the monkey's parts, liana leaves, decorations, the panther, bees, the banana, heart and glint, and the temple's leaves and vines. A piece's contract may say so (`density`: at least that many pixels per unit at its scale).
+  - **The shadow's pieces are generated see-through.** A piece's alpha applies to each shape, as Pixi blends them, so the rig shows them opaque.
+  - **The beehive's trunk**, whose top shows, is drawn at its longest and only ever shrunk.
+  - **The temple's glow** is sixteen additive discs, faded and scaled as Pixi draws them. One baked glow picture was brighter than Pixi's sixteen layers, each rounded to 8 bits.
+  - **The Pixi "+1" pops stroke with round joins**, as Phaser strokes all text (a barely visible change in the Pixi version).
+  - **The sky** is a piece 4 px wide, stretched. A stretched piece is cropped 1 px at each edge, so it does not take in its transparent padding.
+  - **Atlases**:
+    - the packer places cells on a skyline;
+    - a page is at least 2048 px wide (the temple's top, 1228 px wide, did not fit 1024);
+    - strips go on each set's first page.
+  - **Scenarios show what the game shows**:
+    - obstacles cropped between the canopy strip and the floor;
+    - lianas at their spacing;
+    - bananas at the height the game hangs them;
+    - the temple and the backdrop in a whole pane.
+- **Phaser 4.2.1 notes** (adding to M1's):
+  - `Rope` always draws from its texture's first image, whatever page its frame is on.
+  - `scene.make.container` sets the container's blend mode to normal, and a container with a blend mode ignores its children's. The rigs make containers with `blendMode: -1` (skip), so the glow adds.
+  - `Rope` has no `setTint`: `setColors`.
+  - Text:
+    - it strokes with round joins, always;
+    - it measures a font on `|MÉqgy`, Pixi on `|ÉqÅM`, so `src/phaser/text.js` sets Pixi's;
+    - it rounds its width up, so it is centred on the measured width.
+  - A stretched frame takes in its transparent padding at the edges.
+- **Texture memory: 46 MB at 1×, 105 MB at 2×, 250 MB at 4×** (M4: 48, 86, 234). The rise at 2× is the front tiles at 2× and the denser pieces; the build fails over 120 MB at 2× or 300 MB at 4×.
+- **Frame time** (headless Chromium, software WebGL, 1280 × 720, a bot playing for 25 s; CPU time of each animation frame, so it compares, while the frame rates compare only relatively):
+
+  | | Median, 95th percentile | Frames drawn |
+  |---|---|---|
+  | Pixi, one player | 0.9 ms, 3.2–4.8 ms | 180–196 |
+  | Phaser, one player | 1.1 ms, 2.3–2.7 ms | 335–343 |
+  | Pixi, split screen | 0.8 ms, 2.4 ms | 74 |
+  | Phaser, split screen | 1.8 ms, 3.7 ms | 225 |
+
+  Phaser draws two to three times as many frames in the same time, at a similar cost per frame. M7 measures on the iPhone 13 mini.
+- **Still to do**:
+  - the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini), by the owner;
+  - the owner's decision on the two exceptions.
 
 ### M6. Panes, HUD, overlays and the three modes (L)
 

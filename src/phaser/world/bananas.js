@@ -1,5 +1,6 @@
 import { HEART_GLINT, POP_FONT, POP_RISE, POP_TIME, bananaPose, bananaShape, popAlpha, popLook } from '../../views/banana.js';
 import { setTextOrigin, textStyle } from '../text.js';
+import { makeContainer } from './build.js';
 
 // The bananas (and hearts) still to take in the Phaser version, and the "+1" rising where
 // one was taken (as the Pixi BananaViews): each a body piece with its glint, bobbing.
@@ -9,7 +10,7 @@ export class BananaLayer {
   constructor(scene, art) {
     this.scene = scene;
     this.art = art;
-    this.view = scene.make.container({}, false);
+    this.view = makeContainer(scene);
     this.entries = new Map(); // banana -> { view, glint, heart }
     this.pops = [];
     // Device pixels per unit, for the pop texts (see setTextResolution).
@@ -37,7 +38,7 @@ export class BananaLayer {
       }
       if (!entry) {
         const spot = banana.heart ? HEART_GLINT : BANANA_GLINT;
-        const view = this.scene.make.container({}, false);
+        const view = makeContainer(this.scene);
         const glint = this.art.image(this.scene, 'banana.glint').setPosition(spot.x, spot.y);
         view.add([this.art.image(this.scene, banana.heart ? 'heart.field' : 'banana.body'), glint]);
         entry = { view, glint, heart: banana.heart };

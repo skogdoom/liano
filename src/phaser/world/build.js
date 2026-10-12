@@ -3,6 +3,12 @@ import { SEGMENT_REFERENCE } from '../../art/pieces/lines.js';
 // Building blocks of the rigs: pieces made from an Art (phaser/art.js) and placed as the
 // drawing code places its shapes. Each returns Phaser objects, not yet added.
 
+// A container, not yet added. Made without a blend mode of its own: a container with one
+// makes Phaser ignore its children's (the temple's glow is added to what is behind it),
+// and scene.make.container gives it NORMAL unless told otherwise.
+const SKIP_CHECK = -1; // Phaser.BlendModes.SKIP_CHECK
+export const makeContainer = (scene, x = 0, y = 0) => scene.make.container({ x, y, blendMode: SKIP_CHECK }, false);
+
 // Points along a cubic or quadratic Bézier curve, for bending a strip along it.
 export const CURVE_STEPS = 24;
 export function cubicPoints([p0, p1, p2, p3], steps = CURVE_STEPS) {
@@ -30,7 +36,7 @@ export class Builder {
   }
 
   container(x = 0, y = 0) {
-    return this.scene.make.container({ x, y }, false);
+    return makeContainer(this.scene, x, y);
   }
 
   image(key, frame = 0) {
