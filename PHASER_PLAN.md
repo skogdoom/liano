@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). Two questions from M1 are still open (section 11). M3 is next.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is next.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -23,9 +23,9 @@ Made with the owner (answers to the planning questions):
 | Sounds? | **Keep the synthesized recipes**: they play through Phaser's audio context and master nodes, so Phaser handles unlock, mute and pause, and every sound stays the same. |
 | Both versions? | **Both stay playable side by side** until the Pixi removal milestone (M8), which comes after parity and performance (M7), so they can be compared at any point. |
 | Weakest device? | **iPhone 13 mini**: the budgets are set for it (section 6). |
-| What counts as identical? | A pixel diff under about 1 % of pixels differing by more than 8/255 per channel on the parity scenarios; sub-pixel antialiasing differences are accepted. |
+| What counts as identical? | A pixel diff under about 1 % of pixels differing by more than 8/255 per channel on the parity scenarios, **and no more than 25 pixels per million in solid patches of difference** (over the limit with all eight neighbours too: added after M1, where the share alone let wrong art on a small object through); sub-pixel antialiasing differences are accepted. |
 | Visual checks after M8? | M8 keeps a small set of reference screenshots of the parity scenarios (a few MB at most) for later visual checks. |
-| Budgets? | Those of section 6. |
+| Budgets? | Those of section 6, with a texture budget of **120 MB at a pixel ratio of 2** (set after M1). |
 | Download size? | The roughly +150–170 KB gzipped for Phaser is accepted; a custom build is tried in M0 and M7 but not required. |
 | Screen shake? | Our own shake maths drives Phaser's camera, so the death shake stays as it is. |
 | Master meanwhile? | Bug fixes only; new visual features wait until 3.0.0 (a fix that changes `src/render/*` gets a matching change in `src/phaser/`). |
@@ -132,7 +132,7 @@ The weakest device is an **iPhone 13 mini**: A15 chip, 4 GB of memory, a 60 Hz s
 
 - **Frame rate:** a steady 60 fps in every mode, split screen included: no frames over 34 ms in a normal run (the debug view's `slow` counter), and the JS part of a frame no more than about twice today's.
 - **Start:** a playable title within about 1.5 s of the page loading (once cached), loading and decoding the boot atlas included.
-- **Texture memory:** a budget set in the M1 spike, aimed well under 150 MB at a pixel ratio of 2. iOS reloads a page whose memory grows too large, and WebGL textures count towards it. The phone's texture size limit, read in M1, is 16384 pixels.
+- **Texture memory:** at most **120 MB at a pixel ratio of 2** (set after the M1 spike; well under the 150 MB the plan aimed for). iOS reloads a page whose memory grows too large, and WebGL textures count towards it. The phone's texture size limit, read in M1, is 16384 pixels.
 - **Memory over time:** no growth of the post-GC heap over 30 game-minutes (measured in Chrome, which reports the heap; Safari doesn't).
 
 Measuring on the phone: the debug view's frame line (`fps`, `worst`, `slow`) works in Safari; Safari's Web Inspector (from a Mac) gives timelines and memory. CI runs the browser tests in Chromium only, so anything WebKit-specific is caught on the phone.
@@ -243,7 +243,7 @@ With a screenful (4 branches, 4 lianas): atlas rigs 0.47 ms and 10 draw calls, P
 
 **Custom art.** `art/custom/panther.eyes.0.png` (a magenta placeholder of any size, stretched over the piece's box) and `art/custom/liana.leaf.1.svg` (a blue diamond in the piece's box) were packed into both atlases and showed in the Phaser rigs with no code change; removing them brought the generated pieces back.
 
-**What the parity share misses.** The magenta eyes still passed, at 0.71 %: a small object on a large picture moves the share very little. So the parity page now also counts *solid* pixels (over the limit with all eight neighbours too). Antialiasing rims leave next to none (0–2 on the panther), while wrong art leaves a patch (the magenta eyes 96 at 1×, 472 at 2×). The same count found the rope's flat ends (18 at 1×, 209 at 2×) before they were fixed. Whether to make it part of "identical" is question 2 in section 11.
+**What the parity share misses.** The magenta eyes still passed, at 0.71 %: a small object on a large picture moves the share very little. So the parity page now also counts *solid* pixels (over the limit with all eight neighbours too). Antialiasing rims leave next to none (0–2 on the panther), while wrong art leaves a patch (the magenta eyes 96 at 1×, 472 at 2×). The same count found the rope's flat ends (18 at 1×, 209 at 2×) before they were fixed. It is now part of "identical" (section 1): at most 25 solid pixels per million. The native Graphics scenarios, which miss the round caps, would fail it and were dropped from the parity page once M1 had recorded them.
 
 **Phaser 4.2.1 notes** (the known-bad list, R13):
 - `Rope` spreads its texture evenly over its points, not by distance (the rigs set the UVs themselves).
@@ -255,7 +255,7 @@ With a screenful (4 branches, 4 lianas): atlas rigs 0.47 ms and 10 draw calls, P
 - backdrop tiles at 1×: three parallax layers like the far one, at about 14 MB each, plus smaller canopy and floor strips, about 45–55 MB;
 - object atlases at 2×: two to four 2048 × 2048 sheets at 16 MB each, about 32–64 MB.
 
-That is 80–120 MB, so the proposed budget is **120 MB at a ratio of 2** (question 3). If the phone needs less:
+That is 80–120 MB, so the budget is **120 MB at a ratio of 2** (agreed after M1). If the phone needs less:
 - the upper part of each backdrop tile (only seen in tall portrait views) becomes a smaller repeating tile;
 - mostly empty layers are trimmed.
 
@@ -422,8 +422,8 @@ Every question from the first two drafts is answered in section 1. New questions
 
 From M1:
 1. ~~**The iPhone 13 mini numbers.**~~ Answered: in the M1 report (a go). To measure again, on a computer on the same network as the phone run `npm ci`, `npm run art:atlas`, `npm run spike:bench`. Then, in Safari on the phone, open the printed network address followed by `spike/bench.html?engine=atlas&branches=4&lianas=4` (or `engine=pixi`). The `result` line comes after 12 s.
-2. **Solid patches as part of "identical"?** Proposed: a scenario also fails with more than 25 solid pixels per million. The spike's correct rigs score 0–16 per million; the magenta eyes 640; the rope's flat ends 49 (1×) and 142 (2×).
-3. **The texture budget**: 120 MB at a pixel ratio of 2, as estimated in the M1 report?
+2. ~~**Solid patches as part of "identical"?**~~ Accepted: a scenario also fails with more than 25 solid pixels per million (section 1). The spike's correct rigs score 0–16 per million; the magenta eyes 640; the rope's flat ends 49 (1×) and 142 (2×).
+3. ~~**The texture budget.**~~ Accepted: 120 MB at a pixel ratio of 2 (section 6).
 
 ## 12. Appendix: Pixi use by file
 

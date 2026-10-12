@@ -28,8 +28,13 @@ describe('the parity diff', () => {
   });
 
   it(`passes under ${PARITY.share * 100} % of the pixels differing`, () => {
-    expect(passes({ share: PARITY.share - 1e-9 })).toBe(true);
-    expect(passes({ share: PARITY.share })).toBe(false);
+    expect(passes({ share: PARITY.share - 1e-9, pixels: 1e6 })).toBe(true);
+    expect(passes({ share: PARITY.share, pixels: 1e6 })).toBe(false);
+  });
+
+  it(`passes with up to ${PARITY.solidPerMillion} pixels per million in solid patches`, () => {
+    expect(passes({ share: 0, pixels: 2e6, solid: 2 * PARITY.solidPerMillion })).toBe(true);
+    expect(passes({ share: 0, pixels: 2e6, solid: 2 * PARITY.solidPerMillion + 1 })).toBe(false);
   });
 
   it('refuses images of different sizes', () => {

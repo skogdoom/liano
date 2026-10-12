@@ -5,7 +5,7 @@ import { HIGH_BELOW_Y, SIM_DT } from '../config.js';
 import { createObstacle } from '../sim/generator.js';
 import { Liana } from '../sim/liana.js';
 import { mixSeed, mulberry32 } from '../sim/rng.js';
-import { BackdropRig, BranchRig, LianaRig, NativeBackdropRig, NativeBranchRig, NativeLianaRig, piecesFor, preloadArt } from '../spike/rigs.js';
+import { BackdropRig, BranchRig, LianaRig, piecesFor, preloadArt } from '../spike/rigs.js';
 
 // M1 spike scenarios (PHASER_PLAN.md, M1): the far backdrop, a branch with a panther and
 // some lianas, drawn by today's Pixi views and by the Phaser rigs of pre-rendered pieces.
@@ -129,46 +129,6 @@ export const SPIKE_SCENARIOS = [
       const { all, lit } = lianas();
       const pieces = piecesFor(scene, zoom);
       for (const liana of all) new LianaRig(scene, pieces, leafLayout(liana.index)).update(liana, liana === lit);
-    },
-  },
-  // For comparison: the same drawn with Phaser's own Graphics (no curves, caps or joins).
-  {
-    id: 'spike.native.backdrop',
-    title: 'The far backdrop layer in Phaser Graphics',
-    width: 1280,
-    height: 720,
-    scroll: [0, -60],
-    background: SKY,
-    pixi(world) {
-      const background = new Background();
-      background.far.update(1234);
-      world.addChild(background.far.view);
-    },
-    phaser(scene) {
-      new NativeBackdropRig(scene).update(1234);
-    },
-  },
-  (() => {
-    const scenario = branchScenario('spike.native.panther', 'A branch with a panther in Phaser Graphics', 'open');
-    const o = pantherBranch();
-    return { ...scenario, zooms: [1], preload: undefined, phaser: (scene) => new NativeBranchRig(scene, o).update(pantherTimes(o).open) };
-  })(),
-  {
-    id: 'spike.native.lianas',
-    title: 'The lianas in Phaser Graphics',
-    width: 800,
-    height: 460,
-    scroll: [0, -30],
-    background: SKY,
-    pixi(world) {
-      const { all, lit } = lianas();
-      const view = new LianaView();
-      view.update(all, 0, 800, [{ liana: lit, tipTime: 0.05 }]);
-      world.addChild(view.view);
-    },
-    phaser(scene) {
-      const { all, lit } = lianas();
-      for (const liana of all) new NativeLianaRig(scene, leafLayout(liana.index)).update(liana, liana === lit);
     },
   },
 ];
