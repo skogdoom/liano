@@ -113,7 +113,7 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `ui.panel` | 66 × 66 | 1.8 | slice | A panel: a see-through dark rounded rectangle (radius 18) with a faint edge, from its top left (the origin), 64 px square; 9-sliced to each panel's size. |
+| `ui.panel` | 66 × 66 | 2 | slice | A panel: a see-through dark rounded rectangle (radius 18) with a faint edge, from its top left (the origin), 64 px square; 9-sliced to each panel's size. |
 | `ui.arrow` | 26 × 30 | 1.8 |  | The arrow at the top edge pointing up at a monkey above the view; its tip at the origin. |
 | `ui.speaker` | 26 × 40 | 1.8 |  | The mute button: a speaker, from its top left (the origin). |
 | `ui.speakerWaves` | 42 × 42 | 1.8 |  | The speaker's sound waves, while the sound is on (in the speaker's coordinates). |

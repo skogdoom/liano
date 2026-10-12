@@ -1,7 +1,7 @@
 import { RED_DARK } from '../views/hearts.js';
 import { HUD_FONT, HUD_HEART_SIZE, HUD_SHADOW, PLAYER_COLORS, heartCountFont, heartRow, hudPlacement, hudState, tallyIcon } from '../views/hud.js';
 import { makeContainer } from './world/build.js';
-import { makeText, setTextOrigin, setTextResolution } from './text.js';
+import { makeText, setTextOrigin, setTextResolution, textResolution } from './text.js';
 
 // The HUD in the Phaser version, as the Pixi Hud (views/hud.js has what both share): top
 // right, the scores, the banana counts and the hearts. Texts are Phaser Text, laid out as
@@ -86,16 +86,16 @@ export class Hud {
       this.shown = [];
       const at = hudPlacement(this.layout, game.players, game.worlds.length);
       this.solo.setPosition(at.solo.x, at.solo.y).setScale(at.solo.scale);
-      setTextResolution(this.solo, this.zoom * at.solo.scale);
+      setTextResolution(this.solo, textResolution(this.zoom, at.solo.scale));
       this.players.forEach((t, p) => setTextResolution(t.setPosition(at.labels[p].x, at.labels[p].y), this.zoom));
       this.tallies.forEach((tally, p) => {
         tally.view.setPosition(at.tallies[p].x, at.tallies[p].y).setScale(at.tallies[p].scale);
-        setTextResolution(tally.text, this.zoom * at.tallies[p].scale);
+        setTextResolution(tally.text, textResolution(this.zoom, at.tallies[p].scale));
         tally.shown = null;
       });
       this.heartRows.forEach((row, p) => {
         row.view.setPosition(at.hearts[p].x, at.hearts[p].y).setScale(at.hearts[p].scale);
-        setTextResolution(row.count, this.zoom * at.hearts[p].scale);
+        setTextResolution(row.count, textResolution(this.zoom, at.hearts[p].scale));
         row.shown = null;
       });
     }

@@ -1,12 +1,11 @@
 import Phaser from 'phaser';
-import { version } from '../../package.json';
 import { SHARED_ZOOM } from '../config.js';
 import { paneLayouts } from '../layout.js';
 import { FULLSCREEN_HIT, MUTE_HIT } from '../controls.js';
-import { MODES } from '../sim/match.js';
 import { Art, CATALOG, queueCatalog, queueSet } from './art.js';
 import { applyViewCamera, rectCamera } from './view.js';
 import { Hud } from './hud.js';
+import { Overlays } from './overlays.js';
 import { WorldPane } from './world/pane.js';
 
 // The Phaser version's scenes (PHASER_PLAN.md, M2): Boot loads the art and starts the
@@ -15,10 +14,8 @@ import { WorldPane } from './world/pane.js';
 // (main.js) holds the layout, pause and full screen; scenes find it in the game's
 // registry.
 //
-// So far UI shows a readout of the game (readout below), "Paused", and stand-in mute and
-// full-screen buttons; the HUD and panels come in M6.
-
-const CREAM = '#f4e7c5';
+// UI draws the HUD and the overlays (M6a, M6b); the buttons are still stand-ins, and D
+// shows a readout of details (readout below) until the debug view (M6c).
 
 const platformOf = (scene) => scene.registry.get('platform');
 
@@ -196,17 +193,11 @@ function drawMuteIcon(g, muted) {
   else g.lineBetween(28, 14, 32, 20).lineBetween(32, 20, 28, 26).lineBetween(34, 8, 40, 20).lineBetween(40, 20, 34, 32);
 }
 
-// What the game is doing, as text, until the game is drawn (M5, M6). With `debug` (D),
-// the frame rate and the sound's state too.
-export function readout(game, { debug = false, fps = null, sound = null, artLoad = null, inputType = 'keyboard' } = {}) {
-  const press = inputType === 'touch' ? 'Tap' : 'Space';
-  const lines = [
-    `${MODES[game.mode].label}  ${game.state}  score ${game.score}  best ${game.best}  stage ${game.stage}`,
-    `slipping ${game.slip ? 'on' : 'off'} (G)  lives ${game.livesOn ? 'on' : 'off'} (H)  shadow ${game.shadowOn ? 'on' : 'off'} (S)`,
-    `${press}: start or let go  1 2 3: mode  Esc: title  P: pause  M: mute  D: details`,
-  ];
-  if (debug) lines.push(`${fps?.describe() ?? ''}  sound ${sound?.details ?? '—'}`);
-  if (debug && artLoad) lines.push(`art ${artLoad.scale}×: ${artLoad.sets.map((s) => `${s.set} in ${s.ms} ms`).join(', ') || 'loading'}`);
+// The details D shows, until the debug view (M6c): the frame rate, the sound's state and
+// how the art loaded.
+export function readout({ fps = null, sound = null, artLoad = null } = {}) {
+  const lines = [`${fps?.describe() ?? ''}  sound ${sound?.details ?? '—'}`];
+  if (artLoad) lines.push(`art ${artLoad.scale}×: ${artLoad.sets.map((s) => `${s.set} in ${s.ms} ms`).join(', ') || 'loading'}`);
   return lines.join('\n');
 }
 
@@ -217,10 +208,6 @@ export class UiScene extends Phaser.Scene {
 
   create() {
     const platform = platformOf(this);
-    const style = { fontFamily: 'sans-serif', color: CREAM, align: 'center' };
-    this.title = this.add.text(0, 0, `Liano v${version} · Phaser ${Phaser.VERSION}: the world is drawn; the HUD comes in M6`, { ...style, fontSize: '22px' }).setOrigin(0.5);
-    this.status = this.add.text(0, 0, '', { ...style, fontSize: '18px', lineSpacing: 4 }).setOrigin(0.5, 0);
-    this.paused = this.add.text(0, 0, 'Paused', { ...style, fontSize: '56px', fontStyle: 'bold' }).setOrigin(0.5);
     this.controls = this.add.container(0, 0);
     this.muteIcon = this.add.graphics();
     // Where the Pixi button draws its icon inside its tap target.
@@ -235,18 +222,19 @@ export class UiScene extends Phaser.Scene {
     this.fullscreenIcon.visible = platform.fullscreenButton;
     drawFullscreenIcon(this.fullscreenIcon, platform.fullscreen.active);
     platform.on('fullscreen', (active) => drawFullscreenIcon(this.fullscreenIcon, active));
-    // Top right: the scores, banana counts and hearts.
+    // Top right: the scores, banana counts and hearts; over everything, the panels, the
+    // stage banners and the arrow over a monkey above the view.
     this.hud = new Hud(this, platform.art);
+    this.overlays = new Overlays(this, platform.art);
     this.add.existing(this.hud.view);
+    this.add.existing(this.overlays.view);
+    // The details D shows (until the debug view).
+    this.status = this.add.text(0, 0, '', { fontFamily: 'monospace', fontSize: '16px', color: '#ffffff', lineSpacing: 4 }).setVisible(false);
     followLayout(this, (layout, camera) => {
       this.hud.resize(layout, camera.zoom);
-      const { view } = layout;
-      this.title.setPosition(view.width / 2, layout.bandTop + 70);
-      this.status.setPosition(view.width / 2, layout.bandTop + 90);
-      this.paused.setPosition(layout.panels.paused.x, layout.panels.paused.y - 120);
+      this.overlays.resize(layout, camera.zoom);
+      this.status.setPosition(layout.insets.left + 16, layout.insets.top + 96).setResolution(camera.zoom);
       this.controls.setPosition(layout.insets.left, layout.insets.top).setScale(layout.ui);
-      // Text is drawn at the camera's zoom: rasterized at it, it stays sharp.
-      for (const text of [this.title, this.status, this.paused]) text.setResolution(camera.zoom);
     });
     // The platform wires the game's input to this scene's keyboard and pointers.
     platform.emit('ui', this);
@@ -254,12 +242,12 @@ export class UiScene extends Phaser.Scene {
 
   update() {
     const platform = platformOf(this);
-    this.paused.visible = platform.pause.paused;
-    if (platform.game) {
-      this.hud.update(platform.game);
-      this.status.setText(
-        readout(platform.game, { debug: platform.debug, fps: platform.fpsMeter, sound: platform.sound, artLoad: platform.artLoad, inputType: platform.input?.lastType }),
-      );
-    }
+    const { game } = platform;
+    if (!game) return;
+    this.hud.update(game);
+    const cameraX = platform.world?.panes[0]?.camera.x ?? 0;
+    this.overlays.update(game, cameraX, { pauseReason: platform.pause.reason, inputType: platform.input?.lastType, dt: platform.frame?.frameDt ?? 0 });
+    this.status.setVisible(platform.debug);
+    if (platform.debug) this.status.setText(readout({ fps: platform.fpsMeter, sound: platform.sound, artLoad: platform.artLoad }));
   }
 }

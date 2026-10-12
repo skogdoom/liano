@@ -51,9 +51,9 @@ async function parity(page, only, timeout) {
 
 // Both versions run on the same software WebGL here, so the agreed meaning of identical
 // (PHASER_PLAN.md, section 1) holds for every scenario. Needs the art built (`npm run art:build`, part of the build).
-test('the parity page draws every object identically with both versions', async ({ page }) => {
+test('the parity page draws every object, the HUD and the overlays identically with both versions', async ({ page }) => {
   test.setTimeout(240_000);
-  const results = await parity(page, 'shapes,spike.,world.', 200_000);
+  const results = await parity(page, 'shapes,spike.,world.,ui.', 200_000);
   expect(results.filter((result) => !result.pass).map((result) => result.id)).toEqual([]);
 });
 

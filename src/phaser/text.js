@@ -50,10 +50,16 @@ function shadowStyle({ color, alpha, distance, blur, angle }, resolution) {
 export function makeText(scene, content, options) {
   const text = scene.make.text({ x: 0, y: 0, text: content, style: textStyle(options) }, false);
   text.pixiShadow = options.shadow ?? null;
+  text.basePadding = { ...text.padding };
   // Pixi draws a line where it falls (half a stroke in); Phaser would round it to a pixel.
   text.autoRound = false;
   return text;
 }
+
+// The pixels per unit to rasterize a text at, drawn at `scale` on a screen of `zoom`
+// device pixels per unit: the screen's density, times the scale when it is enlarged (a
+// smaller text is drawn at full size and shrunk, as Pixi draws it).
+export const textResolution = (zoom, scale = 1) => zoom * Math.max(scale, 1);
 
 // Sets the pixels per unit a text is rasterized at, its shadow scaled with it.
 export function setTextResolution(text, resolution) {
@@ -61,6 +67,7 @@ export function setTextResolution(text, resolution) {
   if (shadow) {
     const style = shadowStyle(shadow, resolution);
     const { offsetX, offsetY, color, blur } = style.shadow;
+    text.basePadding = style.padding;
     text.setShadow(offsetX, offsetY, color, blur, false, true).setPadding(style.padding);
   }
   return text.setResolution(resolution);
@@ -77,11 +84,16 @@ function pixiLineWidth(context, line) {
 // Makes a text a whole number of pixels across and down at its resolution: its canvas can
 // only be whole pixels, and at a resolution like 1.8 Phaser's own size would leave the
 // canvas a fraction of a pixel smaller than the texture it draws, stretching the text.
+// The fraction goes into the padding at the right and bottom, which moves nothing.
 function fitPixels(text) {
+  const base = text.basePadding;
+  const { left, top, right, bottom } = text.padding;
+  if (left !== base.left || top !== base.top || right !== base.right || bottom !== base.bottom) text.setPadding(base);
   const resolution = text.style.resolution;
-  if (text.style.fixedWidth || text.style.fixedHeight) text.setFixedSize(0, 0);
-  const whole = (size) => Math.ceil(size * resolution - 1e-6) / resolution;
-  if (whole(text.width) !== text.width || whole(text.height) !== text.height) text.setFixedSize(whole(text.width), whole(text.height));
+  // A hair over the whole pixel: the canvas truncates its size, and 74.9999 would be 74.
+  const extra = (size) => (Math.ceil(size * resolution - 1e-6) + 1e-4) / resolution - size;
+  const [dw, dh] = [extra(text.width), extra(text.height)];
+  if (dw || dh) text.setPadding(base.left, base.top, base.right + dw, base.bottom + dh);
 }
 
 // Sets a text's origin as a share of its size, as Pixi anchors a text: on its texture,
@@ -96,9 +108,10 @@ export function setTextOrigin(text, x = 0.5, y = 0.5) {
   const lines = String(text.text).split('\n');
   const distance = text.pixiShadow?.distance ?? 0;
   const measured = Math.max(...lines.map((line) => pixiLineWidth(text.context, line))) + (text.style.strokeThickness ?? 0) + distance;
-  const { left, top, bottom } = text.padding;
+  const { left, top } = text.padding;
+  const inner = text.height - top - text.padding.bottom;
   const resolution = text.style.resolution;
   const texture = (size) => Math.ceil(Math.ceil(size) * resolution) / resolution;
   text.pixiWidth = measured;
-  return text.setOrigin((left + x * texture(measured)) / text.width, (top + y * texture(text.height - top - bottom + distance)) / text.height);
+  return text.setOrigin((left + x * texture(measured)) / text.width, (top + y * texture(inner + distance)) / text.height);
 }

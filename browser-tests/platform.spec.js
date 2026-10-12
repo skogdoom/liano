@@ -153,7 +153,7 @@ test('the Phaser version pauses a run on P and resumes on P', async ({ page }) =
   expect(await page.evaluate(() => window.__liano.pause.paused)).toBe(false);
   await page.keyboard.press('KeyP');
   await expect.poll(() => page.evaluate(() => window.__liano.pause.reason)).toBe('manual');
-  await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').paused.visible)).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.paused.visible)).toBe(true);
   await page.keyboard.press('KeyP');
   await expect.poll(() => page.evaluate(() => window.__liano.pause.paused)).toBe(false);
   expect(errors).toEqual([]);
