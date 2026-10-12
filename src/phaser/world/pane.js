@@ -3,14 +3,15 @@ import { Camera, cameraTarget } from '../../render/camera.js';
 import { blend } from '../../render/interpolate.js';
 import { Shake } from '../../render/shake.js';
 import { LianaSetRig } from './lianas.js';
+import { ObstacleLayer } from './obstacleLayer.js';
 import { MonkeyRig } from './monkey.js';
 import { ShadowRig } from './shadow.js';
 
 // One world drawn in one rect of the view, as the Pixi Pane (render/pane.js): the whole
 // view in single player, a strip per player in split screen. `scene` is what the death
-// shake moves; in it, back to front, the world (scrolled by the camera: the lianas, then
-// the shadow and the monkeys). M5 adds the obstacles, bananas and backdrop; M6 the clip
-// and the debug view.
+// shake moves; in it, back to front, the world (scrolled by the camera: the obstacles,
+// the lianas, then the shadow and the monkeys). M5 adds the bananas and backdrop; M6 the
+// clip and the debug view.
 const FURS = ['p1', 'p2'];
 const COLOURINGS = ['green', 'gold'];
 
@@ -21,13 +22,14 @@ export class WorldPane {
     this.view = scene.add.container(0, 0);
     this.scene = scene.make.container({}, false);
     this.worldLayer = scene.make.container({}, false);
+    this.obstacles = new ObstacleLayer(scene, art);
     this.lianaLayer = scene.make.container({}, false);
     this.monkeyLayer = scene.make.container({}, false);
     this.lianaSets = [];
     this.monkeys = [];
     this.shadow = new ShadowRig(scene, art);
     this.monkeyLayer.add(this.shadow.view);
-    this.worldLayer.add([this.lianaLayer, this.monkeyLayer]);
+    this.worldLayer.add([this.obstacles.view, this.lianaLayer, this.monkeyLayer]);
     this.scene.add(this.worldLayer);
     this.view.add(this.scene);
     this.ownCamera = new Camera();
@@ -93,6 +95,7 @@ export class WorldPane {
     const cameraX = blend(camera.prevX, camera.x, alpha);
     this.cameraX = cameraX;
     this.worldLayer.x = -cameraX;
+    this.obstacles.update(world.obstacles.values(), world.time);
     world.lianaSets.forEach((set, i) => this.lianaSets[i].update(set.values(), cameraX, layout.view.width, world.monkeys, alpha));
     world.monkeys.forEach((m, i) => this.monkeys[i].update(m, dt, world.isInvulnerable(i), alpha));
     this.shadow.update(ghost, dt);

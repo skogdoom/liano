@@ -126,7 +126,7 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 | `support.vine` | 20 × 3 | 1.3 | strip | The vine a high obstacle hangs from, from the canopy down to it. A straight strip 20 px along +x from the origin, 3 px across; bent along the curve. |
 | `support.vineEnd` | 6 × 6 | 1.3 |  | A round end or joint of support.vine: a disc 3 px across about the origin. |
 | `support.stem` | 18 × 102 | 1.3 |  | The stem a low thorn bush or rock stands on, from its top (the origin) 100 px down; stretched to reach below the floor. |
-| `support.hiveTrunk` | 22 × 102 | 1.3 |  | The trunk beside a low beehive, from its top (the origin) 100 px down; stretched to reach below the floor. |
+| `support.hiveTrunk` | 22 × 482 | 1.3 |  | The trunk beside a low beehive, from its top (the origin) 480 px down; shrunk to reach below the floor. |
 
 ### branch
 
@@ -140,115 +140,115 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `panther.body` | 88 × 31 | 1.3 | joins: ear | A black panther lying on the branch, head up: the body and head. It breathes (scaled up and down). |
-| `panther.ear` | 6 × 6 | 1.3 |  | The inside of the ear that flicks, about its own centre (folded by scaling). |
-| `panther.eyes.0` … `.1` | 16 × 7 | 1.3 |  | The eyes: open (frame 0) and shut (frame 1). |
-| `panther.tail.0` … `.15` | 39 × 46 | 1.3 |  | The tail hanging off the end of the branch, in 16 frames from its tip swung 6 px one way to as far the other. |
+| `panther.body` | 88 × 31 | 2.6 | joins: ear | A black panther lying on the branch, head up: the body and head. It breathes (scaled up and down). |
+| `panther.ear` | 6 × 6 | 2.6 |  | The inside of the ear that flicks, about its own centre (folded by scaling). |
+| `panther.eyes.0` … `.1` | 16 × 7 | 2.6 |  | The eyes: open (frame 0) and shut (frame 1). |
+| `panther.tail.0` … `.15` | 39 × 46 | 2.6 |  | The tail hanging off the end of the branch, in 16 frames from its tip swung 6 px one way to as far the other. |
 
 ### perchedBird
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `perchedBird.red.body` | 22 × 22 | 1.3 | joins: tail, head | A small red bird perched on the branch: the body, its feet at the origin. |
-| `perchedBird.red.tail` | 13 × 8 | 1.3 |  | The red perched bird's tail, from its root (the origin); it flicks about the root. |
-| `perchedBird.red.head` | 19 × 14 | 1.3 |  | The red perched bird's head about its centre (the origin); it dips to peck. |
-| `perchedBird.blue.body` | 22 × 22 | 1.3 | joins: tail, head | A small blue bird perched on the branch: the body, its feet at the origin. |
-| `perchedBird.blue.tail` | 13 × 8 | 1.3 |  | The blue perched bird's tail, from its root (the origin); it flicks about the root. |
-| `perchedBird.blue.head` | 19 × 14 | 1.3 |  | The blue perched bird's head about its centre (the origin); it dips to peck. |
-| `perchedBird.purple.body` | 22 × 22 | 1.3 | joins: tail, head | A small purple bird perched on the branch: the body, its feet at the origin. |
-| `perchedBird.purple.tail` | 13 × 8 | 1.3 |  | The purple perched bird's tail, from its root (the origin); it flicks about the root. |
-| `perchedBird.purple.head` | 19 × 14 | 1.3 |  | The purple perched bird's head about its centre (the origin); it dips to peck. |
+| `perchedBird.red.body` | 22 × 22 | 2.6 | joins: tail, head | A small red bird perched on the branch: the body, its feet at the origin. |
+| `perchedBird.red.tail` | 13 × 8 | 2.6 |  | The red perched bird's tail, from its root (the origin); it flicks about the root. |
+| `perchedBird.red.head` | 19 × 14 | 2.6 |  | The red perched bird's head about its centre (the origin); it dips to peck. |
+| `perchedBird.blue.body` | 22 × 22 | 2.6 | joins: tail, head | A small blue bird perched on the branch: the body, its feet at the origin. |
+| `perchedBird.blue.tail` | 13 × 8 | 2.6 |  | The blue perched bird's tail, from its root (the origin); it flicks about the root. |
+| `perchedBird.blue.head` | 19 × 14 | 2.6 |  | The blue perched bird's head about its centre (the origin); it dips to peck. |
+| `perchedBird.purple.body` | 22 × 22 | 2.6 | joins: tail, head | A small purple bird perched on the branch: the body, its feet at the origin. |
+| `perchedBird.purple.tail` | 13 × 8 | 2.6 |  | The purple perched bird's tail, from its root (the origin); it flicks about the root. |
+| `perchedBird.purple.head` | 19 × 14 | 2.6 |  | The purple perched bird's head about its centre (the origin); it dips to peck. |
 
 ### perchedSnake
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `perchedSnake.tail.0` … `.1` | 30 × 32 | 1.3 |  | The tail of a snake coiled round the branch, tapering from its root (the origin) past the last coil: round the trunk (frame 0) or the limb (frame 1). |
-| `perchedSnake.band.0` … `.1` | 54 × 48 | 1.3 |  | The front of a coil, slanting across the wood from its top (the origin): round the trunk (frame 0, 26 px thick), or round the limb (frame 1, for a limb 20 px thick, stretched across to the limb's thickness). |
-| `perchedSnake.mark` | 6 × 6 | 1.3 |  | A dark scale mark on a coil, 2 px in radius about the origin; scaled. |
-| `perchedSnake.neck` | 20 × 7 | 1.3 | strip | The neck of the coiled snake, rising from the last coil to the head. A straight strip 20 px along +x from the origin, 7 px across; bent along the curve. |
-| `perchedSnake.neckEnd` | 10 × 10 | 1.3 |  | A round end or joint of perchedSnake.neck: a disc 7 px across about the origin. |
-| `perchedSnake.head` | 16 × 12 | 1.3 |  | The coiled snake's head, about the end of its neck (the origin), facing +x; it sways and turns. |
-| `perchedSnake.tongue` | 15 × 12 | 1.3 |  | Its tongue, flicking now and then (in the head's coordinates). |
+| `perchedSnake.tail.0` … `.1` | 30 × 32 | 2.6 |  | The tail of a snake coiled round the branch, tapering from its root (the origin) past the last coil: round the trunk (frame 0) or the limb (frame 1). |
+| `perchedSnake.band.0` … `.1` | 54 × 48 | 2.6 |  | The front of a coil, slanting across the wood from its top (the origin): round the trunk (frame 0, 26 px thick), or round the limb (frame 1, for a limb 20 px thick, stretched across to the limb's thickness). |
+| `perchedSnake.mark` | 6 × 6 | 2.6 |  | A dark scale mark on a coil, 2 px in radius about the origin; scaled. |
+| `perchedSnake.neck` | 20 × 7 | 2.6 | strip | The neck of the coiled snake, rising from the last coil to the head. A straight strip 20 px along +x from the origin, 7 px across; bent along the curve. |
+| `perchedSnake.neckEnd` | 10 × 10 | 2.6 |  | A round end or joint of perchedSnake.neck: a disc 7 px across about the origin. |
+| `perchedSnake.head` | 16 × 12 | 2.6 |  | The coiled snake's head, about the end of its neck (the origin), facing +x; it sways and turns. |
+| `perchedSnake.tongue` | 15 × 12 | 2.6 |  | Its tongue, flicking now and then (in the head's coordinates). |
 
 ### hangingMonkey
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `hangingMonkey.arms` | 30 × 33 | 1.3 |  | A grey monkey hanging under the branch: the arms, its hands at the origin (it swings about them). |
-| `hangingMonkey.body` | 26 × 39 | 1.3 |  | The hanging monkey's body and head (in the hands' coordinates). |
-| `hangingMonkey.leg` | 20 × 4.2 | 1.3 |  | A leg of the hanging monkey, from its hip, kicking. A straight segment 20 px along +x from the origin, 4.2 px across; stretched to each length and turned. |
-| `hangingMonkey.legEnd` | 8 × 8 | 1.3 |  | A round end or joint of hangingMonkey.leg: a disc 4.2 px across about the origin. |
-| `hangingMonkey.tail.0` … `.12` | 33 × 30 | 1.3 |  | The hanging monkey's tail curling out and up, in 13 frames from the least curled to the most (in the hands' coordinates). |
-| `hangingMonkey.eyes.0` … `.1` | 16 × 5 | 1.3 |  | Its eyes: open (frame 0) and shut (frame 1). |
+| `hangingMonkey.arms` | 30 × 33 | 2.6 |  | A grey monkey hanging under the branch: the arms, its hands at the origin (it swings about them). |
+| `hangingMonkey.body` | 26 × 39 | 2.6 |  | The hanging monkey's body and head (in the hands' coordinates). |
+| `hangingMonkey.leg` | 20 × 4.2 | 2.6 |  | A leg of the hanging monkey, from its hip, kicking. A straight segment 20 px along +x from the origin, 4.2 px across; stretched to each length and turned. |
+| `hangingMonkey.legEnd` | 8 × 8 | 2.6 |  | A round end or joint of hangingMonkey.leg: a disc 4.2 px across about the origin. |
+| `hangingMonkey.tail.0` … `.12` | 33 × 30 | 2.6 |  | The hanging monkey's tail curling out and up, in 13 frames from the least curled to the most (in the hands' coordinates). |
+| `hangingMonkey.eyes.0` … `.1` | 16 × 5 | 2.6 |  | Its eyes: open (frame 0) and shut (frame 1). |
 
 ### hangingBat
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `hangingBat.purple.body` | 24 × 43 | 1.3 |  | A purple bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them). |
-| `hangingBat.purple.eyes.0` … `.1` | 14 × 5 | 1.3 |  | The purple hanging bat's eyes: shut (frame 0) and open (frame 1). |
-| `hangingBat.purple.ear.0` … `.8` | 11 × 11 | 1.3 |  | The purple hanging bat's ear that twitches, in 9 frames from still to the full twitch. |
-| `hangingBat.brown.body` | 24 × 44 | 1.3 |  | A brown bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them). |
-| `hangingBat.brown.eyes.0` … `.1` | 14 × 5 | 1.3 |  | The brown hanging bat's eyes: shut (frame 0) and open (frame 1). |
-| `hangingBat.brown.ear.0` … `.8` | 11 × 13 | 1.3 |  | The brown hanging bat's ear that twitches, in 9 frames from still to the full twitch. |
-| `hangingBat.grey.body` | 24 × 43 | 1.3 |  | A grey bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them). |
-| `hangingBat.grey.eyes.0` … `.1` | 14 × 5 | 1.3 |  | The grey hanging bat's eyes: shut (frame 0) and open (frame 1). |
-| `hangingBat.grey.ear.0` … `.8` | 11 × 10 | 1.3 |  | The grey hanging bat's ear that twitches, in 9 frames from still to the full twitch. |
-| `hangingBat.black.body` | 24 × 43 | 1.3 |  | A black bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them). |
-| `hangingBat.black.eyes.0` … `.1` | 14 × 5 | 1.3 |  | The black hanging bat's eyes: shut (frame 0) and open (frame 1). |
-| `hangingBat.black.ear.0` … `.8` | 11 × 12 | 1.3 |  | The black hanging bat's ear that twitches, in 9 frames from still to the full twitch. |
+| `hangingBat.purple.body` | 24 × 43 | 2.6 |  | A purple bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them). |
+| `hangingBat.purple.eyes.0` … `.1` | 14 × 5 | 2.6 |  | The purple hanging bat's eyes: shut (frame 0) and open (frame 1). |
+| `hangingBat.purple.ear.0` … `.8` | 11 × 11 | 2.6 |  | The purple hanging bat's ear that twitches, in 9 frames from still to the full twitch. |
+| `hangingBat.brown.body` | 24 × 44 | 2.6 |  | A brown bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them). |
+| `hangingBat.brown.eyes.0` … `.1` | 14 × 5 | 2.6 |  | The brown hanging bat's eyes: shut (frame 0) and open (frame 1). |
+| `hangingBat.brown.ear.0` … `.8` | 11 × 13 | 2.6 |  | The brown hanging bat's ear that twitches, in 9 frames from still to the full twitch. |
+| `hangingBat.grey.body` | 24 × 43 | 2.6 |  | A grey bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them). |
+| `hangingBat.grey.eyes.0` … `.1` | 14 × 5 | 2.6 |  | The grey hanging bat's eyes: shut (frame 0) and open (frame 1). |
+| `hangingBat.grey.ear.0` … `.8` | 11 × 10 | 2.6 |  | The grey hanging bat's ear that twitches, in 9 frames from still to the full twitch. |
+| `hangingBat.black.body` | 24 × 43 | 2.6 |  | A black bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them). |
+| `hangingBat.black.eyes.0` … `.1` | 14 × 5 | 2.6 |  | The black hanging bat's eyes: shut (frame 0) and open (frame 1). |
+| `hangingBat.black.ear.0` … `.8` | 11 × 12 | 2.6 |  | The black hanging bat's ear that twitches, in 9 frames from still to the full twitch. |
 
 ### owl
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `owl.body` | 30 × 34 | 1.3 |  | An owl perched on the branch: the body, its feet at the origin; it puffs as it breathes. |
-| `owl.skull` | 24 × 28 | 1.3 |  | The owl's head with its ear tufts, about its centre (the origin); it tilts as it turns. |
-| `owl.disc` | 24 × 15 | 1.3 |  | The pale face round the eyes (in the head's coordinates); it slides as the head turns. |
-| `owl.beak` | 6 × 7 | 1.3 |  | The beak (in the face's coordinates). |
-| `owl.eyeball` | 10 × 11 | 1.3 |  | An eye, about its centre. |
-| `owl.pupil` | 6 × 7 | 1.3 |  | A pupil, about the eye's centre; it leads the turn. |
-| `owl.shutEye` | 12 × 7 | 1.3 |  | An eye shut, about its centre. |
+| `owl.body` | 30 × 34 | 2.6 |  | An owl perched on the branch: the body, its feet at the origin; it puffs as it breathes. |
+| `owl.skull` | 24 × 28 | 2.6 |  | The owl's head with its ear tufts, about its centre (the origin); it tilts as it turns. |
+| `owl.disc` | 24 × 15 | 2.6 |  | The pale face round the eyes (in the head's coordinates); it slides as the head turns. |
+| `owl.beak` | 6 × 7 | 2.6 |  | The beak (in the face's coordinates). |
+| `owl.eyeball` | 10 × 11 | 2.6 |  | An eye, about its centre. |
+| `owl.pupil` | 6 × 7 | 2.6 |  | A pupil, about the eye's centre; it leads the turn. |
+| `owl.shutEye` | 12 × 7 | 2.6 |  | An eye shut, about its centre. |
 
 ### nest
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `nest.back` | 40 × 18 | 1.3 |  | A nest on the branch: the back of the bowl and its dark inside, its foot at the origin. |
-| `nest.front` | 44 × 15 | 1.3 |  | The front wall of the nest, over its contents (in the nest's coordinates). |
-| `nest.rim` | 46 × 14 | 1.3 |  | The rim of the nest, over the front wall and its twigs. |
-| `nest.twig` | 20 × 1.2 | 1.3 |  | A dark twig woven across the front of the nest. A straight segment 20 px along +x from the origin, 1.2 px across; stretched to each length and turned. |
-| `nest.twigEnd` | 4 × 4 | 1.3 |  | A round end or joint of nest.twig: a disc 1.2 px across about the origin. |
-| `nest.lightTwig` | 20 × 1.2 | 1.3 |  | A light twig woven across the front of the nest. A straight segment 20 px along +x from the origin, 1.2 px across; stretched to each length and turned. |
-| `nest.lightTwigEnd` | 4 × 4 | 1.3 |  | A round end or joint of nest.lightTwig: a disc 1.2 px across about the origin. |
-| `nest.rimTwig` | 20 × 1.4 | 1.3 |  | A twig stuck out of the rim. A straight segment 20 px along +x from the origin, 1.4 px across; stretched to each length and turned. |
-| `nest.rimTwigEnd` | 4 × 4 | 1.3 |  | A round end or joint of nest.rimTwig: a disc 1.4 px across about the origin. |
-| `nest.egg` | 14 × 18 | 1.3 |  | An egg in the nest, about its centre (placed at 0, -11); it rocks now and then. |
-| `nest.shell` | 14 × 12 | 1.3 |  | The cracked shell a chick hatched from, about its centre. |
-| `nest.chick` | 16 × 19 | 1.3 |  | The chick, about its centre; it bobs and tilts. |
-| `nest.chickBeak.0` … `.8` | 8 × 11 | 1.3 |  | The chick's beak, in 9 frames from shut to wide open (in the chick's coordinates). |
-| `nest.cap` | 14 × 10 | 1.3 |  | The top of the shell, tipped on the rim. |
-| `nest.leaf` | 12 × 8 | 1.3 |  | A dry leaf curled in the bottom of an empty nest (in the nest's coordinates). |
+| `nest.back` | 40 × 18 | 2.6 |  | A nest on the branch: the back of the bowl and its dark inside, its foot at the origin. |
+| `nest.front` | 44 × 15 | 2.6 |  | The front wall of the nest, over its contents (in the nest's coordinates). |
+| `nest.rim` | 46 × 14 | 2.6 |  | The rim of the nest, over the front wall and its twigs. |
+| `nest.twig` | 20 × 1.2 | 2.6 |  | A dark twig woven across the front of the nest. A straight segment 20 px along +x from the origin, 1.2 px across; stretched to each length and turned. |
+| `nest.twigEnd` | 4 × 4 | 2.6 |  | A round end or joint of nest.twig: a disc 1.2 px across about the origin. |
+| `nest.lightTwig` | 20 × 1.2 | 2.6 |  | A light twig woven across the front of the nest. A straight segment 20 px along +x from the origin, 1.2 px across; stretched to each length and turned. |
+| `nest.lightTwigEnd` | 4 × 4 | 2.6 |  | A round end or joint of nest.lightTwig: a disc 1.2 px across about the origin. |
+| `nest.rimTwig` | 20 × 1.4 | 2.6 |  | A twig stuck out of the rim. A straight segment 20 px along +x from the origin, 1.4 px across; stretched to each length and turned. |
+| `nest.rimTwigEnd` | 4 × 4 | 2.6 |  | A round end or joint of nest.rimTwig: a disc 1.4 px across about the origin. |
+| `nest.egg` | 14 × 18 | 2.6 |  | An egg in the nest, about its centre (placed at 0, -11); it rocks now and then. |
+| `nest.shell` | 14 × 12 | 2.6 |  | The cracked shell a chick hatched from, about its centre. |
+| `nest.chick` | 16 × 19 | 2.6 |  | The chick, about its centre; it bobs and tilts. |
+| `nest.chickBeak.0` … `.8` | 8 × 11 | 2.6 |  | The chick's beak, in 9 frames from shut to wide open (in the chick's coordinates). |
+| `nest.cap` | 14 × 10 | 2.6 |  | The top of the shell, tipped on the rim. |
+| `nest.leaf` | 12 × 8 | 2.6 |  | A dry leaf curled in the bottom of an empty nest (in the nest's coordinates). |
 
 ### flower
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `flower.stem` | 9 × 28 | 1.3 |  | A flower's stem, 20 px up from its foot (the origin), curving a little; stretched to each flower's height. |
-| `flower.leaf.0` … `.1` | 9 × 6 | 1.3 |  | A leaf on a stem, 7 px from its base (the origin) along +x: green (frame 0) and dark (frame 1). Placed, turned and scaled per leaf. |
-| `flower.petal` | 10 × 10 | 1.3 |  | A petal, 4 px in radius about its centre: white, tinted with the flower's colour, and scaled. |
-| `flower.heart` | 10 × 10 | 1.3 |  | A flower's heart, 4 px in radius about its centre: white, tinted, and scaled. |
+| `flower.stem` | 9 × 28 | 2.6 |  | A flower's stem, 20 px up from its foot (the origin), curving a little; stretched to each flower's height. |
+| `flower.leaf.0` … `.1` | 9 × 6 | 2.6 |  | A leaf on a stem, 7 px from its base (the origin) along +x: green (frame 0) and dark (frame 1). Placed, turned and scaled per leaf. |
+| `flower.petal` | 10 × 10 | 2.6 |  | A petal, 4 px in radius about its centre: white, tinted with the flower's colour, and scaled. |
+| `flower.heart` | 10 × 10 | 2.6 |  | A flower's heart, 4 px in radius about its centre: white, tinted, and scaled. |
 
 ### coconut
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `coconut.frond` | 34 × 16 | 1.3 |  | The frond a bunch of coconuts hangs from, under the branch; the stems spring from the origin. |
-| `coconut.stem` | 20 × 1.8 | 1.3 |  | The stem from the frond to a nut. A straight segment 20 px along +x from the origin, 1.8 px across; stretched to each length and turned. |
-| `coconut.stemEnd` | 4 × 4 | 1.3 |  | A round end or joint of coconut.stem: a disc 1.8 px across about the origin. |
-| `coconut.nut` | 16 × 16 | 1.3 |  | A coconut 7 px in radius, its top at the origin: brown, a highlight and three dark eyes; scaled to each nut. |
-| `coconut.hair` | 7 × 6 | 1.3 |  | A hair on a nut's outline, at its right (about the nut's centre, which is the origin); turned round the nut. |
+| `coconut.frond` | 34 × 16 | 2.6 |  | The frond a bunch of coconuts hangs from, under the branch; the stems spring from the origin. |
+| `coconut.stem` | 20 × 1.8 | 2.6 |  | The stem from the frond to a nut. A straight segment 20 px along +x from the origin, 1.8 px across; stretched to each length and turned. |
+| `coconut.stemEnd` | 4 × 4 | 2.6 |  | A round end or joint of coconut.stem: a disc 1.8 px across about the origin. |
+| `coconut.nut` | 16 × 16 | 2.6 |  | A coconut 7 px in radius, its top at the origin: brown, a highlight and three dark eyes; scaled to each nut. |
+| `coconut.hair` | 7 × 6 | 2.6 |  | A hair on a nut's outline, at its right (about the nut's centre, which is the origin); turned round the nut. |
 
 ### thornBush
 
@@ -277,8 +277,8 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `bee.body` | 10 × 8 | 1.3 |  | A bee: a round yellow body with a dark stripe, about the origin. |
-| `bee.wing` | 8 × 8 | 1.3 |  | A bee's wing at its widest (2.6 px half height), about its centre; squeezed as it beats. |
+| `bee.body` | 10 × 8 | 2.6 |  | A bee: a round yellow body with a dark stripe, about the origin. |
+| `bee.wing` | 8 × 8 | 2.6 |  | A bee's wing at its widest (2.6 px half height), about its centre; squeezed as it beats. |
 
 ### temple
 

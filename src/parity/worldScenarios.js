@@ -1,4 +1,5 @@
 import { LIANA_SPACING, SIM_DT } from '../config.js';
+import { CANOPY_BOTTOM, FLOOR_Y } from '../views/backdrop.js';
 import { Art, CATALOG, queueArt } from '../phaser/art.js';
 import { LianaSetRig } from '../phaser/world/lianas.js';
 import { MonkeyRig } from '../phaser/world/monkey.js';
@@ -8,6 +9,9 @@ import { MonkeyView, PALETTES } from '../render/monkeyView.js';
 import { ShadowView } from '../render/shadowView.js';
 import { Liana } from '../sim/liana.js';
 import { MonkeyState } from '../sim/monkey.js';
+import { BRANCH_DECORATIONS, Obstacle } from '../sim/obstacle.js';
+import { ObstacleLayer } from '../phaser/world/obstacleLayer.js';
+import { ObstacleViews } from '../render/obstacleViews.js';
 
 // M5 scenarios (PHASER_PLAN.md): the world as the Pixi views draw it and as the Phaser
 // rigs draw it from the pre-rendered pieces, part by part.
@@ -46,6 +50,38 @@ function monkeys() {
     { player: 0, monkey: { x: 560, y: 120, vx: 0, vy: 0, state: MonkeyState.DEAD }, dt: 0.37 },
   ];
 }
+
+// Static obstacles of one kind (and decoration): hanging high from the canopy and
+// standing low on the floor, at the first stage's scale and the largest, on different
+// gaps (each picks its own variety), seen at world time `t`. Only what the game can show:
+// below the canopy strip and above the floor, which are drawn over the world (the vines
+// start under one and the trunks end under the other).
+const OBSTACLE_SPACING = 300;
+function obstacleRow(type, decoration = null) {
+  const row = [];
+  for (const [i, [y, scale]] of [[200, 1], [330, 1], [190, 1.3], [340, 1.3]].entries()) {
+    row.push(new Obstacle(i + 3, type, 150 + i * OBSTACLE_SPACING, y, null, scale, decoration));
+  }
+  return row;
+}
+const obstacleScenario = (id, title, type, decoration, t = 1.37) =>
+  withArt({
+    id,
+    title,
+    width: 4 * OBSTACLE_SPACING,
+    scroll: [0, CANOPY_BOTTOM],
+    height: FLOOR_Y - CANOPY_BOTTOM,
+    pixi(world) {
+      const views = new ObstacleViews();
+      views.update(obstacleRow(type, decoration), t);
+      world.addChild(views.view);
+    },
+    phaser(scene, zoom) {
+      const layer = new ObstacleLayer(scene, artFor(scene, zoom));
+      layer.update(obstacleRow(type, decoration), t);
+      scene.add.existing(layer.view);
+    },
+  });
 
 export const WORLD_SCENARIOS = [
   withArt({
@@ -138,4 +174,9 @@ export const WORLD_SCENARIOS = [
       scene.add.existing(rig.view);
     },
   }),
+  obstacleScenario('world.branches', 'Bare branches, hanging on vines and standing on trunks', 'branch', null),
+  obstacleScenario('world.thornBushes', 'Thorn bushes, hanging and standing', 'thornBush', null),
+  obstacleScenario('world.rocks', 'Rocks, hanging and standing', 'rock', null),
+  obstacleScenario('world.beehives', 'Beehives with their bees, hanging and standing', 'beehive', null),
+  ...BRANCH_DECORATIONS.map((decoration) => obstacleScenario(`world.decoration.${decoration}`, `Branches with a ${decoration}`, 'branch', decoration)),
 ];

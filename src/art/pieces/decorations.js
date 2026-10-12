@@ -52,7 +52,9 @@ import { linePieces } from './lines.js';
 // What a branch can carry (the panther is in branch.js). Each decoration is placed on the
 // branch and faces left or right (mirrored); its parts are placed, turned and swapped by
 // its rig as the code animates them.
-const obstacle = { scale: OBSTACLE_SCALE };
+// Small, and they sway, swing, turn and breathe: rasterized at twice the density, so they
+// are sampled smoothly when turned or placed between pixels.
+const obstacle = { scale: 2 * OBSTACLE_SCALE };
 
 export const BIRD_LOOKS = ['red', 'blue', 'purple']; // BIRD_COLORS, in order
 export const BAT_LOOK_NAMES = ['purple', 'brown', 'grey', 'black']; // BAT_LOOKS, in order
