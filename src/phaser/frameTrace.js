@@ -104,6 +104,8 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
       return {
         simTime: pane.world.time,
         drawTime, obstacles,
+        obstacleBlur: pane.obstacleExposure ? { enabled: pane.obstacleExposure.config.enabled,
+          maximumCSS: pane.obstacleExposure.maximumCSS, images: pane.obstacleExposure.images } : null,
         roundPixels: camera.roundPixels,
         cameraX: pane.cameraX, cameraPreviousX: pane.camera.prevX, cameraCurrentX: pane.camera.x,
         // Unwrapped layer position avoids treating a repeating seam as a jump.

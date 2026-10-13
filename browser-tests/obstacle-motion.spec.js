@@ -2,10 +2,10 @@ import { test, expect } from '@playwright/test';
 import { DEV } from '../playwright.config.js';
 import { collectErrors } from './helpers.js';
 
-test('native Phaser frames continuously draw temples, moving obstacles and settling vines at 60/90/144 Hz', async ({ page }) => {
+for (const blur of [false, true]) test(`native Phaser frames continuously draw temples, moving obstacles and settling vines at 60/90/144 Hz${blur ? ' with obstacle exposure' : ''}`, async ({ page }) => {
   test.setTimeout(120_000);
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}?engine=phaser${blur ? '&obstacleblur=on' : ''}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const results = await page.evaluate(async () => {
     const { app, platform } = window.__liano;
@@ -18,14 +18,24 @@ test('native Phaser frames continuously draw temples, moving obstacles and settl
     const { MAX_STEP_TURN, blend } = await import('/src/render/interpolate.js');
     const { ropePoints } = await import('/src/views/liana.js');
     app.events.removeAllListeners('step');
-    const node = app.renderer.renderNodes.getNode('TransformerImage'), original = node.run;
+    const nodes = ['TransformerImage', 'ObjectExposureTransformer'].map((name) => app.renderer.renderNodes.getNode(name)).filter(Boolean);
+    const originals = nodes.map((node) => node.run);
     const keys = ['temple.limestone.top', 'spider.body', 'monkey.p1.torso'];
     let quads = {};
-    node.run = function (...args) {
-      const result = original.apply(this, args), key = args[1].artKey;
-      if (keys.includes(key) && !quads[key]) quads[key] = [...this.quad];
-      return result;
-    };
+    let centerError = 0;
+    nodes.forEach((node, i) => {
+      node.run = function (...args) {
+        const result = originals[i].apply(this, args), image = args[1], key = image.artKey;
+        if (keys.includes(key) && !quads[key]) quads[key] = [...this.quad];
+        if (image.objectExposure) {
+          const drawn = image.objectExposure.history.get(image);
+          const q = this.quad;
+          centerError = Math.max(centerError, Math.abs((q[0] + q[2] + q[4] + q[6]) / 4 - drawn.x),
+            Math.abs((q[1] + q[3] + q[5] + q[7]) / 4 - drawn.y));
+        }
+        return result;
+      };
+    });
     try {
       const out = [];
       for (const hz of [60, 90, 144]) {
@@ -80,14 +90,15 @@ test('native Phaser frames continuously draw temples, moving obstacles and settl
           previous = quads;
         }
         app.events.off('step', onStep);
-        out.push({ hz, frames: 150, positionError, settlingError, repeated });
+        out.push({ hz, frames: 150, positionError, settlingError, centerError, repeated });
       }
       return out;
-    } finally { node.run = original; }
+    } finally { nodes.forEach((node, i) => { node.run = originals[i]; }); }
   });
   for (const result of results) {
     expect(result.positionError).toBeLessThan(1e-9);
     expect(result.settlingError).toBeLessThan(1e-4);
+    expect(result.centerError).toBeLessThan(1e-4);
     expect(Object.values(result.repeated)).toEqual([0, 0, 0]);
   }
   console.log('native obstacle motion:', JSON.stringify(results));

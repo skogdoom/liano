@@ -299,3 +299,64 @@ If gameplay still stutters, investigate these in order:
    can still appear as small jumps even with interpolated continuous motion. The
    expanded trace can correlate a visible jump with a grab and its actor/camera
    positions before changing any gameplay behavior.
+
+## Optional obstacle motion exposure experiment
+
+Use `?obstacleblur=on` on the Phaser game URL. **B**, or the bottom-right
+**Obstacle blur: ON/OFF** button, toggles it during the same run without changing
+the seed or restarting. For a recording, use `?obstacleblur=on&frames=1`.
+Ordinary play creates no exposure nodes or history. This is separate from the
+older `motionblur=on` backdrop experiment.
+
+The experiment samples moving obstacle images over a short, centered exposure:
+half their travel since the last submitted frame, capped at **3 CSS pixels**
+(full width, not radius). Five equally weighted samples cover that interval.
+Motion is measured from the native transformed image center, so both camera
+travel and an obstacle's own movement contribute, including vertical/diagonal
+travel. It does not delay the current pose or change simulation/collision state.
+New images, resets, resizes, flips, missed rendering frames, pauses, large jumps
+and stalls discard the previous movement sample. A stationary frame uses the
+exact native texture sampling path.
+
+This first experiment affects the Image parts of all obstacle kinds: temple
+stone, moss/leaves, haze and flames, and the bodies/supports/decorations of other
+obstacles. Temple additive glow discs retain their normal sampling: they are
+already soft and sampling all 32 again costs work with negligible edge benefit.
+Rope strips, monkeys, lianas, backdrops and UI retain their existing rendering.
+Exposure currently approximates each image as translating its current shape;
+it does not integrate a rotating/deforming shape or its previous flipbook frame.
+Alpha compositing between separately blurred parts is likewise an approximation
+to exposure of the complete rig.
+
+The shader uses one GPU pass and the existing one-texture quad batching. Motion
+and original frame boundaries are extra vertex attributes, so pieces with
+different velocities still batch together. Expanded quads preserve blurred
+silhouettes; sampling respects cropped frame boundaries, reversed canvas UVs,
+tint and premultiplied alpha, without wrapping into neighbouring atlas art.
+There are no full-screen buffers, duplicate art textures, pixel reads or GPU
+waits in gameplay. The shader is requested during pane preparation, not at an
+obstacle's first appearance. The custom quad writer follows Phaser 4.2.1's native
+batch protocol and tint packing, with a thirteen-word vertex layout.
+
+Validation compares actual WebGL pixels with five separately translated native
+poses at 1×/2×, including rotated, anisotropically scaled and cropped artwork.
+Mean channel error is below 0.02/255 and maximum error at most 3/255 (8-bit
+rounding/filtering); stationary output is bit-for-bit equal, and an adjacent
+magenta atlas frame produces no bleed. Sixty-four distinct image velocities use
+one draw call, with no texture uploads or framebuffer creation during motion and
+one shader program. Native whole-game rendering at 60/90/144 Hz has no repeated
+temple/spider/monkey quads and retains the current image centers within 0.000062
+device pixels, with exact obstacle interpolation and settling-rope geometry.
+
+`scripts/dev/obstacle-blur-bench.mjs` compares a moving basalt temple at 1280×720
+in Chromium's SwiftShader. A controlled 24-frame sample per mode, run without
+other browser workloads, used 15 draw calls in both modes. Median CPU submission
+was 0.8 ms native / 0.9 ms exposed; rendering plus full-frame readback was
+89.0 / 92.7 ms (about 4% more). These absolute times include software rendering
+and readback and are not a Safari frame-time prediction. The script alone reads
+pixels to wait for completed drawing; the game does not. Safari's hardware GPU
+cost and perceived smoothness still need the on/off comparison.
+
+The optional frame trace records whether exposure is enabled, its maximum
+observed CSS width, and the number of moving obstacle images each frame. This
+helps distinguish an ineffective experiment from extra submission/display delays.

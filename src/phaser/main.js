@@ -20,6 +20,7 @@ import { BootScene, PlayScene, UiScene } from './scenes.js';
 import { createPhaserSoundPlayer } from './sound.js';
 import { canvasSize, viewCamera } from './view.js';
 import { oneTexturePerBatch } from './shaders.js';
+import { installObstacleBlur } from './obstacleBlur.js';
 
 // The Phaser version of the game (see PHASER_PLAN.md). The platform holds the layout,
 // pause, full screen, input and sound for the scenes (scenes.js); the game runs as in
@@ -71,6 +72,7 @@ oneTexturePerBatch(game.renderer);
 
 const platform = new Phaser.Events.EventEmitter();
 game.registry.set('platform', platform);
+installObstacleBlur(platform);
 blockBrowserGestures(game.canvas);
 
 // Obstacles ahead are generated in a worker (see ObstaclePrefetch).

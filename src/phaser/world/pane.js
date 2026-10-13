@@ -10,6 +10,7 @@ import { MonkeyRig } from './monkey.js';
 import { ShadowRig } from './shadow.js';
 import { makeContainer } from './build.js';
 import { WorldMotion } from './motion.js';
+import { ObjectExposure } from './objectExposure.js';
 
 // One world drawn in one rect of the view, as the Pixi Pane (render/pane.js): the whole
 // view in single player, a strip per player in split screen. `scene` is what the death
@@ -21,13 +22,14 @@ const FURS = ['p1', 'p2'];
 const COLOURINGS = ['green', 'gold'];
 
 export class WorldPane {
-  constructor(scene, art, { motionBlur } = {}) {
+  constructor(scene, art, { motionBlur, obstacleBlur = scene.registry.get('platform')?.obstacleBlur } = {}) {
     this.phaser = scene;
     this.art = art;
     this.view = scene.add.container(0, 0);
     this.scene = makeContainer(scene);
     this.worldLayer = makeContainer(scene);
-    this.obstacles = new ObstacleLayer(scene, art);
+    this.obstacleExposure = obstacleBlur ? new ObjectExposure(obstacleBlur) : null;
+    this.obstacles = new ObstacleLayer(scene, art, this.obstacleExposure);
     this.lianaLayer = makeContainer(scene);
     this.bananas = new BananaLayer(scene, art);
     this.monkeyLayer = makeContainer(scene);
@@ -51,6 +53,7 @@ export class WorldPane {
   // `pane` is one of paneLayouts(): where it goes and how its world is drawn. `zoom`:
   // device pixels per view unit (the camera's), for text.
   resize(pane, zoom = 1) {
+    this.obstacleExposure?.reset();
     this.bananas.setTextResolution(zoom * pane.scale);
     this.layout = pane;
     this.view.setPosition(pane.x, pane.y);
@@ -65,6 +68,7 @@ export class WorldPane {
   // follows player 1's monkey with its own.
   setWorld(world, players, camera = null) {
     this.world = world;
+    this.obstacleExposure?.reset();
     this.motion = new WorldMotion(world);
     this.players = players;
     this.camera = camera ?? this.ownCamera;
@@ -105,6 +109,7 @@ export class WorldPane {
 
   // As the Pixi Pane's update.
   update(events, dt, shakes = true, ghost = null, alpha = 1) {
+    this.obstacleExposure?.begin(dt, 1 / this.phaser.sys.game.scale.zoom);
     const { world, camera, shake, layout } = this;
     if (shakes && events.some((e) => e.type === 'death')) shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
     shake.update(dt);
