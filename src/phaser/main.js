@@ -222,3 +222,10 @@ if (import.meta.env.DEV) {
     get game() { return theGame; },
   };
 }
+
+// Record the real update/render loop on devices with the frame readout enabled.
+// Kept out of normal play and out of the Pixi version.
+if (new URLSearchParams(location.search).get('frames') === '1') {
+  const { installFrameTrace } = await import('./frameTrace.js');
+  installFrameTrace(game, platform);
+}

@@ -105,3 +105,40 @@ Validation of the integrated version:
 These use controlled frame times in Chromium, without GPU drawing during the
 motion runs. This workspace cannot verify perceived smoothness on Safari's
 physical display.
+
+
+## Remaining whole-scene stutter and device capture
+
+The owner still reports both brief freezes/jumps (including on the title screen)
+and continuous uneven movement during gameplay after the merge. Slower scenery
+is not a completed fix for this symptom.
+
+`scripts/dev/full-frame-motion.mjs` now exercises Phaser's actual TimeStep and
+complete Game.step, including the existing driver listener, scene updates,
+native Image render-node vertices and WebGL submission. In the 360-frame 60 Hz
+title swing with rounded timestamps, there are no repeated submitted quads for
+the mid trees, floor or monkey torso. Monkey interpolation error is zero and
+liana-angle error is below 1.3e-15 radians. The stabilized simulation deltas span
+16.659–16.684 ms in the latest run. This does not measure presentation on Safari's physical screen.
+
+To capture an actual Safari incident, open the Phaser game with `?frames=1`,
+reproduce the stutter, then press **Save frame trace** at the bottom right.
+The local JSON file contains the last 1,800 actual Phaser frames (about 30 seconds
+at 60 Hz), including:
+
+- Callback gaps and callback delay; normalized simulation delta and interpolation.
+- Time spent updating and submitting rendering commands, measured separately.
+- Camera positions, unwrapped mid-tree positions, foreground positions and the
+  monkey's simulated and drawn positions, plus liana angles and drawn rope tips.
+- Gameplay events, pause/state/mode, canvas dimensions, browser and context settings.
+
+The trace has no pixel reads, synchronous GPU queries or additional textures.
+It is installed only for Phaser with `frames=1`, including the production build;
+normal play and Pixi do not install it. It reports CPU submission and poses,
+not completed GPU work or whether Safari presented a frame. The browser test
+checks that an actual production frame recording downloads as valid JSON;
+unit checks cover retaining late frames, ring-buffer order and excluding
+expected paused/game-over/reset poses from the repeated-pose count.
+
+Recorder validation: build passed, 19 focused unit tests passed, four production
+browser checks passed, and the 360-frame full render-loop probe passed.
