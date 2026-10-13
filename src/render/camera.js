@@ -1,5 +1,15 @@
 import { CAMERA_TARGET_X, CAMERA_LERP, CAMERA_EASE } from '../config.js';
 
+// TEMPORARY (the owner's check of the stutter while swinging): `?sway=0.5` makes a
+// landscape pane's camera follow that share of each swing about the liana's anchor (1:
+// all of it, as by default; 0: none), see SwingTarget.
+const SWAY = (() => {
+  const value = typeof location === 'undefined' ? NaN : Number(new URLSearchParams(location.search).get('sway') ?? NaN);
+  return value >= 0 && value <= 1 ? value : 1;
+})();
+const CATCH_S = 0.3; // the glide to the new liana after a catch (time constant)
+const FLIGHT_S = 0.5; // closing the gap to the monkey in flight (time constant)
+
 // Horizontal-only camera. `x` is the world x at the left edge of the screen.
 // It eases towards keeping the target at `screenX` on screen (set by the layout).
 //
@@ -48,4 +58,31 @@ export class Camera {
 // the liana it hangs on, so the view holds still through each swing.
 export function cameraTarget(monkey, follow) {
   return follow === 'anchor' && monkey.liana ? monkey.liana.x : monkey.x;
+}
+
+// What a landscape pane's camera follows with ?sway below 1: while the monkey hangs, the
+// liana's anchor plus that share of the monkey's swing about it; in flight, the monkey.
+// It never jumps: after a catch it glides to the new liana, after a release it closes the
+// gap to the monkey as it flies.
+export class SwingTarget {
+  constructor() {
+    this.reset();
+  }
+
+  reset() {
+    this.state = null;
+  }
+
+  // The target for `monkey` after a step of `dt` s.
+  of(monkey, follow, dt) {
+    if (follow === 'anchor' || SWAY === 1) return cameraTarget(monkey, follow);
+    const hanging = monkey.state === 'HANGING' && monkey.liana;
+    const raw = hanging ? monkey.liana.x + SWAY * (monkey.x - monkey.liana.x) : monkey.x;
+    const s = (this.state ??= { target: raw, hanging, carry: 0 });
+    if (hanging !== s.hanging) s.carry = s.target - raw;
+    else s.carry *= Math.exp(-dt / (hanging ? CATCH_S : FLIGHT_S));
+    s.hanging = hanging;
+    s.target = raw + s.carry;
+    return s.target;
+  }
 }

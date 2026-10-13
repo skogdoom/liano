@@ -1,5 +1,5 @@
 import { DEATH_SHAKE_PX, DEATH_SHAKE_TIME } from '../../config.js';
-import { Camera, cameraTarget } from '../../render/camera.js';
+import { Camera, SwingTarget } from '../../render/camera.js';
 import { blend } from '../../render/interpolate.js';
 import { Shake } from '../../render/shake.js';
 import { BackdropRig } from './backdrop.js';
@@ -40,6 +40,7 @@ export class WorldPane {
     this.scene.add([this.backdrop.back, this.worldLayer, this.backdrop.front, this.overlay]);
     this.view.add(this.scene);
     this.ownCamera = new Camera();
+    this.swing = new SwingTarget();
     this.camera = this.ownCamera;
     this.shake = new Shake();
     this.world = null;
@@ -55,7 +56,7 @@ export class WorldPane {
     this.scene.setScale(pane.scale);
     this.backdrop.resize(pane);
     this.ownCamera.screenX = pane.camera.screenX;
-    if (this.world && this.camera === this.ownCamera) this.camera.reset(this.#target());
+    if (this.world && this.camera === this.ownCamera) this.camera.reset(this.#target(0, true));
   }
 
   // Shows `world`, whose monkeys belong to `players` (their furs, by monkey index).
@@ -81,7 +82,7 @@ export class WorldPane {
       this.monkeyLayer.add(rig.view);
     });
     for (const rig of this.monkeys.splice(world.monkeys.length)) rig?.destroy();
-    if (this.layout && !camera) this.camera.reset(this.#target());
+    if (this.layout && !camera) this.camera.reset(this.#target(0, true));
   }
 
   // Fixed-step camera update; it holds still once everyone in the world is out.
@@ -89,11 +90,13 @@ export class WorldPane {
   stepCamera(dt) {
     if (this.camera !== this.ownCamera) return;
     this.camera.mark();
-    if (this.world.alive) this.camera.update(this.#target(), dt);
+    if (this.world.alive) this.camera.update(this.#target(dt), dt);
   }
 
-  #target() {
-    return cameraTarget(this.world.monkey, this.layout.camera.follow);
+  // `restart`: the camera is being placed afresh (see SwingTarget).
+  #target(dt = 0, restart = false) {
+    if (restart) this.swing.reset();
+    return this.swing.of(this.world.monkey, this.layout.camera.follow, dt);
   }
 
   // As the Pixi Pane's update.
