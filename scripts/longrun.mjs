@@ -84,6 +84,12 @@ await page.evaluate(async ({ frameMs, mode, hitches, motion }) => {
   const remove = gl.deleteTexture.bind(gl);
   gl.createTexture = () => { bot.liveTextures++; return create(); };
   gl.deleteTexture = (t) => { if (t) bot.liveTextures--; return remove(t); };
+  // HITCHES: the texture uploads in a frame (a text redrawn, a texture made).
+  bot.uploads = 0;
+  for (const name of ['texImage2D', 'texSubImage2D']) {
+    const f = gl[name].bind(gl);
+    gl[name] = (...a) => { bot.uploads++; return f(...a); };
+  }
   // A key press as the browser gives it (Phaser reads the key code).
   const KEY_CODES = { Space: 32, KeyA: 65, KeyL: 76, KeyG: 71, KeyH: 72, KeyS: 83, Digit2: 50, Digit3: 51 };
   const tap = (code) => {
@@ -133,6 +139,8 @@ await page.evaluate(async ({ frameMs, mode, hitches, motion }) => {
       if (bot.hitches) await yieldFrame();
       bot.step();
       bot.t += bot.frameMs;
+      const hanging = game.world.monkey.state === 'HANGING';
+      const u0 = bot.uploads;
       const t0 = real();
       if (!phaser) app.ticker.update(bot.t);
       else if (bot.n++ % bot.renderEvery) app.headlessStep(bot.t, bot.frameMs);
@@ -142,7 +150,8 @@ await page.evaluate(async ({ frameMs, mode, hitches, motion }) => {
       if (bot.hitches) {
         let fresh = false;
         for (const o of obstacleViews().keys()) if (!bot.seen.has(o)) { bot.seen.add(o); fresh = true; }
-        bot.frameLog.push([ms, fresh]);
+        const grabbed = game.world.monkey.state === 'HANGING' && !hanging;
+        bot.frameLog.push([ms, fresh, grabbed, bot.uploads - u0]);
       }
       if (bot.motion && game.state === 'PLAYING' && game.world.monkey.state !== 'DEAD') {
         const at = drawnAt();
@@ -209,6 +218,14 @@ const summary = await page.evaluate(() => {
     };
     out.newView = stats(bot.frameLog.filter(([, fresh]) => fresh));
     out.others = stats(bot.frameLog.filter(([, fresh]) => !fresh));
+    out.grab = stats(bot.frameLog.filter(([, , grabbed]) => grabbed));
+    out.upload = stats(bot.frameLog.filter(([, , , uploads]) => uploads > 0));
+    out.plain = stats(bot.frameLog.filter(([, fresh, grabbed, uploads]) => !fresh && !grabbed && !uploads));
+    // Frames just after a grab (the next 1..8), in case the cost lands there.
+    const after = [];
+    bot.frameLog.forEach(([, , grabbed], i) => { if (grabbed) for (let k = 1; k <= 8; k++) if (bot.frameLog[i + k]) after.push(bot.frameLog[i + k]); });
+    out.afterGrab = stats(after);
+    out.uploadsAtGrab = bot.frameLog.filter(([, , grabbed]) => grabbed).reduce((a, [, , , u]) => a + u, 0);
   }
   if (bot.motion) out.motion = { still: bot.still, moving: bot.moving, share: +(bot.still / Math.max(1, bot.still + bot.moving)).toFixed(4) };
   return out;

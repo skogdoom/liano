@@ -653,6 +653,7 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
   | Pixi, the others | 18,022 | 0.8 ms | 2.3 ms | 13.1 ms | 3 | 0 |
 
   As in the Pixi version, no pre-warm is worth it: a new rig costs about as much as a new Pixi view, and the few slow frames are as rare in both.
+- **A stutter at each grab, fixed.** The owner saw the background stutter a little at each grab in Safari on a MacBook Air M1. A grab scores, and the Phaser version redrew the score text and uploaded it to the GPU three times: once for the new text and twice to fit its padding to whole pixels. That is the canvas's blurred shadow drawn three times and three uploads, where Pixi makes one. The padding is now set only when it changes, so a new text costs one redraw and one upload. In Chromium a grab's frame went from a median of 1.4 ms to 1.2 ms, and its worst from 12.5 ms to 7.4 ms. The hitch check (`HITCHES=1`) now also reports the grab frames and the texture uploads.
 - **Replacement drill on the finished rigs** (`scripts/dev/replacement-drill.mjs`, the same six pieces as in M4: plain, flipbook, joint, stretch, rope, tinted tile):
   - `art:check` accepted them, with the same warning (the branch placeholder strays past the hitbox). It refused a picture in the wrong aspect, and so did the build.
   - The gallery marked the 21 frames custom and still passed (594 frames, 0.52 % differing).

@@ -85,15 +85,19 @@ function pixiLineWidth(context, line) {
 // only be whole pixels, and at a resolution like 1.8 Phaser's own size would leave the
 // canvas a fraction of a pixel smaller than the texture it draws, stretching the text.
 // The fraction goes into the padding at the right and bottom, which moves nothing.
+// Every change of padding redraws the text and uploads it again, so it is set only when
+// it changes: one redraw for a new text, not three (a stutter in Safari).
 function fitPixels(text) {
   const base = text.basePadding;
-  const { left, top, right, bottom } = text.padding;
-  if (left !== base.left || top !== base.top || right !== base.right || bottom !== base.bottom) text.setPadding(base);
+  const padding = text.padding;
+  // The size with the base padding (a text's size is its lines' plus its padding).
+  const width = text.width - (padding.left - base.left) - (padding.right - base.right);
+  const height = text.height - (padding.top - base.top) - (padding.bottom - base.bottom);
   const resolution = text.style.resolution;
   // A hair over the whole pixel: the canvas truncates its size, and 74.9999 would be 74.
   const extra = (size) => (Math.ceil(size * resolution - 1e-6) + 1e-4) / resolution - size;
-  const [dw, dh] = [extra(text.width), extra(text.height)];
-  if (dw || dh) text.setPadding(base.left, base.top, base.right + dw, base.bottom + dh);
+  const fitted = { left: base.left, top: base.top, right: base.right + extra(width), bottom: base.bottom + extra(height) };
+  if (Object.keys(fitted).some((side) => Math.abs(fitted[side] - padding[side]) > 1e-7)) text.setPadding(fitted);
 }
 
 // Sets a text's origin as a share of its size, as Pixi anchors a text: on its texture,
