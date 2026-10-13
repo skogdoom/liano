@@ -61,16 +61,26 @@ export function makeText(scene, content, options) {
 // smaller text is drawn at full size and shrunk, as Pixi draws it).
 export const textResolution = (zoom, scale = 1) => zoom * Math.max(scale, 1);
 
-// Sets the pixels per unit a text is rasterized at, its shadow scaled with it.
+// Sets the pixels per unit a text is rasterized at, its shadow scaled with it. Phaser's
+// setters each redraw the text and upload it again: the style and the padding (fitted to
+// whole pixels, see fitPixels) are set here, then the text redrawn once, and not at all
+// at the resolution it has.
 export function setTextResolution(text, resolution) {
+  const { style, padding } = text;
+  if (style.resolution === resolution) return text;
+  // The size of the lines alone (a text's size is its lines' plus its padding).
+  const lines = { width: text.width - padding.left - padding.right, height: text.height - padding.top - padding.bottom };
+  style.resolution = resolution;
   const shadow = text.pixiShadow;
   if (shadow) {
-    const style = shadowStyle(shadow, resolution);
-    const { offsetX, offsetY, color, blur } = style.shadow;
-    text.basePadding = style.padding;
-    text.setShadow(offsetX, offsetY, color, blur, false, true).setPadding(style.padding);
+    const { shadow: drop, padding: room } = shadowStyle(shadow, resolution);
+    Object.assign(style, { shadowOffsetX: drop.offsetX, shadowOffsetY: drop.offsetY, shadowColor: drop.color, shadowBlur: drop.blur, shadowStroke: false, shadowFill: true });
+    text.basePadding = room;
   }
-  return text.setResolution(resolution);
+  const base = text.basePadding;
+  Object.assign(padding, fitted(base, lines.width + base.left + base.right, lines.height + base.top + base.bottom, resolution));
+  text.updateText();
+  return text;
 }
 
 // A line's width as Pixi measures it: the larger of its advance and the width its glyphs
@@ -93,11 +103,16 @@ function fitPixels(text) {
   // The size with the base padding (a text's size is its lines' plus its padding).
   const width = text.width - (padding.left - base.left) - (padding.right - base.right);
   const height = text.height - (padding.top - base.top) - (padding.bottom - base.bottom);
-  const resolution = text.style.resolution;
-  // A hair over the whole pixel: the canvas truncates its size, and 74.9999 would be 74.
+  const target = fitted(base, width, height, text.style.resolution);
+  if (Object.keys(target).some((side) => Math.abs(target[side] - padding[side]) > 1e-7)) text.setPadding(target);
+}
+
+// The padding that makes a text `width` × `height` units with the base padding `base` a
+// whole number of pixels at `resolution`: aimed a hair over the whole pixel, as the
+// canvas truncates its size (74.9999 would be 74).
+function fitted(base, width, height, resolution) {
   const extra = (size) => (Math.ceil(size * resolution - 1e-6) + 1e-4) / resolution - size;
-  const fitted = { left: base.left, top: base.top, right: base.right + extra(width), bottom: base.bottom + extra(height) };
-  if (Object.keys(fitted).some((side) => Math.abs(fitted[side] - padding[side]) > 1e-7)) text.setPadding(fitted);
+  return { left: base.left, top: base.top, right: base.right + extra(width), bottom: base.bottom + extra(height) };
 }
 
 // Sets a text's origin as a share of its size, as Pixi anchors a text: on its texture,

@@ -18,6 +18,7 @@ import { phaserKeys, phaserPointers } from './input.js';
 import { BootScene, PlayScene, UiScene } from './scenes.js';
 import { createPhaserSoundPlayer } from './sound.js';
 import { canvasSize, viewCamera } from './view.js';
+import { oneShaderPerBatchKind } from './shaders.js';
 
 // The Phaser version of the game (see PHASER_PLAN.md). The platform holds the layout,
 // pause, full screen, input and sound for the scenes (scenes.js); the game runs as in
@@ -65,6 +66,7 @@ game = new Phaser.Game({
   scene: [BootScene, PlayScene, UiScene],
 });
 await new Promise((resolve) => game.events.once(Phaser.Core.Events.READY, resolve));
+oneShaderPerBatchKind(game.renderer);
 
 const platform = new Phaser.Events.EventEmitter();
 game.registry.set('platform', platform);
