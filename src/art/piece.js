@@ -16,6 +16,9 @@
 //   density   the least density (pixels per unit at its scale) to rasterize it at, whatever
 //             the atlas: for large pictures with long straight edges, which a 1× picture
 //             placed between pixels would blur
+//   soften    for a 'tile': a sideways blur of this many units (its standard deviation),
+//             for a layer whose hard edges move fast across the screen: moving several
+//             pixels a frame, a hard edge looks stepped at 60 Hz (PHASER_PLAN.md, M7)
 //   alpha     for a piece drawn see-through (the shadow monkey): every shape in it at
 //             this share of its alpha, each blending on its own as the game draws them
 //   box       the picture's box in the piece's own units (default: around the drawing)
@@ -43,6 +46,7 @@ export function definePiece(piece) {
   if (!(p.scale > 0)) fail('scale must be positive');
   if (p.density !== undefined && !(p.density >= 1)) fail('density must be at least 1');
   if (p.alpha !== undefined && !(p.alpha > 0 && p.alpha <= 1)) fail('alpha must be above 0 and at most 1');
+  if (p.soften !== undefined && !(p.kind === 'tile' && p.soften > 0)) fail('soften is for tiles, and must be above 0');
   if (p.kind === 'slice' && !p.slices) fail('a slice piece needs its slices');
   if (p.kind === 'strip' && !(p.length > 0)) fail('a strip needs its length');
   if (p.kind === 'tile' && !p.box) fail('a tile needs its box (one repeat)');

@@ -55,8 +55,8 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 | `backdrop.mid` | 2048 × 1670 | 1 | tile, tinted | The middle layer: darker trunks with a few branch stubs. One tile, repeating sideways. |
 | `backdrop.nearTop` | 2048 × 100 | 2 | tile, tinted | The near layer under the canopy: clumps of leaves hanging down. One tile, repeating sideways. |
 | `backdrop.near` | 2048 × 124 | 2 | tile, tinted | The near layer along the floor: ferns. One tile, repeating sideways. |
-| `backdrop.canopy` | 2048 × 112 | 2 | tile, tinted | The canopy strip the lianas hang from, in front of the world, with a leafy top edge for taller views. One tile, repeating sideways. |
-| `backdrop.floor` | 2048 × 74 | 2 | tile, tinted | The top of the dark jungle floor, in front of the world: undergrowth along the floor line. One tile, repeating sideways; below it the floor is backdrop.floorFill, stretched down 1600 px below the band for taller views. |
+| `backdrop.canopy` | 2048 × 112 | 2 | tile, tinted, softened sideways by the build (0.4 units) | The canopy strip the lianas hang from, in front of the world, with a leafy top edge for taller views. One tile, repeating sideways. |
+| `backdrop.floor` | 2048 × 74 | 2 | tile, tinted, softened sideways by the build (0.4 units) | The top of the dark jungle floor, in front of the world: undergrowth along the floor line. One tile, repeating sideways; below it the floor is backdrop.floorFill, stretched down 1600 px below the band for taller views. |
 | `backdrop.floorFill` | 4 × 4 | 1 | tinted | The floor's colour below the undergrowth, a small square stretched to fill the rest of the floor. |
 
 ### monkey
