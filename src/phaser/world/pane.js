@@ -53,7 +53,7 @@ export class WorldPane {
     this.layout = pane;
     this.view.setPosition(pane.x, pane.y);
     this.scene.setScale(pane.scale);
-    this.backdrop.resize(pane);
+    this.backdrop.resize(pane, zoom * pane.scale);
     this.ownCamera.screenX = pane.camera.screenX;
     if (this.world && this.camera === this.ownCamera) this.camera.reset(this.#target());
   }
