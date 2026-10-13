@@ -1,26 +1,15 @@
 import { Container, Graphics } from 'pixi.js';
 import { MUTE_HIT, inside } from '../controls.js';
+import { MUTE_ICON, drawSpeaker, drawSpeakerCross, drawSpeakerWaves } from '../views/buttons.js';
 
-const CREAM = 0xf4e7c5;
-const OUTLINE = 0x2a1a0c;
-// The speaker, its sound waves (on) and a cross (muted), from its top-left corner.
-export function drawSpeaker(g) {
-  return g.poly([0, 12, 10, 12, 22, 2, 22, 38, 10, 28, 0, 28]).fill(CREAM).stroke({ width: 2, color: OUTLINE, join: 'round' });
-}
-
-export function drawSpeakerWaves(g) {
-  return g.arc(24, 20, 8, -0.8, 0.8).stroke({ width: 3, color: CREAM, cap: 'round' }).arc(24, 20, 15, -0.8, 0.8).stroke({ width: 3, color: CREAM, cap: 'round' });
-}
-
-export function drawSpeakerCross(g) {
-  return g.moveTo(28, 12).lineTo(42, 28).moveTo(42, 12).lineTo(28, 28).stroke({ width: 3.5, color: CREAM, cap: 'round' });
-}
+// The parts both versions share (pure: no Pixi) are in views/buttons.js.
+export { drawSpeaker, drawSpeakerCross, drawSpeakerWaves } from '../views/buttons.js';
 
 // Speaker icon in the top-left corner; tap or click it (or press M) to mute.
 export class MuteButton {
   constructor() {
     this.view = new Container();
-    this.view.position.set(20, 16);
+    this.view.position.set(MUTE_ICON.x, MUTE_ICON.y);
     const speaker = drawSpeaker(new Graphics());
     this.waves = drawSpeakerWaves(new Graphics());
     this.cross = drawSpeakerCross(new Graphics());

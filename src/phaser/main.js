@@ -21,8 +21,8 @@ import { canvasSize, viewCamera } from './view.js';
 
 // The Phaser version of the game (see PHASER_PLAN.md). The platform holds the layout,
 // pause, full screen, input and sound for the scenes (scenes.js); the game runs as in
-// the Pixi version (driver.js). The play scene draws the worlds (M5); until M6 the UI
-// scene shows a readout of the game instead of the HUD and panels.
+// the Pixi version (driver.js). The play scene draws the worlds; the UI scene the buttons,
+// the HUD, the panels and the debug view.
 
 let game = null;
 // Anything that breaks from here on, startup included, shows a reload message instead
@@ -186,7 +186,7 @@ const input = createInput(phaserKeys(ui.input.keyboard), phaserPointers(ui.input
 platform.input = input;
 
 // The game, as in the Pixi version (driver.js), once per Phaser step. The two-player
-// modes change the frame. D shows more in the readout until the debug view (M6).
+// modes change the frame. D shows the debug view.
 const fpsMeter = new FpsMeter();
 platform.fpsMeter = fpsMeter;
 platform.debug = false;

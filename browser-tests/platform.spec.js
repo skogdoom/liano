@@ -153,7 +153,7 @@ test('the Phaser version pauses a run on P and resumes on P', async ({ page }) =
   expect(await page.evaluate(() => window.__liano.pause.paused)).toBe(false);
   await page.keyboard.press('KeyP');
   await expect.poll(() => page.evaluate(() => window.__liano.pause.reason)).toBe('manual');
-  await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').paused.visible)).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.paused.visible)).toBe(true);
   await page.keyboard.press('KeyP');
   await expect.poll(() => page.evaluate(() => window.__liano.pause.paused)).toBe(false);
   expect(errors).toEqual([]);
@@ -211,6 +211,8 @@ for (const [width, ratio] of [
     await page.goto(`${DEV}?engine=phaser`);
     await started(page, errors);
     await page.waitForFunction(() => window.__liano.platform.artLoad?.sets.length === 2);
+    // The world alone: the buttons and panels have edges of their own.
+    await page.evaluate(() => window.__liano.app.scene.getScene('ui').cameras.main.setVisible(false));
     // Each tile edge in the band: the floor's top, the ferns' top, the clumps' bottom and
     // the canopy strip's bottom (world y); the mean of each pixel row about it, on the left.
     const rows = await page.evaluate(

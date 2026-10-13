@@ -99,26 +99,26 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 | --- | --- | --- | --- | --- |
 | `banana.body` | 44 × 34 | 2 | joins: glint | A banana to take, about its centre (the origin): curved, with a ridge, a stem and a dark tip. It bobs and rocks. |
 | `banana.glint` | 18 × 18 | 2 |  | A four-pointed glint on a banana (or a heart), about its centre; it fades in and out. |
-| `banana.hud` | 27 × 21 | 1 |  | The banana by each player's banana count in the HUD (11 px), about its centre. |
-| `banana.results` | 31 × 24 | 1 |  | The banana by the bananas taken on the results (13 px), about its centre. |
+| `banana.hud` | 27 × 21 | 2 |  | The banana by each player's banana count in the HUD (11 px), about its centre. |
+| `banana.results` | 31 × 24 | 2 |  | The banana by the bananas taken on the results (13 px), about its centre. |
 
 ### heart
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
 | `heart.field` | 40 × 32 | 2 | joins: glint | A heart to take (a banana turned into a life), 17 px across about its centre. |
-| `heart.hud.0` … `.1` | 28 × 23 | 1 |  | A heart in the HUD, 11 px across about its centre: a life left (frame 0), a life lost (frame 1, an outline). |
+| `heart.hud.0` … `.1` | 28 × 23 | 2 |  | A heart in the HUD, 11 px across about its centre: a life left (frame 0), a life lost (frame 1, an outline). |
 
 ### ui
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `ui.panel` | 66 × 66 | 1 | slice | A panel: a see-through dark rounded rectangle (radius 18) with a faint edge, from its top left (the origin), 64 px square; 9-sliced to each panel's size. |
-| `ui.arrow` | 26 × 30 | 1 |  | The arrow at the top edge pointing up at a monkey above the view; its tip at the origin. |
-| `ui.speaker` | 26 × 40 | 1 |  | The mute button: a speaker, from its top left (the origin). |
-| `ui.speakerWaves` | 42 × 42 | 1 |  | The speaker's sound waves, while the sound is on (in the speaker's coordinates). |
-| `ui.speakerCross` | 28 × 30 | 1 |  | The cross by the speaker, while muted (in its coordinates). |
-| `ui.fullscreen.0` … `.1` | 48 × 48 | 1 |  | The full-screen button, from its top left (the origin): corner brackets pointing out to enter full screen (frame 0), pulled in to leave it (frame 1). |
+| `ui.panel` | 66 × 66 | 2 | slice | A panel: a see-through dark rounded rectangle (radius 18) with a faint edge, from its top left (the origin), 64 px square; 9-sliced to each panel's size. |
+| `ui.arrow` | 26 × 30 | 2 |  | The arrow at the top edge pointing up at a monkey above the view; its tip at the origin. |
+| `ui.speaker` | 26 × 40 | 2 |  | The mute button: a speaker, from its top left (the origin). |
+| `ui.speakerWaves` | 42 × 42 | 2 |  | The speaker's sound waves, while the sound is on (in the speaker's coordinates). |
+| `ui.speakerCross` | 28 × 30 | 2 |  | The cross by the speaker, while muted (in its coordinates). |
+| `ui.fullscreen.0` … `.1` | 48 × 48 | 2 |  | The full-screen button, from its top left (the origin): corner brackets pointing out to enter full screen (frame 0), pulled in to leave it (frame 1). |
 
 ### support
 

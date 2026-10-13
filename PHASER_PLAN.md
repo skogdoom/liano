@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is next.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is next.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -556,6 +556,52 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
 - HUD (scores, banana count, hearts rows, "OUT"), the title (mode picker, controls, version, settings line for slipping, lives and shadow), stage banners, the pause and results panels, the off-screen monkey indicator, game-over panels, the mute and fullscreen buttons, the notice, the debug overlay (per pane), text with stroke, shadow and the pixel-ratio `resolution`.
 - Reduced-motion, safe-area insets, touch layout, portrait text scale.
 - **Done when:** all of `PLAN.md`'s modes and settings work on the Phaser renderer (the checklist in section 10), parity scenarios inside tolerance, `hud/banana/hearts/split/stageViews/debugOverlay` tests pass in their new form.
+
+**M6 report (version 3.0.0-dev.7).**
+- **The Phaser version draws everything the Pixi version does.** The UI scene has:
+  - the mute and full-screen buttons;
+  - the HUD: scores, banana counts, heart rows and "OUT";
+  - the overlays: the title (mode picker, settings line, keys, version), the results, the pause panel, the stage banners and "out" notes per pane, and the arrow over a monkey above the view;
+  - the debug view (D), drawn in every pane.
+
+  The M2 readout and the stand-in icons are gone. Each world pane has its own Phaser camera, whose viewport is the pane (M5), and shared screen uses the zoom and the leader camera of the rules (`game.sharedView`).
+- **View-models** (`src/views/`, no Pixi; both versions draw from them):
+  - `hud.js`: placements, texts, heart rows and the tally;
+  - `overlays.js`: the panels and their texts, the prompts per input, the settings, the results, the banners, the "out" notes and the arrow;
+  - `buttons.js`: the icons and their places;
+  - `debug.js`: the debug drawing and numbers.
+
+  The Pixi HUD, overlays, buttons and debug overlay draw from them, and the view dumps are the same as before. They are tested in Node (`tests/hudView.test.js`, `tests/overlaysView.test.js`); the Pixi view tests still pass.
+- **Parity: 21 more scenarios (`ui.*`, each at 1× and 2×), all within the limits.**
+  - The HUD: single player (and more lives than hearts), shared and split screen, portrait.
+  - The title: settings off and on, shared screen, touch, portrait.
+  - The results: single player, fading in, two players.
+  - The pause panel: by P and by the window; the banners: one pane, and split screen with an "out" note; the arrow.
+  - The buttons, on and off, and in portrait.
+
+  The browser test runs them with the object scenarios. The buttons are measured over the view's top-left corner, as large as the HUD's. Their remaining difference is the round ends of the speaker's waves, which Pixi cuts short, as in M4's gallery.
+- **Text, as Pixi lays it out** (`src/phaser/text.js`, adding to M5c):
+  - Pixi's drop shadow is the canvas shadow. A canvas shadow ignores the canvas's scale, so its offset and blur are scaled by the text's resolution. Phaser cuts a shadow off at the text's edges, so the text gets room round it, a whole number of pixels so the glyphs fall on the pixels as Pixi's do.
+  - Sizes as Pixi measures them:
+    - a line is as wide as the larger of its advance and its glyphs' reach;
+    - a shadow's distance is added to the width and height;
+    - the anchor is on the texture, the size rounded up to whole units, then to whole pixels at the resolution.
+  - Phaser rounds a line's position to a pixel (`autoRound`): off, as Pixi does not.
+  - A text whose canvas would be a fraction of a pixel wide or tall at its resolution (1.69 on a portrait phone) gets the fraction as padding at its right and bottom. The canvas can only be whole pixels; the fraction would stretch the text, and a fixed size would shift centred lines. It is aimed a hair over the whole pixel, as the canvas truncates its size.
+  - **Text is rasterized at the screen's density, times its scale when it is enlarged** (portrait's UI scale). A text drawn smaller (the split-screen banners) is drawn full size and shrunk, as Pixi does. Enlarged Pixi text is that much softer: the parity scenarios set the Pixi texts to the same resolution, so they compare.
+- **Decisions in M6:**
+  - The UI and HUD pieces are rasterized at a whole 2 per unit (the largest UI scale, 1.8, rounded up), so they shrink evenly on other screens. Texture memory is **47 MB at 1×, 106 MB at 2×, 251 MB at 4×**.
+  - The Pixi heart count strokes with round joins, as Phaser strokes all text (as the M5c pops do).
+  - **The debug view is Phaser Graphics** (section 5: dev only). Its drawing is shared code written against Pixi's Graphics calls. The Phaser version records the calls with the art recorder and replays them (`src/phaser/graphics.js`), curves as points along them.
+  - The parity tool's scenarios are whole units across and down: a canvas a fraction of a pixel off its size squeezes the picture differently in each library.
+- **Checklist (section 10) on Phaser**:
+  - Modes: 1P, shared and split, the mode picker, the results, play again, and Esc. The browser tests now end a run by a fall and check the results and play again, with and without reduced motion (no death shake).
+  - Settings and keys: G H S D M F P, Esc, and 1 2 3.
+  - Layouts: landscape shapes, portrait (the UI enlarged, the panels below the band), the 16:9 frame for two players, and safe-area insets through the shared layout.
+  - Touch: the prompts for touch, and taps on the buttons.
+  - The remaining items are M7's: the real-device pass, performance on the iPhone 13 mini, and the replacement drill on the finished rigs.
+- **Frame time** (as measured in M5: headless Chromium, software WebGL, 1280 × 720, a bot playing for 25 s): Pixi 0.8 ms median and 2.5 ms 95th percentile per frame, Phaser 1.2 ms and 3.4 ms; in split screen, Pixi 1.0 ms and 2.7 ms, Phaser 1.5 ms and 2.7 ms. Phaser draws two to four times as many frames in the time.
+- **Still to do**: the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini), by the owner.
 
 ### M7. Parity, performance and polish (M–L)
 

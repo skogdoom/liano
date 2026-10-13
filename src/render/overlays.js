@@ -1,218 +1,161 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import { MONKEY_RADIUS } from '../config.js';
-import { GameState } from '../sim/game.js';
-import { MODES, MODE_ORDER } from '../sim/match.js';
-import { paneLayouts } from '../layout.js';
 import { version } from '../../package.json';
-import { bananaLine } from './hud.js';
+import {
+  ARROW_Y,
+  BANNER_TEXTS,
+  CREAM,
+  FADE_IN,
+  MODE_FONT,
+  MODE_GAP,
+  OUT_NOTE_FONT,
+  OVERLAY_FONT,
+  OVERLAY_SHADOW,
+  PANELS,
+  SETTINGS_GAP,
+  StageBannerState,
+  arrowState,
+  bannerPlacement,
+  centredRow,
+  drawArrow,
+  drawPanel,
+  modeItems,
+  modeLook,
+  outNote,
+  panelsShown,
+  pausePrompt,
+  prompts,
+  pulse,
+  resultsBananas,
+  resultsState,
+  titleState,
+} from '../views/overlays.js';
 import { drawBanana } from './bananaView.js';
 
-const CREAM = 0xf4e7c5;
-const GOLD = 0xffcf4a;
-const PANEL = 0x0b1a10;
-const SHADOW = { color: 0x000000, alpha: 0.5, distance: 3, blur: 2, angle: Math.PI / 4 };
-const FADE_IN = 0.25; // s
-// The title panel runs from TITLE_TOP to the bottom of the last line plus TITLE_PADDING,
-// the room there is above the first line (the version), measured from its centre.
-const TITLE_PADDING = 35;
-const TITLE_TOP = -192;
-const TITLE_LAST_LINE = 196;
-const TITLE_BOTTOM = TITLE_LAST_LINE + TITLE_PADDING;
-const TITLE_HEIGHT = TITLE_BOTTOM - TITLE_TOP;
+// The parts both versions share (pure: no Pixi) are in views/overlays.js.
+export * from '../views/overlays.js';
 
-function text(content, size, { color = CREAM, weight = 'normal' } = {}) {
+function text(content, size, { color = CREAM, bold = false } = {}) {
   const t = new Text({
     text: content,
-    style: { fontFamily: 'sans-serif', fontSize: size, fontWeight: weight, fill: color, dropShadow: SHADOW, align: 'center' },
+    style: { fontFamily: OVERLAY_FONT, fontSize: size, fontWeight: bold ? 'bold' : 'normal', fill: color, dropShadow: OVERLAY_SHADOW, align: 'center' },
   });
   t.anchor.set(0.5);
   return t;
 }
 
-// A rounded panel centred at (cx, cy), with children placed relative to its centre. The
-// rectangle can sit `shiftY` lower than the centre, to grow the panel at the bottom only.
-function panel(cx, cy, width, height, shiftY = 0) {
+// A panel's text from its description (views/overlays.js), placed in the panel.
+function panelText(parent, spec, content = spec.text ?? '') {
+  const t = text(content, spec.size, spec);
+  t.y = spec.y;
+  if (spec.x !== undefined) t.x = spec.x;
+  if (spec.anchorX !== undefined) t.anchor.set(spec.anchorX, 0.5);
+  if (spec.alpha !== undefined) t.alpha = spec.alpha;
+  parent.addChild(t);
+  return t;
+}
+
+// A rounded panel, with children placed relative to its centre.
+function panel({ width, height, shiftY }) {
   const view = new Container();
-  view.position.set(cx, cy);
   view.addChild(drawPanel(new Graphics(), -width / 2, -height / 2 + shiftY, width, height));
   return view;
 }
 
-// A panel's rounded rectangle: see-through dark, with a faint edge.
-export const PANEL_RADIUS = 18;
-export function drawPanel(g, x, y, width, height) {
-  return g.roundRect(x, y, width, height, PANEL_RADIUS).fill({ color: PANEL, alpha: 0.72 }).stroke({ width: 2, color: CREAM, alpha: 0.25 });
-}
-
-// The off-screen arrow, its tip at the origin, pointing up.
-export function drawArrow(g) {
-  return g.poly([0, 0, 11, 16, 4, 16, 4, 26, -4, 26, -4, 16, -11, 16]).fill(CREAM).stroke({ width: 2, color: 0x2a1a0c, join: 'round' });
-}
-
-function place(parent, child, y) {
-  child.y = y;
-  parent.addChild(child);
-  return child;
-}
-
-// Names for the stages, by time of day (the background tint follows them); after Dawn
-// the day starts over.
-export const STAGE_NAMES = ['Day', 'Late afternoon', 'Dusk', 'Night', 'Dawn'];
-const BANNER_IN = 0.3; // s
-const BANNER_HOLD = 1.6;
-const BANNER_OUT = 0.6;
-
-// Opacity of the stage banner `t` s after it appeared: fades in, holds, fades out.
-export function bannerAlpha(t) {
-  if (t < 0 || t >= BANNER_IN + BANNER_HOLD + BANNER_OUT) return 0;
-  if (t < BANNER_IN) return t / BANNER_IN;
-  if (t < BANNER_IN + BANNER_HOLD) return 1;
-  return 1 - (t - BANNER_IN - BANNER_HOLD) / BANNER_OUT;
-}
-
-// "Stage 2" with the time of day, shown on entering each stage after the first.
+// "Stage 2" with the time of day (see StageBannerState).
 class StageBanner {
   constructor() {
     this.view = new Container();
-    this.title = place(this.view, text('', 56, { weight: 'bold' }), -18);
-    this.subtitle = place(this.view, text('', 24, { color: GOLD }), 30);
-    this.stage = 1;
-    this.world = null;
-    this.time = Infinity;
+    this.title = panelText(this.view, BANNER_TEXTS.title);
+    this.subtitle = panelText(this.view, BANNER_TEXTS.subtitle);
+    this.state = new StageBannerState();
     this.view.visible = false;
   }
 
-  // Shows the stage `world` has reached (the furthest of its monkeys).
   update(game, world, dt) {
-    const stage = Math.max(...world.stages);
-    // A new world starts over at stage 1 without a banner.
-    if (world !== this.world) {
-      this.world = world;
-      this.stage = stage;
-      this.time = Infinity;
-    }
-    if (stage > this.stage) {
-      this.stage = stage;
-      this.title.text = `Stage ${this.stage}`;
-      this.subtitle.text = STAGE_NAMES[(this.stage - 1) % STAGE_NAMES.length];
-      this.time = 0;
-    }
-    this.time += dt;
-    const alpha = game.state === GameState.PLAYING ? bannerAlpha(this.time) : 0;
+    const { alpha, title, subtitle } = this.state.update(game, world, dt);
+    if (this.title.text !== title) this.title.text = title;
+    if (this.subtitle.text !== subtitle) this.subtitle.text = subtitle;
     this.view.visible = alpha > 0;
     this.view.alpha = alpha;
   }
 }
 
-// Arrow at the top edge, at the monkey's x, while it is above the view.
-class OffscreenIndicator {
-  constructor() {
-    this.view = drawArrow(new Graphics());
-    this.view.y = 8;
-  }
-
-  update(monkey, cameraX, layout) {
-    this.view.visible = monkey.y + layout.bandTop < -MONKEY_RADIUS;
-    this.view.x = Math.min(Math.max(monkey.x - cameraX, 16), layout.view.width - 16);
-  }
-}
-
-// The title screen's mode picker: "1 · 1P   2 · 2P shared   3 · 2P split", with the
-// selected mode highlighted and modes that aren't available yet dimmed.
+// The title screen's mode picker, with the selected mode highlighted.
 class ModePicker {
   constructor() {
     this.view = new Container();
-    this.items = MODE_ORDER.map((id, i) => {
-      const t = text(`${i + 1} · ${MODES[id].label}`, 17, { weight: 'bold' });
+    this.items = modeItems().map(({ id, text: content }) => {
+      const t = text(content, MODE_FONT.size, MODE_FONT);
       this.view.addChild(t);
       return { id, t };
     });
-    const gap = 26;
-    const total = this.items.reduce((sum, { t }) => sum + t.width, 0) + gap * (this.items.length - 1);
-    let x = -total / 2;
-    for (const { t } of this.items) {
-      t.x = x + t.width / 2;
-      x += t.width + gap;
-    }
+    centredRow(
+      this.items.map(({ t }) => t.width),
+      MODE_GAP,
+    ).forEach((x, i) => (this.items[i].t.x = x));
     this.shown = null;
   }
 
   update(mode) {
     if (mode === this.shown) return;
     for (const { id, t } of this.items) {
-      const selected = id === mode;
-      t.style.fill = selected ? GOLD : CREAM;
-      t.alpha = selected ? 1 : MODES[id].enabled ? 0.8 : 0.35;
+      const look = modeLook(id, mode);
+      t.style.fill = look.color;
+      t.alpha = look.alpha;
     }
     this.shown = mode;
   }
 }
 
-// Prompt wording for the input type the player used last.
-const PROMPTS = {
-  touch: { start: 'Tap to start', control: 'TAP  ·  let go', again: 'Tap to play again', resume: 'Tap to resume' },
-  other: {
-    start: 'Press Space to start',
-    control: 'SPACE  ·  let go',
-    again: 'Space: play again  ·  Esc: menu',
-    resume: 'Click the game to resume',
-  },
-};
-// The two-player modes' keys, one per player.
-const CONTROL_2P = 'P1  A   ·   P2  L   ·   let go';
-
-// Title, game over and pause screens, and the off-screen indicator. Positions and
-// sizes come from the layout (see layout.js).
+// Title, game over and pause screens, the stage banners and "out" notes, and the
+// off-screen indicator. Positions and sizes come from the layout (see layout.js).
 export class Overlays {
   constructor() {
     this.view = new Container();
     this.time = 0;
 
     // Right of the title-screen swing, so the monkey stays in view.
-    this.title = panel(0, 0, 440, TITLE_HEIGHT, (TITLE_TOP + TITLE_BOTTOM) / 2);
-    place(this.title, text('LIANO', 104, { weight: 'bold' }), -90);
-    this.tagline = place(this.title, text('Swing from vine to vine.\nLet go to fly to the next one.', 22), 10);
-    this.titleControl = place(this.title, text('', 22, { color: GOLD, weight: 'bold' }), 70);
-    this.titlePrompt = place(this.title, text('', 28), 125);
+    const title = PANELS.title.texts;
+    this.title = panel(PANELS.title);
+    panelText(this.title, title.name);
+    this.tagline = panelText(this.title, title.tagline);
+    this.titleControl = panelText(this.title, title.control);
+    this.titlePrompt = panelText(this.title, title.prompt);
     this.modePicker = new ModePicker();
-    place(this.title, this.modePicker.view, 92);
-    // The settings, side by side: lives ("H · Lives: off" in single player, "Lives: on" in the
-    // two-player modes), slipping ("G · Slipping: off") and the shadow monkey ("S · Shadow: off",
-    // single player only).
-    this.livesLine = place(this.title, text('', 17, { weight: 'bold' }), 120);
-    this.slipLine = place(this.title, text('', 17, { weight: 'bold' }), 120);
-    this.shadowLine = place(this.title, text('', 17, { weight: 'bold' }), 120);
-    // The pause, menu and setting keys, under the prompt (with a keyboard).
-    this.keysHint = place(this.title, text('P  pause  ·  Esc  menu', 15, { color: CREAM }), 188);
-    this.keysHint.alpha = 0.7;
-    const versionText = place(this.title, text(`v${version}`, 13, { color: CREAM }), -150);
-    versionText.anchor.set(1, 0.5);
-    versionText.x = 204;
-    versionText.alpha = 0.55;
+    this.modePicker.view.y = title.modes.y;
+    this.title.addChild(this.modePicker.view);
+    this.livesLine = panelText(this.title, title.lives);
+    this.slipLine = panelText(this.title, title.slip);
+    this.shadowLine = panelText(this.title, title.shadow);
+    this.keysHint = panelText(this.title, title.keys);
+    panelText(this.title, title.version, `v${version}`);
 
-    this.gameOver = panel(0, 0, 520, 340);
-    this.gameOverTitle = place(this.gameOver, text('GAME OVER', 72, { weight: 'bold' }), -110);
-    this.scoreText = place(this.gameOver, text('', 44, { weight: 'bold' }), -38);
-    this.bestText = place(this.gameOver, text('', 26), 6);
-    // A banana, then the bananas taken out of those passed, per player.
-    this.bananas = place(this.gameOver, new Container(), 42);
+    const over = PANELS.gameOver.texts;
+    this.gameOver = panel(PANELS.gameOver);
+    this.gameOverTitle = panelText(this.gameOver, over.title);
+    this.scoreText = panelText(this.gameOver, over.score);
+    this.bestText = panelText(this.gameOver, over.best);
+    this.bananas = new Container();
+    this.bananas.y = over.bananas.y;
+    this.gameOver.addChild(this.bananas);
     this.bananaIcon = new Graphics();
     drawBanana(this.bananaIcon, 13);
-    this.bananasText = text('', 24, { color: GOLD });
+    this.bananasText = text('', over.bananas.size, over.bananas);
     this.bananas.addChild(this.bananaIcon, this.bananasText);
-    this.newBestText = place(this.gameOver, text('New best!', 28, { color: GOLD, weight: 'bold' }), 82);
-    this.gameOverPrompt = place(this.gameOver, text('', 28), 128);
+    this.newBestText = panelText(this.gameOver, over.newBest);
+    this.gameOverPrompt = panelText(this.gameOver, over.prompt);
 
-    this.paused = panel(0, 0, 420, 170);
-    place(this.paused, text('Paused', 64, { weight: 'bold' }), -25);
-    this.pausedPrompt = place(this.paused, text('', 22), 45);
+    this.paused = panel(PANELS.paused);
+    panelText(this.paused, PANELS.paused.texts.title);
+    this.pausedPrompt = panelText(this.paused, PANELS.paused.texts.prompt);
 
-    this.indicator = new OffscreenIndicator();
+    this.indicator = drawArrow(new Graphics());
+    this.indicator.y = ARROW_Y;
     // A stage banner and an "out" note per pane.
     this.banners = [];
     this.outNotes = [];
     this.paneLayer = new Container();
-    this.view.addChild(this.indicator.view, this.paneLayer, this.title, this.gameOver, this.paused);
+    this.view.addChild(this.indicator, this.paneLayer, this.title, this.gameOver, this.paused);
     this.shown = null;
     this.promptsFor = null;
   }
@@ -231,72 +174,56 @@ export class Overlays {
 
   // `pauseReason` is null while running.
   update(game, cameraX, { pauseReason, inputType, dt }) {
-    const paused = pauseReason !== null;
     this.time += dt;
-    this.#setPrompts(inputType === 'touch' ? 'touch' : 'other', game.players);
-    const pulse = 0.65 + 0.35 * Math.sin(this.time * 4);
+    const kind = inputType === 'touch' ? 'touch' : 'other';
+    this.#setPrompts(kind, game.players);
+    const glow = pulse(this.time);
 
     // The arrow over a monkey above the view is for single player.
-    this.indicator.view.visible = game.players === 1;
-    if (this.indicator.view.visible) this.indicator.update(game.world.monkey, cameraX, this.layout);
+    const arrow = arrowState(game, game.world.monkey, cameraX, this.layout);
+    this.indicator.visible = arrow.visible;
+    if (arrow.x !== null) this.indicator.x = arrow.x;
     this.#updatePanes(game, dt);
 
-    this.title.visible = game.state === GameState.TITLE && !paused;
-    this.titlePrompt.alpha = pulse;
+    const shown = panelsShown(game, pauseReason);
+    this.title.visible = shown.title;
+    this.titlePrompt.alpha = glow;
     if (this.title.visible) this.#updateTitle(game, inputType !== 'touch');
 
-    this.gameOver.visible = game.state === GameState.RESULTS && !paused;
+    this.gameOver.visible = shown.gameOver;
     if (this.gameOver.visible) {
       this.gameOver.alpha = Math.min(game.stateTime / FADE_IN, 1);
-      const solo = game.players === 1;
-      const bananas = Array.from({ length: game.players }, (_, p) => bananaLine(game, p));
-      const shown = [solo ? `${game.score}:${game.best}:${game.newBest}` : `${game.mode}:${game.playerScore(0)}:${game.playerScore(1)}`, ...bananas].join(':');
-      if (shown !== this.shown) {
-        if (solo) {
-          this.gameOverTitle.text = 'GAME OVER';
-          this.scoreText.text = `Score ${game.score}`;
-          this.bestText.text = `Best ${game.best}`;
-          this.bananasText.text = bananas[0];
-        } else {
-          // Totals over all lives decide.
-          const winners = game.winners;
-          this.gameOverTitle.text = winners.length > 1 ? 'DRAW' : `P${winners[0] + 1} WINS`;
-          this.scoreText.text = `P1 ${game.playerScore(0)}  ·  P2 ${game.playerScore(1)}`;
-          this.bestText.text = '';
-          this.bananasText.text = `P1 ${bananas[0]}  ·  P2 ${bananas[1]}`;
-        }
-        // The icon and the text, centred together; in 2P in the line Best has in 1P.
-        this.bananas.y = solo ? 42 : 10;
-        const iconWidth = 26;
-        const gap = 10;
-        const left = -(iconWidth + gap + this.bananasText.width) / 2;
-        this.bananaIcon.position.set(left + iconWidth / 2, -1);
-        this.bananasText.x = left + iconWidth + gap + this.bananasText.width / 2;
-        this.shown = shown;
+      const results = resultsState(game);
+      if (results.key !== this.shown) {
+        this.gameOverTitle.text = results.title;
+        this.scoreText.text = results.score;
+        this.bestText.text = results.best;
+        this.bananasText.text = results.bananas;
+        this.bananas.y = results.bananasY;
+        const at = resultsBananas(this.bananasText.width);
+        this.bananaIcon.position.set(at.iconX, at.iconY);
+        this.bananasText.x = at.textX;
+        this.shown = results.key;
       }
-      this.newBestText.visible = game.newBest && solo;
+      this.newBestText.visible = results.newBest;
       this.gameOverPrompt.visible = game.canRestart();
-      this.gameOverPrompt.alpha = pulse;
+      this.gameOverPrompt.alpha = glow;
     }
 
-    // Paused by the player (P) or by the window losing focus.
-    this.paused.visible = pauseReason === 'unfocused' || pauseReason === 'manual';
-    if (this.paused.visible) {
-      this.pausedPrompt.text = pauseReason === 'manual' ? 'Press P to resume' : PROMPTS[this.promptKind].resume;
-    }
+    this.paused.visible = shown.paused;
+    if (this.paused.visible) this.pausedPrompt.text = pausePrompt(pauseReason, kind);
   }
 
-  // Split screen's panes, or the single one: where each world is drawn in the view.
+  // Split screen's panes, or the single one: a banner and a note in each.
   #updatePanes(game, dt) {
     const count = game.worlds.length;
     while (this.banners.length < count) {
       const banner = new StageBanner();
-      const note = text('', 40, { weight: 'bold' });
+      const note = text('', OUT_NOTE_FONT.size, OUT_NOTE_FONT);
       this.banners.push(banner);
       this.outNotes.push(note);
       this.paneLayer.addChild(banner.view, note);
     }
-    const panes = paneLayouts(this.layout, count);
     this.banners.forEach((banner, i) => {
       const note = this.outNotes[i];
       if (i >= count) {
@@ -305,65 +232,48 @@ export class Overlays {
         return;
       }
       banner.update(game, game.worlds[i], dt);
-      if (count === 1) {
-        banner.view.position.set(this.layout.panels.banner.x, this.layout.panels.banner.y);
-        banner.view.scale.set(this.layout.ui);
-      } else {
-        // Low in the pane, like the single pane's.
-        banner.view.position.set(panes[i].width / 2, panes[i].y + panes[i].height * 0.72);
-        banner.view.scale.set(0.6);
-      }
-      // A player out of lives, while the other plays on.
-      note.visible = count > 1 && game.state === GameState.PLAYING && game.playerOut(i);
-      if (note.visible) {
-        note.text = `P${i + 1} is out`;
-        note.position.set(panes[i].width / 2, panes[i].y + panes[i].height / 2);
+      const at = bannerPlacement(this.layout, count, i);
+      banner.view.position.set(at.x, at.y);
+      banner.view.scale.set(at.scale);
+      const out = outNote(game, this.layout, count, i);
+      note.visible = out !== null;
+      if (out) {
+        note.text = out.text;
+        note.position.set(out.x, out.y);
       }
     });
   }
 
-  // The mode picker, the lives setting and the keys hint show only with a keyboard (the
-  // two-player modes need one, and lives are for the desktop); the lines above them move up
-  // to make room.
   #updateTitle(game, showModes) {
-    this.modePicker.view.visible = showModes;
-    this.livesLine.visible = showModes;
-    this.slipLine.visible = showModes;
-    this.shadowLine.visible = showModes;
-    this.keysHint.visible = showModes;
+    const state = titleState(game, showModes);
+    for (const view of [this.modePicker.view, this.livesLine, this.slipLine, this.shadowLine, this.keysHint]) view.visible = showModes;
     this.modePicker.update(game.mode);
-    // Single player: the setting, to toggle with H. The two-player modes always have lives.
-    const solo = game.mode === 'solo';
-    this.livesLine.text = solo ? `H · Lives: ${game.lives ? 'on' : 'off'}` : 'Lives: on';
-    this.livesLine.style.fill = solo && game.lives ? GOLD : CREAM;
-    this.livesLine.alpha = solo ? (game.lives ? 1 : 0.8) : 0.55;
-    this.slipLine.text = `G · Slipping: ${game.slip ? 'on' : 'off'}`;
-    this.slipLine.style.fill = game.slip ? GOLD : CREAM;
-    this.slipLine.alpha = game.slip ? 1 : 0.8;
-    this.shadowLine.text = solo ? `S · Shadow: ${game.shadow ? 'on' : 'off'}` : 'Shadow: off';
-    this.shadowLine.style.fill = solo && game.shadow ? GOLD : CREAM;
-    this.shadowLine.alpha = solo ? (game.shadow ? 1 : 0.8) : 0.55;
-    // Centred together.
-    const gap = 22;
-    const lines = [this.livesLine, this.slipLine, this.shadowLine];
-    let x = -(lines.reduce((sum, l) => sum + l.width, 0) + gap * (lines.length - 1)) / 2;
-    for (const line of lines) {
-      line.x = x + line.width / 2;
-      x += line.width + gap;
+    const lines = [
+      [this.livesLine, state.lives],
+      [this.slipLine, state.slip],
+      [this.shadowLine, state.shadow],
+    ];
+    for (const [line, look] of lines) {
+      line.text = look.text;
+      line.style.fill = look.color;
+      line.alpha = look.alpha;
     }
-    this.tagline.y = showModes ? 0 : 10;
-    this.titleControl.y = showModes ? 58 : 70;
-    this.titlePrompt.y = showModes ? 156 : 125;
+    centredRow(
+      lines.map(([line]) => line.width),
+      SETTINGS_GAP,
+    ).forEach((x, i) => (lines[i][0].x = x));
+    this.tagline.y = state.taglineY;
+    this.titleControl.y = state.controlY;
+    this.titlePrompt.y = state.promptY;
   }
 
   // Prompts for the input in use; the control hint also names each player's key.
   #setPrompts(kind, players) {
     const key = `${kind}:${players}`;
     if (key === this.promptsFor) return;
-    const p = PROMPTS[kind];
-    this.promptKind = kind;
+    const p = prompts(kind, players);
     this.titlePrompt.text = p.start;
-    this.titleControl.text = players > 1 ? CONTROL_2P : p.control;
+    this.titleControl.text = p.control;
     this.gameOverPrompt.text = p.again;
     this.promptsFor = key;
   }

@@ -103,6 +103,59 @@ test('the Phaser version clips each split-screen pane: the lower one draws nothi
   expect(errors).toEqual([]);
 });
 
+test('the Phaser version shows the debug view on D, over each pane in split screen', async ({ page }) => {
+  const errors = await phaser(page);
+  await page.keyboard.press('Digit3');
+  await expect.poll(() => page.evaluate(() => window.__liano.game.worlds.length)).toBe(2);
+  await page.keyboard.press('KeyD');
+  const debug = () =>
+    page.evaluate(() => {
+      const { debug } = window.__liano.app.scene.getScene('ui');
+      return {
+        visible: debug.view.visible,
+        panes: debug.views.length,
+        // What each pane's Graphics draws, and its numbers.
+        drawn: debug.views.map((v) => v.g.visible && v.g.commandBuffer.length > 0),
+        texts: debug.views.map((v) => v.text.text.split('\n')[0]),
+      };
+    });
+  await expect.poll(debug).toMatchObject({ visible: true, panes: 2, drawn: [true, true] });
+  const { texts } = await debug();
+  expect(texts[0]).toMatch(/^P1 /);
+  expect(texts[1]).toMatch(/^P2 /);
+  await page.keyboard.press('KeyD');
+  await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').debug.view.visible)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+// Starts a run, lets go and drops the monkey below the band: the run ends.
+async function fall(page) {
+  await page.keyboard.press('Space');
+  await expect.poll(() => state(page)).toBe('PLAYING');
+  await page.keyboard.press('Space');
+  await expect.poll(() => page.evaluate(() => window.__liano.game.world.monkey.state)).toBe('AIRBORNE');
+  await page.evaluate(() => (window.__liano.game.world.monkey.y = 5000));
+}
+
+for (const reduced of [false, true]) {
+  test(`the Phaser version ends a run with the results, ${reduced ? 'without' : 'with'} the death shake, and plays again on Space`, async ({ page }) => {
+    if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors = await phaser(page);
+    await fall(page);
+    await expect.poll(() => state(page)).toBe('RESULTS');
+    await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.gameOver.visible)).toBe(true);
+    // The death shakes the pane, unless the player asks for reduced motion.
+    const amplitude = await page.evaluate(() => window.__liano.platform.world.panes[0].shake.amplitude);
+    expect(amplitude > 0).toBe(!reduced);
+    expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.gameOverTitle.text.text)).toBe('GAME OVER');
+    await expect.poll(() => page.evaluate(() => window.__liano.game.canRestart())).toBe(true);
+    await page.keyboard.press('Space');
+    await expect.poll(() => state(page)).toBe('PLAYING');
+    await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.gameOver.visible)).toBe(false);
+    expect(errors).toEqual([]);
+  });
+}
+
 test('the Phaser version starts its sound at the first gesture, plays on Phaser’s context, and mutes on M', async ({ page }) => {
   const errors = await phaser(page);
   expect(await page.evaluate(() => window.__liano.sound.status)).toBe('locked');

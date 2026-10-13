@@ -1,4 +1,5 @@
 import { SPIKE_SCENARIOS } from './spikeScenarios.js';
+import { UI_SCENARIOS } from './uiScenarios.js';
 import { WORLD_SCENARIOS } from './worldScenarios.js';
 
 // The scenarios the parity page draws with both versions (see main.js). Each draws the
@@ -10,7 +11,7 @@ import { WORLD_SCENARIOS } from './worldScenarios.js';
 // M0 has one, drawn with each library's own shape calls, to prove the tool; M1 adds the
 // spike's three objects (spikeScenarios.js). The game's scenarios (the title, each stage,
 // every obstacle kind, ...) come with the milestones that draw them in the Phaser version:
-// M5's in worldScenarios.js.
+// M5's in worldScenarios.js, M6's in uiScenarios.js.
 export const SCENARIOS = [
   {
     id: 'shapes',
@@ -37,4 +38,5 @@ export const SCENARIOS = [
   },
   ...SPIKE_SCENARIOS,
   ...WORLD_SCENARIOS,
+  ...UI_SCENARIOS,
 ];
