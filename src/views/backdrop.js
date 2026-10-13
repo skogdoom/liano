@@ -55,8 +55,13 @@ export function drawSky(g, top, width, bottom) {
   return g.rect(x, FLOOR_Y, w, Math.max(bottom, WORLD_HEIGHT) - FLOOR_Y + SKY_MARGIN).fill(SKY_BOTTOM);
 }
 
+// TEMPORARY (the owner's check of the stutter of the trees): `?parallax=far,mid,near`
+// sets the three layers' speeds, e.g. `?parallax=0.1,0.15,0.3`.
+const PARALLAX = typeof location === 'undefined' ? [] : (new URLSearchParams(location.search).get('parallax') ?? '').split(',').map(Number).filter((f) => f >= 0 && f <= 1);
+const factor = (i, value) => (PARALLAX.length === 3 ? PARALLAX[i] : value);
+
 // How fast the far layer scrolls, as a share of the camera's speed.
-export const FAR_FACTOR = 0.1;
+export const FAR_FACTOR = factor(0, 0.1);
 
 // One tile (TILE wide, repeating) of the far layer (also as a piece for the Phaser version).
 export function drawFarLayer(ctx) {
@@ -90,7 +95,7 @@ export function drawFarLayer(ctx) {
   return ctx;
 }
 
-export const MID_FACTOR = 0.3;
+export const MID_FACTOR = factor(1, 0.3);
 
 // One tile of the mid layer.
 export function drawMidLayer(ctx) {
@@ -112,7 +117,7 @@ export function drawMidLayer(ctx) {
   return ctx;
 }
 
-export const NEAR_FACTOR = 0.5;
+export const NEAR_FACTOR = factor(2, 0.5);
 
 // One tile of the near layer.
 export function drawNearLayer(ctx) {
