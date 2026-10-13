@@ -128,6 +128,34 @@ test('the Phaser version shows the debug view on D, over each pane in split scre
   expect(errors).toEqual([]);
 });
 
+// Starts a run, lets go and drops the monkey below the band: the run ends.
+async function fall(page) {
+  await page.keyboard.press('Space');
+  await expect.poll(() => state(page)).toBe('PLAYING');
+  await page.keyboard.press('Space');
+  await expect.poll(() => page.evaluate(() => window.__liano.game.world.monkey.state)).toBe('AIRBORNE');
+  await page.evaluate(() => (window.__liano.game.world.monkey.y = 5000));
+}
+
+for (const reduced of [false, true]) {
+  test(`the Phaser version ends a run with the results, ${reduced ? 'without' : 'with'} the death shake, and plays again on Space`, async ({ page }) => {
+    if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' });
+    const errors = await phaser(page);
+    await fall(page);
+    await expect.poll(() => state(page)).toBe('RESULTS');
+    await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.gameOver.visible)).toBe(true);
+    // The death shakes the pane, unless the player asks for reduced motion.
+    const amplitude = await page.evaluate(() => window.__liano.platform.world.panes[0].shake.amplitude);
+    expect(amplitude > 0).toBe(!reduced);
+    expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.gameOverTitle.text.text)).toBe('GAME OVER');
+    await expect.poll(() => page.evaluate(() => window.__liano.game.canRestart())).toBe(true);
+    await page.keyboard.press('Space');
+    await expect.poll(() => state(page)).toBe('PLAYING');
+    await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.gameOver.visible)).toBe(false);
+    expect(errors).toEqual([]);
+  });
+}
+
 test('the Phaser version starts its sound at the first gesture, plays on Phaser’s context, and mutes on M', async ({ page }) => {
   const errors = await phaser(page);
   expect(await page.evaluate(() => window.__liano.sound.status)).toBe('locked');
