@@ -99,6 +99,7 @@ export function showFrameStats(doc = document, win = window) {
     cursor: 'pointer',
   });
   line.title = 'Tap to start counting again';
+  line.textContent = stats.describe();
   // A tap here resets the counts and is kept from the game.
   line.addEventListener('pointerdown', (event) => {
     event.stopPropagation();
