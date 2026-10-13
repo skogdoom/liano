@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done but for the owner's real-device pass and the budgets on the iPhone 13 mini (its report): Phaser is now the default version. M8 follows once M7 is accepted.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 follows once M7 is accepted.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -658,9 +658,9 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
   - The gallery marked the 21 frames custom and still passed (594 frames, 0.52 % differing).
   - The game and the parity page showed them with no code change: the red far backdrop, darker at dusk; the red rope bending; player 1's red arms turning about their pivot; the branches' red bodies and stretched trunks; each frame of the panther's tail its own colour.
   - Reverted; the art rebuilt as before.
+- **On the iPhone 13 mini** the owner finds the performance of the Phaser version OK.
 - **Left for the owner** (needs real devices; nothing here can stand in for them):
-  - the real-device pass: desktop browsers (Chrome, Firefox, Safari), the iPhone 13 mini, an iPad, an Android phone; portrait and landscape; split and shared; both versions side by side;
-  - section 6's budgets on the iPhone 13 mini: the frame line of the debug view (D) in a normal run in each mode, the start, and the memory (Safari's Web Inspector);
+  - the rest of the real-device pass: desktop browsers (Chrome, Firefox, Safari), an iPad, an Android phone; portrait and landscape; split and shared; both versions side by side;
   - the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini).
 
   If the phone's start is over budget, the first stage's obstacles move to the boot set (M4). The trunks as stretched pieces (M5d) stay an option, not done: the trees are accepted as they are.
