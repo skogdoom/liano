@@ -9,6 +9,11 @@
 // ENGINE=phaser runs the Phaser version (its loop stopped and stepped by hand: `game.step` on the
 // drawn frames, `game.headlessStep` on the others); the default is the Pixi version.
 //
+// HITCHES=1 times every frame (use RENDER_EVERY=1) and, at the end, sets those that built the
+// view of an obstacle seen for the first time against the others. MOTION=1 counts the drawn
+// frames, during play, in which neither the camera nor player 1's monkey moved on screen (with
+// frameMs 1000/90, 1000/144: a screen of that rate).
+//
 // Needs `playwright-core` (`npm i --no-save playwright-core`) and a Chromium (set CHROMIUM, default
 // /opt/pw-browsers/chromium), and the dev server running (`npm run dev -- --port 5199`: the game's `window.__liano` hooks are dev-only).
 // Usage: [ENGINE=pixi|phaser] [KEYS=KeyG,KeyH,KeyS] [RENDER_EVERY=90] [GC_EVERY=4] node scripts/longrun.mjs <game minutes>
@@ -32,13 +37,24 @@ await cdp.send('HeapProfiler.enable');
 await page.waitForTimeout(500);
 
 await page.evaluate(({ keys, every }) => { window.__keys = keys; window.__renderEvery = every; }, { keys: (process.env.KEYS ?? '').split(',').filter(Boolean), every: +(process.env.RENDER_EVERY ?? 8) });
-await page.evaluate(async ({ frameMs, mode }) => {
+await page.evaluate(async ({ frameMs, mode, hitches, motion }) => {
   const L = window.__liano;
   const { app, game } = L;
   const phaser = L.engine === 'phaser';
   const F = await import('/src/sim/feasibility.js');
   const SIM_DT = 1 / 120;
-  const bot = (window.__bot = { t: performance.now(), key: null, target: null, frames: [], render: [], deaths: 0, pressed: 0, renderMs: 0, frameMs, draws: 0, drawn: 0 });
+  const bot = (window.__bot = { t: performance.now(), key: null, target: null, frames: [], render: [], deaths: 0, pressed: 0, renderMs: 0, frameMs, draws: 0, drawn: 0, hitches, motion });
+  // What the first pane draws: its obstacles' views, the camera, player 1's monkey.
+  const pane = () => (phaser ? L.platform.world.panes[0] : L.views.panes[0]);
+  const obstacleViews = () => (phaser ? pane().obstacles.rigs : pane().obstacleViews.views);
+  const drawnAt = () => {
+    const p = pane();
+    const monkey = phaser ? p.monkeys[0]?.view : p.monkeyViews[0]?.view;
+    return [p.worldLayer.x, monkey?.x ?? 0, monkey?.y ?? 0];
+  };
+  bot.seen = new Set();
+  bot.frameLog = []; // HITCHES: [ms, a new obstacle view]
+  bot.still = 0; bot.moving = 0; bot.last = null; // MOTION
   if (phaser) app.loop.sleep();
   else {
     app.ticker.stop();
@@ -60,7 +76,8 @@ await page.evaluate(async ({ frameMs, mode }) => {
   const gl = r.gl;
   for (const name of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced']) {
     const f = gl[name]?.bind(gl);
-    if (f) gl[name] = (...a) => { bot.draws++; return f(...a); };
+    // HITCHES: the draw calls are counted but not made, so software GL cannot swamp the timing.
+    if (f) gl[name] = (...a) => { bot.draws++; return hitches ? undefined : f(...a); };
   }
   bot.liveTextures = 0;
   const create = gl.createTexture.bind(gl);
@@ -105,19 +122,33 @@ await page.evaluate(async ({ frameMs, mode }) => {
       }
     }
   };
-  bot.pump = (n) => {
+  // HITCHES: each frame yields to the event loop, so the obstacle worker delivers as in play.
+  const yieldFrame = () => new Promise((resolve) => setTimeout(resolve, 0));
+  bot.pump = async (n) => {
     const times = [];
     const r0 = bot.renderMs;
     const d0 = bot.draws;
     const f0 = bot.drawn;
     for (let i = 0; i < n; i++) {
+      if (bot.hitches) await yieldFrame();
       bot.step();
       bot.t += bot.frameMs;
       const t0 = real();
       if (!phaser) app.ticker.update(bot.t);
       else if (bot.n++ % bot.renderEvery) app.headlessStep(bot.t, bot.frameMs);
       else app.step(bot.t, bot.frameMs);
-      times.push(real() - t0);
+      const ms = real() - t0;
+      times.push(ms);
+      if (bot.hitches) {
+        let fresh = false;
+        for (const o of obstacleViews().keys()) if (!bot.seen.has(o)) { bot.seen.add(o); fresh = true; }
+        bot.frameLog.push([ms, fresh]);
+      }
+      if (bot.motion && game.state === 'PLAYING' && game.world.monkey.state !== 'DEAD') {
+        const at = drawnAt();
+        if (bot.last && at.every((v, k) => v === bot.last[k])) bot.still++; else bot.moving++;
+        bot.last = at;
+      } else bot.last = null;
     }
     times.sort((a, b) => a - b);
     const q = (p) => times[Math.min(times.length - 1, Math.floor(p * times.length))];
@@ -149,7 +180,7 @@ await page.evaluate(async ({ frameMs, mode }) => {
       score: game.score, stage: game.stage, liana: w.monkey.liana?.index ?? null,
     };
   };
-}, { frameMs: +frameMs, mode });
+}, { frameMs: +frameMs, mode, hitches: !!process.env.HITCHES, motion: !!process.env.MOTION });
 
 const chunkFrames = Math.round((+every * 1000) / +frameMs);
 const total = Math.round((+minutes * 60 * 1000) / +frameMs);
@@ -167,5 +198,21 @@ for (let done = 0; done < total; done += chunkFrames) {
   console.log(JSON.stringify({ gameSec: row.gameSec, wall: row.wallSec, med: +row.median.toFixed(1), p95: +row.p95.toFixed(1), max: +row.max.toFixed(0), render: +row.renderMean.toFixed(1), draws: +row.drawCalls.toFixed(0), heap: +row.heapUsed.toFixed(1), nodes: row.nodes, score: row.score, deaths, taken: row.taken, ov: row.obstacleViews, bv: row.bananaViews, gpu: row.gpuContexts, tex: row.textures, glTex: row.glTextures }));
   writeFileSync(outFile, JSON.stringify(rows));
 }
+const summary = await page.evaluate(() => {
+  const bot = window.__bot;
+  const out = {};
+  if (bot.hitches) {
+    const stats = (list) => {
+      const t = list.map(([ms]) => ms).sort((a, b) => a - b);
+      const q = (p) => +(t[Math.min(t.length - 1, Math.floor(p * t.length))] ?? 0).toFixed(1);
+      return { frames: t.length, median: q(0.5), p99: q(0.99), max: q(1), over8: t.filter((ms) => ms > 8).length, over16: t.filter((ms) => ms > 16).length };
+    };
+    out.newView = stats(bot.frameLog.filter(([, fresh]) => fresh));
+    out.others = stats(bot.frameLog.filter(([, fresh]) => !fresh));
+  }
+  if (bot.motion) out.motion = { still: bot.still, moving: bot.moving, share: +(bot.still / Math.max(1, bot.still + bot.moving)).toFixed(4) };
+  return out;
+});
+if (Object.keys(summary).length) console.log('summary', JSON.stringify(summary));
 console.log('errors', errors);
 await browser.close();
