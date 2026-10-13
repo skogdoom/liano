@@ -34,6 +34,24 @@ There is a reproducible camera jerk at a catch, independent of frame timing or r
 
 The owner reports the symptom in Safari on a MacBook Air M1 and an iPhone 13 mini, with current testing focused on the Mac. `?camera=smooth` helps a little but does not solve it. The follow-up therefore focuses on the background's movement implementation: scrolling texture coordinates inside a stationary TileSprite versus moving repeated images through the scene.
 
+## Monkey and liana displacement
+
+The owner independently identified large per-frame travel as the likely cause and noticed a similar effect in the monkey/liana once the scenery was slower. `scripts/dev/swing-motion.mjs` checks the actual Phaser rig transforms during a steady, uninterrupted swing with a fixed grip, an unchanged gameplay camera and no rendering load. At 1280×720 with 2× density:
+
+| Synthetic refresh rate | Peak monkey-origin movement | Peak liana-tip movement |
+| --- | ---: | ---: |
+| 60 Hz | 11.53 device pixels/frame | 14.93 device pixels/frame |
+| 90 Hz | 7.69 device pixels/frame | 9.95 device pixels/frame |
+| 144 Hz | 4.81 device pixels/frame | 6.22 device pixels/frame |
+
+No poses repeat. Monkey-position interpolation error is zero, and liana-angle error is below 1.3×10⁻¹⁵ radians. The displacement shrinks in proportion to the refresh interval, consistent with visible stepping of fast motion even when every frame is on time. This supports the owner's explanation but does not directly measure perception or display presentation in Safari.
+
+Interpolation chooses the pose between simulation steps; it cannot show additional poses between a display's refreshes. Extra simulation steps or more positional easing alone do not eliminate the gaps in a steady fast pan. Addressing that remaining effect in the actors would involve changing their per-frame travel or their visual exposure (for example, motion blur), rather than silently changing gameplay physics. No actor movement or Pixi code was changed.
+
+Run the probe with `CHROMIUM=/usr/bin/chromium URL=http://localhost:5174/ node scripts/dev/swing-motion.mjs`.
+
+## Catch-induced camera motion
+
 The relevant chain is:
 
 1. `src/sim/world.js` detects a catch within the monkey's reach of a liana.
