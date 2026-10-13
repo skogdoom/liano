@@ -55,6 +55,16 @@ function cellSvg(piece, i, { x, y, w, h, zoom }) {
   return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${box.x} ${box.y} ${w / zoom} ${h / zoom}" overflow="hidden">${inner(svg)}</svg>`;
 }
 
+// Sprite softening is clipped to its own cell, never mixed with adjacent atlas
+// frames. Unlike a tile it does not wrap from the right edge to the left edge.
+function atlasCellSvg(cell) {
+  const { piece, i, x, y, w, h, zoom } = cell;
+  if (!piece.soften) return cellSvg(piece, i, cell);
+  const once = dataUri('once.png', render(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${cellSvg(piece, i, { ...cell, x: 0, y: 0 })}</svg>`));
+  const id = `soften-${piece.key}-${i}`;
+  return `<svg x="${x}" y="${y}" width="${w}" height="${h}" overflow="hidden"><filter id="${id}" x="0" y="0" width="${w}" height="${h}" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="${piece.soften * zoom} 0"/></filter><image width="${w}" height="${h}" href="${once}" filter="url(#${id})"/></svg>`;
+}
+
 const render = (svg) => new Resvg(svg, { shapeRendering: 2, imageRendering: 0 }).render().asPng();
 
 // The folder is updated in place (a running dev server keeps watching it); files from an
@@ -83,7 +93,7 @@ for (const scale of ATLAS_SCALES) {
     const pages = pack(cells, { width, maxHeight: MAX_PAGE, padding: PADDING });
     const textures = pages.map((page, n) => {
       const image = `${set}@${scale}x-${n}.png`;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${page.width}" height="${page.height}">${page.cells.map((c) => cellSvg(c.piece, c.i, c)).join('')}</svg>`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${page.width}" height="${page.height}">${page.cells.map(atlasCellSvg).join('')}</svg>`;
       write(image, render(svg));
       sizes[image] = `${page.width} × ${page.height}`;
       memory[scale] += page.width * page.height * 4;

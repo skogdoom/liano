@@ -79,8 +79,9 @@ export class LianaSetRig {
   }
 
   // As the Pixi LianaView: the lianas near the view, the ends lit where `monkeys` are
-  // slipping off, swinging ones turned `alpha` of the way between sim steps.
-  update(lianas, cameraX, viewWidth, monkeys = [], alpha = 1) {
+  // slipping off. `motion`, when provided by a pane, interpolates settling poses
+  // too; standalone comparisons retain their explicit pose/alpha convention.
+  update(lianas, cameraX, viewWidth, monkeys = [], alpha = 1, motion = null) {
     const seen = new Set();
     const flashing = flashingLianas(monkeys);
     for (const liana of lianas) {
@@ -90,8 +91,9 @@ export class LianaSetRig {
       this.setVisible(entry, visible);
       if (!visible) continue;
       const flash = flashing.has(liana);
-      const state = drawnState(liana, flash);
-      const place = lianaPlacement(liana, alpha);
+      const drawn = motion?.liana(liana, alpha) ?? liana;
+      const state = drawnState(drawn, flash);
+      const place = lianaPlacement(drawn, motion ? 1 : alpha);
       if (state === entry.drawn) {
         entry.flash.visible = flash;
         this.place(entry, place);

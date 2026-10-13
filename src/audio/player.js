@@ -29,6 +29,8 @@ export class SoundPlayer {
     closeContext = (ctx) => ctx.close?.()?.catch?.(() => {}),
     applyMute = null,
     onRun = () => {},
+    noiseFor = whiteNoise,
+    bufferFor = () => null,
   } = {}) {
     this.createContext = createContext;
     this.now = now;
@@ -36,6 +38,8 @@ export class SoundPlayer {
     this.closeContext = closeContext;
     this.applyMute = applyMute;
     this.onRun = onRun;
+    this.noiseFor = noiseFor;
+    this.bufferFor = bufferFor;
     this.ctx = null;
     this.rebuilds = 0;
     this.played = 0;
@@ -60,12 +64,13 @@ export class SoundPlayer {
 
   #create() {
     const ctx = this.createContext();
+    if (!ctx) return; // Phaser can have no audio manager on this browser.
     this.master = ctx.createGain();
     const compressor = ctx.createDynamicsCompressor();
     this.master.connect(compressor);
     compressor.connect(this.output(ctx));
     this.#applyMute();
-    this.noise = whiteNoise(ctx);
+    this.noise = this.noiseFor(ctx);
     this.ctx = ctx;
     this.stuckSince = null;
     this.lastTime = null;
@@ -130,21 +135,11 @@ export class SoundPlayer {
     if (!ctx || this.muted || this.paused) return false;
     const t0 = ctx.currentTime;
     const sound = { name: recipe.name, outputs: [], sources: [] };
-    let running = recipe.voices.length;
-    for (const voice of recipe.voices) {
-      const out = ctx.createGain();
-      out.gain.value = 0;
-      schedule(out.gain, voice.gain, t0);
-      out.connect(this.master);
-
-      const source = this.#source(voice.source, t0);
-      let node = source;
-      for (const f of voice.filters ?? []) {
-        const filter = biquad(ctx, f.type, f.q, f.freq, t0);
-        node.connect(filter);
-        node = filter;
-      }
-      node.connect(out);
+    const buffer = this.bufferFor(recipe);
+    const voices = buffer ? [{ source: { kind: 'buffer', buffer }, gain: [{ t: 0, v: 1, ramp: 'set' }] }] : recipe.voices;
+    let running = voices.length;
+    for (const voice of voices) {
+      const { out, source } = recipeVoice(ctx, voice, this.master, t0, this.noise);
 
       source.start(t0);
       source.stop(t0 + recipe.duration);
@@ -172,21 +167,6 @@ export class SoundPlayer {
       out.gain.linearRampToValueAtTime(0, now + STOP_FADE);
     }
     for (const s of sound.sources) stopSafely(s, now + STOP_FADE);
-  }
-
-  // Oscillator or looping noise.
-  #source(spec, t0) {
-    const { ctx } = this;
-    if (spec.kind === 'noise') {
-      const noise = ctx.createBufferSource();
-      noise.buffer = this.noise;
-      noise.loop = true;
-      return noise;
-    }
-    const osc = ctx.createOscillator();
-    osc.type = spec.wave;
-    schedule(osc.frequency, spec.freq, t0);
-    return osc;
   }
 
   // Whether the context has been stuck for STUCK_MS while it should be running: not in the
@@ -253,9 +233,35 @@ function biquad(ctx, type, q, freq, t0) {
   return filter;
 }
 
-function whiteNoise(ctx) {
+export function whiteNoise(ctx) {
   const buffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   return buffer;
+}
+
+// The dry recipe graph, shared by live synthesis and Phaser's startup rendering.
+// Master gain and compression stay live, so overlapping cached sounds mix as before.
+export function recipeVoice(ctx, voice, destination, t0, noise) {
+  const out = ctx.createGain();
+  out.gain.value = 0;
+  schedule(out.gain, voice.gain, t0);
+  out.connect(destination);
+  const spec = voice.source;
+  const source = spec.kind === 'osc' ? ctx.createOscillator() : ctx.createBufferSource();
+  if (spec.kind === 'osc') {
+    source.type = spec.wave;
+    schedule(source.frequency, spec.freq, t0);
+  } else {
+    source.buffer = spec.kind === 'noise' ? noise : spec.buffer;
+    source.loop = spec.kind === 'noise';
+  }
+  let node = source;
+  for (const f of voice.filters ?? []) {
+    const filter = biquad(ctx, f.type, f.q, f.freq, t0);
+    node.connect(filter);
+    node = filter;
+  }
+  node.connect(out);
+  return { out, source };
 }

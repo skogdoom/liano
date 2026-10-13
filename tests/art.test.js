@@ -325,7 +325,8 @@ describe('a piece’s contract', () => {
     expect(() => definePiece({ key: 'rock.body', purpose: 'x', frames: [] })).toThrow(/frames/);
     expect(() => definePiece({ key: 'hud.panel', purpose: 'x', frames, kind: 'slice' })).toThrow(/slices/);
     expect(() => definePiece({ key: 'liana.rope', purpose: 'x', frames, kind: 'strip' })).toThrow(/length/);
-    expect(() => definePiece({ key: 'rock.body', purpose: 'x', frames, soften: 0.4 })).toThrow(/soften/);
+    expect(definePiece({ key: 'rock.body', purpose: 'x', frames, soften: 0.4 }).soften).toBe(0.4);
+    expect(() => definePiece({ key: 'rope.x', purpose: 'x', kind: 'strip', length: 10, frames, soften: 0.4 })).toThrow(/soften/);
     expect(() => definePiece({ key: 'backdrop.x', purpose: 'x', frames, kind: 'tile', box: { x: 0, y: 0, w: 10, h: 10 }, soften: 0 })).toThrow(/soften/);
     expect(definePiece({ key: 'backdrop.x', purpose: 'x', frames, kind: 'tile', box: { x: 0, y: 0, w: 10, h: 10 }, soften: 0.4 }).soften).toBe(0.4);
     expect(() => definePiece({ key: 'backdrop.far', purpose: 'x', frames, kind: 'tile' })).toThrow(/box/);

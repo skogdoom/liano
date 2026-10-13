@@ -225,3 +225,77 @@ image/tile equivalence. No global parity tolerance is changed.
 Floor-follow-up validation: build passed; all 32 focused art/import unit checks
 passed; gallery, three image/tile comparisons (landscape/wide/portrait), and
 whole-pane comparisons at 1×/2× passed.
+
+## Startup preparation and obstacle motion
+
+Phaser now renders the 15 finite sound recipes into mono AudioBuffers during
+loading, before accepting gameplay presses. Their sample rate is the live output's;
+the live master gain/compressor still mixes simultaneous sounds. Playback uses
+one source and gain per sound rather than constructing its oscillators, envelopes
+and filters at an event. Mute, pause, gesture unlock and context recovery retain
+their existing behavior. Buffers can be reused after a context replacement, and
+Web Audio resamples them if the replacement's output rate differs. Offline
+rendering failure falls back to synthesis; missing Web Audio does not block loading.
+The buffers plus the shared noise occupy about 3.4 MB at 48 kHz.
+
+The fixed art was already loaded and uploaded before gameplay. Preparation now
+also exercises 37 obstacle builder paths (including supports, decorations and
+temple looks), prepares collection-popup text, and rasterizes the finite HUD
+digits/words into small glyph atlases. Score, tally and heart-count updates only
+change frames and transforms, avoiding Canvas rasterization and texture uploads.
+Quarter-pixel raster phases preserve proportional font spacing at low resolutions.
+Old glyph resolutions are released on resize; the current layout's mode variants
+stay prepared. Heart icons and collection popups are reused. Generated obstacle
+instances are still constructed as the world generates them: warming removes
+first-use code work, not every future allocation. Stage/result/debug text remains
+ordinary Phaser Text.
+
+The motion investigation found genuine interpolation gaps. Moving obstacles used
+their current simulation position/time, while the camera and monkey position were
+already interpolated. Settling vines likewise used current-step angle and bend
+velocity, and monkey tilt used current-step swing/flight velocity. Phaser now
+captures adjacent samples after every simulation step and draws all those
+quantities at the frame's alpha. Obstacle/decorative animation and banana bobbing
+share that drawing time. Spider threads follow the drawn body. Captures hold on
+pause, reset with the world, and honor catches that reset the previous angle.
+Drawing never changes collision state. Pixi drawing remains unchanged.
+
+Static temples already moved with the interpolated world camera. Their stone's
+fine repeated edges now receive mild baked horizontal Gaussian softening (sigma
+0.2 world units), with small horizontal margins on repeating pieces. It adds no
+runtime filter, extra GPU pass, camera delay or collision displacement. Sprite
+softening clips to its own frame, while tile softening retains its wrapping rule.
+The existing strict parity limits remain unchanged; the stronger 0.35 trial was
+reduced because it changed stone details beyond those limits. Atlas/tiles still
+fit the art budgets: 106 MB at 2×, 254 MB at 4×.
+
+Validation: native Phaser update/render/quad submission at 60, 90 and 144 Hz
+(150 frames each) produced zero repeated temple, spider or monkey quads, zero
+moving-body position error, and zero settling-rope geometry error. Cached audio
+matches live synthesis, including overlapping sounds at 44.1/48 kHz, within
+1e-6 per sample. The HUD upload check includes score, tally, life and resize changes;
+normal updates perform zero text rasterizations or uploads. All HUD and whole-pane
+comparisons retain the existing visual limits. These checks measure submitted
+geometry and audio, not Safari's physical presentation of frames.
+
+`?frames=1` now also records each nearby obstacle's simulated, drawn and screen
+positions, interpolated drawing time, monkey body rotation, and preparation counts.
+No recorder runs in ordinary play.
+
+If gameplay still stutters, investigate these in order:
+
+1. **Safari GPU/compositor presentation timing.** Brief freezes affecting the whole
+   scene can happen after JavaScript submits a correct frame. The last Safari
+   capture had no late callbacks, no repeated active poses and CPU work at most
+   6 ms; it did not measure GPU completion or presentation. A Safari graphics
+   timeline and a display recording would distinguish this from update stalls.
+2. **Temporal aliasing at 60 Hz.** Fast, sharp world geometry is sampled only once
+   per refresh. The previous trace showed foreground travel up to 14.37 CSS pixels
+   per frame; large temples travel with that same camera. Interpolation does not
+   add display frames. The new stone softening reduces edge contrast, but a short
+   motion exposure or less overall screen travel would address this more strongly.
+3. **Catch/release pose transitions.** A catch deliberately snaps the grip and
+   resets the liana's swing; release changes the monkey's pose/facing. Those changes
+   can still appear as small jumps even with interpolated continuous motion. The
+   expanded trace can correlate a visible jump with a grab and its actor/camera
+   positions before changing any gameplay behavior.

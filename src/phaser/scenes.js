@@ -8,6 +8,7 @@ import { DebugOverlay } from './debug.js';
 import { Hud } from './hud.js';
 import { Overlays } from './overlays.js';
 import { WorldPane } from './world/pane.js';
+import { warmObstacleRigs } from './warmup.js';
 
 // The Phaser version's scenes (PHASER_PLAN.md, M2): Boot loads the art and starts the
 // others; Play draws the worlds (M5), UI the HUD, panels and buttons (M6). Each scene's
@@ -87,7 +88,11 @@ export class PlayScene extends Phaser.Scene {
     followLayout(this, () => this.layoutPanes());
     // The world is drawn once the main set of the art is in (obstacles are in it); until
     // then the game holds presses (see main.js).
-    const start = () => {
+    const start = async () => {
+      await platform.soundReady;
+      const started = performance.now();
+      const rigs = warmObstacleRigs(this, platform.art);
+      platform.prepared = { rigs, ms: performance.now() - started, sounds: platform.sound.cache?.buffers.size ?? 0, soundBytes: platform.sound.cache?.bytes ?? 0 };
       this.ready = true;
       platform.world = this;
       this.sync();

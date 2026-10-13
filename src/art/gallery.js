@@ -142,7 +142,7 @@ function pixiFrame(piece, i, box, w, h, zoom) {
 
 // Blurs RGBA `data` (w × h) sideways, wrapping around as a repeating tile does, with a
 // Gaussian of standard deviation `sigma` px, in premultiplied colour as SVG filters blur.
-function blurSideways(data, w, h, sigma) {
+function blurSideways(data, w, h, sigma, wrap = true) {
   const radius = Math.ceil(3 * sigma);
   const kernel = Array.from({ length: 2 * radius + 1 }, (_, k) => Math.exp(-((k - radius) ** 2) / (2 * sigma * sigma)));
   const sum = kernel.reduce((a, b) => a + b, 0);
@@ -157,6 +157,7 @@ function blurSideways(data, w, h, sigma) {
     for (let x = 0; x < w; x++) {
       const out = [0, 0, 0, 0];
       for (let k = -radius; k <= radius; k++) {
+        if (!wrap && (x + k < 0 || x + k >= w)) continue;
         const weight = kernel[k + radius] / sum;
         for (let c = 0; c < 4; c++) out[c] += row[(4 * (((x + k) % w + w) % w)) + c] * weight;
       }
@@ -219,9 +220,9 @@ for (const piece of PIECES) {
     const builtData = built.context.getImageData(0, 0, w, h).data;
     if (guides) drawGuides(built.context, contract, at.zoom);
     const drawn = pixiFrame(piece, i, contract.box, w, h, at.zoom);
-    // A softened tile: the drawing blurred sideways as the build blurs it.
+    // A softened piece: the drawing blurred sideways as the build blurs it.
     if (contract.soften) {
-      blurSideways(drawn.data, w, h, contract.soften * at.zoom);
+      blurSideways(drawn.data, w, h, contract.soften * at.zoom, contract.kind === 'tile');
       drawn.canvas.getContext('2d').putImageData(new ImageData(drawn.data, w, h), 0, 0);
     }
     drawn.canvas.style.width = `${w * view}px`;

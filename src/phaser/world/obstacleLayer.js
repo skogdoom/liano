@@ -22,9 +22,10 @@ export class ObstacleLayer {
     return null;
   }
 
-  // `time` is the world time (s), for what moves on its own; `tint` the background's,
+  // `time` is the interpolated drawing time (s), or each model's own time when
+  // omitted (the standalone parity fixtures); `tint` the background's,
   // which the temple takes (but not its fire).
-  update(obstacles, time = 0, tint = 0xffffff) {
+  update(obstacles, time = null, tint = 0xffffff) {
     const seen = new Set();
     for (const o of obstacles) {
       if (!o) continue;
@@ -36,7 +37,7 @@ export class ObstacleLayer {
         globalThis.__frameNote?.(`new ${o.type}${o.decoration ? ` ${o.decoration}` : ''}`); // ?frames=1 (frameStats.js)
         if (rig) this.view.add(rig.view);
       }
-      rig?.update?.(time, tint);
+      rig?.update?.(time ?? o.time, tint);
     }
     for (const [o, rig] of this.rigs) {
       if (seen.has(o)) continue;

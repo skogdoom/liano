@@ -160,6 +160,8 @@ if (platform.fullscreenButton) {
 // browser suspended it, or replace a context that stays stuck.
 sound = createPhaserSoundPlayer(game.sound);
 platform.sound = sound;
+// Rendering does not need a gesture; audible playback still waits for unlock().
+platform.soundReady = sound.prepare();
 for (const type of ['keydown', 'pointerdown', 'pointerup', 'touchend']) {
   window.addEventListener(type, () => sound.unlock(), { capture: true });
 }
@@ -202,7 +204,7 @@ const driver = createDriver({
   pause,
   sound,
   prefetch,
-  // Presses wait until the main set of the art is in (it holds the obstacles).
+  // Presses wait for main art, cached sound and resource preparation.
   ready: () => platform.world !== undefined,
   onStep(dt) {
     platform.world?.sync();

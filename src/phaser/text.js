@@ -66,6 +66,7 @@ export const textResolution = (zoom, scale = 1) => zoom * Math.max(scale, 1);
 // whole pixels, see fitPixels) are set here, then the text redrawn once, and not at all
 // at the resolution it has.
 export function setTextResolution(text, resolution) {
+  if (text.setLabelResolution) return text.setLabelResolution(resolution);
   const { style, padding } = text;
   if (style.resolution === resolution) return text;
   // The size of the lines alone (a text's size is its lines' plus its padding).
@@ -123,6 +124,7 @@ function fitted(base, width, height, resolution) {
 // and height. The room Phaser keeps for the shadow (padding) is left out. `pixiWidth`
 // keeps the measured width (Pixi's `width`).
 export function setTextOrigin(text, x = 0.5, y = 0.5) {
+  if (text.setLabelOrigin) return text.setLabelOrigin(x, y);
   fitPixels(text);
   const lines = String(text.text).split('\n');
   const distance = text.pixiShadow?.distance ?? 0;

@@ -1,4 +1,5 @@
-import { SoundPlayer } from '../audio/player.js';
+import { SoundPlayer, whiteNoise } from '../audio/player.js';
+import { SoundCache } from './soundCache.js';
 
 // The sound player (audio/player.js) on Phaser's sound manager: the recipes play
 // through Phaser's audio context and its master mute and volume nodes, mute is
@@ -14,10 +15,14 @@ import { SoundPlayer } from '../audio/player.js';
 //   would reach the error screen: refusals are ignored (the next frame tries again).
 export function createPhaserSoundPlayer(manager, { createContext = () => new (globalThis.AudioContext || globalThis.webkitAudioContext)(), now } = {}) {
   let first = true;
-  return new SoundPlayer({
+  let cache = null;
+  const player = new SoundPlayer({
     now,
+    noiseFor: (ctx) => cache?.noise ?? whiteNoise(ctx),
+    bufferFor: (recipe) => cache?.get(recipe),
     createContext() {
       if (first) {
+        if (!manager.context) return null;
         first = false;
         return ignoreRefusals(manager.context);
       }
@@ -33,6 +38,14 @@ export function createPhaserSoundPlayer(manager, { createContext = () => new (gl
       manager.gameLostFocus = !run;
     },
   });
+  // Explicit preparation keeps the adapter usable with offline/fake contexts too.
+  player.prepare = () => {
+    if (!manager.context) return Promise.resolve(0);
+    cache ??= new SoundCache(manager.context);
+    player.cache = cache;
+    return cache.prepare();
+  };
+  return player;
 }
 
 // Marks a refused resume() or suspend() as handled; callers still get the promise.

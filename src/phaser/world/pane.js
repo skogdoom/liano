@@ -9,6 +9,7 @@ import { ObstacleLayer } from './obstacleLayer.js';
 import { MonkeyRig } from './monkey.js';
 import { ShadowRig } from './shadow.js';
 import { makeContainer } from './build.js';
+import { WorldMotion } from './motion.js';
 
 // One world drawn in one rect of the view, as the Pixi Pane (render/pane.js): the whole
 // view in single player, a strip per player in split screen. `scene` is what the death
@@ -64,6 +65,7 @@ export class WorldPane {
   // follows player 1's monkey with its own.
   setWorld(world, players, camera = null) {
     this.world = world;
+    this.motion = new WorldMotion(world);
     this.players = players;
     this.camera = camera ?? this.ownCamera;
     const sets = world.lianaSets.length;
@@ -89,6 +91,7 @@ export class WorldPane {
   // Fixed-step camera update; it holds still once everyone in the world is out.
   // (A shared camera is marked and moved by the rules.)
   stepCamera(dt) {
+    this.motion.capture();
     if (this.camera !== this.ownCamera) return;
     this.camera.mark();
     if (this.world.alive) this.camera.update(this.#target(dt), dt);
@@ -112,10 +115,11 @@ export class WorldPane {
     this.overlay.x = -cameraX;
     this.backdrop.update(cameraX, dt);
     const tint = this.backdrop.setStage(Math.max(...world.stages), world, dt);
-    this.obstacles.update(world.obstacles.values(), world.time, tint);
-    world.lianaSets.forEach((set, i) => this.lianaSets[i].update(set.values(), cameraX, layout.view.width, world.monkeys, alpha));
-    this.bananas.update(world, events, dt);
-    world.monkeys.forEach((m, i) => this.monkeys[i].update(m, dt, world.isInvulnerable(i), alpha));
+    const time = this.motion.at(alpha);
+    this.obstacles.update(world.obstacles.values(), time, tint);
+    world.lianaSets.forEach((set, i) => this.lianaSets[i].update(set.values(), cameraX, layout.view.width, world.monkeys, alpha, this.motion));
+    this.bananas.update(world, events, dt, time);
+    world.monkeys.forEach((m, i) => this.monkeys[i].update(this.motion.monkey(m, alpha), dt, world.isInvulnerable(i), alpha));
     this.shadow.update(ghost, dt);
   }
 

@@ -94,8 +94,16 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
       const monkeyScreen = matrix ? screenPoint(matrix.tx, matrix.ty) : null;
       const rope = monkey.liana && pane.lianaSets[0]?.entries.get(monkey.liana)?.rope;
       const tip = rope?.getWorldTransformMatrix().transformPoint(0, monkey.liana.length / rope.scaleY);
+      const drawTime = pane.motion.at(frame.alpha);
+      const obstacles = [...pane.obstacles.rigs].filter(([o, rig]) => rig && o.x >= pane.cameraX - 600 && o.x <= pane.cameraX + pane.layout.view.width + 600).map(([o, rig]) => {
+        const body = rig.body ?? rig.view;
+        const matrix = body.getWorldTransformMatrix();
+        return { gap: o.gap, type: o.type, moving: o.moving, simX: o.x, simY: o.y,
+          drawnX: body.x, drawnY: body.y, screen: screenPoint(matrix.tx, matrix.ty) };
+      });
       return {
         simTime: pane.world.time,
+        drawTime, obstacles,
         roundPixels: camera.roundPixels,
         cameraX: pane.cameraX, cameraPreviousX: pane.camera.prevX, cameraCurrentX: pane.camera.x,
         // Unwrapped layer position avoids treating a repeating seam as a jump.
@@ -104,6 +112,7 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
         monkeyState: monkey.state, monkeyX: monkey.x, monkeyY: monkey.y,
         monkeyPreviousX: monkey.prevX, monkeyPreviousY: monkey.prevY,
         monkeyDrawnX: rig?.x, monkeyDrawnY: rig?.y, monkeyScreen,
+        monkeyRotation: pane.monkeys[0]?.body.rotation,
         liana: monkey.liana?.index ?? null,
         lianaAngle: monkey.liana?.angle ?? null, lianaPreviousAngle: monkey.liana?.prevAngle ?? null,
         ropeRotation: rope?.rotation ?? null,
@@ -121,7 +130,7 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
       events: frame.events.map((e) => e.type), panes,
     });
   });
-  const snapshot = () => trace.snapshot({ ...info, capturedAt: new Date().toISOString() });
+  const snapshot = () => trace.snapshot({ ...info, prepared: platform.prepared, capturedAt: new Date().toISOString() });
   const button = doc.createElement('button');
   button.id = 'save-frame-trace';
   button.textContent = 'Save frame trace';

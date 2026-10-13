@@ -26,6 +26,15 @@ function fakeManager() {
 }
 
 describe('the sound player on Phaser', () => {
+  it('still loads and accepts gestures when Web Audio is unavailable', async () => {
+    const player = createPhaserSoundPlayer({ context: null });
+    expect(await player.prepare()).toBe(0);
+    player.unlock();
+    player.unlock();
+    player.setMuted(true);
+    player.setPaused(false);
+    expect(player.play(crash())).toBe(false);
+  });
   it('plays the recipes through Phaser’s context and master nodes', () => {
     const manager = fakeManager();
     const player = createPhaserSoundPlayer(manager);
