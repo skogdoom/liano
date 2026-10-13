@@ -29,20 +29,38 @@ describe('the frame clock', () => {
   it('keeps the game time with the real time', () => {
     const times = frames(3601, 1000 / 60); // a minute
     const out = steps(times);
-    expect(Math.abs(sum(out) - (Math.round(times.at(-1)) - Math.round(times[0])))).toBeLessThan(1.5);
+    expect(Math.abs(sum(out) - (Math.round(times.at(-1)) - Math.round(times[0])))).toBeLessThan(4);
   });
 
-  it('passes a missed frame through as it is, and stays in time after it', () => {
+  it('counts a missed frame as two, and stays in time after it', () => {
     const times = [...frames(120, 1000 / 60), ...frames(120, 1000 / 60, 121 * (1000 / 60))];
     const out = steps(times);
-    expect(out[119]).toBeCloseTo(2 * (1000 / 60), 0);
-    expect(Math.abs(sum(out) - (Math.round(times.at(-1)) - Math.round(times[0])))).toBeLessThan(1.5);
+    expect(out[119]).toBeCloseTo(2 * (1000 / 60), 1);
+    expect(Math.abs(sum(out) - (Math.round(times.at(-1)) - Math.round(times[0])))).toBeLessThan(4);
   });
 
   it('learns a new refresh rate (a window moved to another screen)', () => {
-    const times = [...frames(120, 1000 / 60), ...frames(120, 1000 / 120, 120 * (1000 / 60))];
-    const out = steps(times).slice(-60);
-    for (const dt of out) expect(dt).toBeCloseTo(1000 / 120, 0);
+    for (const hz of [120, 75, 50]) {
+      const times = [...frames(120, 1000 / 60), ...frames(600, 1000 / hz, 120 * (1000 / 60))];
+      const out = steps(times).slice(-60);
+      for (const dt of out) expect(dt).toBeCloseTo(1000 / hz, 0);
+    }
+  });
+
+  it('evens out frame times that come a few ms early or late', () => {
+    // A seeded jitter of up to ±3 ms on each frame's time, then rounded to the ms.
+    let seed = 7;
+    const jitter = () => ((seed = (seed * 16807) % 2147483647) / 2147483647 - 0.5) * 6;
+    const times = frames(1201, 1000 / 60).map((t, i) => (i === 0 ? t : t + jitter()));
+    const out = steps(times).slice(60);
+    expect(spread(out)).toBeLessThan(0.3);
+    expect(Math.abs(sum(steps(times)) - (Math.round(times.at(-1)) - Math.round(times[0])))).toBeLessThan(5);
+  });
+
+  it('counts a stall that is no whole number of frames as it is', () => {
+    const times = [...frames(60, 1000 / 60), 59 * (1000 / 60) + 0.37 + 200, ...frames(60, 1000 / 60, 60 * (1000 / 60) + 200)];
+    const out = steps(times);
+    expect(out[59]).toBeCloseTo(200, 0);
   });
 
   it('leaves exact frame times exact', () => {

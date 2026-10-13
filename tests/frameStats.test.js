@@ -17,7 +17,7 @@ describe('the frame-time readout', () => {
   it('finds the refresh rate and counts no late frames in a steady run', () => {
     const stats = run(new FrameStats(), Array(120).fill(1000 / 60));
     expect(stats.all).toEqual({ frames: 120, late: 0, veryLate: 0, worst: expect.closeTo(16.7, 1) });
-    expect(stats.describe()).toMatch(/^60 Hz · since reset: 120 frames, late 0 \(0\.0 %\), very late 0, worst 17 ms · last 10 s: late 0, very late 0, worst 17 ms$/);
+    expect(stats.describe()).toMatch(/^60 Hz · since reset: 120 frames, late 0 \(0\.0 %\), very late 0, worst 17 ms · last 10 s: late 0, very late 0, worst 17 ms, on time 17–17 ms, work 0\/0\/0 ms$/);
   });
 
   it('counts a missed frame as late and two or more as very late, at any refresh rate', () => {
@@ -25,6 +25,15 @@ describe('the frame-time readout', () => {
     expect(at120.all).toMatchObject({ frames: 122, late: 2, veryLate: 1 });
     expect(Math.round(1000 / at120.typical)).toBe(120);
     expect(at120.recent()).toMatchObject({ late: 2, veryLate: 1, worst: expect.closeTo(33.3, 1) });
+  });
+
+  it('says how far apart the frames on time came, and how long the game worked in a frame', () => {
+    const stats = new FrameStats();
+    let t = 0;
+    stats.tick(t);
+    for (let i = 0; i < 200; i++) stats.tick((t += i % 3 === 2 ? 16 : 17), i === 50 ? 12 : 1 + (i % 2));
+    stats.tick((t += 34), 3); // one missed: not on time
+    expect(stats.recent()).toMatchObject({ onTime: [16, 17], work: [2, 2, 12] });
   });
 
   it('keeps the recent counts to the last 10 seconds', () => {
