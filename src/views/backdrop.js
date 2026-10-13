@@ -56,7 +56,7 @@ export function drawSky(g, top, width, bottom) {
 }
 
 // How fast the far layer scrolls, as a share of the camera's speed.
-export const FAR_FACTOR = 0.15;
+export const FAR_FACTOR = 0.1;
 
 // One tile (TILE wide, repeating) of the far layer (also as a piece for the Phaser version).
 export function drawFarLayer(ctx) {
@@ -90,7 +90,7 @@ export function drawFarLayer(ctx) {
   return ctx;
 }
 
-export const MID_FACTOR = 0.4;
+export const MID_FACTOR = 0.3;
 
 // One tile of the mid layer.
 export function drawMidLayer(ctx) {
@@ -112,7 +112,7 @@ export function drawMidLayer(ctx) {
   return ctx;
 }
 
-export const NEAR_FACTOR = 0.7;
+export const NEAR_FACTOR = 0.5;
 
 // One tile of the near layer.
 export function drawNearLayer(ctx) {

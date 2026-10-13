@@ -107,7 +107,7 @@ export class Pane {
   stepCamera(dt) {
     if (this.camera !== this.ownCamera) return;
     this.camera.mark();
-    if (this.world.alive) this.camera.update(this.#target(), dt);
+    if (this.world.alive) this.camera.update(this.#target(), dt, this.world.monkey);
   }
 
   // What the pane's own camera follows: player 1's monkey.
