@@ -33,6 +33,7 @@ export class ObstacleLayer {
       if (rig === undefined) {
         rig = this.build(o);
         this.rigs.set(o, rig);
+        globalThis.__frameNote?.(`new ${o.type}${o.decoration ? ` ${o.decoration}` : ''}`); // ?frames=1 (frameStats.js)
         if (rig) this.view.add(rig.view);
       }
       rig?.update?.(time, tint);

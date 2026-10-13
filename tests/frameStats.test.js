@@ -36,6 +36,21 @@ describe('the frame-time readout', () => {
     expect(stats.recent()).toMatchObject({ onTime: [16, 17], work: [2, 2, 12] });
   });
 
+  it('lists the late frames with what happened in the frame before and in the late one', () => {
+    const stats = new FrameStats();
+    let t = 0;
+    stats.tick(t);
+    for (let i = 0; i < 60; i++) stats.tick((t += 1000 / 60), 1);
+    stats.note('grab');
+    stats.note('upload 300×60');
+    stats.note('upload 300×60');
+    stats.tick((t += 1000 / 60), 4);
+    stats.note('new panther');
+    stats.tick((t += 50), 2);
+    expect(stats.lateFrames).toEqual([{ gap: expect.closeTo(50, 6), work: 4, before: 'grab, 2× upload 300×60', notes: 'new panther' }]);
+    expect(stats.describe()).toMatch(/\nlate 50 ms \(work before 4 ms\): before \[grab, 2× upload 300×60\] then \[new panther\]$/);
+  });
+
   it('keeps the recent counts to the last 10 seconds', () => {
     const stats = run(new FrameStats(), [...Array(60).fill(1000 / 60), 50, ...Array(700).fill(1000 / 60)]);
     expect(stats.all.late).toBe(1);

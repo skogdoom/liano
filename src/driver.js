@@ -64,6 +64,7 @@ export function createDriver({ game, input, pause, sound, prefetch, ready = () =
       prefetch.update(game.worlds.map((w) => w.obstacles));
       sound.setPaused(paused);
       const events = game.takeEvents();
+      if (globalThis.__frameNote) for (const e of events) globalThis.__frameNote(e.type); // ?frames=1 (frameStats.js)
       for (const recipe of soundsFor(events)) sound.play(recipe);
       return { frameDt, alpha, events, paused };
     },
