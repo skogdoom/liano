@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { MAX_RESOLUTION } from '../config.js';
 import { FULLSCREEN_HIT, MUTE_HIT, controlsPoint, inside } from '../controls.js';
 import { createDriver } from '../driver.js';
+import { PhaserFrameClock } from './frameClock.js';
 import { createFatalOverlay, createNotice, isOwnError } from '../fatal.js';
 import { bindFullscreenControls } from '../fullscreen.js';
 import { createInput } from '../input.js';
@@ -192,8 +193,11 @@ platform.input = input;
 const fpsMeter = new FpsMeter();
 platform.fpsMeter = fpsMeter;
 platform.debug = false;
+const frameClock = new PhaserFrameClock();
+platform.frameClock = frameClock;
 const driver = createDriver({
   game: theGame,
+  clock: frameClock,
   input,
   pause,
   sound,

@@ -31,11 +31,19 @@ try {
     };
     try {
       const rows = [];
+      // Match the clock age in the captured gameplay; include native rendering
+      // in warmup too, rather than advancing only a synthetic driver.
+      let warmTime = app.loop.lastTime;
+      for (let i = 0; i < 600; i++) app.loop.step(warmTime += 1000 / 60);
       const start = app.loop.lastTime;
-      // Safari-style rounded timestamps, including the actual renderer each frame.
+      let elapsed = 0;
+      const phaseGaps = new Map([[120, 27], [121, 14], [122, 8], [240, 30], [241, 11], [242, 9]]);
+      // Rounded timestamps plus both callback-phase disturbances in the Safari trace.
       for (let i = 0; i < 360; i++) {
         sampled = {};
-        app.loop.step(start + Math.round((i + 1) * 1000 / 60));
+        const rawMs = phaseGaps.get(i) ?? (Math.round((i + 1) * 1000 / 60) - Math.round(i * 1000 / 60));
+        elapsed += rawMs;
+        app.loop.step(start + elapsed);
         const m = platform.game.world.monkey, l = m.liana, alpha = platform.frame.alpha;
         const monkey = pane.monkeys[0].view, rope = pane.lianaSets[0].entries.get(l).rope;
         rows.push({ stepMs: platform.frame.frameDt * 1000,
@@ -49,8 +57,9 @@ try {
       const positionError = Math.max(...rows.map((r) => r.positionError));
       const angleError = Math.max(...rows.map((r) => r.angleError));
       if (positionError > 1e-9 || angleError > 1e-9 || Object.values(repeat).some(Boolean)) throw new Error('A full-loop rendered pose repeated or diverged from interpolation');
+      for (const i of phaseGaps.keys()) if (Math.abs(rows[i].stepMs - 1000 / 60) > 0.2) throw new Error('Callback phase disturbance changed the drawing pace');
       if (rows.some((row) => keys.some((key) => !row.quads[key]))) throw new Error('A render-node vertex sample was missing');
-      return { frames: rows.length, hz: 60, roundedTimestamps: true, repeatedSubmittedQuads: repeat,
+      return { frames: rows.length, hz: 60, roundedTimestamps: true, phaseDisturbances: [[27, 14, 8], [30, 11, 9]], repeatedSubmittedQuads: repeat,
         maxPositionInterpolationError: positionError, maxRopeInterpolationError: angleError,
         steadyStepRangeMs: [Math.min(...steady.map((r) => r.stepMs)), Math.max(...steady.map((r) => r.stepMs))],
         presentationMeasured: false,

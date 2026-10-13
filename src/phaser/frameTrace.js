@@ -59,6 +59,7 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
     url: `${win.location.origin}${win.location.pathname}${win.location.search}`,
     devicePixelRatio: win.devicePixelRatio,
     context: app.renderer.gl.getContextAttributes(),
+    frameClock: 'phaser-callback-phase-v1',
     gpuTimingMeasured: false,
     presentationMeasured: false,
   };
@@ -111,6 +112,7 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
     });
     trace.add({
       timestamp, rawMs, stepMs: frame.frameDt * 1000, alpha: frame.alpha,
+      clockIntervalMs: platform.frameClock.refresh.interval, clockDebtMs: platform.frameClock.owed,
       callbackDelayMs: begin - timestamp,
       updateMs: renderBegin - begin, renderSubmitMs: done - renderBegin, cpuMs: done - begin,
       paused: frame.paused, alive: platform.game.worlds.some((w) => w.alive),

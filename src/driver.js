@@ -16,7 +16,7 @@ const ROLES = ['start', 'primary', 'p1', 'p2', 'menu'];
 // version's), `prefetch` an ObstaclePrefetch. `onDebugToggle` and `onMuteToggle` are
 // called when D and M are pressed. Until `ready()` (the Phaser version's art), presses
 // wait in the input: one made before then acts as soon as it is.
-export function createDriver({ game, input, pause, sound, prefetch, ready = () => true, onStep = () => {}, onDebugToggle = () => {}, onMuteToggle = () => {} }) {
+export function createDriver({ game, input, pause, sound, prefetch, ready = () => true, onStep = () => {}, onDebugToggle = () => {}, onMuteToggle = () => {}, clock = new FrameClock() }) {
   const loop = createFixedStepLoop({
     dt: SIM_DT,
     maxFrameDt: MAX_FRAME_DT,
@@ -34,9 +34,6 @@ export function createDriver({ game, input, pause, sound, prefetch, ready = () =
       onStep(dt);
     },
   });
-
-  // Frame times evened out to the screen's refresh (frameClock.js).
-  const clock = new FrameClock();
 
   return {
     loop,

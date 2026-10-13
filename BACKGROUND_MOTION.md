@@ -142,3 +142,54 @@ expected paused/game-over/reset poses from the repeated-pose count.
 
 Recorder validation: build passed, 19 focused unit tests passed, four production
 browser checks passed, and the 360-frame full render-loop probe passed.
+
+
+## Safari trace: callback-phase disturbance amplified by the clock
+
+The owner's 1,800-frame Safari trace covers 30 seconds of gameplay and results
+at a 2880 × 1646 canvas. It has two late callbacks, no repeated active poses,
+and 99th-percentile CPU submission time of 3 ms. Camera and monkey position
+interpolation match exactly; swinging-rope rotation matches within 1.3e-15.
+This rules out missing position interpolation in the recorded frames, while
+GPU completion and display presentation remain unmeasured.
+
+Two temporary disturbances are amplified by the original frame clock:
+
+| Recorded callback gaps (ms) | Original game steps (ms) | Phaser replacement (ms, rounded) |
+| --- | --- | --- |
+| 27 / 14 / 8 | 33.30 / 16.55 / 8 | 16.75 / 16.74 / 16.64 |
+| 30 / 11 / 9 | 33.32 / 16.55 / 9 | 16.76 / 16.75 / 16.65 |
+
+Each set of three callbacks spans about three normal refresh intervals. The
+clock classified the longer gap as two refreshes, then passed the shortest
+callback's raw delta through, producing double/half movement across the entire
+scene. This is a reproducible contribution to the brief jumps, not proof of
+the cause of all the owner's continuous uneven movement or title-screen freezes.
+
+Phaser now supplies its own `PhaserFrameClock` to the shared driver. It keeps
+one interval through short callback-phase disturbances, carries the actual time
+balance, and repays it gradually (at most 0.1 ms per callback). Gaps close to
+two or more whole refreshes still advance missed frames. Long stalls preserve
+elapsed time; persistent cadence changes trigger relearning without reversing
+time or applying the outstanding balance as a sudden jump. The Pixi driver
+keeps its existing clock. Simulation still uses the same 120 Hz fixed steps,
+and scenery speeds, camera tuning, collision rules and artwork are unchanged.
+
+Replaying all 1,800 raw gaps with a warmed 60 Hz clock gives steps between
+**16.64 and 16.77 ms** rather than 8–33.32 ms, and elapsed game time stays within
+**3.3 ms** of the 30-second capture. The test fixtures contain only the two short
+timing sequences; the owner's full trace and browser metadata are not committed.
+The complete-render-loop probe now includes both sequences, and browser checks
+exercise the real driver and renderer with them. New recordings identify the
+clock and include its interval/time balance for follow-up analysis.
+
+
+Clock-change validation: the full unit suite passed 682 tests; after the final
+immediate-wake and monotonic-time guards, all 27 focused clock/driver/recorder
+checks passed, including the added 30→240 Hz stall case. All 49 browser cases
+passed (48 in the full run, then the disturbance regression after matching its
+warmup to the captured session). The build passed. The vertex-level probe draws
+600 warmup frames, then checks 360 frames including both disturbances: no repeated
+mid/floor/monkey quads, zero monkey position interpolation error, rope error below
+1.2e-15, and steady steps spanning 16.633–16.752 ms. These are submitted poses in
+Chromium, not Safari display-presentation measurements.

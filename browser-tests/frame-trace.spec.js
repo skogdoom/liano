@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { PREVIEW } from '../playwright.config.js';
+import { DEV, PREVIEW } from '../playwright.config.js';
 import { collectErrors, started } from './helpers.js';
 import { readFile } from 'node:fs/promises';
 
@@ -9,6 +9,7 @@ test('the production Phaser readout exports actual update/render frames', async 
   await started(page, errors);
   await page.waitForFunction(() => window.__phaserFrameTrace?.snapshot().frames.length > 10);
   const recorded = await page.evaluate(() => window.__phaserFrameTrace.snapshot());
+  expect(recorded.info.frameClock).toBe('phaser-callback-phase-v1');
   expect(recorded.info.presentationMeasured).toBe(false);
   expect(recorded.info.gpuTimingMeasured).toBe(false);
   const frame = recorded.frames.at(-1);
@@ -35,6 +36,43 @@ test('normal Phaser play and the Pixi readout do not install the recorder', asyn
     await started(page, errors);
     expect(await page.evaluate(() => window.__phaserFrameTrace)).toBeUndefined();
     await expect(page.getByRole('button', { name: 'Save frame trace' })).toHaveCount(0);
+  }
+  expect(errors).toEqual([]);
+});
+
+
+test('the real Phaser loop normalizes the Safari trace disturbances before drawing', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto(`${DEV}?engine=phaser&frames=1`);
+  await started(page, errors);
+  await page.waitForFunction(() => window.__liano?.platform.world && window.__phaserFrameTrace);
+  const result = await page.evaluate(() => {
+    const { app, platform } = window.__liano;
+    app.loop.sleep();
+    platform.frameClock.refresh.relearn();
+    platform.frameClock.owed = 0;
+    let time = app.loop.lastTime;
+    // The supplied trace starts 19 seconds into the session. Exercise the
+    // disturbance with a settled estimate, after ten seconds of real rendering.
+    for (let i = 0; i < 600; i++) app.loop.step(time += 1000 / 60);
+    const out = [];
+    for (const gap of [27, 14, 8, 17, 17, 30, 11, 9]) {
+      app.loop.step(time += gap);
+      const frame = window.__phaserFrameTrace.snapshot().frames.at(-1);
+      out.push({ rawMs: frame.rawMs, stepMs: frame.stepMs,
+        cameraX: frame.panes[0].cameraX, monkeyX: frame.panes[0].monkeyDrawnX,
+        monkeyPreviousX: frame.panes[0].monkeyPreviousX, monkeyCurrentX: frame.panes[0].monkeyX,
+        ropeRotation: frame.panes[0].ropeRotation, lianaAngle: frame.panes[0].lianaAngle,
+        lianaPreviousAngle: frame.panes[0].lianaPreviousAngle, alpha: frame.alpha,
+      });
+    }
+    return out;
+  });
+  console.log('Phaser phase replay:', JSON.stringify(result));
+  for (const frame of result) {
+    expect(Math.abs(frame.stepMs - 1000 / 60)).toBeLessThan(0.2);
+    expect(frame.monkeyX).toBeCloseTo(frame.monkeyPreviousX + (frame.monkeyCurrentX - frame.monkeyPreviousX) * frame.alpha, 8);
+    expect(frame.ropeRotation).toBeCloseTo(-(frame.lianaPreviousAngle + (frame.lianaAngle - frame.lianaPreviousAngle) * frame.alpha), 8);
   }
   expect(errors).toEqual([]);
 });
