@@ -182,6 +182,20 @@ export class Art {
     return tile;
   }
 
+  // One copy of a tile, using the same standalone texture as tile(). Moving copies
+  // keeps backdrop movement in the scene transform instead of a wrapping shader. Crop off
+  // the duplicate edge rows, with the visible top still at the piece's box.y.
+  tileCopy(scene, key) {
+    const { box } = this.piece(key);
+    const { zoom } = this.at(key);
+    const image = scene.make.image({ key: tileKey(key) }, false)
+      .setOrigin(0, 0).setScale(1 / zoom)
+      .setCrop(0, TILE_EDGE, box.w * zoom, box.h * zoom)
+      .setPosition(0, box.y - TILE_EDGE / zoom);
+    image.artKey = key;
+    return image;
+  }
+
   // Sets a tile's width (units) and scroll: the tile at `x` units across it shows first.
   setTile(tile, key, { width = null, x = 0 }) {
     const { zoom } = this.at(key);

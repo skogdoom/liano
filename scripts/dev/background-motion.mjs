@@ -10,13 +10,14 @@ const browser = await chromium.launch({
 });
 const results = [];
 try {
-  for (const camera of ['', 'smooth']) {
+  for (const backdrop of ['tiles', 'images']) for (const camera of ['', 'smooth']) {
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 2 });
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     const url = new URL(process.env.URL ?? 'http://localhost:5174/');
     url.searchParams.set('engine', 'phaser');
     url.searchParams.set('camera', camera);
+    url.searchParams.set('backdrop', backdrop);
     await page.goto(url.href);
     await page.waitForFunction(() => window.__liano?.platform.world);
     const result = await page.evaluate(async () => {
@@ -64,9 +65,11 @@ try {
           const caught = platform.frame.events.some((e) => e.type === 'grab');
           const monkey = game.world.monkey;
           frames.push({ cameraX, monkeyX: monkey.x, caught, state: monkey.state });
-          for (const { tile, factor, key: artKey } of pane.backdrop.layers) {
-            const expected = (layerShift(cameraX, factor) - SKY_MARGIN) * platform.art.at(artKey).zoom;
-            if (tile.tilePositionX !== expected) throw new Error('Backdrop did not use the interpolated camera');
+          for (const { tile, copies, factor, key: artKey } of pane.backdrop.layers) {
+            const shift = layerShift(cameraX, factor);
+            const actual = copies ? copies.view.x : tile.tilePositionX;
+            const expected = copies ? -shift : (shift - SKY_MARGIN) * platform.art.at(artKey).zoom;
+            if (actual !== expected) throw new Error('Backdrop did not use the interpolated camera');
           }
           if (game.state !== 'PLAYING') throw new Error(`Bot stopped at frame ${i}, ${hz} Hz, slip=${slip}`);
         }
@@ -112,7 +115,7 @@ try {
       app.scene.getScene('ui').cameras.main.setVisible(false);
       pane.worldLayer.setVisible(false);
       pane.backdrop.front.setVisible(false);
-      for (const { key, tile } of pane.backdrop.layers) tile.setVisible(key === 'backdrop.mid');
+      for (const { key, view } of pane.backdrop.layers) view.setVisible(key === 'backdrop.mid');
       const gl = app.renderer.gl;
       let previous = null;
       const pixelDiffs = [];
@@ -128,7 +131,7 @@ try {
       return { motion, swing, subpixelScroll: { cameraStep: 0.1, midLayerDevicePixelStep: 0.1 * MID_FACTOR * 2, pixelDiffs } };
     });
     if (errors.length) throw new Error(errors.join('\n'));
-    results.push({ camera: camera || 'default', ...result });
+    results.push({ backdrop, camera: camera || 'default', ...result });
     await page.close();
   }
 } finally {

@@ -1,10 +1,12 @@
-# Background motion investigation
+# Phaser background movement
 
 Investigated on `phaser-m7-codex`, starting at `phaser-m7` commit `c9a4c31`, on 2026-10-13.
 
 ## Findings
 
-There is a reproducible camera jerk at a catch, independent of frame timing or rendering cost. The background's fractional scrolling itself works in Chromium. The remaining perception of stutter during a swing is not established as a Phaser rendering bug by these checks; the reporting device's browser/GPU frame presentation still needs to be measured.
+There is a reproducible camera jerk at a catch, independent of frame timing or rendering cost. The background's fractional scrolling itself works in Chromium. This establishes a contribution to the catch effect, not the root cause of all the reported stutter.
+
+The owner reports the symptom in Safari on a MacBook Air M1 and an iPhone 13 mini, with current testing focused on the Mac. `?camera=smooth` helps a little but does not solve it. The follow-up therefore focuses on the background's movement implementation: scrolling texture coordinates inside a stationary TileSprite versus moving repeated images through the scene.
 
 The relevant chain is:
 
@@ -18,7 +20,7 @@ On an obstacle-free run with slipping off (the default), at 60 Hz, the first cat
 
 ## Controlled comparison
 
-`scripts/dev/background-motion.mjs` runs the real game, driver, camera and Phaser pane with a deterministic, obstacle-free world. It advances each frame by exactly 1/60, 1/90 or 1/144 second for 20 seconds, with slipping both off and on. It compares the default camera with the existing `?camera=smooth` option. The bot's input is sampled once per frame, so runs at different refresh rates can release at different simulation steps; camera profiles at the same rate follow identical gameplay.
+`scripts/dev/background-motion.mjs` runs the real game, driver, camera and Phaser pane with a deterministic, obstacle-free world. It advances each frame by exactly 1/60, 1/90 or 1/144 second for 20 seconds, with slipping both off and on. It compares the default camera with the existing `?camera=smooth` option, through both backdrop implementations. The bot's input is sampled once per frame, so runs at different refresh rates can release at different simulation steps; camera profiles at the same rate follow identical gameplay.
 
 Maximum catch-window acceleration (world units/second², rounded; catch frame and the next two frames):
 
@@ -31,7 +33,7 @@ Maximum catch-window acceleration (world units/second², rounded; catch frame an
 | On | 90 Hz | 13,837 | 2,876 | 79% |
 | On | 144 Hz | 21,270 | 2,987 | 86% |
 
-All twelve runs had **zero repeated camera frames** (23,520 frames total). The script also verifies that each background layer's scroll uses the interpolated camera each frame. These are synthetic refresh intervals, not measurements from physical 90/144 Hz displays.
+All 24 runs through the two backdrop implementations had **zero repeated camera frames** (47,040 frames total). The script also verifies that each background layer's scroll uses the interpolated camera each frame. Changing the backdrop implementation leaves the camera trajectory identical for a given camera mode, slipping setting and refresh rate. These are synthetic refresh intervals, not measurements from physical 90/144 Hz displays.
 
 The second lag in `camera=smooth` spreads the catch's speed change over more frames. It adds tracking delay: roughly 42 ms more than the default for steady motion (two 1/12-second lags versus one 1/8-second lag). It does not freeze the camera through a swing.
 
@@ -55,17 +57,35 @@ CHROMIUM=/usr/bin/chromium URL=http://localhost:5174/ \
   node scripts/dev/background-motion.mjs > background-motion.json
 ```
 
-`CHROMIUM` is optional if Playwright's Chromium is installed. The script outputs one JSON array with both camera profiles, frame counts, catch samples, acceleration measurements, the uninterrupted swing and pixel checks. It fails if the bot dies, a layer diverges from the camera, a subpixel move leaves the sampled tree row unchanged, or the browser reports an uncaught error. It uses Chromium's software WebGL renderer; its timings must not be treated as GPU performance results.
+`CHROMIUM` is optional if Playwright's Chromium is installed. The script outputs one JSON array with both camera profiles and backdrop implementations, frame counts, catch samples, acceleration measurements, the uninterrupted swing and pixel checks. It fails if the bot dies, a layer diverges from the camera, a subpixel move leaves the sampled tree row unchanged, or the browser reports an uncaught error. It uses Chromium's software WebGL renderer; its timings must not be treated as GPU performance results.
 
-## Recommended next step
+## Phaser implementation change
 
-Use the existing `?camera=smooth` comparison on the reporting device, also with `&frames=1`. If the catch effect improves while the swing still looks uneven, they need separate treatment: retain a camera-speed smoothing solution for catches, and inspect presentation/frame pacing during the uninterrupted swing on that browser. The frame readout measures callback timing and CPU work; it cannot prove that the GPU/display presented each frame on time. A Safari recording on the affected Mac would resolve that remaining uncertainty.
+Phaser now draws the background as repeated Images in moving containers by default. Each frame moves a layer's container by `-layerShift(interpolatedCameraX, factor)`, the same movement model used by the Pixi background. Its texture coordinates remain fixed. The former implementation left each TileSprite stationary and changed its texture coordinates every frame, sending the motion through Phaser's wrapping shader instead of the scene transform.
 
-No production camera or rendering behavior was changed as part of this investigation. Changing the catch snap would change gameplay, and making the smooth option the default should follow a visual check of its added camera lag.
+The image copies share the existing textures; resizing creates only the copies needed for coverage, including the death-shake margin and a full tile of wrapping. They preserve the edge-row crop, day/night tint and pane cameras' clipping. New copies receive the current tint after resize. This is a change to the Phaser movement implementation, not a change to physics, camera smoothing or frame timing. The Pixi renderer and all shared camera/simulation modules are untouched.
+
+Chromium verifies the resulting movement and appearance, but this environment cannot run Safari on the MacBook Air M1 or iPhone 13 mini. The Safari symptom's resolution therefore still requires a visual check on those devices; the code change should not be described as a confirmed Safari fix before that check.
+
+## Safari comparison
+
+Compare these URLs on the Mac's Safari, keeping the camera setting the same:
+
+- `?engine=phaser`: the new default, repeated Images with moving parent containers.
+- `?engine=phaser&backdrop=tiles`: the previous stationary TileSprites, their texture coordinates scrolling each frame.
+
+The paths share the same textures, fractional camera positions, parallax factors, tint, vertical cropping and pane clipping. The new default does not change the simulation or slow the camera. Add `&camera=smooth` to both URLs only for a separate camera comparison.
+
+Browser pixel checks compare the two paths in landscape at 1×, a wide view at 2× and iPhone-sized portrait at 2×. They include both directions, fractional positions, tile-wrap boundaries and day/night tints. At most 0.0039% of pixels differ by more than three channel values in the measured comparisons. This verifies the same picture in Chromium; it does not prove the paths animate identically in Safari.
+
+If the new default improves the remaining swing symptom, the TileSprite scrolling/sampling path becomes the primary suspect. If both look the same, trace the Phaser pane's camera-to-render transforms and interpolation next. The earlier catch-speed measurements alone should not be treated as a complete diagnosis.
+
+Camera behavior is unchanged. Changing the catch snap would change gameplay, and making the smooth option the default should follow a visual check of its added camera lag.
 
 ## Validation
 
-- Investigation script: all 12 motion runs and both subpixel rendering checks passed.
-- `npm test`: 60 files, 665 tests passed.
+- Investigation script: all 24 motion runs and four subpixel rendering checks passed.
+- New browser pixel comparisons: landscape, wide and portrait all passed through both paths, including fractional movement, negative scrolling, wraps and tint.
+- Unit checks: 60 files, 665 tests passed, including an isolated rerun of `prefetch.test.js`. Its 16 ms timing assertion failed at 20.9 ms when the full unit suite ran alongside software-WebGL browser tests; all four prefetch tests passed when rerun separately after the browser run. No timing limit or generation code was changed.
 - `npm run build`: passed.
-- Focused browser checks: all five passed (the four backdrop edge cases at 1×/2× and the single-shader batching check).
+- Full browser suite: all 43 passed, including the new movement comparisons, gameplay, resize/split-screen clipping, backdrop edges, single-shader batching and full Pixi/Phaser visual parity checks.
