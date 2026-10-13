@@ -247,7 +247,7 @@ test('the Phaser version draws every batch of a kind with one shader', async ({ 
   await page.waitForTimeout(500);
   const keys = await page.evaluate(() => {
     const nodes = window.__liano.app.renderer.renderNodes._nodes;
-    return ['BatchHandlerQuad', 'BatchHandlerStrip'].map((name) => Object.keys(nodes[name]?.programManager.programs ?? {}));
+    return ['BatchHandlerQuad', 'BatchHandlerStrip', 'BackdropExposureBatch'].map((name) => Object.keys(nodes[name]?.programManager.programs ?? {}));
   });
   for (const programs of keys) {
     expect(programs).toHaveLength(1);

@@ -108,3 +108,85 @@ test('Phaser eases only distant scenery at fixed steps and resets it with the pa
   expect(result.reset).toEqual([-1000, 0]);
   expect(errors).toEqual([]);
 });
+
+test('moving trees average their exposure without darkening, seams or shader recompiles', async ({ browser }) => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 2 });
+  const errors = collectErrors(page);
+  await page.goto(`${DEV}?engine=phaser`);
+  await started(page, errors);
+  await page.waitForFunction(() => window.__liano?.platform.world);
+  const results = await page.evaluate(() => {
+    const { app, platform } = window.__liano;
+    app.loop.sleep();
+    app.scene.getScene('ui').cameras.main.setVisible(false);
+    const pane = platform.world.panes[0], rig = pane.backdrop;
+    pane.worldLayer.setVisible(false); pane.overlay.setVisible(false); rig.front.setVisible(false);
+    for (const { key, view } of rig.layers) view.setVisible(key === 'backdrop.mid');
+    const mid = rig.layers.find((l) => l.key === 'backdrop.mid');
+    const gl = app.renderer.gl;
+    const row = () => {
+      app.renderer.preRender(); app.scene.render(app.renderer); app.renderer.postRender();
+      const pixels = new Uint8Array(app.canvas.width * 4);
+      gl.readPixels(0, Math.floor(app.canvas.height / 2), app.canvas.width, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      return pixels;
+    };
+    const gradient = (pixels) => {
+      let largest = 0;
+      for (let i = 4; i < pixels.length; i += 4) {
+        largest = Math.max(largest, ...[0, 1, 2].map((c) => Math.abs(pixels[i + c] - pixels[i - 4 + c])));
+      }
+      return largest;
+    };
+    const results = [];
+    const width = 3; // world units of exposure, six device pixels at this density
+    for (const tint of [0xffffff, 0x506878]) for (const center of [1000, 2048 / mid.factor]) {
+      platform.art.tint([rig.back], tint);
+      rig.resetMotion(); rig.update(center, center, 0);
+      const sharp = row();
+      rig.update(center - width / mid.factor, center - width / mid.factor, 0);
+      rig.update(center, center, 1 / 60);
+      const blurred = row();
+      const expected = new Float64Array(sharp.length);
+      // Ground truth: average nine sharp rendered poses through the same travel.
+      for (let sample = 0; sample < 9; sample++) {
+        const offset = (sample - 4) / 8;
+        const cameraX = center + (width * offset) / mid.factor;
+        rig.update(cameraX, cameraX, 0);
+        const pixels = row();
+        pixels.forEach((value, i) => (expected[i] += value / 9));
+      }
+      const error = Math.max(...Array.from(blurred, (value, i) => Math.abs(value - expected[i])));
+      rig.update(center, center, 0);
+      const stopped = row();
+      results.push({ tint, center, error, sharpGradient: gradient(sharp), blurredGradient: gradient(blurred), stopError: Math.max(...stopped.map((value, i) => Math.abs(value - sharp[i]))) });
+    }
+    // Different speeds/directions are uniform values, with the shader already cached.
+    const batch = app.renderer.renderNodes.getNode('BackdropExposureBatch');
+    const programs = Object.keys(batch.programManager.programs);
+    for (const position of [600, 599, 600, 601, 600]) { rig.update(position, position, 1 / 60); row(); }
+    return { rows: results, programs, after: Object.keys(batch.programManager.programs) };
+  });
+  console.log('tree exposure:', JSON.stringify(results));
+  for (const result of results.rows) {
+    expect(result.error).toBeLessThanOrEqual(3);
+    expect(result.blurredGradient).toBeLessThan(result.sharpGradient * 0.65);
+    expect(result.stopError).toBe(0);
+  }
+  expect(results.programs).toHaveLength(1);
+  expect(results.after).toEqual(results.programs);
+  expect(errors).toEqual([]);
+  await page.close();
+});
+
+test('the scenery motion-blur comparison can be disabled', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto(`${DEV}?engine=phaser&motionblur=off`);
+  await started(page, errors);
+  await page.waitForFunction(() => window.__liano?.platform.world);
+  expect(await page.evaluate(() => {
+    const { app, platform } = window.__liano;
+    const copies = platform.world.panes[0].backdrop.layers.filter((l) => l.scenery).flatMap((l) => l.view.list);
+    return copies.every((image) => !image.customRenderNodes.BatchHandler) && app.renderer.renderNodes.getNode('BackdropExposureBatch') === null;
+  })).toBe(true);
+  expect(errors).toEqual([]);
+});

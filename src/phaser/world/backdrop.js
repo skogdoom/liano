@@ -15,6 +15,8 @@ import {
 } from '../../views/backdrop.js';
 import { makeContainer } from './build.js';
 import { PARALLAX_SPEED } from './backdropMotion.js';
+import { exposureWidth } from './exposure.js';
+import { addExposure } from './exposureShader.js';
 
 // The jungle backdrop in the Phaser version (as the Pixi Background): the sky, stretched
 // to the view, and three parallax layers behind the world (`back`); the canopy strip and
@@ -26,12 +28,14 @@ const SKY = SKY_BANDS * SKY_BAND_HEIGHT; // the sky piece's height, in units
 // Move the layers with scene transforms, as the foreground and Pixi backdrop move.
 // Keep the former TileSprite UV-scrolling path for a Safari comparison.
 const IMAGE_MODE = typeof location === 'undefined' || new URLSearchParams(location.search).get('backdrop') !== 'tiles';
+const MOTION_BLUR = typeof location === 'undefined' || new URLSearchParams(location.search).get('motionblur') !== 'off';
 
 class ImageLayer {
-  constructor(scene, art, key) {
+  constructor(scene, art, key, blur) {
     this.scene = scene;
     this.art = art;
     this.key = key;
+    this.blur = blur;
     this.view = makeContainer(scene);
   }
 
@@ -42,14 +46,19 @@ class ImageLayer {
     while (this.view.list.length > count) this.view.list.at(-1).destroy();
     while (this.view.list.length < count) {
       const image = this.art.tileCopy(this.scene, this.key);
+      if (this.blur) addExposure(image);
       image.x = (this.view.list.length - 1) * TILE;
       this.view.add(image);
     }
   }
+
+  setExposure(width) {
+    if (this.blur) for (const image of this.view.list) image.exposureUV = width / TILE;
+  }
 }
 
 export class BackdropRig {
-  constructor(scene, art, { images = IMAGE_MODE, speed = PARALLAX_SPEED } = {}) {
+  constructor(scene, art, { images = IMAGE_MODE, speed = PARALLAX_SPEED, motionBlur = MOTION_BLUR } = {}) {
     this.scene = scene;
     this.art = art;
     this.back = makeContainer(scene);
@@ -64,9 +73,9 @@ export class BackdropRig {
       ['backdrop.canopy', 1, this.front],
       ['backdrop.floor', 1, this.front],
     ].map(([key, factor, group]) => {
-      const copies = images ? new ImageLayer(scene, art, key) : null;
-      const tile = copies ? null : art.tile(scene, key, 1);
       const scenery = group === this.back;
+      const copies = images ? new ImageLayer(scene, art, key, scenery && motionBlur) : null;
+      const tile = copies ? null : art.tile(scene, key, 1);
       return { key, factor: scenery ? factor * speed : factor, scenery, group, tile, copies, view: copies?.view ?? tile };
     });
     this.floor = makeContainer(scene);
@@ -83,7 +92,8 @@ export class BackdropRig {
 
   // Fits the sky and the layers to the pane (one of paneLayouts()), and lifts the floor to
   // the bottom edge when the band is cropped (see layout.js).
-  resize(pane) {
+  resize(pane, zoom = 1) {
+    this.density = zoom * pane.scale;
     const top = -pane.bandTop;
     const sky = skyLayout(top, pane.view.width, top + pane.view.height);
     const { art } = this;
@@ -101,15 +111,25 @@ export class BackdropRig {
     const fillTop = FLOOR_Y + FLOOR_DEPTH;
     art.stretch(this.floorFill, 'backdrop.floorFill', { x: -SKY_MARGIN, y: fillTop, w: width, h: WORLD_HEIGHT + EXTEND_DOWN - fillTop });
     this.floor.y = pane.floorShift;
-    this.cameraX = null;
+    this.resetMotion();
+  }
+
+  resetMotion() {
+    this.sceneryX = null;
+    for (const { copies } of this.layers) copies?.setExposure(0);
   }
 
   // Scenery follows its own eased camera; the canopy and floor stay aligned with
   // the world camera. A standalone art comparison can pass one position for both.
-  update(cameraX, sceneryX = cameraX) {
+  update(cameraX, sceneryX = cameraX, dt = 0) {
+    const distance = this.sceneryX === null ? 0 : sceneryX - this.sceneryX;
+    this.sceneryX = sceneryX;
     for (const { key, tile, copies, factor, scenery } of this.layers) {
       const shift = layerShift(scenery ? sceneryX : cameraX, factor);
-      if (copies) copies.view.x = -shift;
+      if (copies) {
+        copies.view.x = -shift;
+        copies.setExposure(scenery ? exposureWidth(distance * factor, this.density, dt) : 0);
+      }
       else this.art.setTile(tile, key, { x: shift - SKY_MARGIN });
     }
   }

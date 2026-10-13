@@ -21,7 +21,7 @@ const FURS = ['p1', 'p2'];
 const COLOURINGS = ['green', 'gold'];
 
 export class WorldPane {
-  constructor(scene, art, { backdropSpeed, smoothBackdrop = true } = {}) {
+  constructor(scene, art, { backdropSpeed, smoothBackdrop = true, motionBlur } = {}) {
     this.phaser = scene;
     this.art = art;
     this.view = scene.add.container(0, 0);
@@ -36,7 +36,7 @@ export class WorldPane {
     this.shadow = new ShadowRig(scene, art);
     this.monkeyLayer.add(this.shadow.view);
     this.worldLayer.add([this.obstacles.view, this.lianaLayer, this.bananas.view, this.monkeyLayer]);
-    this.backdrop = new BackdropRig(scene, art, { speed: backdropSpeed });
+    this.backdrop = new BackdropRig(scene, art, { speed: backdropSpeed, motionBlur });
     this.backdropMotion = new BackdropMotion();
     this.smoothBackdrop = smoothBackdrop;
     this.overlay = makeContainer(scene);
@@ -56,7 +56,7 @@ export class WorldPane {
     this.layout = pane;
     this.view.setPosition(pane.x, pane.y);
     this.scene.setScale(pane.scale);
-    this.backdrop.resize(pane);
+    this.backdrop.resize(pane, zoom);
     this.ownCamera.screenX = pane.camera.screenX;
     if (this.world && this.camera === this.ownCamera) this.camera.reset(this.#target());
     this.backdropMotion.reset(this.camera.x);
@@ -87,6 +87,7 @@ export class WorldPane {
     for (const rig of this.monkeys.splice(world.monkeys.length)) rig?.destroy();
     if (this.layout && !camera) this.camera.reset(this.#target());
     this.backdropMotion.reset(this.camera.x);
+    this.backdrop.resetMotion();
   }
 
   // Fixed-step camera update; it holds still once everyone in the world is out.
@@ -115,7 +116,7 @@ export class WorldPane {
     this.worldLayer.x = -cameraX;
     this.overlay.x = -cameraX;
     this.backdropCameraX = this.smoothBackdrop ? blend(this.backdropMotion.prevX, this.backdropMotion.x, alpha) : cameraX;
-    this.backdrop.update(cameraX, this.backdropCameraX);
+    this.backdrop.update(cameraX, this.backdropCameraX, dt);
     const tint = this.backdrop.setStage(Math.max(...world.stages), world, dt);
     this.obstacles.update(world.obstacles.values(), world.time, tint);
     world.lianaSets.forEach((set, i) => this.lianaSets[i].update(set.values(), cameraX, layout.view.width, world.monkeys, alpha));

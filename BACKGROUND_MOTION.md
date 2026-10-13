@@ -4,6 +4,20 @@ Investigated on `phaser-m7-codex`, starting at `phaser-m7` commit `c9a4c31`, on 
 
 ## Current Phaser behavior
 
+### Moving-edge exposure
+
+Safari feedback confirms that slower/eased scenery is only slightly better and still looks noticeably stepped. Phaser now additionally gives decorative scenery a short horizontal motion exposure: each rendered tree samples nine positions across the distance it travels in one frame. This softens the gaps between the otherwise sharp displayed poses; the layer positions and speed stay unchanged.
+
+Exposure is capped at **eight device pixels**, with no blur below half a device pixel of travel. Stopped/paused frames, new worlds, resize and gaps longer than 50 ms reset or disable the exposure. Distance is measured before tile wrapping, so a seam cannot become a long streak. Canopy, floor, monkeys, lianas, UI and Pixi remain sharp and unchanged.
+
+The effect uses one pass through the existing Image geometry and textures, with a shared single-texture shader. It creates no render textures, history buffers or texture uploads. Speed changes update a uniform; one shader is compiled on the title screen and reused during play.
+
+Pixel validation with six device pixels of exposure matches the average of nine independently rendered sharp poses to within **0.67 of one channel value**. The strongest row-wise tree edge changes from **13 to 4** channel values by day and **5 to 2** under the tested night tint, a **60–69% reduction** in edge contrast. The opaque colours stay intact, wrapping shows no seam, and stopping produces exactly the sharp reference image. This checks the rendered treatment, not perceived smoothness on Safari's physical display.
+
+The effect is enabled by default. Compare `?engine=phaser&frames=1` against `?engine=phaser&frames=1&motionblur=off` on the Mac. The latter keeps the previous slower/eased image motion and disables only the exposure. `backdrop=tiles` also bypasses this Image shader.
+
+### Scenery speed and easing
+
 The owner found the moving-image version a little better in Safari, but still saw occasional stutters and felt the background moved slightly too fast. The supplied `?frames=1` screenshot shows 3,482 frames, five late frames (about 0.14%), a worst gap of 109 ms, and CPU work of 1/2/4 ms in the last ten seconds. That last interval had no late frames. Some listed delays coincide with score-text uploads; this correlation alone does not establish their cause. The readout measures callbacks and CPU submission, not GPU/display presentation. Its "59 Hz" is the rounded estimate from a median 17 ms callback interval.
 
 The follow-up changes only Phaser's decorative scenery:
@@ -130,9 +144,9 @@ Camera behavior is unchanged. Changing the catch snap would change gameplay, and
 
 - Investigation script: all 24 motion runs and four subpixel rendering checks passed.
 - New browser pixel comparisons: landscape, wide and portrait all passed through both paths, including fractional movement, negative scrolling, wraps and tint.
-- Latest focused unit checks: 8 files, 76 tests passed, covering scenery motion, camera/interpolation, Phaser imports, view/layout, pause, stages and the frame clock.
+- Latest focused unit checks: 9 files, 79 tests passed, covering exposure bounds, scenery motion, camera/interpolation, Phaser imports, view/layout, pause, stages and the frame clock.
 - `npm run build`: passed.
-- Full browser suite: all 44 passed, including the new movement/lifecycle comparisons, gameplay, resize/split-screen clipping, backdrop edges, single-shader batching and full Pixi/Phaser visual parity checks.
+- Full browser suite: all 46 passed, including the new exposure pixel/disable comparisons, movement/lifecycle comparisons, gameplay, resize/split-screen clipping, backdrop edges, single-shader batching and full Pixi/Phaser visual parity checks. The six background checks are also rerun after adding the subpixel-motion fast path.
 
 Scenery-tuning validation additionally covers the follower's response, steady pan, step-size stability and reset behavior in five unit tests, plus a browser check of fixed-step scenery easing, foreground alignment, pause, resize and reset. Static Pixi/Phaser art comparisons explicitly use the reference scenery speed and disable the new follower, so intentional movement differences do not mask drawing regressions; the new motion is checked separately.
 
