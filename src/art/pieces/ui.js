@@ -1,6 +1,5 @@
-import { FULLSCREEN_STROKES, drawCorners } from '../../render/fullscreenButton.js';
-import { drawSpeaker, drawSpeakerCross, drawSpeakerWaves } from '../../render/muteButton.js';
-import { PANEL_RADIUS, drawArrow, drawPanel } from '../../render/overlays.js';
+import { FULLSCREEN_STROKES, drawCorners, drawSpeaker, drawSpeakerCross, drawSpeakerWaves } from '../../views/buttons.js';
+import { PANEL_RADIUS, drawArrow, drawPanel } from '../../views/overlays.js';
 import { MAX_UI_SCALE } from '../../config.js';
 
 // The HUD and the overlays: the panels behind the title, results and pause texts (a
@@ -15,14 +14,13 @@ const fullscreenIcon = (inward) => (g) => {
   return g;
 };
 
-// Enlarged with the layout's `ui` scale (portrait phones).
-const ui = { set: 'boot', scale: MAX_UI_SCALE };
+// Enlarged with the layout's `ui` scale (portrait phones): rasterized for the largest,
+// rounded up to a whole scale, so the icons shrink evenly on other screens.
+const ui = { set: 'boot', scale: Math.ceil(MAX_UI_SCALE) };
 
 export const UI_PIECES = [
   {
     ...ui,
-    // At least the largest UI scale; at a whole 2 the stretched edges sample evenly.
-    scale: 2,
     key: 'ui.panel',
     kind: 'slice',
     purpose: `A panel: a see-through dark rounded rectangle (radius ${PANEL_RADIUS}) with a faint edge, from its top left (the origin), ${PANEL_REFERENCE} px square; 9-sliced to each panel's size.`,

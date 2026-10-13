@@ -7,6 +7,10 @@ import { Hud } from '../render/hud.js';
 import { Overlays as PhaserOverlays } from '../phaser/overlays.js';
 import { Overlays } from '../render/overlays.js';
 import { GameState } from '../sim/game.js';
+import { Container } from 'pixi.js';
+import { Buttons } from '../phaser/buttons.js';
+import { MuteButton } from '../render/muteButton.js';
+import { FullscreenButton } from '../render/fullscreenButton.js';
 
 // M6 scenarios (PHASER_PLAN.md): the HUD, the overlays and the buttons as the Pixi views
 // draw them and as the Phaser version draws them, over the view as the layout places them.
@@ -125,6 +129,38 @@ const overlayScenario = (id, title, game, { window = [1280, 720], fixed = false,
     },
   });
 };
+// The mute and full-screen buttons in the top-left corner (as main.js and the UI scene
+// place them), `muted` and `fullscreen` on or off, on a window `window`: the view's
+// corner as large as the HUD's (hudScenario). What differs is the round ends of the
+// speaker's waves, which Pixi starts short (PHASER_PLAN.md, M4's gallery).
+const buttonScenario = (id, title, { muted = false, fullscreen = false, window = [1280, 720] } = {}) => {
+  const layout = layoutFor(...window);
+  return withArt({
+    id,
+    title,
+    width: Math.ceil(640 * layout.ui),
+    height: Math.ceil(160 * layout.ui),
+    pixi(world) {
+      const controls = new Container();
+      const mute = new MuteButton();
+      const full = new FullscreenButton();
+      mute.update(muted);
+      full.update(fullscreen);
+      controls.addChild(mute.view, full.view);
+      controls.position.set(layout.insets.left, layout.insets.top);
+      controls.scale.set(layout.ui);
+      world.addChild(controls);
+    },
+    phaser(scene, zoom) {
+      const buttons = new Buttons(scene, artFor(scene, zoom));
+      buttons.setMuted(muted);
+      buttons.setFullscreen(fullscreen);
+      buttons.view.setPosition(layout.insets.left, layout.insets.top).setScale(layout.ui);
+      scene.add.existing(buttons.view);
+    },
+  });
+};
+
 // The title panel's area, in a 1280 × 720 view.
 const TITLE_CROP = [740, 100, 500, 520];
 const RESULTS_CROP = [360, 150, 560, 420];
@@ -147,5 +183,8 @@ export const UI_SCENARIOS = [
   overlayScenario('ui.banner', 'The stage banner, entering stage 2', overlayGame({ state: GameState.PLAYING }), { crop: [340, 420, 600, 200], frames: [[0, [1]], [1, [2]]] }),
   overlayScenario('ui.banner.split', 'Split screen: a banner in each pane (stages 4 and 5), and P1 out', overlayGame({ mode: 'split', players: 2, worlds: 2, state: GameState.PLAYING, out: [true, false] }), { fixed: true, frames: [[0, [1, 1]], [1, [4, 5]]] }),
   overlayScenario('ui.arrow', 'The arrow over a monkey above the view', overlayGame({ state: GameState.PLAYING, monkey: { x: 700, y: -80 } }), { crop: [400, 0, 600, 80], cameraX: 100 }),
+  buttonScenario('ui.buttons', 'The mute and full-screen buttons: sound on, not full screen'),
+  buttonScenario('ui.buttons.on', 'The same muted and full screen', { muted: true, fullscreen: true }),
+  buttonScenario('ui.buttons.portrait', 'The buttons on a portrait phone (enlarged)', { window: [390, 844] }),
   hudScenario('ui.hud.portrait', 'The HUD on a portrait phone (enlarged)', hudGame({ score: 77, best: 120, bananas: [5, 0], livesOn: true, lives: [4, 0] }), { window: [390, 844], height: 300 }),
 ];

@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 import { SHARED_ZOOM } from '../config.js';
 import { paneLayouts } from '../layout.js';
-import { FULLSCREEN_HIT, MUTE_HIT } from '../controls.js';
 import { Art, CATALOG, queueCatalog, queueSet } from './art.js';
 import { applyViewCamera, rectCamera } from './view.js';
+import { Buttons } from './buttons.js';
+import { DebugOverlay } from './debug.js';
 import { Hud } from './hud.js';
 import { Overlays } from './overlays.js';
 import { WorldPane } from './world/pane.js';
@@ -14,8 +15,7 @@ import { WorldPane } from './world/pane.js';
 // (main.js) holds the layout, pause and full screen; scenes find it in the game's
 // registry.
 //
-// UI draws the HUD and the overlays (M6a, M6b); the buttons are still stand-ins, and D
-// shows a readout of details (readout below) until the debug view (M6c).
+// UI draws the buttons, the HUD, the overlays and the debug view (D).
 
 const platformOf = (scene) => scene.registry.get('platform');
 
@@ -162,44 +162,7 @@ export class PlayScene extends Phaser.Scene {
   }
 }
 
-// Four corner brackets, pointing out to enter full screen and in to leave it (a stand-in
-// for the button's art, M6).
-function drawFullscreenIcon(g, active) {
-  const size = 38;
-  const arm = 12;
-  g.clear().lineStyle(4, 0xf4e7c5);
-  for (const [cx, cy, dx, dy] of [
-    [0, 0, 1, 1],
-    [size, 0, -1, 1],
-    [0, size, 1, -1],
-    [size, size, -1, -1],
-  ]) {
-    const x = active ? cx + dx * arm : cx;
-    const y = active ? cy + dy * arm : cy;
-    const sx = active ? -dx : dx;
-    const sy = active ? -dy : dy;
-    g.lineBetween(x + sx * arm, y, x, y).lineBetween(x, y, x, y + sy * arm);
-  }
-}
 
-// A speaker, crossed out when muted (a stand-in for the button's art, M6).
-function drawMuteIcon(g, muted) {
-  g.clear().fillStyle(0xf4e7c5).fillPoints(
-    [0, 12, 10, 12, 22, 2, 22, 38, 10, 28, 0, 28].reduce((pts, v, i, all) => (i % 2 ? pts : [...pts, { x: v, y: all[i + 1] }]), []),
-    true,
-  );
-  g.lineStyle(3.5, 0xf4e7c5);
-  if (muted) g.lineBetween(28, 12, 42, 28).lineBetween(42, 12, 28, 28);
-  else g.lineBetween(28, 14, 32, 20).lineBetween(32, 20, 28, 26).lineBetween(34, 8, 40, 20).lineBetween(40, 20, 34, 32);
-}
-
-// The details D shows, until the debug view (M6c): the frame rate, the sound's state and
-// how the art loaded.
-export function readout({ fps = null, sound = null, artLoad = null } = {}) {
-  const lines = [`${fps?.describe() ?? ''}  sound ${sound?.details ?? '—'}`];
-  if (artLoad) lines.push(`art ${artLoad.scale}×: ${artLoad.sets.map((s) => `${s.set} in ${s.ms} ms`).join(', ') || 'loading'}`);
-  return lines.join('\n');
-}
 
 export class UiScene extends Phaser.Scene {
   constructor() {
@@ -208,33 +171,27 @@ export class UiScene extends Phaser.Scene {
 
   create() {
     const platform = platformOf(this);
-    this.controls = this.add.container(0, 0);
-    this.muteIcon = this.add.graphics();
-    // Where the Pixi button draws its icon inside its tap target.
-    this.muteIcon.setPosition(MUTE_HIT.x + 20, MUTE_HIT.y + 16);
-    drawMuteIcon(this.muteIcon, false);
-    platform.on('mute', (muted) => drawMuteIcon(this.muteIcon, muted));
-    this.controls.add(this.muteIcon);
-    this.fullscreenIcon = this.add.graphics();
-    // Where the Pixi button draws its icon inside its tap target.
-    this.fullscreenIcon.setPosition(FULLSCREEN_HIT.x + 8, FULLSCREEN_HIT.y + 17);
-    this.controls.add(this.fullscreenIcon);
-    this.fullscreenIcon.visible = platform.fullscreenButton;
-    drawFullscreenIcon(this.fullscreenIcon, platform.fullscreen.active);
-    platform.on('fullscreen', (active) => drawFullscreenIcon(this.fullscreenIcon, active));
+    // Top left: the mute and full-screen buttons.
+    this.buttons = new Buttons(this, platform.art, { fullscreen: platform.fullscreenButton });
+    this.buttons.setMuted(platform.sound?.muted ?? false);
+    this.buttons.setFullscreen(platform.fullscreen.active);
+    platform.on('mute', (muted) => this.buttons.setMuted(muted));
+    platform.on('fullscreen', (active) => this.buttons.setFullscreen(active));
+    this.add.existing(this.buttons.view);
     // Top right: the scores, banana counts and hearts; over everything, the panels, the
     // stage banners and the arrow over a monkey above the view.
     this.hud = new Hud(this, platform.art);
     this.overlays = new Overlays(this, platform.art);
     this.add.existing(this.hud.view);
     this.add.existing(this.overlays.view);
-    // The details D shows (until the debug view).
-    this.status = this.add.text(0, 0, '', { fontFamily: 'monospace', fontSize: '16px', color: '#ffffff', lineSpacing: 4 }).setVisible(false);
+    // D: the debug view, over each pane, with its numbers.
+    this.debug = new DebugOverlay(this);
+    this.debugPanes = null;
     followLayout(this, (layout, camera) => {
       this.hud.resize(layout, camera.zoom);
       this.overlays.resize(layout, camera.zoom);
-      this.status.setPosition(layout.insets.left + 16, layout.insets.top + 96).setResolution(camera.zoom);
-      this.controls.setPosition(layout.insets.left, layout.insets.top).setScale(layout.ui);
+      this.debug.resize(layout, camera.zoom);
+      this.buttons.view.setPosition(layout.insets.left, layout.insets.top).setScale(layout.ui);
     });
     // The platform wires the game's input to this scene's keyboard and pointers.
     platform.emit('ui', this);
@@ -247,7 +204,12 @@ export class UiScene extends Phaser.Scene {
     this.hud.update(game);
     const cameraX = platform.world?.panes[0]?.camera.x ?? 0;
     this.overlays.update(game, cameraX, { pauseReason: platform.pause.reason, inputType: platform.input?.lastType, dt: platform.frame?.frameDt ?? 0 });
-    this.status.setVisible(platform.debug);
-    if (platform.debug) this.status.setText(readout({ fps: platform.fpsMeter, sound: platform.sound, artLoad: platform.artLoad }));
+    const panes = platform.world?.panes ?? [];
+    if (panes.length !== this.debugPanes?.length || panes.some((pane, i) => pane !== this.debugPanes[i])) {
+      this.debug.attach(panes);
+      this.debugPanes = [...panes];
+    }
+    this.debug.setVisible(platform.debug);
+    this.debug.update(game, platform.sound, platform.fpsMeter);
   }
 }

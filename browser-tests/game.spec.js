@@ -103,6 +103,31 @@ test('the Phaser version clips each split-screen pane: the lower one draws nothi
   expect(errors).toEqual([]);
 });
 
+test('the Phaser version shows the debug view on D, over each pane in split screen', async ({ page }) => {
+  const errors = await phaser(page);
+  await page.keyboard.press('Digit3');
+  await expect.poll(() => page.evaluate(() => window.__liano.game.worlds.length)).toBe(2);
+  await page.keyboard.press('KeyD');
+  const debug = () =>
+    page.evaluate(() => {
+      const { debug } = window.__liano.app.scene.getScene('ui');
+      return {
+        visible: debug.view.visible,
+        panes: debug.views.length,
+        // What each pane's Graphics draws, and its numbers.
+        drawn: debug.views.map((v) => v.g.visible && v.g.commandBuffer.length > 0),
+        texts: debug.views.map((v) => v.text.text.split('\n')[0]),
+      };
+    });
+  await expect.poll(debug).toMatchObject({ visible: true, panes: 2, drawn: [true, true] });
+  const { texts } = await debug();
+  expect(texts[0]).toMatch(/^P1 /);
+  expect(texts[1]).toMatch(/^P2 /);
+  await page.keyboard.press('KeyD');
+  await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').debug.view.visible)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
 test('the Phaser version starts its sound at the first gesture, plays on Phaser’s context, and mutes on M', async ({ page }) => {
   const errors = await phaser(page);
   expect(await page.evaluate(() => window.__liano.sound.status)).toBe('locked');

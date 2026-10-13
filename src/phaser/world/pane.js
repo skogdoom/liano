@@ -14,8 +14,8 @@ import { makeContainer } from './build.js';
 // view in single player, a strip per player in split screen. `scene` is what the death
 // shake moves; in it, back to front: the sky and the parallax layers, the world
 // (scrolled by the camera: the obstacles, the lianas, the bananas, then the shadow and
-// the monkeys), the canopy strip and the floor. The play scene's camera for the pane
-// clips it (PlayScene.placeCameras). M6 adds the debug view.
+// the monkeys), the canopy strip and the floor, then `overlay` (the debug view, scrolled
+// with the world). The play scene's camera for the pane clips it (PlayScene.placeCameras).
 const FURS = ['p1', 'p2'];
 const COLOURINGS = ['green', 'gold'];
 
@@ -36,7 +36,8 @@ export class WorldPane {
     this.monkeyLayer.add(this.shadow.view);
     this.worldLayer.add([this.obstacles.view, this.lianaLayer, this.bananas.view, this.monkeyLayer]);
     this.backdrop = new BackdropRig(scene, art);
-    this.scene.add([this.backdrop.back, this.worldLayer, this.backdrop.front]);
+    this.overlay = makeContainer(scene);
+    this.scene.add([this.backdrop.back, this.worldLayer, this.backdrop.front, this.overlay]);
     this.view.add(this.scene);
     this.ownCamera = new Camera();
     this.camera = this.ownCamera;
@@ -104,6 +105,7 @@ export class WorldPane {
     const cameraX = blend(camera.prevX, camera.x, alpha);
     this.cameraX = cameraX;
     this.worldLayer.x = -cameraX;
+    this.overlay.x = -cameraX;
     this.backdrop.update(cameraX);
     const tint = this.backdrop.setStage(Math.max(...world.stages), world, dt);
     this.obstacles.update(world.obstacles.values(), world.time, tint);

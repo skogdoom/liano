@@ -14,8 +14,9 @@ export const RESULTS_BANANA = 13;
 // The banana, the heart to take and the glint rock and bob between pixels: rasterized at
 // twice the density, so they are sampled smoothly.
 const rocking = { scale: 2 };
-// The HUD and results icons are enlarged with the layout's `ui` scale (portrait phones).
-const hud = { set: 'boot', scale: MAX_UI_SCALE };
+// The HUD and results icons are enlarged with the layout's `ui` scale (portrait phones):
+// rasterized for the largest, rounded up to a whole scale (see ui.js).
+const hud = { set: 'boot', scale: Math.ceil(MAX_UI_SCALE) };
 
 export const ITEM_PIECES = [
   {
