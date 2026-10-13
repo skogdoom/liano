@@ -14,7 +14,6 @@ import {
   skyLayout,
 } from '../../views/backdrop.js';
 import { makeContainer } from './build.js';
-import { PARALLAX_SPEED } from './backdropMotion.js';
 import { exposureWidth } from './exposure.js';
 import { addExposure } from './exposureShader.js';
 
@@ -28,7 +27,8 @@ const SKY = SKY_BANDS * SKY_BAND_HEIGHT; // the sky piece's height, in units
 // Move the layers with scene transforms, as the foreground and Pixi backdrop move.
 // Keep the former TileSprite UV-scrolling path for a Safari comparison.
 const IMAGE_MODE = typeof location === 'undefined' || new URLSearchParams(location.search).get('backdrop') !== 'tiles';
-const MOTION_BLUR = typeof location === 'undefined' || new URLSearchParams(location.search).get('motionblur') !== 'off';
+// Keep the earlier exposure experiment opt-in; normal play uses phaser-m7's motion.
+const MOTION_BLUR = typeof location !== 'undefined' && new URLSearchParams(location.search).get('motionblur') === 'on';
 
 class ImageLayer {
   constructor(scene, art, key, blur) {
@@ -58,7 +58,7 @@ class ImageLayer {
 }
 
 export class BackdropRig {
-  constructor(scene, art, { images = IMAGE_MODE, speed = PARALLAX_SPEED, motionBlur = MOTION_BLUR } = {}) {
+  constructor(scene, art, { images = IMAGE_MODE, motionBlur = MOTION_BLUR } = {}) {
     this.scene = scene;
     this.art = art;
     this.back = makeContainer(scene);
@@ -76,7 +76,7 @@ export class BackdropRig {
       const scenery = group === this.back;
       const copies = images ? new ImageLayer(scene, art, key, scenery && motionBlur) : null;
       const tile = copies ? null : art.tile(scene, key, 1);
-      return { key, factor: scenery ? factor * speed : factor, scenery, group, tile, copies, view: copies?.view ?? tile };
+      return { key, factor, scenery, group, tile, copies, view: copies?.view ?? tile };
     });
     this.floor = makeContainer(scene);
     // Below the floor's undergrowth, its colour down to the bottom of taller views.
@@ -115,17 +115,17 @@ export class BackdropRig {
   }
 
   resetMotion() {
-    this.sceneryX = null;
+    this.previousCameraX = null;
     for (const { copies } of this.layers) copies?.setExposure(0);
   }
 
-  // Scenery follows its own eased camera; the canopy and floor stay aligned with
-  // the world camera. A standalone art comparison can pass one position for both.
-  update(cameraX, sceneryX = cameraX, dt = 0) {
-    const distance = this.sceneryX === null ? 0 : sceneryX - this.sceneryX;
-    this.sceneryX = sceneryX;
+  // Every layer uses the pane's interpolated camera, at phaser-m7's parallax speeds.
+  // Only the optional exposure experiment needs the distance since the last frame.
+  update(cameraX, dt = 0) {
+    const distance = this.previousCameraX === null ? 0 : cameraX - this.previousCameraX;
+    this.previousCameraX = cameraX;
     for (const { key, tile, copies, factor, scenery } of this.layers) {
-      const shift = layerShift(scenery ? sceneryX : cameraX, factor);
+      const shift = layerShift(cameraX, factor);
       if (copies) {
         copies.view.x = -shift;
         copies.setExposure(scenery ? exposureWidth(distance * factor, this.density, dt) : 0);

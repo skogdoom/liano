@@ -1,153 +1,107 @@
 # Phaser background movement
 
-Investigated on `phaser-m7-codex`, starting at `phaser-m7` commit `c9a4c31`, on 2026-10-13.
+Investigated on `phaser-m7-codex`, starting at `phaser-m7` commit `c9a4c31`.
+The owner's changes through `phaser-m7` commit `851deab` are now merged.
 
-## Current Phaser behavior
+## Current behavior
 
-### Moving-edge exposure
+The owner found the earlier Codex changes only slightly better in Safari on a
+MacBook Air M1. Their later `phaser-m7` tuning reduces per-frame travel much more
+and is now the default on this branch:
 
-Safari feedback confirms that slower/eased scenery is only slightly better and still looks noticeably stepped. Phaser now additionally gives decorative scenery a short horizontal motion exposure: each rendered tree samples nine positions across the distance it travels in one frame. This softens the gaps between the otherwise sharp displayed poses; the layer positions and speed stay unchanged.
+- The far, middle and near background layers move at **0.06, 0.12 and 0.3** of
+  camera speed. The previous Codex factors were 0.12, 0.32 and 0.56.
+- Pane cameras use two consecutive exponential lags at **12/s**, solved exactly
+  for each simulation step. The shared-screen rules camera retains one lag at
+  **8/s**, preserving the rules for falling behind and respawning.
+- Landscape cameras follow the liana's anchor plus **75% of the monkey's swing**.
+  `SwingTarget` carries the target offset through releases and catches, then
+  decays it, so changing between hanging and flight does not jump the target.
+  Portrait cameras still follow the anchor.
+- The canopy and floor textures receive the owner's **0.4-unit horizontal
+  softening at build time**, wrapped across the repeating seam in sRGB. They
+  still move with the world at factor 1. The art contract, guide and gallery
+  comparison include this treatment.
 
-Exposure is capped at **eight device pixels**, with no blur below half a device pixel of travel. Stopped/paused frames, new worlds, resize and gaps longer than 50 ms reset or disable the exposure. Distance is measured before tile wrapping, so a seam cannot become a long streak. Canopy, floor, monkeys, lianas, UI and Pixi remain sharp and unchanged.
+The Codex-only scenery follower and 0.8 speed multiplier have been removed.
+Every layer now uses the same interpolated pane camera with the owner's exact
+factors; there is no extra scenery lag or additional speed reduction.
 
-The effect uses one pass through the existing Image geometry and textures, with a shared single-texture shader. It creates no render textures, history buffers or texture uploads. Speed changes update a uniform; one shader is compiled on the title screen and reused during play.
+Phaser retains the repeated Images in translating containers introduced on
+this branch. Copies share their textures and preserve fractional scrolling,
+vertical edge-row cropping, tint, clipping and coverage during resize/shake.
+`?engine=phaser&backdrop=tiles` selects the former TileSprite rendering path with
+identical camera behavior and speeds.
 
-Pixel validation with six device pixels of exposure matches the average of nine independently rendered sharp poses to within **0.67 of one channel value**. The strongest row-wise tree edge changes from **13 to 4** channel values by day and **5 to 2** under the tested night tint, a **60–69% reduction** in edge contrast. The opaque colours stay intact, wrapping shows no seam, and stopping produces exactly the sharp reference image. This checks the rendered treatment, not perceived smoothness on Safari's physical display.
+The earlier nine-sample tree exposure experiment is **off by default** so the
+normal picture uses the owner's tuning. `?engine=phaser&motionblur=on` enables
+it for comparison: it averages travel across a frame, capped at eight device
+pixels, and disables exposure for subpixel travel, stops and gaps over 50 ms.
+This is distinct from the small build-time canopy/floor softening above.
 
-The effect is enabled by default. Compare `?engine=phaser&frames=1` against `?engine=phaser&frames=1&motionblur=off` on the Mac. The latter keeps the previous slower/eased image motion and disables only the exposure. `backdrop=tiles` also bypasses this Image shader.
+The merge includes the owner's shared camera and Pixi pane updates as authored
+on `phaser-m7`; no further Pixi behavior changes were added. The temporary
+`camera`, `sway`, `parallax` and `shaders` switches removed on that branch remain
+removed here. No URL parameters are needed for the integrated motion tuning.
 
-### Scenery speed and easing
+## Earlier investigation
 
-The owner found the moving-image version a little better in Safari, but still saw occasional stutters and felt the background moved slightly too fast. The supplied `?frames=1` screenshot shows 3,482 frames, five late frames (about 0.14%), a worst gap of 109 ms, and CPU work of 1/2/4 ms in the last ten seconds. That last interval had no late frames. Some listed delays coincide with score-text uploads; this correlation alone does not establish their cause. The readout measures callbacks and CPU submission, not GPU/display presentation. Its "59 Hz" is the rounded estimate from a median 17 ms callback interval.
+The frame readout supplied by the owner showed only five late frames in 3,482
+(about 0.14%) and none in the last ten seconds, while the trees still looked
+stepped. Callback timing alone does not measure GPU/display presentation.
 
-The follow-up changes only Phaser's decorative scenery:
+With the original one-lag camera, a controlled 60 Hz catch changed its speed
+from 534 to 617 to 697 world units/s even with perfectly regular input times
+and no GPU drawing, score updates, audio or obstacles. At the old 0.4 mid-layer
+factor on a 2× screen, that was 7.1 to 8.2 to 9.3 device pixels per frame.
 
-- Far trees: factor 0.15 → 0.12; mid trunks: 0.4 → 0.32; near foliage: 0.7 → 0.56. All are **20% slower**.
-- A critically damped follower advances at the fixed simulation rate and is interpolated for display. It retains velocity across changes in camera speed instead of passing each catch's speed jump directly into the scenery. Its steady-motion lag is about 83 ms.
-- Canopy and floor retain factor 1 and the original gameplay camera, keeping their attachment to lianas, obstacles and collision geometry.
-- Pause and game-over hold the follower; new worlds and resize reset its position and discard momentum. Shared screen uses the same scenery follower without changing its rules-owned camera.
+The Codex 20% speed reduction, separate scenery follower and later moving-edge
+exposure each received browser/unit validation but did not resolve the owner's
+Safari symptom. They should not be treated as evidence of a completed fix.
+The owner subsequently selected the substantially slower factors and reduced
+camera sway now integrated here (see `PHASER_PLAN.md`, M7).
 
-No Pixi renderer, shared camera, simulation or frame-clock code changed. These changes address how Phaser moves the scenery; they cannot reconstruct frames the browser did not present.
+## Validation and reproduction
 
-On the controlled uninterrupted swing at 60 Hz and 2×, the mid layer's peak movement fell from **9.22 to 7.26 device pixels/frame**. For 20-second bot runs with the default gameplay camera, peak mid-layer acceleration changed as follows (world units/second², rounded):
-
-| Slipping | Refresh rate | Previous scenery | Slower, eased scenery | Reduction |
-| --- | ---: | ---: | ---: | ---: |
-| Off | 60 Hz | 3,950 | 902 | 77% |
-| Off | 90 Hz | 4,431 | 1,000 | 77% |
-| Off | 144 Hz | 9,561 | 1,077 | 89% |
-| On | 60 Hz | 3,672 | 766 | 79% |
-| On | 90 Hz | 5,535 | 847 | 85% |
-| On | 144 Hz | 8,508 | 916 | 89% |
-
-These are movement measurements with regular synthetic frame times, not claims that Safari's rare missed frames have been eliminated. Both drawing paths pass 24 runs (47,040 frames), with no repeated scenery frames and subpixel pixel changes in every check.
-
-## Initial findings
-
-There is a reproducible camera jerk at a catch, independent of frame timing or rendering cost. The background's fractional scrolling itself works in Chromium. This establishes a contribution to the catch effect, not the root cause of all the reported stutter.
-
-The owner reports the symptom in Safari on a MacBook Air M1 and an iPhone 13 mini, with current testing focused on the Mac. `?camera=smooth` helps a little but does not solve it. The follow-up therefore focuses on the background's movement implementation: scrolling texture coordinates inside a stationary TileSprite versus moving repeated images through the scene.
-
-## Monkey and liana displacement
-
-The owner independently identified large per-frame travel as the likely cause and noticed a similar effect in the monkey/liana once the scenery was slower. `scripts/dev/swing-motion.mjs` checks the actual Phaser rig transforms during a steady, uninterrupted swing with a fixed grip, an unchanged gameplay camera and no rendering load. At 1280×720 with 2× density:
-
-| Synthetic refresh rate | Peak monkey-origin movement | Peak liana-tip movement |
-| --- | ---: | ---: |
-| 60 Hz | 11.53 device pixels/frame | 14.93 device pixels/frame |
-| 90 Hz | 7.69 device pixels/frame | 9.95 device pixels/frame |
-| 144 Hz | 4.81 device pixels/frame | 6.22 device pixels/frame |
-
-No poses repeat. Monkey-position interpolation error is zero, and liana-angle error is below 1.3×10⁻¹⁵ radians. The displacement shrinks in proportion to the refresh interval, consistent with visible stepping of fast motion even when every frame is on time. This supports the owner's explanation but does not directly measure perception or display presentation in Safari.
-
-Interpolation chooses the pose between simulation steps; it cannot show additional poses between a display's refreshes. Extra simulation steps or more positional easing alone do not eliminate the gaps in a steady fast pan. Addressing that remaining effect in the actors would involve changing their per-frame travel or their visual exposure (for example, motion blur), rather than silently changing gameplay physics. No actor movement or Pixi code was changed.
-
-Run the probe with `CHROMIUM=/usr/bin/chromium URL=http://localhost:5174/ node scripts/dev/swing-motion.mjs`.
-
-## Catch-induced camera motion
-
-The relevant chain is:
-
-1. `src/sim/world.js` detects a catch within the monkey's reach of a liana.
-2. `Monkey.grab()` in `src/sim/monkey.js` immediately moves the monkey onto the rope, starts its swing, and replaces its airborne velocity with the hanging velocity. This is a deliberate gameplay discontinuity. It also resets the monkey's previous position so the visual catch is immediate.
-3. `Camera.update()` in `src/render/camera.js` follows that position through one exponential lag (`CAMERA_LERP = 8`). This eases camera position but does not preserve camera speed when the target jumps.
-4. `WorldPane.update()` in `src/phaser/world/pane.js` interpolates the camera between fixed simulation steps. This removes repeated simulation poses at other refresh rates; it does not remove the change in camera speed.
-5. Before scenery tuning, `BackdropRig.update()` in `src/phaser/world/backdrop.js` used that same interpolated camera for every layer. The dark green trunks in the mid layer scrolled at 40% of camera speed, compared with 15% for the hazier far layer. The near foliage scrolled at 70%. The darker, faster edges make changes in motion easier to see.
-
-On an obstacle-free run with slipping off (the default), at 60 Hz, the first catch changed camera speed from **534 to 617 to 697 world units/second**. The mid-layer trees on a 2× screen consequently changed from about **7.1 to 8.2 to 9.3 device pixels/frame**. This happens with perfectly regular input frame times, without GPU drawing, score text, audio, or obstacle construction.
-
-## Controlled comparison
-
-`scripts/dev/background-motion.mjs` runs the real game, driver, camera and Phaser pane with a deterministic, obstacle-free world. It advances each frame by exactly 1/60, 1/90 or 1/144 second for 20 seconds, with slipping both off and on. It compares the default camera with the existing `?camera=smooth` option, through both backdrop implementations. The bot's input is sampled once per frame, so runs at different refresh rates can release at different simulation steps; camera profiles at the same rate follow identical gameplay.
-
-Initial gameplay-camera measurements: maximum catch-window acceleration (world units/second², rounded; catch frame and the next two frames):
-
-| Slipping | Refresh rate | Default camera | `camera=smooth` | Reduction |
-| --- | ---: | ---: | ---: | ---: |
-| Off | 60 Hz | 9,875 | 2,413 | 76% |
-| Off | 90 Hz | 11,079 | 2,472 | 78% |
-| Off | 144 Hz | 23,903 | 3,356 | 86% |
-| On | 60 Hz | 9,180 | 2,558 | 72% |
-| On | 90 Hz | 13,837 | 2,876 | 79% |
-| On | 144 Hz | 21,270 | 2,987 | 86% |
-
-All 24 runs through the two backdrop implementations had **zero repeated camera frames** (47,040 frames total). The script also verifies that each background layer's scroll uses the interpolated camera each frame. Changing the backdrop implementation leaves the camera trajectory identical for a given camera mode, slipping setting and refresh rate. These are synthetic refresh intervals, not measurements from physical 90/144 Hz displays.
-
-The second lag in `camera=smooth` spreads the catch's speed change over more frames. It adds tracking delay: roughly 42 ms more than the default for steady motion (two 1/12-second lags versus one 1/8-second lag). It does not freeze the camera through a swing.
-
-An uninterrupted 2.6-second swing with a fixed grip changed the default camera's direction twice and reached **9.22 device pixels/frame** in the mid layer at 60 Hz and 2×. The smooth option reached **9.24**. Thus it helps the catches substantially while leaving the fast, reversing motion of the background during a swing. High-contrast edges moving that far between refreshes can look stepped; these measurements alone cannot identify that as the user's remaining symptom.
-
-## Renderer check
-
-A separate WebGL check hides the world, UI and other background layers, then renders the dark green mid-layer trunks over the static sky. Ten successive camera moves of 0.1 world units each **all change the rendered pixels** (originally 0.08 device pixels in the mid layer at this screen size, now 0.064 with the slower factor).
-
-The camera has `roundPixels = false`, the source texture uses linear filtering, and Phaser 4.2.1's TileSprite WebGL texturer retains fractional texture coordinates. The tile does not hold until the next whole texture or device pixel. The mid-layer source image is 1× even on a 2× screen, which affects edge softness, but does not prevent fractional scrolling.
-
-The branch already contains fixes for score-text redraws, rounded Safari frame times, and shader compilation during play. The isolated catch jerk survives removal of all those workloads. This does not rule out a separate performance hitch on real hardware.
-
-## Reproduce
+`scripts/dev/background-motion.mjs` exercises the real game, fixed-step driver
+and Phaser pane with regular 60/90/144 Hz input, slipping off/on, through both
+image and tile paths. It checks layer positions against the interpolated
+camera, catch acceleration, uninterrupted swing travel and actual WebGL pixel
+changes under fractional scrolling. The obsolete `camera=smooth` comparison
+has been removed because two-lag easing is now the default.
 
 ```sh
-npm ci
-npm run dev -- --port 5174
-# In another terminal, from the repository root:
+npm run build
+npm test
+CHROMIUM=/usr/bin/chromium npm run test:browser -- --workers=1
+# With the dev server running on port 5174:
 CHROMIUM=/usr/bin/chromium URL=http://localhost:5174/ \
-  node scripts/dev/background-motion.mjs > background-motion.json
+  node scripts/dev/background-motion.mjs
 ```
 
-`CHROMIUM` is optional if Playwright's Chromium is installed. The script outputs one JSON array with both camera profiles and backdrop implementations, frame counts, catch samples, acceleration measurements, the uninterrupted swing and pixel checks. It fails if the bot dies, a layer diverges from the camera, a subpixel move leaves the sampled tree row unchanged, or the browser reports an uncaught error. It uses Chromium's software WebGL renderer; its timings must not be treated as GPU performance results.
+Browser tests cover the exact integrated parallax factors, shared-camera
+interpolation, pause, resize and new-world alignment, plus image/tile pixel
+parity across landscape, wide and portrait views, fractional/negative shifts,
+wrap boundaries and day/night tint. The default shader test verifies that
+normal gameplay uses only the standard image shader for the backdrop; the
+optional exposure has separate pixel and shader-cache checks.
 
-## Phaser implementation change
+Validation of the integrated version:
 
-Phaser now draws the background as repeated Images in moving containers by default. Each frame moves a layer's container by `-layerShift(interpolatedSceneryX, factor)` for decorative scenery, or the original gameplay camera for the canopy and floor. This uses the same container movement model as the Pixi background, with Phaser-specific scenery easing and speed. Texture coordinates remain fixed. The former implementation left each TileSprite stationary and changed its texture coordinates every frame, sending the motion through Phaser's wrapping shader instead of the scene transform.
+- Build passed; all **674 unit tests** passed.
+- All **46 browser cases** passed (45 in the full run; the new motion case
+  passed on rerun after reducing its test camera increment below the existing
+  30-unit teleport threshold).
+- All **12 motion runs / 23,520 frames** passed, with zero repeated camera
+  frames and identical camera trajectories through the image and tile paths.
+- At 60 Hz and 2×, the uninterrupted swing's peak mid-tree travel is now
+  **2.08 device pixels/frame**, versus 7.26 with the previous Codex tuning.
+  The two 60 Hz bot runs peak at 2.34 and 2.54 pixels/frame.
+- Both rendering paths change pixels on every tested 0.2-device-pixel tree
+  movement. The probe now holds the layer increment constant: the old fixed
+  camera increment moved these slower trees only 0.024 device pixels, sometimes
+  too little to change the sampled 8-bit row despite fractional geometry.
 
-The image copies share the existing textures; resizing creates only the copies needed for coverage, including the death-shake margin and a full tile of wrapping. They preserve the edge-row crop, day/night tint and pane cameras' clipping. New copies receive the current tint after resize. The Pixi renderer and all shared camera/simulation modules are untouched.
-
-Chromium verifies the resulting movement and appearance, but this environment cannot run Safari on the MacBook Air M1 or iPhone 13 mini. The Safari symptom's resolution therefore still requires a visual check on those devices; the code change should not be described as a confirmed Safari fix before that check.
-
-## Safari comparison
-
-Compare these URLs on the Mac's Safari, keeping the camera setting the same:
-
-- `?engine=phaser`: the new default, repeated Images with moving parent containers.
-- `?engine=phaser&backdrop=tiles`: the previous stationary TileSprites, their texture coordinates scrolling each frame.
-
-Both drawing paths use the slower, eased scenery motion, the same textures, fractional positions, parallax factors, tint, vertical cropping and pane clipping. `backdrop=tiles` selects only the previous drawing technique; it does not undo the newer scenery tuning. The gameplay camera is unchanged. The new scenery easing is enabled by default, with no extra URL parameter required.
-
-Browser pixel checks compare the two paths in landscape at 1×, a wide view at 2× and iPhone-sized portrait at 2×. They include both directions, fractional positions, tile-wrap boundaries and day/night tints. At most 0.0039% of pixels differ by more than three channel values in the measured comparisons. This verifies the same picture in Chromium; it does not prove the paths animate identically in Safari.
-
-The owner reports that moving Images helped a little. The earlier catch-speed measurements should not be treated as a complete diagnosis of the remaining Safari symptom.
-
-Camera behavior is unchanged. Changing the catch snap would change gameplay, and making the smooth option the default should follow a visual check of its added camera lag.
-
-## Validation
-
-- Investigation script: all 24 motion runs and four subpixel rendering checks passed.
-- New browser pixel comparisons: landscape, wide and portrait all passed through both paths, including fractional movement, negative scrolling, wraps and tint.
-- Latest focused unit checks: 9 files, 79 tests passed, covering exposure bounds, scenery motion, camera/interpolation, Phaser imports, view/layout, pause, stages and the frame clock.
-- `npm run build`: passed.
-- Full browser suite: all 46 passed, including the new exposure pixel/disable comparisons, movement/lifecycle comparisons, gameplay, resize/split-screen clipping, backdrop edges, single-shader batching and full Pixi/Phaser visual parity checks. The six background checks are also rerun after adding the subpixel-motion fast path.
-
-Scenery-tuning validation additionally covers the follower's response, steady pan, step-size stability and reset behavior in five unit tests, plus a browser check of fixed-step scenery easing, foreground alignment, pause, resize and reset. Static Pixi/Phaser art comparisons explicitly use the reference scenery speed and disable the new follower, so intentional movement differences do not mask drawing regressions; the new motion is checked separately.
-
-The initial image-path change also passed the full 665-test unit suite, including an isolated rerun of `prefetch.test.js` after its 16 ms timing assertion failed under concurrent software-WebGL browser load. No timing limit or generation code was changed.
+These use controlled frame times in Chromium, without GPU drawing during the
+motion runs. This workspace cannot verify perceived smoothness on Safari's
+physical display.

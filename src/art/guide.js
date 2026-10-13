@@ -13,6 +13,7 @@ function row(piece) {
     piece.kind !== 'sprite' && piece.kind,
     piece.tint && 'tinted',
     piece.alpha !== undefined && `see-through (${Math.round(piece.alpha * 100)} %)`,
+    piece.soften !== undefined && `softened sideways by the build (${fmt(piece.soften)} units)`,
     piece.fps && `${piece.fps} fps`,
     piece.attach && `joins: ${Object.keys(piece.attach).join(', ')}`,
     piece.hitbox && 'hitbox',

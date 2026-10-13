@@ -60,7 +60,7 @@ for (const [width, height, ratio] of [[1280, 720, 1], [1920, 800, 2], [375, 812,
   });
 }
 
-test('Phaser eases only distant scenery at fixed steps and resets it with the pane', async ({ page }) => {
+test('Phaser uses phaser-m7 speeds and one interpolated camera for all layers', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto(`${DEV}?engine=phaser`);
   await started(page, errors);
@@ -69,50 +69,51 @@ test('Phaser eases only distant scenery at fixed steps and resets it with the pa
     const { app, platform } = window.__liano;
     app.loop.sleep();
     const pane = platform.world.panes[0];
-    // Use an externally stepped camera, as in shared screen, to isolate the scenery.
-    const camera = { x: 0, prevX: 0 };
+    // The shared-screen camera is moved by the rules. There must be no second
+    // scenery follower or speed multiplier on top of the camera and layer tuning.
+    const camera = { x: 20, prevX: 0 };
     pane.setWorld(pane.world, [0], camera);
-    camera.x = camera.prevX = 100;
+    const snapshot = () => ({
+      cameraX: pane.cameraX,
+      worldX: pane.worldLayer.x,
+      factors: pane.backdrop.layers.map((l) => l.factor),
+      positions: pane.backdrop.layers.map((l) => l.view.x),
+    });
     pane.stepCamera(1 / 120);
     pane.update([], 1 / 60, false, null, 0.5);
-    const drawn = pane.backdropCameraX;
-    const layer = (key) => pane.backdrop.layers.find((l) => l.key === `backdrop.${key}`);
-    const first = { sceneryX: drawn, worldX: pane.worldLayer.x,
-      midX: layer('mid').view.x, canopyX: layer('canopy').view.x, floorX: layer('floor').view.x,
-      factors: ['far', 'mid', 'near', 'nearTop', 'canopy', 'floor'].map((key) => layer(key).factor),
-    };
-    // Rendering/pausing does not advance the spring: only simulation steps do.
+    const first = snapshot();
     pane.update([], 0, false, null, 0.5);
-    const pausedX = pane.backdropCameraX;
+    const paused = snapshot();
     pane.update([], 1 / 60, false, null, 0.5);
-    const renderOnlyX = pane.backdropCameraX;
+    const renderOnly = snapshot();
     camera.x = camera.prevX = 1000;
     pane.resize(pane.layout, platform.camera.zoom);
     pane.update([], 0, false, null, 0.5);
-    const resized = [pane.backdropCameraX, pane.backdropMotion.velocity];
+    const resized = snapshot();
     camera.x = camera.prevX = -1000;
     pane.setWorld(pane.world, [0], camera);
     pane.update([], 0, false, null, 0.5);
-    return { first, pausedX, renderOnlyX, resized, reset: [pane.backdropCameraX, pane.backdropMotion.velocity] };
+    return { first, paused, renderOnly, resized, reset: snapshot() };
   });
-  expect(result.first.sceneryX).toBeGreaterThan(0);
-  expect(result.first.sceneryX).toBeLessThan(1);
-  expect(result.first.worldX).toBe(-100);
-  expect(result.first.midX).toBeCloseTo(-result.first.sceneryX * 0.32, 9);
-  expect(result.first.canopyX).toBe(-100);
-  expect(result.first.floorX).toBe(-100);
-  result.first.factors.forEach((factor, i) => expect(factor).toBeCloseTo([0.12, 0.32, 0.56, 0.56, 1, 1][i], 9));
-  expect(result.pausedX).toBe(result.first.sceneryX);
-  expect(result.renderOnlyX).toBe(result.first.sceneryX);
-  expect(result.resized).toEqual([1000, 0]);
-  expect(result.reset).toEqual([-1000, 0]);
+  const factors = [0.06, 0.12, 0.3, 0.3, 1, 1];
+  expect(result.first.cameraX).toBe(10);
+  expect(result.first.worldX).toBe(-10);
+  expect(result.first.factors).toEqual(factors);
+  result.first.positions.forEach((x, i) => expect(x).toBeCloseTo(-10 * factors[i], 9));
+  expect(result.paused).toEqual(result.first);
+  expect(result.renderOnly).toEqual(result.first);
+  expect(result.resized.cameraX).toBe(1000);
+  expect(result.reset.cameraX).toBe(-1000);
+  expect(result.resized.positions).toEqual(factors.map((factor) => -1000 * factor));
+  // layerShift wraps negative positions into the repeating tile.
+  result.reset.positions.forEach((x, i) => expect(x).toBeCloseTo(-(2048 - 1000 * factors[i]), 9));
   expect(errors).toEqual([]);
 });
 
 test('moving trees average their exposure without darkening, seams or shader recompiles', async ({ browser }) => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 2 });
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}?engine=phaser&motionblur=on`);
   await started(page, errors);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const results = await page.evaluate(() => {
@@ -141,29 +142,29 @@ test('moving trees average their exposure without darkening, seams or shader rec
     const width = 3; // world units of exposure, six device pixels at this density
     for (const tint of [0xffffff, 0x506878]) for (const center of [1000, 2048 / mid.factor]) {
       platform.art.tint([rig.back], tint);
-      rig.resetMotion(); rig.update(center, center, 0);
+      rig.resetMotion(); rig.update(center, 0);
       const sharp = row();
-      rig.update(center - width / mid.factor, center - width / mid.factor, 0);
-      rig.update(center, center, 1 / 60);
+      rig.update(center - width / mid.factor, 0);
+      rig.update(center, 1 / 60);
       const blurred = row();
       const expected = new Float64Array(sharp.length);
       // Ground truth: average nine sharp rendered poses through the same travel.
       for (let sample = 0; sample < 9; sample++) {
         const offset = (sample - 4) / 8;
         const cameraX = center + (width * offset) / mid.factor;
-        rig.update(cameraX, cameraX, 0);
+        rig.update(cameraX, 0);
         const pixels = row();
         pixels.forEach((value, i) => (expected[i] += value / 9));
       }
       const error = Math.max(...Array.from(blurred, (value, i) => Math.abs(value - expected[i])));
-      rig.update(center, center, 0);
+      rig.update(center, 0);
       const stopped = row();
       results.push({ tint, center, error, sharpGradient: gradient(sharp), blurredGradient: gradient(blurred), stopError: Math.max(...stopped.map((value, i) => Math.abs(value - sharp[i]))) });
     }
     // Different speeds/directions are uniform values, with the shader already cached.
     const batch = app.renderer.renderNodes.getNode('BackdropExposureBatch');
     const programs = Object.keys(batch.programManager.programs);
-    for (const position of [600, 599, 600, 601, 600]) { rig.update(position, position, 1 / 60); row(); }
+    for (const position of [600, 599, 600, 601, 600]) { rig.update(position, 1 / 60); row(); }
     return { rows: results, programs, after: Object.keys(batch.programManager.programs) };
   });
   console.log('tree exposure:', JSON.stringify(results));
@@ -178,9 +179,9 @@ test('moving trees average their exposure without darkening, seams or shader rec
   await page.close();
 });
 
-test('the scenery motion-blur comparison can be disabled', async ({ page }) => {
+test('default scenery uses the standard image shader without experimental exposure', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser&motionblur=off`);
+  await page.goto(`${DEV}?engine=phaser`);
   await started(page, errors);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => {

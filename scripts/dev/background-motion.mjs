@@ -10,13 +10,12 @@ const browser = await chromium.launch({
 });
 const results = [];
 try {
-  for (const backdrop of ['tiles', 'images']) for (const camera of ['', 'smooth']) {
+  for (const backdrop of ['tiles', 'images']) {
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 2 });
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     const url = new URL(process.env.URL ?? 'http://localhost:5174/');
     url.searchParams.set('engine', 'phaser');
-    url.searchParams.set('camera', camera);
     url.searchParams.set('backdrop', backdrop);
     await page.goto(url.href);
     await page.waitForFunction(() => window.__liano?.platform.world);
@@ -27,7 +26,7 @@ try {
       const { World } = await import('/src/sim/world.js');
       const { createDriver } = await import('/src/driver.js');
       const { longestRun, validReleaseSteps } = await import('/src/sim/feasibility.js');
-      const { layerShift, SKY_MARGIN, MID_FACTOR } = await import('/src/views/backdrop.js');
+      const { layerShift, SKY_MARGIN } = await import('/src/views/backdrop.js');
       const { SIM_DT, SWING_PERIOD } = await import('/src/config.js');
       const play = platform.world;
       // A fresh driver per rate makes its accumulator/clock independent of page startup.
@@ -64,9 +63,9 @@ try {
           const cameraX = pane.cameraX;
           const caught = platform.frame.events.some((e) => e.type === 'grab');
           const monkey = game.world.monkey;
-          frames.push({ cameraX, sceneryX: pane.backdropCameraX, monkeyX: monkey.x, caught, state: monkey.state });
-          for (const { tile, copies, factor, scenery, key: artKey } of pane.backdrop.layers) {
-            const shift = layerShift(scenery ? pane.backdropCameraX : cameraX, factor);
+          frames.push({ cameraX, monkeyX: monkey.x, caught, state: monkey.state });
+          for (const { tile, copies, factor, key: artKey } of pane.backdrop.layers) {
+            const shift = layerShift(cameraX, factor);
             const actual = copies ? copies.view.x : tile.tilePositionX;
             const expected = copies ? -shift : (shift - SKY_MARGIN) * platform.art.at(artKey).zoom;
             if (actual !== expected) throw new Error('Backdrop did not use the interpolated camera');
@@ -75,8 +74,6 @@ try {
         }
         const shifts = frames.slice(1).map((f, i) => f.cameraX - frames[i].cameraX);
         const acceleration = shifts.slice(1).map((dx, i) => (dx - shifts[i]) * hz * hz);
-        const sceneryShifts = frames.slice(1).map((f, i) => f.sceneryX - frames[i].sceneryX);
-        const sceneryAcceleration = sceneryShifts.slice(1).map((dx, i) => (dx - sceneryShifts[i]) * hz * hz);
         const midFactor = play.panes[0].backdrop.layers.find((l) => l.key === 'backdrop.mid').factor;
         // The catch and the next two frames: interpolation can split a catch across them.
         const grabs = frames.flatMap((f, i) => f.caught ? [{
@@ -88,12 +85,10 @@ try {
         }] : []);
         motion.push({ slip, hz, frames: frames.length, grabs: grabs.length,
           repeatedCameraFrames: shifts.filter((dx) => dx === 0).length,
-          repeatedSceneryFrames: sceneryShifts.filter((dx) => dx === 0).length,
           peakCatchAcceleration: Math.max(...grabs.map((g) => g.peakAcceleration)),
           peakAcceleration: Math.max(...acceleration.map(Math.abs)), firstCatch: grabs[0],
-          peakPreviousMidAcceleration: Math.max(...acceleration.map(Math.abs)) * MID_FACTOR,
-          peakMidAcceleration: Math.max(...sceneryAcceleration.map(Math.abs)) * midFactor,
-          peakMidDevicePixelsPerFrame: Math.max(...sceneryShifts.map(Math.abs)) * midFactor * 2,
+          peakMidAcceleration: Math.max(...acceleration.map(Math.abs)) * midFactor,
+          peakMidDevicePixelsPerFrame: Math.max(...shifts.map(Math.abs)) * midFactor * 2,
         });
       }
       // One uninterrupted swing on the title world's first liana. Holding its grip
@@ -107,7 +102,7 @@ try {
         swingGame.step(SIM_DT); play.stepCameras(SIM_DT);
         platform.frame = { frameDt: 1 / 60, alpha: 1, events: [] };
         play.update();
-        swingFrames.push(play.panes[0].backdropCameraX);
+        swingFrames.push(play.panes[0].cameraX);
       }
       const swingShifts = swingFrames.slice(1).map((x, i) => x - swingFrames[i]);
       const swing = {
@@ -126,8 +121,13 @@ try {
       const gl = app.renderer.gl;
       let previous = null;
       const pixelDiffs = [];
+      const midFactor = pane.backdrop.layers.find((l) => l.key === 'backdrop.mid').factor;
+      // Keep the tree travel fractional but measurable in an 8-bit pixel readback.
+      // A fixed 0.1 camera step is only 0.024 device pixels at the new speed,
+      // sometimes producing the same quantized row despite continuous geometry.
+      const cameraStep = 0.1 / midFactor;
       for (let i = 0; i <= 10; i++) {
-        pane.backdrop.update(i / 10);
+        pane.backdrop.update(i * cameraStep);
         app.renderer.preRender(); app.scene.render(app.renderer); app.renderer.postRender();
         const row = new Uint8Array(app.canvas.width * 4);
         gl.readPixels(0, Math.floor(app.canvas.height / 2), app.canvas.width, 1, gl.RGBA, gl.UNSIGNED_BYTE, row);
@@ -135,10 +135,10 @@ try {
         previous = row;
       }
       if (pixelDiffs.some((d) => d === 0)) throw new Error('A subpixel scroll left the rendered tree row unchanged');
-      return { motion, swing, subpixelScroll: { cameraStep: 0.1, midLayerDevicePixelStep: 0.1 * pane.backdrop.layers.find((l) => l.key === 'backdrop.mid').factor * 2, pixelDiffs } };
+      return { motion, swing, subpixelScroll: { cameraStep, midLayerDevicePixelStep: cameraStep * midFactor * 2, pixelDiffs } };
     });
     if (errors.length) throw new Error(errors.join('\n'));
-    results.push({ backdrop, camera: camera || 'default', ...result });
+    results.push({ backdrop, camera: 'two-lag, sway=0.75', ...result });
     await page.close();
   }
 } finally {

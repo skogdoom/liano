@@ -1,9 +1,8 @@
 import { DEATH_SHAKE_PX, DEATH_SHAKE_TIME } from '../../config.js';
-import { Camera, cameraTarget } from '../../render/camera.js';
+import { Camera, SwingTarget } from '../../render/camera.js';
 import { blend } from '../../render/interpolate.js';
 import { Shake } from '../../render/shake.js';
 import { BackdropRig } from './backdrop.js';
-import { BackdropMotion } from './backdropMotion.js';
 import { BananaLayer } from './bananas.js';
 import { LianaSetRig } from './lianas.js';
 import { ObstacleLayer } from './obstacleLayer.js';
@@ -21,7 +20,7 @@ const FURS = ['p1', 'p2'];
 const COLOURINGS = ['green', 'gold'];
 
 export class WorldPane {
-  constructor(scene, art, { backdropSpeed, smoothBackdrop = true, motionBlur } = {}) {
+  constructor(scene, art, { motionBlur } = {}) {
     this.phaser = scene;
     this.art = art;
     this.view = scene.add.container(0, 0);
@@ -36,13 +35,12 @@ export class WorldPane {
     this.shadow = new ShadowRig(scene, art);
     this.monkeyLayer.add(this.shadow.view);
     this.worldLayer.add([this.obstacles.view, this.lianaLayer, this.bananas.view, this.monkeyLayer]);
-    this.backdrop = new BackdropRig(scene, art, { speed: backdropSpeed, motionBlur });
-    this.backdropMotion = new BackdropMotion();
-    this.smoothBackdrop = smoothBackdrop;
+    this.backdrop = new BackdropRig(scene, art, { motionBlur });
     this.overlay = makeContainer(scene);
     this.scene.add([this.backdrop.back, this.worldLayer, this.backdrop.front, this.overlay]);
     this.view.add(this.scene);
     this.ownCamera = new Camera();
+    this.swing = new SwingTarget();
     this.camera = this.ownCamera;
     this.shake = new Shake();
     this.world = null;
@@ -58,8 +56,7 @@ export class WorldPane {
     this.scene.setScale(pane.scale);
     this.backdrop.resize(pane, zoom);
     this.ownCamera.screenX = pane.camera.screenX;
-    if (this.world && this.camera === this.ownCamera) this.camera.reset(this.#target());
-    this.backdropMotion.reset(this.camera.x);
+    if (this.world && this.camera === this.ownCamera) this.camera.reset(this.#target(0, true));
   }
 
   // Shows `world`, whose monkeys belong to `players` (their furs, by monkey index).
@@ -85,24 +82,22 @@ export class WorldPane {
       this.monkeyLayer.add(rig.view);
     });
     for (const rig of this.monkeys.splice(world.monkeys.length)) rig?.destroy();
-    if (this.layout && !camera) this.camera.reset(this.#target());
-    this.backdropMotion.reset(this.camera.x);
+    if (this.layout && !camera) this.camera.reset(this.#target(0, true));
     this.backdrop.resetMotion();
   }
 
   // Fixed-step camera update; it holds still once everyone in the world is out.
   // (A shared camera is marked and moved by the rules.)
   stepCamera(dt) {
-    if (this.camera === this.ownCamera) {
-      this.camera.mark();
-      if (this.world.alive) this.camera.update(this.#target(), dt);
-    }
-    this.backdropMotion.mark();
-    if (this.world.alive) this.backdropMotion.update(this.camera.x, dt);
+    if (this.camera !== this.ownCamera) return;
+    this.camera.mark();
+    if (this.world.alive) this.camera.update(this.#target(dt), dt);
   }
 
-  #target() {
-    return cameraTarget(this.world.monkey, this.layout.camera.follow);
+  // `restart`: the camera is being placed afresh (see SwingTarget).
+  #target(dt = 0, restart = false) {
+    if (restart) this.swing.reset();
+    return this.swing.of(this.world.monkey, this.layout.camera.follow, dt);
   }
 
   // As the Pixi Pane's update.
@@ -115,8 +110,7 @@ export class WorldPane {
     this.cameraX = cameraX;
     this.worldLayer.x = -cameraX;
     this.overlay.x = -cameraX;
-    this.backdropCameraX = this.smoothBackdrop ? blend(this.backdropMotion.prevX, this.backdropMotion.x, alpha) : cameraX;
-    this.backdrop.update(cameraX, this.backdropCameraX, dt);
+    this.backdrop.update(cameraX, dt);
     const tint = this.backdrop.setStage(Math.max(...world.stages), world, dt);
     this.obstacles.update(world.obstacles.values(), world.time, tint);
     world.lianaSets.forEach((set, i) => this.lianaSets[i].update(set.values(), cameraX, layout.view.width, world.monkeys, alpha));

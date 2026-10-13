@@ -30,6 +30,7 @@ export function generateArt(pieces) {
       tint: piece.tint,
       ...(piece.alpha !== undefined && { alpha: piece.alpha }),
       ...(piece.density !== undefined && { density: piece.density }),
+      ...(piece.soften !== undefined && { soften: piece.soften }),
       ...(piece.fps !== undefined && { fps: piece.fps }),
       ...(piece.attach && { attach: piece.attach }),
       ...(piece.hitbox && { hitbox: piece.hitbox }),
