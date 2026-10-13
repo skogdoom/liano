@@ -3,7 +3,7 @@ import { DEV, PREVIEW } from '../playwright.config.js';
 import { collectErrors, started } from './helpers.js';
 
 for (const [label, query, engine] of [
-  ['default', '', 'pixi'],
+  ['default', '', 'phaser'],
   ['Pixi', '?engine=pixi', 'pixi'],
   ['Phaser', '?engine=phaser', 'phaser'],
 ]) {

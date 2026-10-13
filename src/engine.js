@@ -1,8 +1,8 @@
 // During the move to Phaser (see PHASER_PLAN.md) the game comes in two versions: the
-// Pixi one (today's game, the default) and the Phaser one. `?engine=phaser` picks the
-// Phaser version and `?engine=pixi` the Pixi one; anything else gets the default.
+// Phaser one (the default since M7) and the Pixi one, until M8 removes it. `?engine=pixi`
+// picks the Pixi version and `?engine=phaser` the Phaser one; anything else gets the default.
 export const ENGINES = ['pixi', 'phaser'];
-export const DEFAULT_ENGINE = 'pixi';
+export const DEFAULT_ENGINE = 'phaser';
 
 export function engineFrom(search) {
   const value = new URLSearchParams(search).get('engine');

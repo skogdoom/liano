@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is next.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done but for the owner's real-device pass and the budgets on the iPhone 13 mini (its report): Phaser is now the default version. M8 follows once M7 is accepted.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -612,6 +612,58 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
 - **Replacement drill**: in a test build, swap one piece of each kind (plain, flipbook, joint, stretch, rope, tinted) for placeholder art, check the game, gallery and validator handle them, then revert.
 - Make Phaser the default version; Pixi stays reachable with `?engine=pixi`.
 - **Done when:** parity and budgets are met or each exception is accepted in writing here.
+
+**M7 report (version 3.0.0-dev.8).**
+- **Phaser is the default version.** `?engine=pixi` gives the Pixi version until M8.
+- **Parity:** the whole set (the object, scene and UI scenarios, each at 1× and 2×) passes within the limits, apart from the two scene exceptions accepted in M5. Nothing new.
+- **Bundle: Phaser built from its source** (`vite.config.js`):
+  - without physics, through Phaser's own `phaser-no-physics.js` entry;
+  - WebGL only: its feature flags (`typeof WEBGL_RENDERER` and the like) are replaced as Phaser's webpack build does, in the build and in the dev server's pre-bundling;
+  - Node's `global` mapped to `globalThis`.
+
+  The Phaser chunk shrinks from 377 to **322 KB gzipped**. A first visit to the Phaser version downloads 363 KB of scripts gzipped against the Pixi version's 201 (+162 KB, within the +150–170 KB accepted in section 1). The art adds 1.1 MB of PNG at 1×. Lazy features would gain little: what is left is the renderer, the scene system, the loader, text and sound, all of which the game uses.
+- **Start** (the production build served locally, headless Chromium, software WebGL): a playable title 792 ms after navigation, against 251 ms for Pixi. The difference is the larger script and the boot atlas. The 1.5 s budget is for the iPhone 13 mini and is measured there (below).
+- **Long-run check** (`scripts/longrun.mjs`, now `ENGINE=phaser` too; dev server, headless Chromium, software WebGL, 33 ms of game time a frame, drawn every 90th frame, the heap sampled after a GC). Four scenarios of 30 game-minutes, no errors:
+
+  | | Gaps | Post-GC heap (MB), start → end | Draw calls a frame | Render a frame |
+  |---|---|---|---|---|
+  | Phaser, solo | 705 | 78.8 → 72.9 | 11–22 | 0.74 ms |
+  | Phaser, solo, everything on | 814 | 79.6 → 79.7 | 12–23 | |
+  | Phaser, shared | 713 | 76.9 → 74.0 | 13–22 | |
+  | Phaser, split | 715 | 77.0 → 72.6 | 21–44 | 1.15 ms |
+  | Pixi, solo | 731 | 45.3 → 48.5 | 27–36 | 1.79 ms |
+  | Pixi, solo, everything on | | 45.3 → 54.5 | | |
+  | Pixi, shared | | 44.1 → 47.6 | 33–40 | |
+  | Pixi, split | | 56.7 → 59.7 | 55–80 | 3.47 ms |
+
+  - **No growth.** The Phaser heap is flat or falls in all four. The dev server's heap is larger for Phaser (its unminified source); the production build is smaller (below).
+  - **Bounded**: scene nodes 226–485 (416–908 in split screen), textures 40–44, of them 0–4 made at run time (text).
+  - **Half the draw calls of Pixi and less than half its render time**: the pieces batch, where each Pixi Graphics over 200 points was a draw of its own.
+  - **No slowdown**: the JS side of a frame has a median of 0–0.1 ms and a p95 of 0.2–0.4 ms in both versions, the same through the run.
+- **Leak check over restarts** (45 runs ended by a fall, the post-GC heap on the dev server): Phaser 24.0 MB after 1, 25.0 after 5, 26.5 after 15, 26.8 after 25 to 45: flat after 15. Pixi 20.0, 22.0, 25.6, 28.5, 29.8 (still growing, as in PLAN.md's checklist).
+- **Memory in the production build** (JS heap after a GC, 1280 × 720): Phaser 7.6 MB at the title and 9.6 MB after a minute of play; Pixi 11.3 and 13.4 MB. Texture memory is unchanged since M6 (47 MB at 1×, 106 MB at 2×).
+- **Motion** (`MOTION=1`: drawn frames in play in which neither the camera nor player 1's monkey moved, 2 game-minutes at each rate): **none** at 60, 90, 120 or 144 Hz (7,235, 10,823, 14,411 and 17,282 frames). The Phaser version draws between sim steps as the Pixi version does (PLAN.md, "Drawing between sim steps"), whose run of this check found none at 60, 90 and 144 Hz either.
+- **First-appearance hitches** (`HITCHES=1`: 8 game-minutes, every frame drawn with the draw calls stubbed, the page yielding each frame):
+
+  | | Frames | Median | p99 | Worst | Over 8 ms | Over 16 ms |
+  |---|---|---|---|---|---|---|
+  | Phaser, a new obstacle view | 227 | 1.1 ms | 8.4 ms | 17.8 ms | 3 | 1 |
+  | Phaser, the others | 18,013 | 0.7 ms | 2.2 ms | 11.1 ms | 2 | 0 |
+  | Pixi, a new obstacle view | 218 | 1.2 ms | 4.2 ms | 15.5 ms | 1 | 0 |
+  | Pixi, the others | 18,022 | 0.8 ms | 2.3 ms | 13.1 ms | 3 | 0 |
+
+  As in the Pixi version, no pre-warm is worth it: a new rig costs about as much as a new Pixi view, and the few slow frames are as rare in both.
+- **Replacement drill on the finished rigs** (`scripts/dev/replacement-drill.mjs`, the same six pieces as in M4: plain, flipbook, joint, stretch, rope, tinted tile):
+  - `art:check` accepted them, with the same warning (the branch placeholder strays past the hitbox). It refused a picture in the wrong aspect, and so did the build.
+  - The gallery marked the 21 frames custom and still passed (594 frames, 0.52 % differing).
+  - The game and the parity page showed them with no code change: the red far backdrop, darker at dusk; the red rope bending; player 1's red arms turning about their pivot; the branches' red bodies and stretched trunks; each frame of the panther's tail its own colour.
+  - Reverted; the art rebuilt as before.
+- **Left for the owner** (needs real devices; nothing here can stand in for them):
+  - the real-device pass: desktop browsers (Chrome, Firefox, Safari), the iPhone 13 mini, an iPad, an Android phone; portrait and landscape; split and shared; both versions side by side;
+  - section 6's budgets on the iPhone 13 mini: the frame line of the debug view (D) in a normal run in each mode, the start, and the memory (Safari's Web Inspector);
+  - the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini).
+
+  If the phone's start is over budget, the first stage's obstacles move to the boot set (M4). The trunks as stretched pieces (M5d) stay an option, not done: the trees are accepted as they are.
 
 ### M8. Remove Pixi (S–M)
 
