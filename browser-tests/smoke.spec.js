@@ -18,6 +18,23 @@ for (const [label, query, engine] of [
   });
 }
 
+// The frame-time readout (?frames=1) for checking smoothness on a device: it counts the
+// frames, and a tap on it is not a press in the game.
+for (const engine of ['phaser', 'pixi']) {
+  test(`the ${engine === 'phaser' ? 'Phaser' : 'Pixi'} version shows the frame-time readout with ?frames=1`, async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(`${DEV}?engine=${engine}&frames=1`);
+    await started(page, errors);
+    const readout = page.locator('#frame-stats');
+    await expect(readout).toContainText(/Hz · since reset: \d+ frames/, { timeout: 10_000 });
+    await page.waitForFunction(() => window.__liano.pause.acceptsInput());
+    await readout.click();
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
+    expect(errors).toEqual([]);
+  });
+}
+
 test('the Pixi version plays: Space starts a run', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto(`${DEV}?engine=pixi`);

@@ -135,7 +135,7 @@ The weakest device is an **iPhone 13 mini**: A15 chip, 4 GB of memory, a 60 Hz s
 - **Texture memory:** at most **120 MB at a pixel ratio of 2** (set after the M1 spike; well under the 150 MB the plan aimed for). iOS reloads a page whose memory grows too large, and WebGL textures count towards it. The phone's texture size limit, read in M1, is 16384 pixels.
 - **Memory over time:** no growth of the post-GC heap over 30 game-minutes (measured in Chrome, which reports the heap; Safari doesn't).
 
-Measuring on the phone: the debug view's frame line (`fps`, `worst`, `slow`) works in Safari; Safari's Web Inspector (from a Mac) gives timelines and memory. CI runs the browser tests in Chromium only, so anything WebKit-specific is caught on the phone.
+Measuring on the phone: `?frames=1` shows a frame-time readout in either version (frames that came late, once or more than once, and the worst; tap it to start counting again). It draws nothing on the canvas, unlike the debug view (D), whose own drawing makes frames slow (M7). Safari's Web Inspector (from a Mac) gives timelines and memory. CI runs the browser tests in Chromium only, so anything WebKit-specific is caught on the phone.
 
 ## 7. Risks and how the plan deals with them
 
@@ -660,6 +660,8 @@ For each part: rigs built from the M4 pieces, a view-model (tested in Node) and 
   - The game and the parity page showed them with no code change: the red far backdrop, darker at dusk; the red rope bending; player 1's red arms turning about their pivot; the branches' red bodies and stretched trunks; each frame of the panther's tail its own colour.
   - Reverted; the art rebuilt as before.
 - **On the iPhone 13 mini** the owner finds the performance of the Phaser version OK.
+- **The debug view is no way to judge smoothness.** It redraws its texts and shapes every frame. Over a game-minute in Chromium (drawing stubbed), a frame's median goes from 0.7 to 4.6 ms in the Phaser version, with 339 frames over 8 ms, 16 over 16 ms and the worst at 60 ms. In the Pixi version it goes from 0.6 to 3.7 ms, with 59 over 8 ms and the worst at 18 ms. The owner's first check in Safari on a MacBook Air M1 used it and saw frames over 17 ms, some over 60, in both versions. `?frames=1` is the readout to use instead (section 6).
+- **The owner's check in Safari (MacBook Air M1):** a slight stutter of the background while swinging, in both versions (Pixi seemed best); scrolling the backdrop by whole device pixels made no difference. A slight stutter at a crash with the shadow on, in the Phaser version; in Chromium a death costs that version at most 4–5 ms in a frame, with the shadow on or off (Pixi up to 15 ms, as its results appear). To be measured with `?frames=1` on the production build.
 - **Left for the owner** (needs real devices; nothing here can stand in for them):
   - the rest of the real-device pass: desktop browsers (Chrome, Firefox, Safari), an iPad, an Android phone; portrait and landscape; split and shared; both versions side by side;
   - the rest of M3's manual sound pass (the pling, Chrome, Firefox, the iPhone 13 mini).

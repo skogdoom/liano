@@ -5,6 +5,8 @@ import { createFatalOverlay } from './fatal.js';
 // Each version is its own chunk, so a page downloads only its own library.
 const engine = engineFrom(location.search);
 document.documentElement.dataset.engine = engine;
+// `?frames=1`: a frame-time readout, for checking smoothness on a device (frameStats.js).
+if (new URLSearchParams(location.search).get('frames') === '1') import('./frameStats.js').then(({ showFrameStats }) => showFrameStats());
 try {
   if (engine === 'phaser') await import('./phaser/main.js');
   else await import('./main.js');
