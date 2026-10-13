@@ -237,22 +237,21 @@ test('every sound renders the same, sample for sample, through Phaser’s nodes 
   expect(errors).toEqual([]);
 });
 
-// Each kind of batch (images, tiles, ropes) has one shader, for the most textures a batch
-// takes (phaser/shaders.js): a batch with a new number of textures (an obstacle first
-// showing) compiles nothing in play, which stalled Safari.
+// A batch takes one texture (phaser/shaders.js), so each kind of batch (images, tiles,
+// ropes) has one shader, the cheapest, compiled before the title: an obstacle first
+// showing compiles nothing in play, which stalled Safari.
 test('the Phaser version draws every batch of a kind with one shader', async ({ page }) => {
   const errors = await phaser(page);
   await page.keyboard.press('Space');
   await expect.poll(() => state(page)).toBe('PLAYING');
   await page.waitForTimeout(500);
-  const programs = await page.evaluate(() => {
-    const { renderer } = window.__liano.app;
-    const nodes = renderer.renderNodes._nodes;
-    return { max: renderer.maxTextures, keys: ['BatchHandlerQuad', 'BatchHandlerTileSprite', 'BatchHandlerStrip'].map((name) => Object.keys(nodes[name]?.programManager.programs ?? {})) };
+  const keys = await page.evaluate(() => {
+    const nodes = window.__liano.app.renderer.renderNodes._nodes;
+    return ['BatchHandlerQuad', 'BatchHandlerTileSprite', 'BatchHandlerStrip'].map((name) => Object.keys(nodes[name]?.programManager.programs ?? {}));
   });
-  for (const keys of programs.keys) {
-    expect(keys).toHaveLength(1);
-    expect(keys[0]).toContain(`_${programs.max}TexCount_`);
+  for (const programs of keys) {
+    expect(programs).toHaveLength(1);
+    expect(programs[0]).toContain('_1TexCount_');
   }
   expect(errors).toEqual([]);
 });
