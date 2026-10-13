@@ -116,7 +116,7 @@
       },
       "scale": 2,
       "tint": true,
-      "soften": 0.4,
+      "soften": 0.8,
       "frames": [
         "generated/backdrop.floor.svg"
       ]

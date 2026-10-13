@@ -193,3 +193,35 @@ warmup to the captured session). The build passed. The vertex-level probe draws
 mid/floor/monkey quads, zero monkey position interpolation error, rope error below
 1.2e-15, and steady steps spanning 16.633–16.752 ms. These are submitted poses in
 Chromium, not Safari display-presentation measurements.
+
+
+## Floor shrubbery follow-up
+
+The owner's next 1,800-frame Safari capture shows no late callbacks and no
+repeated active poses. Game steps span 16.597–16.716 ms, with 99th-percentile CPU
+work of 3 ms. Camera and monkey positions match interpolation exactly. The two
+clock-induced double/half steps from the earlier trace are absent. Occasional
+perceived stutter still cannot be attributed to GPU/display presentation from
+these CPU/pose measurements alone.
+
+The owner finds the overall motion substantially better and asks for gentler
+floor shrubbery, like the ceiling. Both tiles already used a 0.4-unit horizontal
+build-time Gaussian. The floor's narrower, darker foliage now uses **0.8 units**;
+the canopy remains at 0.4. The trace shows foreground travel reaching about
+14.37 CSS pixels per frame, so those thin edges remain much more conspicuous
+than the slow trees. The softening wraps across the tile repeat, keeps vertical
+placement intact, and adds no runtime shaders, textures or uploads. The floor
+still moves with the world at factor 1; no movement timing or Pixi drawing changes
+are made. The generated art contract and guide record the new floor treatment.
+
+
+Whole-pane parity fixtures now match the softened floor artwork in their Pixi
+reference, so intentional Phaser-only blur is not treated as a placement or
+layering regression. The actual Pixi floor stays sharp. The art gallery still
+independently validates the softened PNG against the procedural drawing plus
+its declared Gaussian; background pixel checks verify repeat/crop/tint and
+image/tile equivalence. No global parity tolerance is changed.
+
+Floor-follow-up validation: build passed; all 32 focused art/import unit checks
+passed; gallery, three image/tile comparisons (landscape/wide/portrait), and
+whole-pane comparisons at 1×/2× passed.

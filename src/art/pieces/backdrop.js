@@ -26,9 +26,11 @@ const tile = { kind: 'tile', set: 'boot', tint: true };
 const sharp = { scale: 2 };
 // The canopy and the floor move with the world, as fast as the camera: in a fast flight
 // their hard edges moved 10–12 points a frame and looked stepped at 60 Hz (PHASER_PLAN.md,
-// M7), so the build blurs them sideways this much (units), a little under a pixel on a 2×
-// screen.
-const SOFTEN = 0.4;
+// M7), so the build softens them sideways. The canopy's 0.4 units is a little under
+// one pixel at 2×. The floor's thin, high-contrast shrubs need a little more softening
+// (Safari follow-up, BACKGROUND_MOTION.md); their 0.8 units is 1.6 pixels at 2×.
+const CANOPY_SOFTEN = 0.4;
+const FLOOR_SOFTEN = 0.8;
 // The near layer: its leaf clumps reach this far down from the top of the band, and its
 // ferns this far up from the floor line.
 export const NEAR_TOP_HEIGHT = 100;
@@ -90,7 +92,7 @@ export const BACKDROP_PIECES = [
     ...tile,
     ...sharp,
     key: 'backdrop.canopy',
-    soften: SOFTEN,
+    soften: CANOPY_SOFTEN,
     purpose: 'The canopy strip the lianas hang from, in front of the world, with a leafy top edge for taller views. One tile, repeating sideways.',
     // From the bumps of the leafy top edge to the leaves hanging under the strip.
     box: { x: 0, y: -SKY_MARGIN - 30, w: TILE, h: CANOPY_BOTTOM + 24 + SKY_MARGIN + 30 },
@@ -100,7 +102,7 @@ export const BACKDROP_PIECES = [
     ...tile,
     ...sharp,
     key: 'backdrop.floor',
-    soften: SOFTEN,
+    soften: FLOOR_SOFTEN,
     purpose: `The top of the dark jungle floor, in front of the world: undergrowth along the floor line. One tile, repeating sideways; below it the floor is backdrop.floorFill, stretched down ${EXTEND_DOWN} px below the band for taller views.`,
     box: { x: 0, y: FLOOR_Y - FLOOR_TOP, w: TILE, h: FLOOR_TOP + FLOOR_DEPTH },
     frames: [(g) => drawFloorLayer(g)],

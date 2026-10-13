@@ -38,7 +38,7 @@ async function drawWithPixi(scenario, zoom) {
   world.scale.set(zoom);
   world.position.set(-sx * zoom, -sy * zoom);
   app.stage.addChild(world);
-  scenario.pixi(world, { Graphics, Container }, zoom);
+  await scenario.pixi(world, { Graphics, Container }, zoom);
   app.render();
   const image = pixelsOf(app.canvas, width, height);
   app.destroy(true, { children: true });
