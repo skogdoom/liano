@@ -89,7 +89,7 @@ export class WorldPane {
   stepCamera(dt) {
     if (this.camera !== this.ownCamera) return;
     this.camera.mark();
-    if (this.world.alive) this.camera.update(this.#target(), dt, this.world.monkey);
+    if (this.world.alive) this.camera.update(this.#target(), dt);
   }
 
   #target() {

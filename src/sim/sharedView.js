@@ -16,7 +16,7 @@ export class SharedView {
   constructor(world, width = SCREEN_WIDTH / SHARED_ZOOM) {
     this.world = world;
     this.width = width;
-    this.camera = new Camera(0, SHARED_LEADER_X * width);
+    this.camera = new Camera(0, SHARED_LEADER_X * width, { lags: 1 });
     this.camera.reset(this.#target() ?? world.monkey.x);
     world.respawnLiana = (player) => this.respawnLiana(player);
   }

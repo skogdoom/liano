@@ -9,9 +9,6 @@
 // default on phones: one shader per kind of batch, compiled before the title, and the
 // cheapest one per pixel (less than half the drawing time of either, in Chromium's
 // software renderer).
-//
-// TEMPORARY (the owner's check in Safari): `?shaders=default` keeps Phaser's own batching.
 export function oneTexturePerBatch(renderer) {
-  if (new URLSearchParams(location.search).get('shaders') === 'default') return;
   renderer.renderNodes.setMaxParallelTextureUnits(1);
 }
