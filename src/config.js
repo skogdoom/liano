@@ -250,6 +250,9 @@ export const CAMERA_TARGET_X = 0.35 * SCREEN_WIDTH;
 export const CAMERA_LERP = 8;
 // A pane's camera eases through two lags of this rate (per second) each (render/camera.js).
 export const CAMERA_EASE = 12;
+// The share of each swing a landscape pane's camera follows, about the liana's anchor
+// (render/camera.js, SwingTarget).
+export const CAMERA_SWAY = 0.75;
 
 // Layout (see layout.js).
 // Landscape screens wider than 16:9 first crop the empty bottom of the world band,

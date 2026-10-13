@@ -67,3 +67,36 @@ describe('the pane camera (two lags) and the shared screen camera (one)', () => 
     expect(a.x).toBeCloseTo(b.x, 9);
   });
 });
+
+describe('the swing target (what a landscape pane follows)', () => {
+  const liana = { x: 1000 };
+  const hang = (x) => ({ state: 'HANGING', liana, x });
+  const fly = (x) => ({ state: 'AIRBORNE', liana: null, x });
+
+  it('follows a share of the swing about the anchor', async () => {
+    const { SwingTarget } = await import('../src/render/camera.js');
+    const target = new SwingTarget(0.75);
+    expect(target.of(hang(1000), 'monkey', 1 / 120)).toBe(1000);
+    for (let i = 0; i < 600; i++) target.of(hang(1100), 'monkey', 1 / 120);
+    expect(target.of(hang(1100), 'monkey', 1 / 120)).toBeCloseTo(1075, 6);
+    expect(new SwingTarget(1).of(hang(1100), 'monkey', 0)).toBe(1100);
+  });
+
+  it('never jumps at a release or a catch, and closes in on what it follows', async () => {
+    const { SwingTarget } = await import('../src/render/camera.js');
+    const target = new SwingTarget(0.5);
+    let last = target.of(hang(1200), 'monkey', 1 / 120); // 1100
+    const steps = [...Array(60).fill(fly(1250)), ...Array(240).fill(hang(1300))];
+    for (const monkey of steps) {
+      const next = target.of(monkey, 'monkey', 1 / 120);
+      expect(Math.abs(next - last)).toBeLessThan(3);
+      last = next;
+    }
+    expect(last).toBeCloseTo(1150, 0); // the anchor plus half the swing
+  });
+
+  it('follows the anchor in portrait', async () => {
+    const { SwingTarget } = await import('../src/render/camera.js');
+    expect(new SwingTarget(0.75).of(hang(1100), 'anchor', 1 / 120)).toBe(1000);
+  });
+});
