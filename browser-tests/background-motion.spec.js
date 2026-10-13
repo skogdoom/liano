@@ -38,8 +38,9 @@ for (const [width, height, ratio] of [[1280, 720, 1], [1920, 800, 2], [375, 812,
       const results = [];
       for (const tint of [0xffffff, 0x506878]) {
         platform.art.tint([images.back, images.front, tiles.back, tiles.front], tint);
-        // mid-layer wrap at ±5120; canopy/floor wrap at 2048.
-        for (const cameraX of [0, 0.125, -0.125, 2048, 5119.875, 5120.125, -5120.125]) {
+        const midWrap = 2048 / images.layers.find((l) => l.key === 'backdrop.mid').factor;
+        // Mid-layer and foreground wrap boundaries, including backwards movement.
+        for (const cameraX of [0, 0.125, -0.125, 2048, midWrap - 0.125, midWrap + 0.125, -midWrap - 0.125]) {
           const a = draw(images, cameraX), b = draw(tiles, cameraX);
           let different = 0, largest = 0;
           for (let i = 0; i < a.length; i += 4) {
@@ -58,3 +59,52 @@ for (const [width, height, ratio] of [[1280, 720, 1], [1920, 800, 2], [375, 812,
     await page.close();
   });
 }
+
+test('Phaser eases only distant scenery at fixed steps and resets it with the pane', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto(`${DEV}?engine=phaser`);
+  await started(page, errors);
+  await page.waitForFunction(() => window.__liano?.platform.world);
+  const result = await page.evaluate(() => {
+    const { app, platform } = window.__liano;
+    app.loop.sleep();
+    const pane = platform.world.panes[0];
+    // Use an externally stepped camera, as in shared screen, to isolate the scenery.
+    const camera = { x: 0, prevX: 0 };
+    pane.setWorld(pane.world, [0], camera);
+    camera.x = camera.prevX = 100;
+    pane.stepCamera(1 / 120);
+    pane.update([], 1 / 60, false, null, 0.5);
+    const drawn = pane.backdropCameraX;
+    const layer = (key) => pane.backdrop.layers.find((l) => l.key === `backdrop.${key}`);
+    const first = { sceneryX: drawn, worldX: pane.worldLayer.x,
+      midX: layer('mid').view.x, canopyX: layer('canopy').view.x, floorX: layer('floor').view.x,
+      factors: ['far', 'mid', 'near', 'nearTop', 'canopy', 'floor'].map((key) => layer(key).factor),
+    };
+    // Rendering/pausing does not advance the spring: only simulation steps do.
+    pane.update([], 0, false, null, 0.5);
+    const pausedX = pane.backdropCameraX;
+    pane.update([], 1 / 60, false, null, 0.5);
+    const renderOnlyX = pane.backdropCameraX;
+    camera.x = camera.prevX = 1000;
+    pane.resize(pane.layout, platform.camera.zoom);
+    pane.update([], 0, false, null, 0.5);
+    const resized = [pane.backdropCameraX, pane.backdropMotion.velocity];
+    camera.x = camera.prevX = -1000;
+    pane.setWorld(pane.world, [0], camera);
+    pane.update([], 0, false, null, 0.5);
+    return { first, pausedX, renderOnlyX, resized, reset: [pane.backdropCameraX, pane.backdropMotion.velocity] };
+  });
+  expect(result.first.sceneryX).toBeGreaterThan(0);
+  expect(result.first.sceneryX).toBeLessThan(1);
+  expect(result.first.worldX).toBe(-100);
+  expect(result.first.midX).toBeCloseTo(-result.first.sceneryX * 0.32, 9);
+  expect(result.first.canopyX).toBe(-100);
+  expect(result.first.floorX).toBe(-100);
+  result.first.factors.forEach((factor, i) => expect(factor).toBeCloseTo([0.12, 0.32, 0.56, 0.56, 1, 1][i], 9));
+  expect(result.pausedX).toBe(result.first.sceneryX);
+  expect(result.renderOnlyX).toBe(result.first.sceneryX);
+  expect(result.resized).toEqual([1000, 0]);
+  expect(result.reset).toEqual([-1000, 0]);
+  expect(errors).toEqual([]);
+});

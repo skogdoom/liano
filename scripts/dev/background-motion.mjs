@@ -64,9 +64,9 @@ try {
           const cameraX = pane.cameraX;
           const caught = platform.frame.events.some((e) => e.type === 'grab');
           const monkey = game.world.monkey;
-          frames.push({ cameraX, monkeyX: monkey.x, caught, state: monkey.state });
-          for (const { tile, copies, factor, key: artKey } of pane.backdrop.layers) {
-            const shift = layerShift(cameraX, factor);
+          frames.push({ cameraX, sceneryX: pane.backdropCameraX, monkeyX: monkey.x, caught, state: monkey.state });
+          for (const { tile, copies, factor, scenery, key: artKey } of pane.backdrop.layers) {
+            const shift = layerShift(scenery ? pane.backdropCameraX : cameraX, factor);
             const actual = copies ? copies.view.x : tile.tilePositionX;
             const expected = copies ? -shift : (shift - SKY_MARGIN) * platform.art.at(artKey).zoom;
             if (actual !== expected) throw new Error('Backdrop did not use the interpolated camera');
@@ -75,6 +75,9 @@ try {
         }
         const shifts = frames.slice(1).map((f, i) => f.cameraX - frames[i].cameraX);
         const acceleration = shifts.slice(1).map((dx, i) => (dx - shifts[i]) * hz * hz);
+        const sceneryShifts = frames.slice(1).map((f, i) => f.sceneryX - frames[i].sceneryX);
+        const sceneryAcceleration = sceneryShifts.slice(1).map((dx, i) => (dx - sceneryShifts[i]) * hz * hz);
+        const midFactor = play.panes[0].backdrop.layers.find((l) => l.key === 'backdrop.mid').factor;
         // The catch and the next two frames: interpolation can split a catch across them.
         const grabs = frames.flatMap((f, i) => f.caught ? [{
           frame: i,
@@ -85,8 +88,12 @@ try {
         }] : []);
         motion.push({ slip, hz, frames: frames.length, grabs: grabs.length,
           repeatedCameraFrames: shifts.filter((dx) => dx === 0).length,
+          repeatedSceneryFrames: sceneryShifts.filter((dx) => dx === 0).length,
           peakCatchAcceleration: Math.max(...grabs.map((g) => g.peakAcceleration)),
           peakAcceleration: Math.max(...acceleration.map(Math.abs)), firstCatch: grabs[0],
+          peakPreviousMidAcceleration: Math.max(...acceleration.map(Math.abs)) * MID_FACTOR,
+          peakMidAcceleration: Math.max(...sceneryAcceleration.map(Math.abs)) * midFactor,
+          peakMidDevicePixelsPerFrame: Math.max(...sceneryShifts.map(Math.abs)) * midFactor * 2,
         });
       }
       // One uninterrupted swing on the title world's first liana. Holding its grip
@@ -100,13 +107,13 @@ try {
         swingGame.step(SIM_DT); play.stepCameras(SIM_DT);
         platform.frame = { frameDt: 1 / 60, alpha: 1, events: [] };
         play.update();
-        swingFrames.push(play.panes[0].cameraX);
+        swingFrames.push(play.panes[0].backdropCameraX);
       }
       const swingShifts = swingFrames.slice(1).map((x, i) => x - swingFrames[i]);
       const swing = {
         hz: 60, frames: swingFrames.length,
         speedRange: [Math.min(...swingShifts) * 60, Math.max(...swingShifts) * 60],
-        peakMidLayerDevicePixelsPerFrame: Math.max(...swingShifts.map(Math.abs)) * MID_FACTOR * 2,
+        peakMidLayerDevicePixelsPerFrame: Math.max(...swingShifts.map(Math.abs)) * play.panes[0].backdrop.layers.find((l) => l.key === 'backdrop.mid').factor * 2,
         directionChanges: swingShifts.slice(1).filter((dx, i) => Math.sign(dx) !== Math.sign(swingShifts[i])).length,
       };
       // Actual GPU pixels, separately: isolate the mid (dark green trunks) layer over
@@ -128,7 +135,7 @@ try {
         previous = row;
       }
       if (pixelDiffs.some((d) => d === 0)) throw new Error('A subpixel scroll left the rendered tree row unchanged');
-      return { motion, swing, subpixelScroll: { cameraStep: 0.1, midLayerDevicePixelStep: 0.1 * MID_FACTOR * 2, pixelDiffs } };
+      return { motion, swing, subpixelScroll: { cameraStep: 0.1, midLayerDevicePixelStep: 0.1 * pane.backdrop.layers.find((l) => l.key === 'backdrop.mid').factor * 2, pixelDiffs } };
     });
     if (errors.length) throw new Error(errors.join('\n'));
     results.push({ backdrop, camera: camera || 'default', ...result });

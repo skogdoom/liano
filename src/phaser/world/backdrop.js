@@ -14,6 +14,7 @@ import {
   skyLayout,
 } from '../../views/backdrop.js';
 import { makeContainer } from './build.js';
+import { PARALLAX_SPEED } from './backdropMotion.js';
 
 // The jungle backdrop in the Phaser version (as the Pixi Background): the sky, stretched
 // to the view, and three parallax layers behind the world (`back`); the canopy strip and
@@ -48,7 +49,7 @@ class ImageLayer {
 }
 
 export class BackdropRig {
-  constructor(scene, art, { images = IMAGE_MODE } = {}) {
+  constructor(scene, art, { images = IMAGE_MODE, speed = PARALLAX_SPEED } = {}) {
     this.scene = scene;
     this.art = art;
     this.back = makeContainer(scene);
@@ -65,7 +66,8 @@ export class BackdropRig {
     ].map(([key, factor, group]) => {
       const copies = images ? new ImageLayer(scene, art, key) : null;
       const tile = copies ? null : art.tile(scene, key, 1);
-      return { key, factor, group, tile, copies, view: copies?.view ?? tile };
+      const scenery = group === this.back;
+      return { key, factor: scenery ? factor * speed : factor, scenery, group, tile, copies, view: copies?.view ?? tile };
     });
     this.floor = makeContainer(scene);
     // Below the floor's undergrowth, its colour down to the bottom of taller views.
@@ -102,10 +104,11 @@ export class BackdropRig {
     this.cameraX = null;
   }
 
-  // Scrolls the layers for a camera at `cameraX`.
-  update(cameraX) {
-    for (const { key, tile, copies, factor } of this.layers) {
-      const shift = layerShift(cameraX, factor);
+  // Scenery follows its own eased camera; the canopy and floor stay aligned with
+  // the world camera. A standalone art comparison can pass one position for both.
+  update(cameraX, sceneryX = cameraX) {
+    for (const { key, tile, copies, factor, scenery } of this.layers) {
+      const shift = layerShift(scenery ? sceneryX : cameraX, factor);
       if (copies) copies.view.x = -shift;
       else this.art.setTile(tile, key, { x: shift - SKY_MARGIN });
     }

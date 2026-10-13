@@ -208,7 +208,9 @@ const sceneScenario = (id, title, stage, ahead = 0, temple = null) =>
       view.addChild(pane.view);
     },
     phaser(scene, zoom) {
-      const pane = new WorldPane(scene, artFor(scene, zoom));
+      // Match motion settings for the art comparison. Phaser's gameplay scenery
+      // is deliberately slower and eased separately; its motion has its own checks.
+      const pane = new WorldPane(scene, artFor(scene, zoom), { backdropSpeed: 1, smoothBackdrop: false });
       pane.setWorld(sceneWorld(stage, temple), [0]);
       pane.resize(paneLayouts(layoutFor(SCENE.width, SCENE.height), 1, 1)[0], zoom);
       pane.camera.x = pane.camera.prevX = pane.camera.x + ahead;
