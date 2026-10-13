@@ -20,9 +20,6 @@ import { makeContainer } from './build.js';
 // repeating sideways (TileSprites); all of it takes the stage tint, eased as the stages
 // change.
 const SKY = SKY_BANDS * SKY_BAND_HEIGHT; // the sky piece's height, in units
-// TEMPORARY (M7, the owner's check in Safari): `?snap=1` scrolls the layers by whole device
-// pixels, so their pictures are not resampled at a different fraction of a pixel each frame.
-const SNAP = typeof location !== 'undefined' && new URLSearchParams(location.search).get('snap') === '1';
 
 export class BackdropRig {
   constructor(scene, art) {
@@ -54,9 +51,7 @@ export class BackdropRig {
 
   // Fits the sky and the layers to the pane (one of paneLayouts()), and lifts the floor to
   // the bottom edge when the band is cropped (see layout.js).
-  // `density`: device pixels per world unit.
-  resize(pane, density = 1) {
-    this.density = density;
+  resize(pane) {
     const top = -pane.bandTop;
     const sky = skyLayout(top, pane.view.width, top + pane.view.height);
     const { art } = this;
@@ -74,8 +69,7 @@ export class BackdropRig {
 
   // Scrolls the layers for a camera at `cameraX`.
   update(cameraX) {
-    const snap = (x) => (SNAP ? Math.round(x * this.density) / this.density : x);
-    for (const { key, tile, factor } of this.layers) this.art.setTile(tile, key, { x: snap(layerShift(cameraX, factor)) - SKY_MARGIN });
+    for (const { key, tile, factor } of this.layers) this.art.setTile(tile, key, { x: layerShift(cameraX, factor) - SKY_MARGIN });
   }
 
   // Eases the tint towards the stage's (see StageTint); returns it.
