@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolutionChoice, resolutionLimit, RESOLUTION_STORAGE_KEY } from '../src/phaser/resolution.js';
+import { applyResolutionChoice, resolutionChoice, resolutionLimit, RESOLUTION_STORAGE_KEY } from '../src/phaser/resolution.js';
 import { pixelRatio } from '../src/screen.js';
 
 const safari = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/26.5.2 Safari/605.1.15';
@@ -47,5 +47,21 @@ describe('Phaser resolution choices', () => {
       expect(resolutionChoice('', { localStorage: { getItem: () => value } })).toBe('auto');
     }
     expect(resolutionLimit('?resolution=0', { userAgent: safari })).toBe(1.5);
+  });
+
+  it('saves submenu choices and returns to the same match mode without dropping test parameters', () => {
+    const saved = [], navigated = [];
+    const win = { localStorage: { setItem: (...args) => saved.push(args) },
+      location: { href: 'https://example.test/liano/?engine=phaser&frames=1#game', assign: (url) => navigated.push(url) } };
+    applyResolutionChoice('1.5', win, { mode: 'split' });
+    expect(saved).toEqual([[RESOLUTION_STORAGE_KEY, '1.5']]);
+    const next = new URL(navigated[0]);
+    expect(next.searchParams.get('resolution')).toBe('1.5');
+    expect(next.searchParams.get('mode')).toBe('split');
+    expect(next.searchParams.get('frames')).toBe('1');
+    expect(next.hash).toBe('#game');
+    win.location.href = next.href;
+    applyResolutionChoice('auto', win, { mode: 'solo' });
+    expect(new URL(navigated[1]).searchParams.has('mode')).toBe(false);
   });
 });

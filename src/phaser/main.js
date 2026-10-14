@@ -20,7 +20,8 @@ import { createPhaserSoundPlayer } from './sound.js';
 import { canvasSize, resolutionLimit, viewCamera } from './view.js';
 import { oneTexturePerBatch } from './shaders.js';
 import { installObstacleBlur } from './obstacleBlur.js';
-import { installResolutionControl, resolutionChoice } from './resolution.js';
+import { applyResolutionChoice, rememberResolutionChoice, resolutionChoice } from './resolution.js';
+import { ConfigMenu } from './configMenu.js';
 
 // The Phaser version of the game (see PHASER_PLAN.md). The platform holds the layout,
 // pause, full screen, input and sound for the scenes (scenes.js); the game runs as in
@@ -78,6 +79,11 @@ const platform = new Phaser.Events.EventEmitter();
 game.registry.set('platform', platform);
 platform.resolutionLimit = resolutionCap;
 platform.resolutionMode = resolutionPreference;
+platform.configMenu = new ConfigMenu(resolutionPreference, {
+  apply: (choice) => applyResolutionChoice(choice, window, { mode: platform.game.mode }),
+  remember: rememberResolutionChoice,
+  clear: () => platform.input?.clear(),
+});
 installObstacleBlur(platform);
 blockBrowserGestures(game.canvas);
 
@@ -99,8 +105,9 @@ const theGame = new Game({
     return new World({ ...options, makeObstacle: prefetch.makeObstacle, makeBanana: prefetch.makeBanana });
   },
 });
+// A graphics change reloads assets, then returns to the selected match mode.
+theGame.selectMode(new URLSearchParams(location.search).get('mode'));
 platform.game = theGame;
-installResolutionControl(game, platform, resolutionPreference);
 
 // The layout for the window (layout.js) and the camera that shows the view on the
 // canvas (view.js); scenes follow the 'layout' event. The two-player modes use the
@@ -187,14 +194,15 @@ const ui = await new Promise((resolve) => platform.once('ui', resolve));
 const buttonAt = (hit, event) =>
   inside(hit, controlsPoint(platform.layout, game.canvas.getBoundingClientRect(), event.clientX, event.clientY));
 const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-const input = createInput(phaserKeys(ui.input.keyboard), phaserPointers(ui.input), {
+const input = createInput(phaserKeys(ui.input.keyboard, {
+  intercept: (event) => platform.configMenu.interceptKey(event, theGame, pause.acceptsInput()),
+}), phaserPointers(ui.input), {
   initialType: coarsePointer ? 'touch' : 'keyboard',
   accepts: () => pause.acceptsInput(),
   intercept: (event) => {
     if (platform.fullscreenButton && buttonAt(FULLSCREEN_HIT, event)) return true;
-    if (!buttonAt(MUTE_HIT, event)) return false;
-    toggleMute();
-    return true;
+    if (buttonAt(MUTE_HIT, event)) { toggleMute(); return true; }
+    return ui.overlays.interceptConfigPointer(event, theGame, pause.acceptsInput());
   },
 });
 platform.input = input;

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { DEV, PREVIEW } from '../playwright.config.js';
 import { layoutFor } from '../src/layout.js';
 import { viewCamera } from '../src/phaser/view.js';
-import { collectErrors, started } from './helpers.js';
+import { collectErrors, openConfig, panelPoint, started } from './helpers.js';
 
 const SAFARI_MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/26.5.2 Safari/605.1.15';
 
@@ -106,18 +106,19 @@ test('Safari Auto and all manual choices persist without changing explicit test 
   const errors = collectErrors(page);
   await page.goto(`${DEV}?engine=phaser&frames=1`);
   await page.waitForFunction(() => window.__liano?.platform.world);
-  const selector = page.getByLabel('Graphics', { exact: false });
-  await expect(selector).toHaveValue('auto');
+  expect(await page.evaluate(() => window.__liano.platform.configMenu.choice)).toBe('auto');
+  await expect(page.locator('#graphics-quality')).toHaveCount(0);
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1500);
 
   // Selecting graphics must not start a run or send keyboard actions to it.
-  await selector.focus();
+  await openConfig(page);
   await page.keyboard.press('Space');
   await page.keyboard.press('Escape');
   expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
 
   for (const [choice, width] of [['2', 2000], ['1', 1000], ['1.5', 1500], ['auto', 1500]]) {
-    await selector.selectOption(choice);
+    await openConfig(page);
+    await page.keyboard.press({ '1': 'Digit1', '1.5': 'Digit2', '2': 'Digit3', auto: 'KeyA' }[choice]);
     await page.waitForURL((url) => url.searchParams.get('resolution') === choice);
     await page.waitForFunction(() => window.__liano?.platform.world && window.__phaserFrameTrace?.snapshot().frames.length);
     expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(width);
@@ -125,30 +126,30 @@ test('Safari Auto and all manual choices persist without changing explicit test 
     expect(trace.info.resolutionMode).toBe(choice);
     await page.goto(`${DEV}?engine=phaser&frames=1`);
     await page.waitForFunction(() => window.__liano?.platform.world);
-    await expect(selector).toHaveValue(choice);
+    expect(await page.evaluate(() => window.__liano.platform.configMenu.choice)).toBe(choice);
     expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(width);
   }
   // An A/B URL temporarily overrides the stored choice; it does not save itself.
   await page.goto(`${DEV}?engine=phaser&resolution=1`);
   await page.waitForFunction(() => window.__liano?.platform.world);
-  await expect(selector).toHaveValue('1');
+  expect(await page.evaluate(() => window.__liano.platform.configMenu.choice)).toBe('1');
   await page.goto(`${DEV}?engine=phaser`);
   await page.waitForFunction(() => window.__liano?.platform.world);
-  await expect(selector).toHaveValue('auto');
+  expect(await page.evaluate(() => window.__liano.platform.configMenu.choice)).toBe('auto');
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1500);
 
-  await selector.evaluate((el) => el.blur());
   await page.keyboard.press('Space');
   await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');
-  await expect(selector).toBeHidden();
+  expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.config.visible)).toBe(false);
   await page.keyboard.press('KeyP');
   await expect.poll(() => page.evaluate(() => window.__liano.pause.reason)).toBe('manual');
-  await expect(selector).toBeHidden();
+  await page.keyboard.press('KeyC');
+  expect(await page.evaluate(() => window.__liano.platform.configMenu.open)).toBe(false);
   await page.keyboard.press('KeyP');
   await page.waitForFunction(() => window.__liano.pause.acceptsInput());
   await page.keyboard.press('Escape');
   await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
-  await expect(selector).toBeVisible();
+  await openConfig(page);
   expect(errors).toEqual([]);
   await page.close();
 });
@@ -162,10 +163,12 @@ test('Safari Auto caps a high-density phone and graphics taps do not start play'
   await page.goto(`${DEV}?engine=phaser`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(563);
-  const selector = page.getByLabel('Graphics', { exact: false });
-  await selector.tap();
+  const entry = await panelPoint(page, 'title', 0, 180);
+  await page.touchscreen.tap(entry.x, entry.y);
+  await expect.poll(() => page.evaluate(() => window.__liano.platform.configMenu.open)).toBe(true);
   expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
-  await selector.selectOption('2');
+  const sharp = await panelPoint(page, 'config', 0, 60);
+  await page.touchscreen.tap(sharp.x, sharp.y);
   await page.waitForURL((url) => url.searchParams.get('resolution') === '2');
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(750);
@@ -183,7 +186,8 @@ test('blocked preference storage keeps Safari Auto and manual selection function
   await page.goto(`${DEV}?engine=phaser`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1500);
-  await page.getByLabel('Graphics', { exact: false }).selectOption('2');
+  await openConfig(page);
+  await page.keyboard.press('Digit3');
   await page.waitForURL((url) => url.searchParams.get('resolution') === '2');
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(2000);

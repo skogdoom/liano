@@ -4,6 +4,7 @@ import {
   BANNER_TEXTS,
   CREAM,
   FADE_IN,
+  GOLD,
   MODE_FONT,
   MODE_GAP,
   OUT_NOTE_FONT,
@@ -28,6 +29,8 @@ import {
 } from '../views/overlays.js';
 import { makeContainer } from './world/build.js';
 import { makeText, setTextOrigin, setTextResolution, textResolution } from './text.js';
+import { CONFIG_BACK_Y, CONFIG_PANEL, GRAPHICS_ITEMS } from './configMenu.js';
+import { inside } from '../controls.js';
 
 // The overlays in the Phaser version, as the Pixi Overlays (views/overlays.js has what
 // both share): the title, results and pause panels, the stage banners and "out" notes per
@@ -109,9 +112,10 @@ class StageBanner {
 }
 
 export class Overlays {
-  constructor(scene, art) {
+  constructor(scene, art, { configMenu = null } = {}) {
     this.view = makeContainer(scene);
     this.time = 0;
+    this.configMenu = configMenu;
     this.labels = []; // every label with the scale it is drawn at: [label, () => scale]
     const label = (parent, spec, content, scale) => {
       const l = new Label(scene, spec, content);
@@ -134,8 +138,21 @@ export class Overlays {
     this.livesLine = label(this.title, title.lives, undefined, ui);
     this.slipLine = label(this.title, title.slip, undefined, ui);
     this.shadowLine = label(this.title, title.shadow, undefined, ui);
-    this.keysHint = label(this.title, title.keys, undefined, ui);
+    this.keysHint = label(this.title, configMenu ? { ...title.keys, y: 216, size: 13 } : title.keys, undefined, ui);
     label(this.title, title.version, `v${version}`, ui);
+
+    if (configMenu) {
+      this.configEntry = label(this.title, { y: 190, size: 18, bold: true, color: GOLD }, 'C · Config', ui);
+      this.config = panel(scene, art, CONFIG_PANEL).setVisible(false);
+      label(this.config, { y: -194, size: 52, bold: true }, 'CONFIG', ui);
+      label(this.config, { y: -146, size: 22, color: GOLD }, 'Graphics', ui);
+      this.graphicsItems = GRAPHICS_ITEMS.map((item) => ({ ...item,
+        label: label(this.config, { y: item.y, size: item.choice === 'auto' ? 20 : 26, bold: true }, item.text, ui),
+      }));
+      label(this.config, { y: 172, size: 14, alpha: 0.7 }, 'Changes reload the game', ui);
+      this.configBack = label(this.config, { y: CONFIG_BACK_Y, size: 20 }, 'C / Esc · Back', ui);
+      this.view.add(this.config);
+    }
 
     const over = PANELS.gameOver.texts;
     this.gameOver = panel(scene, art, PANELS.gameOver);
@@ -161,6 +178,7 @@ export class Overlays {
     this.outNotes = [];
     this.paneLayer = makeContainer(scene);
     this.view.add([this.indicator, this.paneLayer, this.title, this.gameOver, this.paused]);
+    if (this.config) this.view.bringToTop(this.config);
     this.shown = null;
     this.promptsFor = null;
     this.zoom = 1;
@@ -171,6 +189,12 @@ export class Overlays {
     this.layout = layout;
     this.zoom = zoom;
     for (const name of ['title', 'gameOver', 'paused']) this[name].setPosition(layout.panels[name].x, layout.panels[name].y).setScale(layout.ui);
+    if (this.config) {
+      const margin = 16;
+      const half = CONFIG_PANEL.height / 2 * layout.ui;
+      const y = Math.max(half + margin, Math.min(layout.panels.title.y, layout.view.height - half - margin));
+      this.config.setPosition(layout.panels.title.x, y).setScale(layout.ui);
+    }
     for (const [l, scale] of this.labels) l.setResolution(textResolution(zoom, scale()));
     this.layModes = true;
     this.shown = null;
@@ -189,9 +213,22 @@ export class Overlays {
     this.#updatePanes(game, dt);
 
     const shown = panelsShown(game, pauseReason);
-    this.title.setVisible(shown.title);
+    this.configMenu?.sync(game);
+    const configShown = shown.title && !!this.configMenu?.open;
+    this.config?.setVisible(configShown);
+    this.title.setVisible(shown.title && !configShown);
     this.titlePrompt.text.setAlpha(glow);
     if (shown.title) this.#updateTitle(game, inputType !== 'touch');
+    if (this.config) {
+      this.configEntry.set(kind === 'touch' ? 'Config' : 'C · Config');
+      this.configEntry.text.y = kind === 'touch' ? 180 : 190;
+      this.configBack.set(kind === 'touch' ? 'Back' : 'C / Esc · Back');
+      for (const item of this.graphicsItems) {
+        const selected = item.choice === this.configMenu.choice;
+        item.label.setColor(selected ? GOLD : CREAM);
+        item.label.text.setAlpha(selected ? 1 : 0.8);
+      }
+    }
 
     this.gameOver.setVisible(shown.gameOver);
     if (shown.gameOver) {
@@ -214,6 +251,36 @@ export class Overlays {
 
     this.paused.setVisible(shown.paused);
     if (shown.paused) this.pausedPrompt.set(pausePrompt(pauseReason, kind));
+  }
+
+  // Canvas pointer positions are CSS pixels. Hit regions use the same panel/UI
+  // transforms as its artwork, including portrait enlargement and letterboxing.
+  interceptConfigPointer(event, game, accepts) {
+    if (!this.configMenu) return false;
+    this.configMenu.sync(game);
+    if (game.state !== 'TITLE' || !accepts) return this.configMenu.open;
+    const rect = this.scene.sys.game.canvas.getBoundingClientRect();
+    const point = (view) => ({
+      x: ((event.clientX - rect.left - this.layout.x) / this.layout.scale - view.x) / this.layout.ui,
+      y: ((event.clientY - rect.top - this.layout.y) / this.layout.scale - view.y) / this.layout.ui,
+    });
+    if (this.configMenu.open) {
+      const p = point(this.config);
+      if (inside({ x: -200, y: CONFIG_BACK_Y - 32, w: 400, h: 64 }, p)) this.configMenu.close();
+      else {
+        const item = this.graphicsItems.find((item) => inside({ x: -200,
+          y: item.y - (item.choice === 'auto' ? 25 : 37), w: 400,
+          h: item.choice === 'auto' ? 50 : 74 }, p));
+        if (item) this.configMenu.choose(item.choice);
+      }
+      return true; // outside taps do not start the underlying title screen
+    }
+    const y = event.pointerType === 'touch' ? 180 : 190;
+    if (inside({ x: -190, y: y - (event.pointerType === 'touch' ? 30 : 12), w: 380,
+      h: event.pointerType === 'touch' ? 60 : 36 }, point(this.title))) {
+      return this.configMenu.show(game, accepts);
+    }
+    return false;
   }
 
   #updatePanes(game, dt) {

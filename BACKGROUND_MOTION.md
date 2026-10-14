@@ -415,12 +415,22 @@ The submitted motion also exposes two separate discontinuities:
 
 ## Phaser graphics quality and rendering resolution
 
-The **Graphics** selector on the title/results screens offers **Auto**, **Balanced**
-(cap 1.5), **Sharp** (the original cap of 2) and **Performance** (cap 1).
-Changing it saves the choice for this origin and reloads the game, so graphics
-preparation happens before play. The selector is hidden during a run, including
-while paused, and its pointer/keyboard input does not become game input. It is
-available on touch devices too. Pixi does not install it or read the preference.
+The title menu's **C · Config** entry opens a native Phaser submenu using the same
+panel artwork, fonts and shadows. Its graphics choices are **1 · Performance**
+(cap 1), **2 · Balanced** (cap 1.5) and **3 · Sharp** (the original cap of 2), with
+**A · Auto** to restore automatic selection. The active choice is gold. C or Esc
+returns to the title; on touch screens the Config entry, options and Back are
+tappable. There is no external HTML graphics selector.
+
+Changing the choice saves it for this origin and reloads the game, so graphics
+preparation happens before play. The selected 1P/shared/split match mode is kept
+through that reload via the Phaser `mode` URL parameter. Re-selecting the active
+choice returns to the title without reloading. Config opens only from the title,
+not gameplay, pause or results. While open, it consumes game input: Space cannot
+start a run and 1/2/3 select graphics rather than a match mode. Entry/exit clear
+queued presses, and held/replayed keys cannot toggle the menu or apply twice.
+Outside config the title's game-mode keys retain their existing meaning. Pixi
+does not install this submenu or read the graphics preference.
 
 Auto is the default. It chooses the tested 1.5 cap for Safari on Mac/iOS and the
 existing cap of 2 for other browsers. The actual rendering ratio is always capped
@@ -434,8 +444,8 @@ For controlled comparisons, use `?engine=phaser&resolution=1.5&frames=1` and
 resolution even on Safari or when a lower preference is saved. `resolution=1`
 provides the stronger reduction, and `resolution=auto` explicitly selects Auto.
 Keep obstacle blur off. Explicit URLs override saved preferences without writing
-them. Numeric values from 1 through 2 remain accepted; custom values appear as
-Custom in the selector. Invalid/missing stored values and invalid query values
+them. Numeric values from 1 through 2 remain accepted in the URL.
+Invalid/missing stored values and invalid query values
 fall back to Auto. If storage is unavailable, manual URL selection still works.
 
 The CSS canvas size, world layout, camera's position in world units, simulation,

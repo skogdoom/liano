@@ -21,3 +21,19 @@ export async function started(page, errors) {
   expect(errors).toEqual([]);
   await expect(page.locator('html')).toHaveAttribute('data-ready', 'true');
 }
+
+// A point in a Phaser overlay panel, converted through the actual CSS/UI layout.
+export async function panelPoint(page, name, x, y) {
+  return page.evaluate(({ name, x, y }) => {
+    const { app, layout } = window.__liano;
+    const view = app.scene.getScene('ui').overlays[name];
+    const rect = app.canvas.getBoundingClientRect();
+    return { x: rect.left + layout.x + (view.x + x * layout.ui) * layout.scale,
+      y: rect.top + layout.y + (view.y + y * layout.ui) * layout.scale };
+  }, { name, x, y });
+}
+
+export async function openConfig(page) {
+  await page.keyboard.press('KeyC');
+  await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.config.visible)).toBe(true);
+}

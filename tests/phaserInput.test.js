@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createInput } from '../src/input.js';
 import { phaserKeys, phaserPointers, pointerEvent } from '../src/phaser/input.js';
+import { ConfigMenu } from '../src/phaser/configMenu.js';
 
 // A Phaser event emitter (on, off, emit), enough for the keyboard and input plugins.
 function emitter() {
@@ -47,6 +48,27 @@ describe('Phaser keys for the game input', () => {
     createInput(keys).destroy();
     keys.destroy();
     expect(keyboard.count('keydown')).toBe(0);
+  });
+
+  it('intercepts each submenu key once before game mode/start input', () => {
+    const keyboard = emitter(), game = { state: 'TITLE' }, selected = [];
+    const menu = new ConfigMenu('auto', { apply: (choice) => selected.push(choice) });
+    const input = createInput(phaserKeys(keyboard, {
+      intercept: (event) => menu.interceptKey(event, game, true),
+    }));
+    menu.clear = () => input.clear();
+    keyboard.emit('keydown', key('Space')); // queued before C in the same frame
+    const c = key('KeyC');
+    keyboard.emit('keydown', c);
+    keyboard.emit('keydown', c); // Phaser replays the same event
+    keyboard.emit('keydown', key('Space'));
+    expect(menu.open).toBe(true);
+    expect(input.consumePress()).toBe(false);
+    const choice = key('Digit2');
+    keyboard.emit('keydown', choice);
+    keyboard.emit('keydown', choice);
+    expect(selected).toEqual(['1.5']);
+    expect(input.consumeModePick()).toBe(null);
   });
 });
 

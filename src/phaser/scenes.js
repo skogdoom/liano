@@ -186,7 +186,7 @@ export class UiScene extends Phaser.Scene {
     // Top right: the scores, banana counts and hearts; over everything, the panels, the
     // stage banners and the arrow over a monkey above the view.
     this.hud = new Hud(this, platform.art);
-    this.overlays = new Overlays(this, platform.art);
+    this.overlays = new Overlays(this, platform.art, { configMenu: platform.configMenu });
     this.add.existing(this.hud.view);
     this.add.existing(this.overlays.view);
     // D: the debug view, over each pane, with its numbers.
