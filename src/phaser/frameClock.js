@@ -11,11 +11,13 @@ const TIMER_PRECISION_MS = 1; // the timestamp rounding visible in the Safari tr
 const DEADBAND_MS = 3;
 const MAX_PAYBACK_MS = 0.1;
 const PAYBACK = 0.05;
+const CADENCE_CONFIRM_FRAMES = 3;
 
 export class PhaserFrameClock {
   constructor() {
     this.refresh = new FrameClock();
     this.owed = 0;
+    this.cadenceFrames = 0;
   }
 
   frame(deltaMs) {
@@ -30,6 +32,7 @@ export class PhaserFrameClock {
       const debt = this.owed;
       const advance = Math.max(0, deltaMs + debt);
       this.owed = deltaMs + debt - advance;
+      this.cadenceFrames = 0;
       return advance;
     }
     // Allow whole-ms rounding at an actual missed refresh. Short callbacks
@@ -37,12 +40,18 @@ export class PhaserFrameClock {
     let step = interval === null || deltaMs >= 2 * interval - TIMER_PRECISION_MS ? normalized : interval;
     const priorDebt = this.owed;
     this.owed += deltaMs - step;
-    // A persistent cadence change must be learnt promptly. Keep the remaining
-    // balance and repay it gradually; never reverse time or jump by that debt.
-    if (interval !== null && Math.abs(this.owed) > interval) {
+    // A late callback can temporarily push existing debt past one interval, then
+    // give that time back in the next short callbacks (the recorded 28/10/8 ms
+    // sequence). Require sustained imbalance before exposing raw timing and
+    // relearning. Genuine cadence changes still accumulate debt across frames.
+    const growing = Math.abs(this.owed) > Math.abs(priorDebt) + TIMER_PRECISION_MS;
+    this.cadenceFrames = interval !== null && Math.abs(this.owed) > interval && growing
+      ? this.cadenceFrames + 1 : 0;
+    if (this.cadenceFrames >= CADENCE_CONFIRM_FRAMES) {
       this.owed = priorDebt;
       step = deltaMs;
       this.refresh.relearn();
+      this.cadenceFrames = 0;
     }
     const excess = Math.abs(this.owed) > DEADBAND_MS ? this.owed - Math.sign(this.owed) * DEADBAND_MS : 0;
     const pay = Math.max(-Math.min(step, MAX_PAYBACK_MS), Math.min(MAX_PAYBACK_MS, excess * PAYBACK));

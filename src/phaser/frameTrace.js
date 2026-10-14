@@ -60,7 +60,8 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
     devicePixelRatio: win.devicePixelRatio,
     resolutionLimit: platform.resolutionLimit,
     context: app.renderer.gl.getContextAttributes(),
-    frameClock: 'phaser-callback-phase-v1',
+    frameClock: 'phaser-callback-phase-v2',
+    monkeyMotion: 'phaser-catch-transition-v1',
     gpuTimingMeasured: false,
     presentationMeasured: false,
   };
@@ -116,6 +117,7 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
         monkeyPreviousX: monkey.prevX, monkeyPreviousY: monkey.prevY,
         monkeyDrawnX: rig?.x, monkeyDrawnY: rig?.y, monkeyScreen,
         monkeyRotation: pane.monkeys[0]?.body.rotation,
+        monkeyCatchOffset: { x: pane.monkeys[0]?.catchOffsetX ?? 0, y: pane.monkeys[0]?.catchOffsetY ?? 0 },
         liana: monkey.liana?.index ?? null,
         lianaAngle: monkey.liana?.angle ?? null, lianaPreviousAngle: monkey.liana?.prevAngle ?? null,
         ropeRotation: rope?.rotation ?? null,

@@ -9,7 +9,8 @@ test('the production Phaser readout exports actual update/render frames', async 
   await started(page, errors);
   await page.waitForFunction(() => window.__phaserFrameTrace?.snapshot().frames.length > 10);
   const recorded = await page.evaluate(() => window.__phaserFrameTrace.snapshot());
-  expect(recorded.info.frameClock).toBe('phaser-callback-phase-v1');
+  expect(recorded.info.frameClock).toBe('phaser-callback-phase-v2');
+  expect(recorded.info.monkeyMotion).toBe('phaser-catch-transition-v1');
   expect(recorded.info.presentationMeasured).toBe(false);
   expect(recorded.info.gpuTimingMeasured).toBe(false);
   const frame = recorded.frames.at(-1);
@@ -57,6 +58,18 @@ test('the real Phaser loop normalizes the Safari trace disturbances before drawi
     for (let i = 0; i < 600; i++) app.loop.step(time += 1000 / 60);
     const out = [];
     for (const gap of [27, 14, 8, 17, 17, 30, 11, 9]) {
+      app.loop.step(time += gap);
+      const frame = window.__phaserFrameTrace.snapshot().frames.at(-1);
+      out.push({ rawMs: frame.rawMs, stepMs: frame.stepMs,
+        cameraX: frame.panes[0].cameraX, monkeyX: frame.panes[0].monkeyDrawnX,
+        monkeyPreviousX: frame.panes[0].monkeyPreviousX, monkeyCurrentX: frame.panes[0].monkeyX,
+        ropeRotation: frame.panes[0].ropeRotation, lianaAngle: frame.panes[0].lianaAngle,
+        lianaPreviousAngle: frame.panes[0].lianaPreviousAngle, alpha: frame.alpha,
+      });
+    }
+    // A phase disturbance with an existing balance must not trigger relearning.
+    platform.frameClock.owed = 6.1892;
+    for (const gap of [28, 10, 8, 17, 17]) {
       app.loop.step(time += gap);
       const frame = window.__phaserFrameTrace.snapshot().frames.at(-1);
       out.push({ rawMs: frame.rawMs, stepMs: frame.stepMs,

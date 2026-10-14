@@ -438,3 +438,64 @@ not solely pixel fill rate. Frame captures now include `info.resolutionLimit`,
 dimensions. These identify the actual resolution used rather than inferring it
 from the browser's device pixel ratio. They still do not measure GPU completion
 or physical presentation; Safari smoothness needs the device comparison.
+
+## Follow-up fixes for submitted movement discontinuities
+
+The Safari traces identified two discontinuities in movement submitted by Phaser,
+independent of whether the browser actually presents every submitted frame.
+Both are now addressed in the Phaser drawing/clock path; the shared simulation
+and Pixi implementation retain their existing behavior.
+
+**Callback phase versus refresh-rate changes.** A delayed callback can push an
+existing clock balance over one refresh interval. Previously that single crossing
+immediately reset the estimate and exposed raw callback timing during relearning.
+The recorded 28/10/8 ms sequence consequently advanced movement by 28.1/10.1/8.1 ms.
+Relearning now requires three consecutive callbacks with an excessive balance
+that continues growing by more than the observed 1 ms timestamp precision. A
+temporary phase offset, or the short callbacks that return its elapsed time, does
+not meet that condition. Real missed refreshes and long stalls still advance
+elapsed time; sustained cadence changes still relearn, with existing bounded
+repayment and nonnegative steps.
+
+Replaying the supplied blur-on callback history, initialized from its first
+recorded interval/balance, changes the ordinary step range from 8.1–28.1 ms to
+16.623–16.768 ms. The problematic sequence becomes approximately
+16.740/16.724/16.624 ms. The remaining balance at the end is 2.919 ms. Replaying
+the blur-off history produces exactly the same steps as before, including its
+genuine long stall. These are timing replays, not measurements of Safari display
+presentation.
+
+**Catch position reset.** `Monkey.grab()` intentionally snaps the physics center
+to the rope and sets its previous position to that center. Normal position
+interpolation therefore has no flight endpoint to blend through. Phaser's
+`WorldMotion` now retains each adjacent step's position/velocity and reconstructs
+the semi-implicit ballistic endpoint replaced by the grab. Drawing finishes that
+flight step, then removes the difference from the held position with a smoothstep
+over 80 ms, measured in interpolated simulation time. It does not move the rope,
+delay the actual catch, or change collision, scoring, grip, camera target or swing
+state. The front arm briefly reaches from the approaching body to its native grip
+position; the hand stays where the original pose put it. The effect uses ordinary
+quad transforms and adds no textures, shaders or drawing passes.
+
+The correction is bounded to twice the monkey's collision radius (44 world units).
+Respawns, teleports, new drawing worlds and implausibly large corrections snap
+normally. An immediate release keeps the short position correction continuous;
+pauses freeze its simulation-time progress. Capturing several simulation steps
+before drawing retains the catch instead of losing it when the next step updates
+the model's previous position. Ordinary movement keeps its existing interpolation.
+
+Native WebGL checks of a reproducible 21-unit catch correction, with the camera
+held still to isolate the actor, reduce the largest torso-center movement from
+22.86 to 13.48 CSS pixels per frame at 60 Hz, 22.91 to 8.97 at 90 Hz, and 22.94 to
+5.64 at 144 Hz. Both swing directions produce the same result, with no repeated
+active quads, zero root-position error and the correction fully gone after 80 ms.
+The gripping-hand check compares against the native pose's hand location during
+the entire transition, within 0.000031 world units (Phaser's composed matrices
+use Float32 values). These checks validate submitted geometry, not perceived
+smoothness on Safari.
+
+New frame recordings identify `frameClock: phaser-callback-phase-v2` and
+`monkeyMotion: phaser-catch-transition-v1`. Each pane includes
+`monkeyCatchOffset` in world units, so a drawing transition can be distinguished
+from a physics-position jump. These fixes also apply with the optional resolution
+cap; obstacle exposure remains off in ordinary play.

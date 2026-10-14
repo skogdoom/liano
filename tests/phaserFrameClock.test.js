@@ -47,6 +47,46 @@ describe('Phaser callback-phase handling', () => {
     }
   });
 
+  it('keeps the recorded delayed callback smooth when pre-existing debt crosses one interval', () => {
+    const clock = warm(new PhaserFrameClock());
+    // Timing-only excerpt before the blur-on trace's 28/10/8 ms disturbance.
+    // The previous implementation relearned on the 28 ms callback and drew
+    // 28.1/10.1/8.1 ms instead of three approximately equal advances.
+    clock.owed = 3.7022;
+    const raw = [17, 16, 17, 16, 17, 17, 16, 17, 16, 20, 14, 18, 16, 19, 28, 10, 8, 18, 16, 17];
+    const steps = raw.map((gap) => clock.frame(gap));
+    for (const step of steps) expect(Math.abs(step - 1000 / 60)).toBeLessThan(0.2);
+    expect(clock.refresh.interval).not.toBeNull();
+    expect(Math.abs(sum(raw) - sum(steps) - clock.owed + 3.7022)).toBeLessThan(1e-9);
+  });
+
+  it('draws a constant-speed mover evenly through the debt-triggering disturbance', () => {
+    const clock = warm(new PhaserFrameClock());
+    clock.owed = 6.1892;
+    let x = 0, previousX = 0;
+    const loop = createFixedStepLoop({ dt: 1 / 120, maxFrameDt: 0.1,
+      step(dt) { previousX = x; x += 600 * dt; },
+    });
+    loop.advance(1 / 60);
+    let previousDrawn = previousX;
+    for (const raw of [28, 10, 8, 18, 16, 17]) {
+      const alpha = loop.advance(clock.frame(raw) / 1000);
+      const drawn = previousX + (x - previousX) * alpha;
+      expect(Math.abs(drawn - previousDrawn - 10)).toBeLessThan(0.15);
+      previousDrawn = drawn;
+    }
+  });
+
+  it('does not mistake a sustained callback phase offset for a refresh-rate change', () => {
+    const clock = warm(new PhaserFrameClock());
+    clock.owed = 6.1892;
+    const gaps = [28, 17, 17, 17, 17, 10, 8];
+    for (const gap of gaps) {
+      expect(Math.abs(clock.frame(gap) - 1000 / 60)).toBeLessThan(0.2);
+      expect(clock.refresh.interval).not.toBeNull();
+    }
+  });
+
   it('keeps rounded-clock time close to real time over a minute with both disturbances', () => {
     const clock = warm(new PhaserFrameClock());
     const raw = Array.from({ length: 3600 }, (_, i) => Math.round((i + 1) * 1000 / 60) - Math.round(i * 1000 / 60));
