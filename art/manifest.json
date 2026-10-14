@@ -98,6 +98,7 @@
       },
       "scale": 2,
       "tint": true,
+      "soften": 0.4,
       "frames": [
         "generated/backdrop.canopy.svg"
       ]
@@ -115,6 +116,7 @@
       },
       "scale": 2,
       "tint": true,
+      "soften": 0.8,
       "frames": [
         "generated/backdrop.floor.svg"
       ]
@@ -2508,6 +2510,7 @@
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "hitbox": [
         {
           "kind": "rect",
@@ -2555,13 +2558,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -236,
+        "x": -238,
         "y": 202,
-        "w": 472,
+        "w": 476,
         "h": 92
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.limestone.baseTop.svg"
       ]
@@ -2572,13 +2576,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -236,
+        "x": -238,
         "y": 0,
-        "w": 472,
+        "w": 476,
         "h": 92
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.limestone.base.svg"
       ]
@@ -2589,13 +2594,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -38,
+        "x": -40,
         "y": 0,
-        "w": 76,
+        "w": 80,
         "h": 96
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.limestone.stairs.svg"
       ]
@@ -2613,6 +2619,7 @@
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "hitbox": [
         {
           "kind": "rect",
@@ -2660,13 +2667,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -236,
+        "x": -238,
         "y": 202,
-        "w": 472,
+        "w": 476,
         "h": 92
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.sandstone.baseTop.svg"
       ]
@@ -2677,13 +2685,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -236,
+        "x": -238,
         "y": 0,
-        "w": 472,
+        "w": 476,
         "h": 92
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.sandstone.base.svg"
       ]
@@ -2694,13 +2703,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -38,
+        "x": -40,
         "y": 0,
-        "w": 76,
+        "w": 80,
         "h": 96
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.sandstone.stairs.svg"
       ]
@@ -2718,6 +2728,7 @@
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "hitbox": [
         {
           "kind": "rect",
@@ -2765,13 +2776,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -236,
+        "x": -238,
         "y": 202,
-        "w": 472,
+        "w": 476,
         "h": 92
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.mossy.baseTop.svg"
       ]
@@ -2782,13 +2794,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -236,
+        "x": -238,
         "y": 0,
-        "w": 472,
+        "w": 476,
         "h": 92
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.mossy.base.svg"
       ]
@@ -2799,13 +2812,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -38,
+        "x": -40,
         "y": 0,
-        "w": 76,
+        "w": 80,
         "h": 96
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.mossy.stairs.svg"
       ]
@@ -2823,6 +2837,7 @@
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "hitbox": [
         {
           "kind": "rect",
@@ -2870,13 +2885,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -236,
+        "x": -238,
         "y": 202,
-        "w": 472,
+        "w": 476,
         "h": 92
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.basalt.baseTop.svg"
       ]
@@ -2887,13 +2903,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -236,
+        "x": -238,
         "y": 0,
-        "w": 472,
+        "w": 476,
         "h": 92
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.basalt.base.svg"
       ]
@@ -2904,13 +2921,14 @@
       "kind": "sprite",
       "set": "main",
       "box": {
-        "x": -38,
+        "x": -40,
         "y": 0,
-        "w": 76,
+        "w": 80,
         "h": 96
       },
       "scale": 1.3,
       "tint": true,
+      "soften": 0.2,
       "frames": [
         "generated/temple.basalt.stairs.svg"
       ]

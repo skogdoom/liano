@@ -55,8 +55,10 @@ export function drawSky(g, top, width, bottom) {
   return g.rect(x, FLOOR_Y, w, Math.max(bottom, WORLD_HEIGHT) - FLOOR_Y + SKY_MARGIN).fill(SKY_BOTTOM);
 }
 
-// How fast the far layer scrolls, as a share of the camera's speed.
-export const FAR_FACTOR = 0.15;
+// How fast the far layer scrolls, as a share of the camera's speed. The layers are slow:
+// a layer's hard-edged trees moving several pixels a frame look stepped on a 60 Hz
+// screen however smoothly the frames come (PHASER_PLAN.md, M7).
+export const FAR_FACTOR = 0.06;
 
 // One tile (TILE wide, repeating) of the far layer (also as a piece for the Phaser version).
 export function drawFarLayer(ctx) {
@@ -90,7 +92,7 @@ export function drawFarLayer(ctx) {
   return ctx;
 }
 
-export const MID_FACTOR = 0.4;
+export const MID_FACTOR = 0.12;
 
 // One tile of the mid layer.
 export function drawMidLayer(ctx) {
@@ -112,7 +114,7 @@ export function drawMidLayer(ctx) {
   return ctx;
 }
 
-export const NEAR_FACTOR = 0.7;
+export const NEAR_FACTOR = 0.3;
 
 // One tile of the near layer.
 export function drawNearLayer(ctx) {

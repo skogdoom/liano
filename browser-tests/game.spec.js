@@ -236,3 +236,24 @@ test('every sound renders the same, sample for sample, through Phaser’s nodes 
   }
   expect(errors).toEqual([]);
 });
+
+// A batch takes one texture (phaser/shaders.js), so each kind of batch (images,
+// ropes) has one shader, the cheapest, compiled before the title: an obstacle first
+// showing compiles nothing in play, which stalled Safari.
+test('the Phaser version draws every batch of a kind with one shader', async ({ page }) => {
+  const errors = await phaser(page);
+  await page.keyboard.press('Space');
+  await expect.poll(() => state(page)).toBe('PLAYING');
+  await page.waitForTimeout(500);
+  const keys = await page.evaluate(() => {
+    const nodes = window.__liano.app.renderer.renderNodes._nodes;
+    return ['BatchHandlerQuad', 'BatchHandlerStrip'].map((name) => Object.keys(nodes[name]?.programManager.programs ?? {}));
+  });
+  for (const programs of keys) {
+    expect(programs).toHaveLength(1);
+    expect(programs[0]).toContain('_1TexCount_');
+  }
+  // The default backdrop now shares the image shader; no tile shader is needed.
+  expect(await page.evaluate(() => Object.keys(window.__liano.app.renderer.renderNodes._nodes.BatchHandlerTileSprite?.programManager.programs ?? {}))).toHaveLength(0);
+  expect(errors).toEqual([]);
+});

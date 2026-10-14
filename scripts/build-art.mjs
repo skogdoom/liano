@@ -55,6 +55,16 @@ function cellSvg(piece, i, { x, y, w, h, zoom }) {
   return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${box.x} ${box.y} ${w / zoom} ${h / zoom}" overflow="hidden">${inner(svg)}</svg>`;
 }
 
+// Sprite softening is clipped to its own cell, never mixed with adjacent atlas
+// frames. Unlike a tile it does not wrap from the right edge to the left edge.
+function atlasCellSvg(cell) {
+  const { piece, i, x, y, w, h, zoom } = cell;
+  if (!piece.soften) return cellSvg(piece, i, cell);
+  const once = dataUri('once.png', render(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${cellSvg(piece, i, { ...cell, x: 0, y: 0 })}</svg>`));
+  const id = `soften-${piece.key}-${i}`;
+  return `<svg x="${x}" y="${y}" width="${w}" height="${h}" overflow="hidden"><filter id="${id}" x="0" y="0" width="${w}" height="${h}" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="${piece.soften * zoom} 0"/></filter><image width="${w}" height="${h}" href="${once}" filter="url(#${id})"/></svg>`;
+}
+
 const render = (svg) => new Resvg(svg, { shapeRendering: 2, imageRendering: 0 }).render().asPng();
 
 // The folder is updated in place (a running dev server keeps watching it); files from an
@@ -83,7 +93,7 @@ for (const scale of ATLAS_SCALES) {
     const pages = pack(cells, { width, maxHeight: MAX_PAGE, padding: PADDING });
     const textures = pages.map((page, n) => {
       const image = `${set}@${scale}x-${n}.png`;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${page.width}" height="${page.height}">${page.cells.map((c) => cellSvg(c.piece, c.i, c)).join('')}</svg>`;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${page.width}" height="${page.height}">${page.cells.map(atlasCellSvg).join('')}</svg>`;
       write(image, render(svg));
       sizes[image] = `${page.width} × ${page.height}`;
       memory[scale] += page.width * page.height * 4;
@@ -106,6 +116,16 @@ for (const scale of ATLAS_SCALES) {
   }
 }
 
+// A tile with `soften`, blurred sideways by that many units: rendered once, then placed
+// three times side by side under the blur and cut back to one, so the blur wraps around
+// as the tile repeats. In sRGB, as the game blends (SVG filters default to linear light).
+function softened(piece, cell, svg) {
+  if (!piece.soften) return svg;
+  const once = dataUri('once.png', render(svg));
+  const copy = (x) => `<image x="${x}" y="0" width="${cell.w}" height="${cell.h}" href="${once}"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}"><filter id="soften" x="${-cell.w}" y="0" width="${3 * cell.w}" height="${cell.h}" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="${piece.soften * cell.zoom} 0"/></filter><g filter="url(#soften)">${copy(-cell.w)}${copy(0)}${copy(cell.w)}</g></svg>`;
+}
+
 // The tiles, each an image of its own at each scale it is made at (see tileZoom).
 for (const piece of pieces.filter((p) => p.kind === 'tile')) {
   for (const scale of ATLAS_SCALES) {
@@ -114,7 +134,7 @@ for (const piece of pieces.filter((p) => p.kind === 'tile')) {
     if (!written.has(image)) {
       // The tile between its edge rows (see TILE_EDGE), each a copy of the row next to it:
       // the rendered tile placed again, one pixel row of it showing.
-      const tile = dataUri('tile.png', render(`<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}">${cellSvg(piece, 0, cell)}</svg>`));
+      const tile = dataUri('tile.png', render(softened(piece, cell, `<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}">${cellSvg(piece, 0, cell)}</svg>`)));
       const placed = (y) => `<image x="0" y="${y}" width="${cell.w}" height="${cell.h}" href="${tile}"/>`;
       const row = (y, from) => `<svg y="${y}" width="${cell.w}" height="1">${placed(-from)}</svg>`;
       const edges = Array.from({ length: TILE_EDGE }, (_, i) => row(i, 0) + row(TILE_EDGE + cell.h + i, cell.h - 1)).join('');

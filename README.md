@@ -1,5 +1,7 @@
 # Liano
 
+![Liano: a monkey swinging on a liana through the jungle at night, a Mayan temple behind](docs/cover_night.png)
+
 A one-button browser game. A monkey swings on lianas through the jungle; let go to fly to the next one.
 
 Play it at **https://skogdoom.github.io/liano/**.

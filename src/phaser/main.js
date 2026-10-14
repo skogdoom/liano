@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { MAX_RESOLUTION } from '../config.js';
 import { FULLSCREEN_HIT, MUTE_HIT, controlsPoint, inside } from '../controls.js';
 import { createDriver } from '../driver.js';
+import { PhaserFrameClock } from './frameClock.js';
 import { createFatalOverlay, createNotice, isOwnError } from '../fatal.js';
 import { bindFullscreenControls } from '../fullscreen.js';
 import { createInput } from '../input.js';
@@ -12,12 +12,18 @@ import { blockBrowserGestures, isHomeScreenApp, pixelRatio, safeAreaReader, watc
 import { Game } from '../sim/game.js';
 import { MODES } from '../sim/match.js';
 import { World } from '../sim/world.js';
+import { SharedView } from '../sim/sharedView.js';
 import { FpsMeter } from '../render/fpsMeter.js';
 import { createPhaserFullscreen } from './fullscreen.js';
 import { phaserKeys, phaserPointers } from './input.js';
 import { BootScene, PlayScene, UiScene } from './scenes.js';
 import { createPhaserSoundPlayer } from './sound.js';
-import { canvasSize, viewCamera } from './view.js';
+import { canvasSize, resolutionLimit, viewCamera } from './view.js';
+import { oneTexturePerBatch } from './shaders.js';
+import { installObstacleBlur } from './obstacleBlur.js';
+import { applyResolutionChoice, rememberResolutionChoice, resolutionChoice } from './resolution.js';
+import { ConfigMenu } from './configMenu.js';
+import { visibleMenuArea } from './menuLayout.js';
 
 // The Phaser version of the game (see PHASER_PLAN.md). The platform holds the layout,
 // pause, full screen, input and sound for the scenes (scenes.js); the game runs as in
@@ -39,7 +45,12 @@ window.addEventListener('error', (event) => {
 });
 window.addEventListener('unhandledrejection', (event) => fail(event.reason));
 
-const ratio = () => pixelRatio(window, MAX_RESOLUTION);
+const resolutionPreference = resolutionChoice(location.search, window);
+const resolutionCap = resolutionLimit(location.search, {
+  userAgent: navigator.userAgent, preference: resolutionPreference,
+});
+const ratio = () => pixelRatio(window, resolutionCap);
+const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const initial = canvasSize(window.innerWidth, window.innerHeight, ratio());
 
 game = new Phaser.Game({
@@ -65,9 +76,20 @@ game = new Phaser.Game({
   scene: [BootScene, PlayScene, UiScene],
 });
 await new Promise((resolve) => game.events.once(Phaser.Core.Events.READY, resolve));
+oneTexturePerBatch(game.renderer);
 
 const platform = new Phaser.Events.EventEmitter();
 game.registry.set('platform', platform);
+platform.resolutionLimit = resolutionCap;
+platform.resolutionMode = resolutionPreference;
+platform.mobile = coarsePointer;
+platform.configMenu = new ConfigMenu(resolutionPreference, {
+  apply: (choice) => applyResolutionChoice(choice, window, { mode: platform.game.mode,
+    settings: { lives: platform.game.lives, slip: platform.game.slip, shadow: platform.game.shadow } }),
+  remember: rememberResolutionChoice,
+  clear: () => platform.input?.clear(),
+});
+installObstacleBlur(platform);
 blockBrowserGestures(game.canvas);
 
 // Obstacles ahead are generated in a worker (see ObstaclePrefetch).
@@ -79,15 +101,22 @@ function createObstacleWorker() {
   }
 }
 const prefetch = new ObstaclePrefetch(createObstacleWorker());
-// The game starts without slipping (G turns it on).
+// The title starts without slipping and with shadow enabled. Preserve current
+// settings when the graphics submenu reloads assets.
+const titleSettings = new URLSearchParams(location.search);
 const theGame = new Game({
-  slip: false,
+  slip: titleSettings.get('slip') === 'on',
+  lives: titleSettings.get('lives') === 'on',
+  shadow: titleSettings.get('shadow') !== 'off',
+  createSharedView: (world) => new SharedView(world, undefined, { smoothCamera: true }),
   // Split screen's worlds share the match seed, and so the prefetched gaps.
   createWorld: (options) => {
     if (options.seed !== prefetch.seed) prefetch.reset(options.seed);
     return new World({ ...options, makeObstacle: prefetch.makeObstacle, makeBanana: prefetch.makeBanana });
   },
 });
+// A graphics change reloads assets, then returns to the selected match mode.
+if (!coarsePointer) theGame.selectMode(titleSettings.get('mode'));
 platform.game = theGame;
 
 // The layout for the window (layout.js) and the camera that shows the view on the
@@ -107,11 +136,14 @@ function layout() {
   game.canvas.style.width = `${w}px`;
   game.canvas.style.height = `${h}px`;
   layoutMode = theGame.mode;
-  platform.layout = layoutFor(w, h, safeAreaInsets(), { fixed: MODES[theGame.mode].players > 1 });
+  const insets = safeAreaInsets();
+  platform.menuArea = visibleMenuArea(window, insets);
+  platform.layout = layoutFor(w, h, insets, { fixed: MODES[theGame.mode].players > 1 });
   platform.camera = viewCamera(platform.layout, r);
   platform.emit('layout', platform.layout, platform.camera);
 }
 const queueLayout = watchScreen(window, layout);
+window.visualViewport?.addEventListener('scroll', queueLayout);
 layout();
 
 // Paused while the window is unfocused or hidden, the graphics context is lost, or the
@@ -157,6 +189,8 @@ if (platform.fullscreenButton) {
 // browser suspended it, or replace a context that stays stuck.
 sound = createPhaserSoundPlayer(game.sound);
 platform.sound = sound;
+// Rendering does not need a gesture; audible playback still waits for unlock().
+platform.soundReady = sound.prepare();
 for (const type of ['keydown', 'pointerdown', 'pointerup', 'touchend']) {
   window.addEventListener(type, () => sound.unlock(), { capture: true });
 }
@@ -172,15 +206,22 @@ function toggleMute() {
 const ui = await new Promise((resolve) => platform.once('ui', resolve));
 const buttonAt = (hit, event) =>
   inside(hit, controlsPoint(platform.layout, game.canvas.getBoundingClientRect(), event.clientX, event.clientY));
-const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-const input = createInput(phaserKeys(ui.input.keyboard), phaserPointers(ui.input), {
+const input = createInput(phaserKeys(ui.input.keyboard, {
+  intercept: (event) => {
+    if (platform.configMenu.interceptKey(event, theGame, pause.acceptsInput())) return true;
+    if (coarsePointer && ['Digit1', 'Digit2', 'Digit3'].includes(event.code)) {
+      event.preventDefault();
+      return true;
+    }
+    return false;
+  },
+}), phaserPointers(ui.input), {
   initialType: coarsePointer ? 'touch' : 'keyboard',
   accepts: () => pause.acceptsInput(),
   intercept: (event) => {
     if (platform.fullscreenButton && buttonAt(FULLSCREEN_HIT, event)) return true;
-    if (!buttonAt(MUTE_HIT, event)) return false;
-    toggleMute();
-    return true;
+    if (buttonAt(MUTE_HIT, event)) { toggleMute(); return true; }
+    return ui.overlays.interceptConfigPointer(event, theGame, pause.acceptsInput());
   },
 });
 platform.input = input;
@@ -190,13 +231,16 @@ platform.input = input;
 const fpsMeter = new FpsMeter();
 platform.fpsMeter = fpsMeter;
 platform.debug = false;
+const frameClock = new PhaserFrameClock();
+platform.frameClock = frameClock;
 const driver = createDriver({
   game: theGame,
+  clock: frameClock,
   input,
   pause,
   sound,
   prefetch,
-  // Presses wait until the main set of the art is in (it holds the obstacles).
+  // Presses wait for main art, cached sound and resource preparation.
   ready: () => platform.world !== undefined,
   onStep(dt) {
     platform.world?.sync();
@@ -219,4 +263,11 @@ if (import.meta.env.DEV) {
     get camera() { return platform.camera; },
     get game() { return theGame; },
   };
+}
+
+// Record the real update/render loop on devices with the frame readout enabled.
+// Kept out of normal play and out of the Pixi version.
+if (new URLSearchParams(location.search).get('frames') === '1') {
+  const { installFrameTrace } = await import('./frameTrace.js');
+  installFrameTrace(game, platform);
 }

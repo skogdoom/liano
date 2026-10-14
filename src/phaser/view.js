@@ -3,6 +3,8 @@
 // pixels per CSS pixel and is shown at its CSS size, and each camera zooms by the
 // layout's scale times the ratio. Pure, so it is tested in Node.
 
+export { resolutionLimit } from './resolution.js';
+
 // The canvas size in device pixels for a window of `width` × `height` CSS pixels.
 export const canvasSize = (width, height, ratio) => ({ width: Math.round(width * ratio), height: Math.round(height * ratio) });
 

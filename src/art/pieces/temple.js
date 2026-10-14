@@ -58,6 +58,9 @@ export const FLAME_HEIGHT = flipbook(7, 0, 1);
 export const flameFrameFor = (sway, k) => FLAME_SWAY.frameFor(sway) * FLAME_HEIGHT.frames + FLAME_HEIGHT.frameFor(k);
 
 const temple = { scale: OBSTACLE_SCALE, tint: true };
+// Mild horizontal antialiasing of the stone's fine, repeated edges. Like the canopy
+// and floor this is baked at startup's asset scale; no gameplay shader or camera lag.
+const stone = { ...temple, soften: 0.2 };
 // Placed between pixels and turned: rasterized at least at 2× (see piece.js).
 const fine = { ...temple, density: 2 };
 
@@ -82,7 +85,7 @@ const looks = TEMPLE_LOOKS.flatMap((name, look) => {
   const style = TEMPLE_STYLES[look];
   return [
     {
-      ...temple,
+      ...stone,
       key: `temple.${name}.top`,
       purpose: `The ${name} temple down to the top of its base: the shrine, the three tiers and the stairs on them${['', ', a stepped fret on the shrine', ', a roof comb over the shrine', ', serpent heads on the stairs and moss', ', gold inlay and two braziers'][look + 1]}. Its origin is the top centre of the shrine (the hitbox's).`,
       hitbox: OBSTACLE_HITBOXES.temple,
@@ -90,17 +93,17 @@ const looks = TEMPLE_LOOKS.flatMap((name, look) => {
       frames: [(g) => drawTop(g, look)],
     },
     {
-      ...temple,
+      ...stone,
       key: `temple.${name}.baseTop`,
       purpose: `The first ${TEMPLE_PANEL_ROW} px of the ${name} temple's base, from its lit top edge (at y ${base.dy}): courses of blocks and a row of panels.`,
-      box: { x: base.dx, y: base.dy, w: base.w, h: TEMPLE_PANEL_ROW },
+      box: { x: base.dx - 2, y: base.dy, w: base.w + 4, h: TEMPLE_PANEL_ROW },
       frames: [(g) => drawTemplePanels(drawTempleTier(g, style, base, base.dy + 2 * TEMPLE_PANEL_ROW), style, base.dy + 40)],
     },
     {
-      ...temple,
+      ...stone,
       key: `temple.${name}.base`,
       purpose: `The ${name} temple's base below that: ${TEMPLE_PANEL_ROW} px, from its top (the origin's y), that repeat down to the floor.`,
-      box: { x: base.dx, y: 0, w: base.w, h: TEMPLE_PANEL_ROW },
+      box: { x: base.dx - 2, y: 0, w: base.w + 4, h: TEMPLE_PANEL_ROW },
       frames: [
         (g) => {
           drawTempleTier(g, style, { ...base, dy: -TEMPLE_PANEL_ROW }, 2 * TEMPLE_PANEL_ROW);
@@ -110,10 +113,10 @@ const looks = TEMPLE_LOOKS.flatMap((name, look) => {
       ],
     },
     {
-      ...temple,
+      ...stone,
       key: `temple.${name}.stairs`,
       purpose: `The ${name} temple's stairs below the tiers, with their low walls: ${TEMPLE_STAIRS_REPEAT} steps (${TEMPLE_STAIRS_REPEAT * TEMPLE_STEP} px, from the top of a step at the origin's y) that repeat down to the floor.`,
-      box: { x: TEMPLE_STAIRS.x - TEMPLE_STAIRS.wall, y: 0, w: TEMPLE_STAIRS.w + 2 * TEMPLE_STAIRS.wall, h: TEMPLE_STAIRS_REPEAT * TEMPLE_STEP },
+      box: { x: TEMPLE_STAIRS.x - TEMPLE_STAIRS.wall - 2, y: 0, w: TEMPLE_STAIRS.w + 2 * TEMPLE_STAIRS.wall + 4, h: TEMPLE_STAIRS_REPEAT * TEMPLE_STEP },
       frames: [(g) => drawTempleStairs(g, style, 0, (TEMPLE_STAIRS_REPEAT + 1) * TEMPLE_STEP)],
     },
   ];

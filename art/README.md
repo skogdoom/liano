@@ -55,8 +55,8 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 | `backdrop.mid` | 2048 × 1670 | 1 | tile, tinted | The middle layer: darker trunks with a few branch stubs. One tile, repeating sideways. |
 | `backdrop.nearTop` | 2048 × 100 | 2 | tile, tinted | The near layer under the canopy: clumps of leaves hanging down. One tile, repeating sideways. |
 | `backdrop.near` | 2048 × 124 | 2 | tile, tinted | The near layer along the floor: ferns. One tile, repeating sideways. |
-| `backdrop.canopy` | 2048 × 112 | 2 | tile, tinted | The canopy strip the lianas hang from, in front of the world, with a leafy top edge for taller views. One tile, repeating sideways. |
-| `backdrop.floor` | 2048 × 74 | 2 | tile, tinted | The top of the dark jungle floor, in front of the world: undergrowth along the floor line. One tile, repeating sideways; below it the floor is backdrop.floorFill, stretched down 1600 px below the band for taller views. |
+| `backdrop.canopy` | 2048 × 112 | 2 | tile, tinted, softened sideways by the build (0.4 units) | The canopy strip the lianas hang from, in front of the world, with a leafy top edge for taller views. One tile, repeating sideways. |
+| `backdrop.floor` | 2048 × 74 | 2 | tile, tinted, softened sideways by the build (0.8 units) | The top of the dark jungle floor, in front of the world: undergrowth along the floor line. One tile, repeating sideways; below it the floor is backdrop.floorFill, stretched down 1600 px below the band for taller views. |
 | `backdrop.floorFill` | 4 × 4 | 1 | tinted | The floor's colour below the undergrowth, a small square stretched to fill the rest of the floor. |
 
 ### monkey
@@ -285,22 +285,22 @@ Sizes are the box in game units; *scale* is the largest the game draws the piece
 
 | Files | Box | Scale | | What it is |
 | --- | --- | --- | --- | --- |
-| `temple.limestone.top` | 376 × 206 | 1.3 | tinted, hitbox | The limestone temple down to the top of its base: the shrine, the three tiers and the stairs on them, a stepped fret on the shrine. Its origin is the top centre of the shrine (the hitbox's). |
-| `temple.limestone.baseTop` | 472 × 92 | 1.3 | tinted | The first 92 px of the limestone temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels. |
-| `temple.limestone.base` | 472 × 92 | 1.3 | tinted | The limestone temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor. |
-| `temple.limestone.stairs` | 76 × 96 | 1.3 | tinted | The limestone temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor. |
-| `temple.sandstone.top` | 376 × 206 | 1.3 | tinted, hitbox | The sandstone temple down to the top of its base: the shrine, the three tiers and the stairs on them, a roof comb over the shrine. Its origin is the top centre of the shrine (the hitbox's). |
-| `temple.sandstone.baseTop` | 472 × 92 | 1.3 | tinted | The first 92 px of the sandstone temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels. |
-| `temple.sandstone.base` | 472 × 92 | 1.3 | tinted | The sandstone temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor. |
-| `temple.sandstone.stairs` | 76 × 96 | 1.3 | tinted | The sandstone temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor. |
-| `temple.mossy.top` | 376 × 206 | 1.3 | tinted, hitbox | The mossy temple down to the top of its base: the shrine, the three tiers and the stairs on them, serpent heads on the stairs and moss. Its origin is the top centre of the shrine (the hitbox's). |
-| `temple.mossy.baseTop` | 472 × 92 | 1.3 | tinted | The first 92 px of the mossy temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels. |
-| `temple.mossy.base` | 472 × 92 | 1.3 | tinted | The mossy temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor. |
-| `temple.mossy.stairs` | 76 × 96 | 1.3 | tinted | The mossy temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor. |
-| `temple.basalt.top` | 376 × 206 | 1.3 | tinted, hitbox | The basalt temple down to the top of its base: the shrine, the three tiers and the stairs on them, gold inlay and two braziers. Its origin is the top centre of the shrine (the hitbox's). |
-| `temple.basalt.baseTop` | 472 × 92 | 1.3 | tinted | The first 92 px of the basalt temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels. |
-| `temple.basalt.base` | 472 × 92 | 1.3 | tinted | The basalt temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor. |
-| `temple.basalt.stairs` | 76 × 96 | 1.3 | tinted | The basalt temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor. |
+| `temple.limestone.top` | 376 × 206 | 1.3 | tinted, softened sideways by the build (0.2 units), hitbox | The limestone temple down to the top of its base: the shrine, the three tiers and the stairs on them, a stepped fret on the shrine. Its origin is the top centre of the shrine (the hitbox's). |
+| `temple.limestone.baseTop` | 476 × 92 | 1.3 | tinted, softened sideways by the build (0.2 units) | The first 92 px of the limestone temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels. |
+| `temple.limestone.base` | 476 × 92 | 1.3 | tinted, softened sideways by the build (0.2 units) | The limestone temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor. |
+| `temple.limestone.stairs` | 80 × 96 | 1.3 | tinted, softened sideways by the build (0.2 units) | The limestone temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor. |
+| `temple.sandstone.top` | 376 × 206 | 1.3 | tinted, softened sideways by the build (0.2 units), hitbox | The sandstone temple down to the top of its base: the shrine, the three tiers and the stairs on them, a roof comb over the shrine. Its origin is the top centre of the shrine (the hitbox's). |
+| `temple.sandstone.baseTop` | 476 × 92 | 1.3 | tinted, softened sideways by the build (0.2 units) | The first 92 px of the sandstone temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels. |
+| `temple.sandstone.base` | 476 × 92 | 1.3 | tinted, softened sideways by the build (0.2 units) | The sandstone temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor. |
+| `temple.sandstone.stairs` | 80 × 96 | 1.3 | tinted, softened sideways by the build (0.2 units) | The sandstone temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor. |
+| `temple.mossy.top` | 376 × 206 | 1.3 | tinted, softened sideways by the build (0.2 units), hitbox | The mossy temple down to the top of its base: the shrine, the three tiers and the stairs on them, serpent heads on the stairs and moss. Its origin is the top centre of the shrine (the hitbox's). |
+| `temple.mossy.baseTop` | 476 × 92 | 1.3 | tinted, softened sideways by the build (0.2 units) | The first 92 px of the mossy temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels. |
+| `temple.mossy.base` | 476 × 92 | 1.3 | tinted, softened sideways by the build (0.2 units) | The mossy temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor. |
+| `temple.mossy.stairs` | 80 × 96 | 1.3 | tinted, softened sideways by the build (0.2 units) | The mossy temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor. |
+| `temple.basalt.top` | 376 × 206 | 1.3 | tinted, softened sideways by the build (0.2 units), hitbox | The basalt temple down to the top of its base: the shrine, the three tiers and the stairs on them, gold inlay and two braziers. Its origin is the top centre of the shrine (the hitbox's). |
+| `temple.basalt.baseTop` | 476 × 92 | 1.3 | tinted, softened sideways by the build (0.2 units) | The first 92 px of the basalt temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels. |
+| `temple.basalt.base` | 476 × 92 | 1.3 | tinted, softened sideways by the build (0.2 units) | The basalt temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor. |
+| `temple.basalt.stairs` | 80 × 96 | 1.3 | tinted, softened sideways by the build (0.2 units) | The basalt temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor. |
 | `temple.leaf.0` … `.7` | 88 × 46 | 1.3 | tinted | A leaf on a temple (the fringe of ferns at its foot, and on the corners of the tiers), 86 px from its base (the origin) along +x, in the greens FRINGE_DEEP, BUSH, FRINGE, BUSH_LIGHT, LEAF_DARK, LEAF, MOSS, MOSS_LIGHT (one frame each); placed, turned and scaled per leaf. |
 | `temple.moss.0` … `.1` | 46 × 12 | 1.3 | tinted | A patch of moss on a tier, 22 by 4.5 px (half) about its centre: dark (frame 0) and light (frame 1); stretched sideways. |
 | `temple.vine` | 20 × 2 | 1.3 | strip, tinted | A vine hanging from a patch of moss. A straight strip 20 px along +x from the origin, 2 px across; bent along the curve. |

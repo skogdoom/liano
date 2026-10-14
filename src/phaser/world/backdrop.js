@@ -8,21 +8,57 @@ import {
   NEAR_FACTOR,
   SKY_BANDS,
   SKY_MARGIN,
+  TILE,
   StageTint,
   layerShift,
   skyLayout,
 } from '../../views/backdrop.js';
 import { makeContainer } from './build.js';
+import { exposureWidth } from './exposure.js';
+import { addExposure } from './exposureShader.js';
 
 // The jungle backdrop in the Phaser version (as the Pixi Background): the sky, stretched
 // to the view, and three parallax layers behind the world (`back`); the canopy strip and
 // the floor in front of it (`front`), which scroll with the world. The layers are tiles
-// repeating sideways (TileSprites); all of it takes the stage tint, eased as the stages
-// change.
+// repeating sideways (Images in moving containers); all of it takes the stage tint,
+// eased as the stages change.
 const SKY = SKY_BANDS * SKY_BAND_HEIGHT; // the sky piece's height, in units
 
+// Move the layers with scene transforms, as the foreground and Pixi backdrop move.
+// Keep the former TileSprite UV-scrolling path for a Safari comparison.
+const IMAGE_MODE = typeof location === 'undefined' || new URLSearchParams(location.search).get('backdrop') !== 'tiles';
+// Keep the earlier exposure experiment opt-in; normal play uses phaser-m7's motion.
+const MOTION_BLUR = typeof location !== 'undefined' && new URLSearchParams(location.search).get('motionblur') === 'on';
+
+class ImageLayer {
+  constructor(scene, art, key, blur) {
+    this.scene = scene;
+    this.art = art;
+    this.key = key;
+    this.blur = blur;
+    this.view = makeContainer(scene);
+  }
+
+  resize(width) {
+    // One copy before the origin covers the shake margin; an extra copy after the
+    // view covers a full tile of scroll. Textures are shared, not re-uploaded.
+    const count = Math.ceil(width / TILE) + 2;
+    while (this.view.list.length > count) this.view.list.at(-1).destroy();
+    while (this.view.list.length < count) {
+      const image = this.art.tileCopy(this.scene, this.key);
+      if (this.blur) addExposure(image);
+      image.x = (this.view.list.length - 1) * TILE;
+      this.view.add(image);
+    }
+  }
+
+  setExposure(width) {
+    if (this.blur) for (const image of this.view.list) image.exposureUV = width / TILE;
+  }
+}
+
 export class BackdropRig {
-  constructor(scene, art) {
+  constructor(scene, art, { images = IMAGE_MODE, motionBlur = MOTION_BLUR } = {}) {
     this.scene = scene;
     this.art = art;
     this.back = makeContainer(scene);
@@ -36,14 +72,19 @@ export class BackdropRig {
       ['backdrop.nearTop', NEAR_FACTOR, this.back],
       ['backdrop.canopy', 1, this.front],
       ['backdrop.floor', 1, this.front],
-    ].map(([key, factor, group]) => ({ key, factor, group, tile: art.tile(scene, key, 1) }));
+    ].map(([key, factor, group]) => {
+      const scenery = group === this.back;
+      const copies = images ? new ImageLayer(scene, art, key, scenery && motionBlur) : null;
+      const tile = copies ? null : art.tile(scene, key, 1);
+      return { key, factor, scenery, group, tile, copies, view: copies?.view ?? tile };
+    });
     this.floor = makeContainer(scene);
     // Below the floor's undergrowth, its colour down to the bottom of taller views.
     this.floorFill = art.image(scene, 'backdrop.floorFill');
-    const tileOf = (key) => this.layers.find((l) => l.key === key).tile;
-    this.back.add([this.sky.bands, this.sky.above, this.sky.below, ...['far', 'mid', 'near', 'nearTop'].map((k) => tileOf(`backdrop.${k}`))]);
-    this.floor.add([tileOf('backdrop.floor'), this.floorFill]);
-    this.front.add([tileOf('backdrop.canopy'), this.floor]);
+    const viewOf = (key) => this.layers.find((l) => l.key === key).view;
+    this.back.add([this.sky.bands, this.sky.above, this.sky.below, ...['far', 'mid', 'near', 'nearTop'].map((k) => viewOf(`backdrop.${k}`))]);
+    this.floor.add([viewOf('backdrop.floor'), this.floorFill]);
+    this.front.add([viewOf('backdrop.canopy'), this.floor]);
     this.stageTint = new StageTint();
     this.color = this.stageTint.color;
     this.shownTint = null;
@@ -51,7 +92,8 @@ export class BackdropRig {
 
   // Fits the sky and the layers to the pane (one of paneLayouts()), and lifts the floor to
   // the bottom edge when the band is cropped (see layout.js).
-  resize(pane) {
+  resize(pane, zoom = 1) {
+    this.density = zoom * pane.scale;
     const top = -pane.bandTop;
     const sky = skyLayout(top, pane.view.width, top + pane.view.height);
     const { art } = this;
@@ -60,16 +102,36 @@ export class BackdropRig {
     art.stretch(this.sky.below, 'backdrop.sky', { x: sky.x, ...sky.below, w: sky.w }, { from: [0, SKY - SKY_BAND_HEIGHT] });
     // The layers span the view, and SKY_MARGIN more each side for the death shake.
     const width = pane.view.width / pane.scale + 2 * SKY_MARGIN;
-    for (const { key, tile } of this.layers) this.art.setTile(tile.setX(-SKY_MARGIN), key, { width });
+    for (const { key, tile, copies } of this.layers) {
+      if (copies) {
+        copies.resize(width);
+        art.tint([copies.view], this.color);
+      } else art.setTile(tile.setX(-SKY_MARGIN), key, { width });
+    }
     const fillTop = FLOOR_Y + FLOOR_DEPTH;
     art.stretch(this.floorFill, 'backdrop.floorFill', { x: -SKY_MARGIN, y: fillTop, w: width, h: WORLD_HEIGHT + EXTEND_DOWN - fillTop });
     this.floor.y = pane.floorShift;
-    this.cameraX = null;
+    this.resetMotion();
   }
 
-  // Scrolls the layers for a camera at `cameraX`.
-  update(cameraX) {
-    for (const { key, tile, factor } of this.layers) this.art.setTile(tile, key, { x: layerShift(cameraX, factor) - SKY_MARGIN });
+  resetMotion() {
+    this.previousCameraX = null;
+    for (const { copies } of this.layers) copies?.setExposure(0);
+  }
+
+  // Every layer uses the pane's interpolated camera, at phaser-m7's parallax speeds.
+  // Only the optional exposure experiment needs the distance since the last frame.
+  update(cameraX, dt = 0) {
+    const distance = this.previousCameraX === null ? 0 : cameraX - this.previousCameraX;
+    this.previousCameraX = cameraX;
+    for (const { key, tile, copies, factor, scenery } of this.layers) {
+      const shift = layerShift(cameraX, factor);
+      if (copies) {
+        copies.view.x = -shift;
+        copies.setExposure(scenery ? exposureWidth(distance * factor, this.density, dt) : 0);
+      }
+      else this.art.setTile(tile, key, { x: shift - SKY_MARGIN });
+    }
   }
 
   // Eases the tint towards the stage's (see StageTint); returns it.

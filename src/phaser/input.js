@@ -28,7 +28,7 @@ function source(type, attach, detach) {
 
 // Key presses from a scene's keyboard plugin (`scene.input.keyboard`), as the browser's
 // keydown events, each once.
-export function phaserKeys(keyboard) {
+export function phaserKeys(keyboard, { intercept = () => false } = {}) {
   const seen = new WeakSet();
   let handler = null;
   return source(
@@ -37,6 +37,7 @@ export function phaserKeys(keyboard) {
       handler = (event) => {
         if (seen.has(event)) return;
         seen.add(event);
+        if (intercept(event)) return;
         emit(event);
       };
       keyboard.on('keydown', handler);

@@ -1,5 +1,8 @@
-import { LIANA_SPACING, SIM_DT } from '../config.js';
-import { CANOPY_BOTTOM, FLOOR_Y } from '../views/backdrop.js';
+import { Assets, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
+import { LIANA_SPACING, SIM_DT, WORLD_HEIGHT } from '../config.js';
+import { CANOPY_BOTTOM, EXTEND_DOWN, FLOOR_Y, TILE } from '../views/backdrop.js';
+import { FLOOR_DEPTH, FLOOR_TOP } from '../art/pieces/backdrop.js';
+import { TILE_EDGE } from '../art/catalog.js';
 import { Art, CATALOG, queueArt } from '../phaser/art.js';
 import { LianaSetRig } from '../phaser/world/lianas.js';
 import { MonkeyRig } from '../phaser/world/monkey.js';
@@ -192,15 +195,41 @@ function sceneWorld(stage, temple = null) {
   if (temple !== null) world.obstacles.set(1, new Obstacle(1, 'temple', LIANA_SPACING * 1.5, 330, null, 1.3, null, temple));
   return world;
 }
+// The gameplay Pixi floor remains sharp. Match only this intentionally different
+// artwork in whole-pane parity fixtures; the art gallery independently checks the
+// softened PNG against the procedural drawing and the contract's Gaussian blur.
+// Placement, tint, clipping and all other artwork keep their normal comparison.
+async function matchFloorArt(pane, zoom) {
+  const scale = Math.min(Art.scaleFor(zoom), 2);
+  const image = await Assets.load(`${import.meta.env.BASE_URL}art/tiles/backdrop.floor@${scale}x.png`);
+  // Pixi recognizes @2x in the filename and reports logical texture sizes.
+  const resolution = image.source.resolution;
+  const edge = TILE_EDGE / resolution;
+  const texture = new Texture({ source: image.source,
+    frame: new Rectangle(0, edge, image.width, image.height - 2 * edge),
+  });
+  const floor = pane.background.floor.view;
+  for (const child of floor.removeChildren()) child.destroy();
+  for (let i = 0; i < 2; i++) {
+    const copy = new Sprite(texture);
+    copy.scale.set(resolution / scale);
+    copy.position.set(i * TILE, FLOOR_Y - FLOOR_TOP);
+    floor.addChild(copy);
+  }
+  const top = FLOOR_Y + FLOOR_DEPTH;
+  floor.addChild(new Graphics().rect(0, top, 2 * TILE, WORLD_HEIGHT + EXTEND_DOWN - top).fill(0x0a140d));
+}
+
 const SCENE = { width: 1280, height: 720 };
 const sceneScenario = (id, title, stage, ahead = 0, temple = null) =>
   withArt({
     id,
-    title,
+    title: `${title} (floor artwork matched for parity)`,
     ...SCENE,
     background: 0x000000,
-    pixi(view) {
+    async pixi(view, _api, zoom) {
       const pane = new Pane();
+      await matchFloorArt(pane, zoom);
       pane.setWorld(sceneWorld(stage, temple), [0]);
       pane.resize(paneLayouts(layoutFor(SCENE.width, SCENE.height), 1, 1)[0]);
       pane.camera.x = pane.camera.prevX = pane.camera.x + ahead;

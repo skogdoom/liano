@@ -3,7 +3,7 @@ import { DEATH_SHAKE_PX, DEATH_SHAKE_TIME } from '../config.js';
 import { Background } from './background.js';
 import { Shake } from './shake.js';
 import { BananaViews } from './bananaView.js';
-import { Camera, cameraTarget } from './camera.js';
+import { Camera, SwingTarget } from './camera.js';
 import { blend } from './interpolate.js';
 import { LIANA_PALETTES, LianaView } from './lianaView.js';
 import { MonkeyView, PALETTES } from './monkeyView.js';
@@ -42,6 +42,7 @@ export class Pane {
     this.clip = new Graphics();
     this.view.addChild(this.scene);
     this.ownCamera = new Camera();
+    this.swing = new SwingTarget();
     this.camera = this.ownCamera;
     this.shake = new Shake();
     this.world = null;
@@ -70,7 +71,7 @@ export class Pane {
       this.scene.mask = null;
       this.clip.removeFromParent();
     }
-    if (this.world && this.camera === this.ownCamera) this.camera.reset(this.#target());
+    if (this.world && this.camera === this.ownCamera) this.camera.reset(this.#target(0, true));
   }
 
   // Shows `world`, whose monkeys belong to `players` (their palettes, by monkey index).
@@ -99,7 +100,7 @@ export class Pane {
       this.monkeyLayer.addChild(view.view);
     });
     for (const view of this.monkeyViews.splice(world.monkeys.length)) view?.view.destroy({ children: true });
-    if (this.layout && !camera) this.camera.reset(this.#target());
+    if (this.layout && !camera) this.camera.reset(this.#target(0, true));
   }
 
   // Fixed-step camera update; it holds still once everyone in the world is out.
@@ -107,12 +108,14 @@ export class Pane {
   stepCamera(dt) {
     if (this.camera !== this.ownCamera) return;
     this.camera.mark();
-    if (this.world.alive) this.camera.update(this.#target(), dt);
+    if (this.world.alive) this.camera.update(this.#target(dt), dt);
   }
 
   // What the pane's own camera follows: player 1's monkey.
-  #target() {
-    return cameraTarget(this.world.monkey, this.layout.camera.follow);
+  // `restart`: the camera is being placed afresh (see SwingTarget).
+  #target(dt = 0, restart = false) {
+    if (restart) this.swing.reset();
+    return this.swing.of(this.world.monkey, this.layout.camera.follow, dt);
   }
 
   // `events`: this frame's events from this pane's world.

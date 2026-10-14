@@ -28,8 +28,8 @@ function spider(b, o) {
   return {
     parts: [thread, body],
     body,
-    animate(t) {
-      b.setSegment(thread, 'spider.thread', [o.x, CANOPY_Y - 40], [o.x, o.y - 14 * o.scale]);
+    animate(t, position) {
+      b.setSegment(thread, 'spider.thread', [position.x, CANOPY_Y - 40], [position.x, position.y - 14 * o.scale]);
       spiderLegs(t).forEach(({ shoulder, knee, foot }, i) => {
         const [upper, lower, ...joints] = legs[i];
         b.setSegment(upper, 'spider.leg', shoulder, knee);
@@ -98,17 +98,19 @@ function bat(b, o) {
 
 export const MOVING_RIGS = { spider, snake, bird, blueBird: bird, purpleBird: bird, bat, circleBat: bat };
 
-// A moving obstacle's view, as the Pixi one: its body follows it each update.
+// A moving obstacle's view sampled at the pane's drawing time. Using o.x/o.y and
+// o.time here repeated a simulation pose on display frames without a sim step.
 export function buildMovingRig(scene, art, o) {
   const b = new Builder(scene, art);
   const { parts, body, animate } = MOVING_RIGS[o.type](b, o);
   const view = b.container();
   view.add(parts);
   body.setScale(o.scale);
-  const update = () => {
-    body.setPosition(o.x, o.y);
-    animate(o.time);
+  const update = (t = o.time) => {
+    const position = o.positionAt(t);
+    body.setPosition(position.x, position.y);
+    animate(t, position);
   };
   update();
-  return { view, update };
+  return { view, body, update };
 }

@@ -1,14 +1,16 @@
-import { RED_DARK } from '../views/hearts.js';
+import { MAX_SHOWN, RED_DARK } from '../views/hearts.js';
 import { HUD_FONT, HUD_HEART_SIZE, HUD_SHADOW, PLAYER_COLORS, heartCountFont, heartRow, hudPlacement, hudState, tallyIcon } from '../views/hud.js';
 import { makeContainer } from './world/build.js';
-import { makeText, setTextOrigin, setTextResolution, textResolution } from './text.js';
+import { setTextOrigin, setTextResolution, textResolution } from './text.js';
+import { glyphLabel, prepareGlyphLabels } from './glyphLabel.js';
 
 // The HUD in the Phaser version, as the Pixi Hud (views/hud.js has what both share): top
-// right, the scores, the banana counts and the hearts. Texts are Phaser Text, laid out as
-// Pixi lays them out (text.js); the icons are pieces.
+// right, the scores, the banana counts and the hearts, laid out as
+// Pixi lays them out (text.js); the changing labels use prepared glyph atlases and
+// the icons are pieces.
 
 // A label right-aligned at its point.
-const label = (scene, size, color) => makeText(scene, '', { family: HUD_FONT.family, size, weight: HUD_FONT.weight, fill: color, shadow: HUD_SHADOW });
+const label = (scene, size, color) => glyphLabel(scene, { family: HUD_FONT.family, size, weight: HUD_FONT.weight, fill: color, shadow: HUD_SHADOW });
 const setLabel = (text, content) => setTextOrigin(text.setText(content), 1, 0);
 
 // A banana and a count, right-aligned at its position.
@@ -40,7 +42,9 @@ class HeartRow {
     this.view = makeContainer(scene);
     this.hearts = makeContainer(scene);
     const font = heartCountFont(size);
-    this.count = makeText(scene, '', { family: font.family, size: font.size, weight: font.weight, fill: 0xffffff, stroke: RED_DARK, strokeWidth: font.stroke });
+    this.count = glyphLabel(scene, { family: font.family, size: font.size, weight: font.weight, fill: 0xffffff, stroke: RED_DARK, strokeWidth: font.stroke });
+    this.icons = Array.from({ length: MAX_SHOWN }, () => art.image(scene, 'heart.hud').setVisible(false));
+    this.hearts.add(this.icons);
     this.view.add([this.hearts, this.count]);
     this.shown = null;
   }
@@ -49,8 +53,11 @@ class HeartRow {
     if (lives === this.shown) return;
     this.shown = lives;
     const row = heartRow(lives, this.size);
-    this.hearts.removeAll(true);
-    for (const { x, filled } of row.hearts) this.hearts.add(this.art.image(this.scene, 'heart.hud', filled ? 0 : 1).setPosition(x, 0));
+    this.icons.forEach((image, i) => {
+      const heart = row.hearts[i];
+      image.setVisible(!!heart);
+      if (heart) this.art.setFrame(image.setPosition(heart.x, 0), 'heart.hud', heart.filled ? 0 : 1);
+    });
     this.count.setVisible(row.count !== null);
     if (row.count) setTextOrigin(this.count.setText(row.count.text)).setPosition(row.count.x, row.count.y);
   }
@@ -58,6 +65,7 @@ class HeartRow {
 
 export class Hud {
   constructor(scene, art) {
+    this.scene = scene;
     this.view = makeContainer(scene);
     this.solo = label(scene, HUD_FONT.solo, PLAYER_COLORS[0]);
     this.players = PLAYER_COLORS.map((color) => label(scene, HUD_FONT.player, color));
@@ -73,6 +81,20 @@ export class Hud {
     this.layout = layout;
     this.zoom = zoom;
     this.placed = null;
+    // Prepare every mode's finite glyph set while loading/resizing, including the
+    // currently hidden two-player labels. Gameplay score changes upload no text.
+    prepareGlyphLabels(this.scene, () => {
+      setTextResolution(this.solo, textResolution(zoom, layout.ui));
+      this.players.forEach((text) => setTextResolution(text, zoom));
+      this.tallies.forEach((tally) => {
+        setTextResolution(tally.text, textResolution(zoom, layout.ui));
+        setTextResolution(tally.text, zoom);
+      });
+      this.heartRows.forEach((row) => {
+        setTextResolution(row.count, textResolution(zoom, layout.ui));
+        setTextResolution(row.count, zoom);
+      });
+    });
   }
 
   update(game) {

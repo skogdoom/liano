@@ -3,7 +3,7 @@ import { DEV, PREVIEW } from '../playwright.config.js';
 import { collectErrors, started } from './helpers.js';
 
 for (const [label, query, engine] of [
-  ['default', '', 'pixi'],
+  ['default', '', 'phaser'],
   ['Pixi', '?engine=pixi', 'pixi'],
   ['Phaser', '?engine=phaser', 'phaser'],
 ]) {
@@ -14,6 +14,24 @@ for (const [label, query, engine] of [
     await expect(page.locator('html')).toHaveAttribute('data-engine', engine);
     await expect(page.locator('canvas')).toHaveCount(1);
     await expect(page.locator('#fatal')).not.toHaveClass(/shown/);
+    expect(errors).toEqual([]);
+  });
+}
+
+// The frame-time readout (?frames=1) for checking smoothness on a device: it counts the
+// frames, and a tap on it is not a press in the game.
+for (const engine of ['phaser', 'pixi']) {
+  test(`the ${engine === 'phaser' ? 'Phaser' : 'Pixi'} version shows the frame-time readout with ?frames=1`, async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(`${DEV}?engine=${engine}&frames=1`);
+    await started(page, errors);
+    const readout = page.locator('#frame-stats');
+    // Software rendering makes the frames slow here: the counts may not have come yet.
+    await expect(readout).toContainText(/frames/);
+    await page.waitForFunction(() => window.__liano.pause.acceptsInput());
+    await readout.click();
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
     expect(errors).toEqual([]);
   });
 }

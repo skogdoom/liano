@@ -8,6 +8,7 @@ import { DebugOverlay } from './debug.js';
 import { Hud } from './hud.js';
 import { Overlays } from './overlays.js';
 import { WorldPane } from './world/pane.js';
+import { warmObstacleRigs } from './warmup.js';
 
 // The Phaser version's scenes (PHASER_PLAN.md, M2): Boot loads the art and starts the
 // others; Play draws the worlds (M5), UI the HUD, panels and buttons (M6). Each scene's
@@ -87,7 +88,11 @@ export class PlayScene extends Phaser.Scene {
     followLayout(this, () => this.layoutPanes());
     // The world is drawn once the main set of the art is in (obstacles are in it); until
     // then the game holds presses (see main.js).
-    const start = () => {
+    const start = async () => {
+      await platform.soundReady;
+      const started = performance.now();
+      const rigs = warmObstacleRigs(this, platform.art);
+      platform.prepared = { rigs, ms: performance.now() - started, sounds: platform.sound.cache?.buffers.size ?? 0, soundBytes: platform.sound.cache?.bytes ?? 0 };
       this.ready = true;
       platform.world = this;
       this.sync();
@@ -181,15 +186,24 @@ export class UiScene extends Phaser.Scene {
     // Top right: the scores, banana counts and hearts; over everything, the panels, the
     // stage banners and the arrow over a monkey above the view.
     this.hud = new Hud(this, platform.art);
-    this.overlays = new Overlays(this, platform.art);
+    this.overlays = new Overlays(this, platform.art, { configMenu: platform.configMenu, mobile: platform.mobile });
     this.add.existing(this.hud.view);
     this.add.existing(this.overlays.view);
     // D: the debug view, over each pane, with its numbers.
     this.debug = new DebugOverlay(this);
     this.debugPanes = null;
+    // Title/config/results panels can use the visible screen even when a two-player
+    // game is letterboxed into a small landscape frame on a portrait phone.
+    this.menuCamera = this.cameras.add(0, 0, 1, 1);
+    this.cameras.main.ignore([this.overlays.title, this.overlays.config, this.overlays.gameOver]);
+    this.menuCamera.ignore([this.buttons.view, this.hud.view, this.debug.view,
+      this.overlays.indicator, this.overlays.paneLayer, this.overlays.paused]);
     followLayout(this, (layout, camera) => {
       this.hud.resize(layout, camera.zoom);
-      this.overlays.resize(layout, camera.zoom);
+      this.overlays.resize(layout, camera.zoom, platform.menuArea);
+      applyViewCamera(this.menuCamera, { x: 0, y: 0,
+        width: this.sys.game.canvas.width, height: this.sys.game.canvas.height,
+        zoom: camera.zoom, scrollX: -layout.x / layout.scale, scrollY: -layout.y / layout.scale });
       this.debug.resize(layout, camera.zoom);
       this.buttons.view.setPosition(layout.insets.left, layout.insets.top).setScale(layout.ui);
     });
@@ -204,6 +218,7 @@ export class UiScene extends Phaser.Scene {
     this.hud.update(game);
     const cameraX = platform.world?.panes[0]?.camera.x ?? 0;
     this.overlays.update(game, cameraX, { pauseReason: platform.pause.reason, inputType: platform.input?.lastType, dt: platform.frame?.frameDt ?? 0 });
+    this.menuCamera.setVisible((game.state === 'TITLE' || game.state === 'RESULTS') && !platform.pause.paused);
     const panes = platform.world?.panes ?? [];
     if (panes.length !== this.debugPanes?.length || panes.some((pane, i) => pane !== this.debugPanes[i])) {
       this.debug.attach(panes);
