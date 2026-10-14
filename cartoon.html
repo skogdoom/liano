@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Liano · Cartoon style review</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #10261a; color: #f4e7c5; font: 15px/1.5 system-ui, sans-serif; }
+      main { max-width: 1328px; margin: auto; padding: 24px; }
+      h1 { margin: 0; font-size: clamp(26px, 4vw, 40px); }
+      h2 { margin: 24px 0 12px; font-size: 21px; }
+      p { max-width: 80ch; }
+      .eyebrow { color: #ffc857; letter-spacing: .15em; text-transform: uppercase; font-size: 12px; }
+      .muted { color: #b6c8b2; }
+      a { color: #ffc857; }
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 16px 0; }
+      label { display: flex; align-items: center; gap: 8px; }
+      select, button { font: inherit; background: #254433; border: 1px solid #688566; border-radius: 8px; color: #f4e7c5; min-height: 44px; padding: 8px 12px; }
+      .scroll { overflow: auto; border: 1px solid #456247; border-radius: 12px; background: #07180e; }
+      #scene { display: block; margin: auto; }
+      #cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+      article { border: 1px solid #456247; border-radius: 12px; overflow: hidden; background: #183027; }
+      article h3 { font-size: 15px; margin: 12px 16px 6px; }
+      article p { font-size: 13px; margin: 0 16px 12px; }
+      article canvas { display: block; width: 100%; height: auto; background: repeating-conic-gradient(#d0d5cd 0% 25%, #e4e7df 0% 50%) 0 / 20px 20px; }
+      #sheet { display: block; width: 100%; max-height: 850px; object-fit: contain; background: #253d30; border-radius: 12px; }
+      table { border-collapse: collapse; width: 100%; max-width: 600px; }
+      td, th { padding: 7px 12px; text-align: left; border-bottom: 1px solid #456247; }
+      details { margin: 20px 0; }
+      summary { cursor: pointer; color: #ffc857; }
+      .notice { border-left: 3px solid #ffc857; padding: 10px 16px; background: #1b3527; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">M8a · First style review</div>
+      <h1>A painted cartoon jungle</h1>
+      <p class="muted">Character poses, day/night scenery, a temple and menu treatment based on the two Liano covers. These are style samples for review before producing the full sprite pack.</p>
+      <p class="notice">The samples are not production sprites yet. The monkey sizes below use the classic rig's bounds; backgrounds are concept strips. Joint assembly, seamless tiles and final collision alignment come next after style approval.</p>
+      <div class="controls">
+        <label>View <select id="viewport"><option value="desktop">Desktop · 1280 × 720</option><option value="landscape">Small phone · landscape</option><option value="portrait">Small phone · portrait</option></select></label>
+        <label>Light <select id="light"><option value="day">Day</option><option value="night">Night</option></select></label>
+        <label>Display <select id="display"><option value="fit">Fit on this screen</option><option value="actual">Actual CSS size</option></select></label>
+      </div>
+      <div class="scroll"><canvas id="scene" aria-label="Cartoon art style mockup at game scale"></canvas></div>
+      <p id="scale" class="muted"></p>
+      <h2>Pose and asset close-ups</h2>
+      <div id="cards"></div>
+      <details><summary>Full style sheet</summary><img id="sheet" alt="Six-cell cartoon style sample sheet" /></details>
+      <details><summary>Asset coverage</summary><p id="coverage"></p><table><thead><tr><th>Family</th><th>Pieces</th><th>Frames</th></tr></thead><tbody id="families"></tbody></table></details>
+      <p><a href="/">Open the classic game</a> · <a href="/docs/cover_day.png">Day concept</a> · <a href="/docs/cover_night.png">Night concept</a></p>
+    </main>
+    <script type="module" src="/src/art/cartoonReview.js"></script>
+  </body>
+</html>

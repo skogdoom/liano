@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fifth draft: adds the planned cartoon sprite pack, M8a). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a is planned on `phaser-sprites`, between M8 and M9; implementation awaits the owner’s explicit go-ahead. M9 follows M8a.**
+Status: **agreed plan (fifth draft: adds the planned cartoon sprite pack, M8a). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a implementation has started on `phaser-sprites`, between M8 and M9; its coverage inventory and first style review are being prepared before full asset production. M9 follows M8a.**
 
 **Nothing is merged into master until every milestone (M0 to M9, including M8a) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -725,7 +725,7 @@ Only once M7 is accepted: until then the Pixi version is the reference.
 
 ### M8a. Cartoon sprite sheets and the classic graphics toggle (L)
 
-**Status: planning only, on `phaser-sprites` from `phaser`. Implementation starts only after the owner explicitly gives the go-ahead.** This milestone is between M8 (Pixi removal) and M9 (cleanup/release). Planning does not generate artwork, change runtime code, introduce pack scaffolding, or bump the version.
+**Status: implementation started on `phaser-sprites` from `phaser`, after the owner’s go-ahead.** This milestone is between M8 (Pixi removal) and M9 (cleanup/release). Full asset production follows review of the concrete style sample below; the game stays on classic while that review is pending.
 
 **Outcome.** Prepare and integrate a complete cartoon sprite pack that can replace all current graphics, alongside a complete classic pack. The Config menu selects between them through **Classic graphics: On/Off** and reloads the game when the value changes. Classic is the default for now. Both packs use the same rules, physics, generated levels, obstacles, animation timing, camera motion, modes and sounds.
 
@@ -740,7 +740,7 @@ The visual references are [the day concept](docs/cover_day.png) and [the night c
 - **Menus:** carry the stone lettering, vines and carved sun/spiral motif into the cartoon title treatment, panels and icons. Keep instructions, scores, settings and the version as crisp live text, rather than baking variable text into sheets.
 - **Art direction confirmed by the owner:** a cohesive painted cartoon style for both characters and scenery. Retain the concepts' atmosphere while simplifying fine detail for small screens; the backgrounds belong to the same cartoon world as the monkey.
 
-Approve a small style sample at actual game size before producing the full pack: a hanging/flying monkey, a liana, a branch with a creature, a temple, a day/night background strip and a menu sample. Check outline weight, palette, shading, joint overlaps and hazard readability together. The samples belong to implementation after the go-ahead; none are produced during this planning task.
+Approve a small style sample at actual game size before producing the full pack: a hanging/flying monkey, a liana, a branch with a creature, a temple, a day/night background strip and a menu sample. Check outline weight, palette, shading, joint overlaps and hazard readability together. The first sample and its game-scale review page are being prepared as the initial implementation step.
 
 #### M8a.1. Inventory and sprite contracts
 
@@ -802,6 +802,15 @@ Add a clearly labelled **Classic graphics: On/Off** row inside the existing titl
 
 **Done when:** the owner approves the cohesive concept-derived artwork; cartoon assets replace every required current visual family without hidden classic fallbacks; both complete packs build and fit the existing budgets (or explicitly accepted exceptions); classic defaults to On; Config switches correctly by reload on desktop/mobile; tests and classic/cartoon visual checks pass; the milestone report and asset-editing guide are complete. M9 starts afterward. Keep classic as the default until a later explicit decision changes it.
 
+**M8a progress: inventory and first style review.**
+
+- Added `art/packs/cartoon/inventory.json`: every one of the 175 classic contracts and 594 stable frame keys, with pivots, joins, hitbox guides, tint/alpha/softening, export dimensions and per-frame source/sheet/cell/status fields. `npm run art:cartoon:inventory` refreshes contracts while retaining artist progress; `npm run art:cartoon:check` checks synchronization. All production frames are still pending.
+- Generated concept-derived style samples, simplifying the scenery and temple into the same painted cartoon style as the monkey. The owner flagged a missing arm in the airborne pose, an unnatural grip and a truncated ring finger on the restored hand; the revised sample restores a distinct far arm, redraws the gripping hand and completes the ring finger. Added close-ups for those details, with enough space to show every fingertip.
+- Added the development-only `cartoon.html` review page, with desktop/phone landscape/portrait views, day/night scenes, actual-size/fitted display, asset close-ups and coverage. Monkey envelopes use bounds from the existing classic rig; these are static style mockups, not finished modular rigs, seamless tiles or collision-ready assets.
+- The sample sheet is reviewed separately from production coverage. No default-game assets, classic reference images, simulation, camera, sound or Config behavior are changed in this step. The runtime toggle and complete dual-pack build follow style approval.
+- Validation: the inventory synchronization check, four authoring unit tests and Vite production build pass. Chromium checks pass for the review page (viewport/light controls, no game loading and transparent cutouts) and the unchanged classic renderer references. Inspected the corrected hand enlarged and the mockups at game scale; full sprite-pack integration and real-device gameplay checks remain for the next steps.
+- Style review status: awaiting the owner's review of the corrected sample, available at `/cartoon.html` on the development server. The version remains 3.0.0-dev.9 until this milestone is complete.
+
 ### M9. Cleanup and release (S)
 
 - Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables, the art pipeline), the README's technology section and a short "Custom art" section pointing to `art/README.md`, and the `package.json` description; set the version to 3.0.0.
@@ -838,7 +847,7 @@ Everything below must work on the Phaser renderer as on v2.3:
 
 ## 11. Open questions
 
-**M8a art direction, answered:** the owner chose a cohesive painted cartoon style for both characters and scenery, based on the day/night concepts. There are no unresolved planning questions for this milestone. Implementation awaits the owner’s explicit go-ahead.
+**M8a art direction, answered:** the owner chose a cohesive painted cartoon style for both characters and scenery, based on the day/night concepts. There are no unresolved planning questions for this milestone. The owner has authorized implementation; review of the first concrete style sample precedes full sprite production.
 
 Every question from the first two drafts is answered in section 1. New questions that come up during a milestone are added here and asked before that milestone's PR is merged into `phaser`.
 
