@@ -20,6 +20,7 @@ import { createPhaserSoundPlayer } from './sound.js';
 import { canvasSize, resolutionLimit, viewCamera } from './view.js';
 import { oneTexturePerBatch } from './shaders.js';
 import { installObstacleBlur } from './obstacleBlur.js';
+import { installResolutionControl, resolutionChoice } from './resolution.js';
 
 // The Phaser version of the game (see PHASER_PLAN.md). The platform holds the layout,
 // pause, full screen, input and sound for the scenes (scenes.js); the game runs as in
@@ -41,7 +42,10 @@ window.addEventListener('error', (event) => {
 });
 window.addEventListener('unhandledrejection', (event) => fail(event.reason));
 
-const resolutionCap = resolutionLimit(location.search);
+const resolutionPreference = resolutionChoice(location.search, window);
+const resolutionCap = resolutionLimit(location.search, {
+  userAgent: navigator.userAgent, preference: resolutionPreference,
+});
 const ratio = () => pixelRatio(window, resolutionCap);
 const initial = canvasSize(window.innerWidth, window.innerHeight, ratio());
 
@@ -73,6 +77,7 @@ oneTexturePerBatch(game.renderer);
 const platform = new Phaser.Events.EventEmitter();
 game.registry.set('platform', platform);
 platform.resolutionLimit = resolutionCap;
+platform.resolutionMode = resolutionPreference;
 installObstacleBlur(platform);
 blockBrowserGestures(game.canvas);
 
@@ -95,6 +100,7 @@ const theGame = new Game({
   },
 });
 platform.game = theGame;
+installResolutionControl(game, platform, resolutionPreference);
 
 // The layout for the window (layout.js) and the camera that shows the view on the
 // canvas (view.js); scenes follow the 'layout' event. The two-player modes use the

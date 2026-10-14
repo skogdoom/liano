@@ -3,15 +3,7 @@
 // pixels per CSS pixel and is shown at its CSS size, and each camera zooms by the
 // layout's scale times the ratio. Pure, so it is tested in Node.
 
-import { MAX_RESOLUTION } from '../config.js';
-
-// Opt-in rendering-density experiment. This is a cap, never an instruction to
-// upscale a lower-density screen. Invalid values retain the ordinary limit.
-export function resolutionLimit(search) {
-  const requested = Number(new URLSearchParams(search).get('resolution'));
-  return Number.isFinite(requested) && requested >= 1 && requested <= MAX_RESOLUTION
-    ? requested : MAX_RESOLUTION;
-}
+export { resolutionLimit } from './resolution.js';
 
 // The canvas size in device pixels for a window of `width` × `height` CSS pixels.
 export const canvasSize = (width, height, ratio) => ({ width: Math.round(width * ratio), height: Math.round(height * ratio) });

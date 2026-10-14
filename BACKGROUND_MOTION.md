@@ -413,15 +413,30 @@ The submitted motion also exposes two separate discontinuities:
   cadence-change fallback with the surrounding timing history, rather than
   increasing the exposure or changing gameplay speed.
 
-## Optional Phaser rendering-resolution experiment
+## Phaser graphics quality and rendering resolution
 
-Use `?engine=phaser&resolution=1.5&frames=1` to cap rendering at 1.5 device pixels
-per CSS pixel. Compare with `?engine=phaser&frames=1` for the ordinary cap of 2.
-`resolution=1` provides a stronger reduction if needed. Keep obstacle blur off
-for this comparison. Reload to change the cap; this avoids texture regeneration
-or resizing during a measured swing. Values from 1 through 2 are accepted;
-missing, invalid and out-of-range values retain the ordinary cap. Lower-density
-screens are never upscaled to meet the cap. Pixi does not read this option.
+The **Graphics** selector on the title/results screens offers **Auto**, **Balanced**
+(cap 1.5), **Sharp** (the original cap of 2) and **Performance** (cap 1).
+Changing it saves the choice for this origin and reloads the game, so graphics
+preparation happens before play. The selector is hidden during a run, including
+while paused, and its pointer/keyboard input does not become game input. It is
+available on touch devices too. Pixi does not install it or read the preference.
+
+Auto is the default. It chooses the tested 1.5 cap for Safari on Mac/iOS and the
+existing cap of 2 for other browsers. The actual rendering ratio is always capped
+by native DPR, so low-density screens are never upscaled. This is a conservative
+browser/screen-density policy supported by the Safari test, not an estimate of
+GPU model or available memory. It does not run a startup benchmark or change
+resolution during a swing. Manual choices remain available on every device.
+
+For controlled comparisons, use `?engine=phaser&resolution=1.5&frames=1` and
+`?engine=phaser&resolution=2&frames=1`; the latter explicitly selects the original
+resolution even on Safari or when a lower preference is saved. `resolution=1`
+provides the stronger reduction, and `resolution=auto` explicitly selects Auto.
+Keep obstacle blur off. Explicit URLs override saved preferences without writing
+them. Numeric values from 1 through 2 remain accepted; custom values appear as
+Custom in the selector. Invalid/missing stored values and invalid query values
+fall back to Auto. If storage is unavailable, manual URL selection still works.
 
 The CSS canvas size, world layout, camera's position in world units, simulation,
 controls and movement speed use their existing rules. Only canvas pixel density
@@ -433,11 +448,37 @@ continue to respect the selected cap.
 The art loader uses its existing atlas-scale selection at the reduced camera
 zoom, so this experiment can also reduce texture size/memory when it crosses an
 atlas-scale threshold. It therefore tests a reduction in overall rendering load,
-not solely pixel fill rate. Frame captures now include `info.resolutionLimit`,
-`info.artScale` and each frame's `renderPixelRatio`, alongside the existing canvas
+not solely pixel fill rate. Frame captures now include `info.resolutionMode`,
+`info.resolutionLimit`, `info.artScale` and each frame's `renderPixelRatio`, alongside the existing canvas
 dimensions. These identify the actual resolution used rather than inferring it
 from the browser's device pixel ratio. They still do not measure GPU completion
 or physical presentation; Safari smoothness needs the device comparison.
+
+### Safari resolution result (2026-10-14, before the catch fix)
+
+The MacBook Air M1 Safari test felt significantly better at both 1 and 1.5 than
+at the original resolution. The tester preferred 1.5 because 1 looked blurry.
+Both supplied captures retain 1,800 callbacks (about 30 seconds), show zero late
+callbacks and zero repeated active poses, and identify clock version 1. They
+predate the catch-transition and callback-cadence fixes below.
+
+| Measurement | Resolution 1 | Resolution 1.5 |
+| --- | ---: | ---: |
+| Canvas pixels | 1440×823 | 2160×1235 |
+| Art atlas scale | 1× | 2× |
+| Live, unpaused gameplay frames | 1,690 | 1,566 |
+| Active callback interval, 99th percentile | 18 ms | 18 ms |
+| Largest callback interval | 20 ms | 20 ms |
+| Active CPU work, 99th percentile | 2 ms | 3 ms |
+| Active render submission, 99th percentile | 2 ms | 2 ms |
+| Monkey jumps above 15 CSS pixels | 18 | 24 |
+
+Every listed large monkey jump coincides with a grab; their maximum sizes are
+29.84 and 29.04 CSS pixels. Different obstacles and pause/results periods prevent
+a controlled cost comparison. These files support the preferred quality tradeoff
+and identify the old catch discontinuity, but do not measure displayed frames or
+prove that all remaining stutters originate in the GPU. Compare the current
+catch fix at the same resolution before judging the remaining actor jumps.
 
 ## Follow-up fixes for submitted movement discontinuities
 

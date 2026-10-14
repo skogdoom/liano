@@ -4,6 +4,8 @@ import { layoutFor } from '../src/layout.js';
 import { viewCamera } from '../src/phaser/view.js';
 import { collectErrors, started } from './helpers.js';
 
+const SAFARI_MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/26.5.2 Safari/605.1.15';
+
 for (const [query, ratio] of [['', 2], ['&resolution=1.5', 1.5], ['&resolution=1', 1]]) {
   test(`Phaser resolution ${ratio}× preserves CSS layout, controls and trace measurements`, async ({ browser }) => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 823 }, deviceScaleFactor: 2 });
@@ -91,6 +93,99 @@ test('the resolution experiment leaves Pixi at its ordinary screen density', asy
   const errors = collectErrors(page);
   await page.goto(`${DEV}?engine=pixi&resolution=1`);
   await started(page, errors);
+  expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(2000);
+  await expect(page.locator('#graphics-quality')).toHaveCount(0);
+  expect(errors).toEqual([]);
+  await page.close();
+});
+
+test('Safari Auto and all manual choices persist without changing explicit test overrides', async ({ browser }) => {
+  // Emulate browser identity to test selection policy; rendering still uses
+  // Chromium and does not predict actual Safari GPU performance.
+  const page = await browser.newPage({ viewport: { width: 1000, height: 600 }, deviceScaleFactor: 2, userAgent: SAFARI_MAC });
+  const errors = collectErrors(page);
+  await page.goto(`${DEV}?engine=phaser&frames=1`);
+  await page.waitForFunction(() => window.__liano?.platform.world);
+  const selector = page.getByLabel('Graphics', { exact: false });
+  await expect(selector).toHaveValue('auto');
+  expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1500);
+
+  // Selecting graphics must not start a run or send keyboard actions to it.
+  await selector.focus();
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Escape');
+  expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
+
+  for (const [choice, width] of [['2', 2000], ['1', 1000], ['1.5', 1500], ['auto', 1500]]) {
+    await selector.selectOption(choice);
+    await page.waitForURL((url) => url.searchParams.get('resolution') === choice);
+    await page.waitForFunction(() => window.__liano?.platform.world && window.__phaserFrameTrace?.snapshot().frames.length);
+    expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(width);
+    const trace = await page.evaluate(() => window.__phaserFrameTrace.snapshot());
+    expect(trace.info.resolutionMode).toBe(choice);
+    await page.goto(`${DEV}?engine=phaser&frames=1`);
+    await page.waitForFunction(() => window.__liano?.platform.world);
+    await expect(selector).toHaveValue(choice);
+    expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(width);
+  }
+  // An A/B URL temporarily overrides the stored choice; it does not save itself.
+  await page.goto(`${DEV}?engine=phaser&resolution=1`);
+  await page.waitForFunction(() => window.__liano?.platform.world);
+  await expect(selector).toHaveValue('1');
+  await page.goto(`${DEV}?engine=phaser`);
+  await page.waitForFunction(() => window.__liano?.platform.world);
+  await expect(selector).toHaveValue('auto');
+  expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1500);
+
+  await selector.evaluate((el) => el.blur());
+  await page.keyboard.press('Space');
+  await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');
+  await expect(selector).toBeHidden();
+  await page.keyboard.press('KeyP');
+  await expect.poll(() => page.evaluate(() => window.__liano.pause.reason)).toBe('manual');
+  await expect(selector).toBeHidden();
+  await page.keyboard.press('KeyP');
+  await page.waitForFunction(() => window.__liano.pause.acceptsInput());
+  await page.keyboard.press('Escape');
+  await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
+  await expect(selector).toBeVisible();
+  expect(errors).toEqual([]);
+  await page.close();
+});
+
+test('Safari Auto caps a high-density phone and graphics taps do not start play', async ({ browser }) => {
+  const page = await browser.newPage({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 3,
+    isMobile: true, hasTouch: true,
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1',
+  });
+  const errors = collectErrors(page);
+  await page.goto(`${DEV}?engine=phaser`);
+  await page.waitForFunction(() => window.__liano?.platform.world);
+  expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(563);
+  const selector = page.getByLabel('Graphics', { exact: false });
+  await selector.tap();
+  expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
+  await selector.selectOption('2');
+  await page.waitForURL((url) => url.searchParams.get('resolution') === '2');
+  await page.waitForFunction(() => window.__liano?.platform.world);
+  expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(750);
+  expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
+  expect(errors).toEqual([]);
+  await page.close();
+});
+
+test('blocked preference storage keeps Safari Auto and manual selection functional', async ({ browser }) => {
+  const page = await browser.newPage({ viewport: { width: 1000, height: 600 }, deviceScaleFactor: 2, userAgent: SAFARI_MAC });
+  const errors = collectErrors(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('Blocked', 'SecurityError'); } });
+  });
+  await page.goto(`${DEV}?engine=phaser`);
+  await page.waitForFunction(() => window.__liano?.platform.world);
+  expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1500);
+  await page.getByLabel('Graphics', { exact: false }).selectOption('2');
+  await page.waitForURL((url) => url.searchParams.get('resolution') === '2');
+  await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(2000);
   expect(errors).toEqual([]);
   await page.close();
