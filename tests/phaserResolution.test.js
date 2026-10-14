@@ -53,12 +53,15 @@ describe('Phaser resolution choices', () => {
     const saved = [], navigated = [];
     const win = { localStorage: { setItem: (...args) => saved.push(args) },
       location: { href: 'https://example.test/liano/?engine=phaser&frames=1#game', assign: (url) => navigated.push(url) } };
-    applyResolutionChoice('1.5', win, { mode: 'split' });
+    applyResolutionChoice('1.5', win, { mode: 'split', settings: { lives: true, slip: true, shadow: false } });
     expect(saved).toEqual([[RESOLUTION_STORAGE_KEY, '1.5']]);
     const next = new URL(navigated[0]);
     expect(next.searchParams.get('resolution')).toBe('1.5');
     expect(next.searchParams.get('mode')).toBe('split');
     expect(next.searchParams.get('frames')).toBe('1');
+    expect(next.searchParams.get('lives')).toBe('on');
+    expect(next.searchParams.get('slip')).toBe('on');
+    expect(next.searchParams.get('shadow')).toBe('off');
     expect(next.hash).toBe('#game');
     win.location.href = next.href;
     applyResolutionChoice('auto', win, { mode: 'solo' });

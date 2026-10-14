@@ -28,12 +28,20 @@ export async function panelPoint(page, name, x, y) {
     const { app, layout } = window.__liano;
     const view = app.scene.getScene('ui').overlays[name];
     const rect = app.canvas.getBoundingClientRect();
-    return { x: rect.left + layout.x + (view.x + x * layout.ui) * layout.scale,
-      y: rect.top + layout.y + (view.y + y * layout.ui) * layout.scale };
+    return { x: rect.left + layout.x + (view.x + x * view.scaleX) * layout.scale,
+      y: rect.top + layout.y + (view.y + y * view.scaleY) * layout.scale };
   }, { name, x, y });
 }
 
 export async function openConfig(page) {
   await page.keyboard.press('KeyC');
   await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.config.visible)).toBe(true);
+}
+
+export async function menuLabelPoint(page, panel, name) {
+  const point = await page.evaluate((name) => {
+    const text = window.__liano.app.scene.getScene('ui').overlays[name].text;
+    return { x: text.x, y: text.y };
+  }, name);
+  return panelPoint(page, panel, point.x, point.y);
 }

@@ -422,14 +422,24 @@ panel artwork, fonts and shadows. Its graphics choices are **1 · Performance**
 returns to the title; on touch screens the Config entry, options and Back are
 tappable. There is no external HTML graphics selector.
 
+Phaser title/config panels fit inside the visual viewport and safe-area insets,
+including Safari toolbar changes. Short landscape screens use a two-column
+layout; portrait menus retain tap targets at least 44 CSS pixels high on small
+phone screens. Desktop 1P/shared/split choices and Lives, Slipping and Shadow settings
+are tappable. Mobile uses single-player only, hides the player-mode row, and keeps
+all three settings tappable. Multiplayer URL choices and match-mode keys are ignored
+on mobile; graphics-mode keys continue to work inside Config.
+Phaser enables Shadow by default; `shadow=off` explicitly disables it.
+
 Changing the choice saves it for this origin and reloads the game, so graphics
 preparation happens before play. The selected 1P/shared/split match mode is kept
-through that reload via the Phaser `mode` URL parameter. Re-selecting the active
-choice returns to the title without reloading. Config opens only from the title,
-not gameplay, pause or results. While open, it consumes game input: Space cannot
+through that reload via the Phaser `mode` URL parameter, along with the Lives,
+Slipping and Shadow settings via `lives=on`, `slip=on` and `shadow=off` when needed.
+Re-selecting the active choice returns to the title without reloading. Config opens
+only from the title, not gameplay, pause or results. While open, it consumes game input: Space cannot
 start a run and 1/2/3 select graphics rather than a match mode. Entry/exit clear
 queued presses, and held/replayed keys cannot toggle the menu or apply twice.
-Outside config the title's game-mode keys retain their existing meaning. Pixi
+On desktop, outside Config the title's game-mode keys retain their existing meaning. Pixi
 does not install this submenu or read the graphics preference.
 
 Auto is the default. It chooses the tested 1.5 cap for Safari on Mac/iOS and the

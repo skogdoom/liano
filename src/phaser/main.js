@@ -22,6 +22,7 @@ import { oneTexturePerBatch } from './shaders.js';
 import { installObstacleBlur } from './obstacleBlur.js';
 import { applyResolutionChoice, rememberResolutionChoice, resolutionChoice } from './resolution.js';
 import { ConfigMenu } from './configMenu.js';
+import { visibleMenuArea } from './menuLayout.js';
 
 // The Phaser version of the game (see PHASER_PLAN.md). The platform holds the layout,
 // pause, full screen, input and sound for the scenes (scenes.js); the game runs as in
@@ -48,6 +49,7 @@ const resolutionCap = resolutionLimit(location.search, {
   userAgent: navigator.userAgent, preference: resolutionPreference,
 });
 const ratio = () => pixelRatio(window, resolutionCap);
+const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const initial = canvasSize(window.innerWidth, window.innerHeight, ratio());
 
 game = new Phaser.Game({
@@ -79,8 +81,10 @@ const platform = new Phaser.Events.EventEmitter();
 game.registry.set('platform', platform);
 platform.resolutionLimit = resolutionCap;
 platform.resolutionMode = resolutionPreference;
+platform.mobile = coarsePointer;
 platform.configMenu = new ConfigMenu(resolutionPreference, {
-  apply: (choice) => applyResolutionChoice(choice, window, { mode: platform.game.mode }),
+  apply: (choice) => applyResolutionChoice(choice, window, { mode: platform.game.mode,
+    settings: { lives: platform.game.lives, slip: platform.game.slip, shadow: platform.game.shadow } }),
   remember: rememberResolutionChoice,
   clear: () => platform.input?.clear(),
 });
@@ -96,9 +100,13 @@ function createObstacleWorker() {
   }
 }
 const prefetch = new ObstaclePrefetch(createObstacleWorker());
-// The game starts without slipping (G turns it on).
+// The title starts without slipping and with shadow enabled. Preserve current
+// settings when the graphics submenu reloads assets.
+const titleSettings = new URLSearchParams(location.search);
 const theGame = new Game({
-  slip: false,
+  slip: titleSettings.get('slip') === 'on',
+  lives: titleSettings.get('lives') === 'on',
+  shadow: titleSettings.get('shadow') !== 'off',
   // Split screen's worlds share the match seed, and so the prefetched gaps.
   createWorld: (options) => {
     if (options.seed !== prefetch.seed) prefetch.reset(options.seed);
@@ -106,7 +114,7 @@ const theGame = new Game({
   },
 });
 // A graphics change reloads assets, then returns to the selected match mode.
-theGame.selectMode(new URLSearchParams(location.search).get('mode'));
+if (!coarsePointer) theGame.selectMode(titleSettings.get('mode'));
 platform.game = theGame;
 
 // The layout for the window (layout.js) and the camera that shows the view on the
@@ -126,11 +134,14 @@ function layout() {
   game.canvas.style.width = `${w}px`;
   game.canvas.style.height = `${h}px`;
   layoutMode = theGame.mode;
-  platform.layout = layoutFor(w, h, safeAreaInsets(), { fixed: MODES[theGame.mode].players > 1 });
+  const insets = safeAreaInsets();
+  platform.menuArea = visibleMenuArea(window, insets);
+  platform.layout = layoutFor(w, h, insets, { fixed: MODES[theGame.mode].players > 1 });
   platform.camera = viewCamera(platform.layout, r);
   platform.emit('layout', platform.layout, platform.camera);
 }
 const queueLayout = watchScreen(window, layout);
+window.visualViewport?.addEventListener('scroll', queueLayout);
 layout();
 
 // Paused while the window is unfocused or hidden, the graphics context is lost, or the
@@ -193,9 +204,15 @@ function toggleMute() {
 const ui = await new Promise((resolve) => platform.once('ui', resolve));
 const buttonAt = (hit, event) =>
   inside(hit, controlsPoint(platform.layout, game.canvas.getBoundingClientRect(), event.clientX, event.clientY));
-const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const input = createInput(phaserKeys(ui.input.keyboard, {
-  intercept: (event) => platform.configMenu.interceptKey(event, theGame, pause.acceptsInput()),
+  intercept: (event) => {
+    if (platform.configMenu.interceptKey(event, theGame, pause.acceptsInput())) return true;
+    if (coarsePointer && ['Digit1', 'Digit2', 'Digit3'].includes(event.code)) {
+      event.preventDefault();
+      return true;
+    }
+    return false;
+  },
 }), phaserPointers(ui.input), {
   initialType: coarsePointer ? 'touch' : 'keyboard',
   accepts: () => pause.acceptsInput(),

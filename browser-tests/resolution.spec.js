@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { DEV, PREVIEW } from '../playwright.config.js';
 import { layoutFor } from '../src/layout.js';
 import { viewCamera } from '../src/phaser/view.js';
-import { collectErrors, openConfig, panelPoint, started } from './helpers.js';
+import { collectErrors, menuLabelPoint, openConfig, panelPoint, started } from './helpers.js';
 
 const SAFARI_MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/26.5.2 Safari/605.1.15';
 
@@ -163,7 +163,7 @@ test('Safari Auto caps a high-density phone and graphics taps do not start play'
   await page.goto(`${DEV}?engine=phaser`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(563);
-  const entry = await panelPoint(page, 'title', 0, 180);
+  const entry = await menuLabelPoint(page, 'title', 'configEntry');
   await page.touchscreen.tap(entry.x, entry.y);
   await expect.poll(() => page.evaluate(() => window.__liano.platform.configMenu.open)).toBe(true);
   expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');

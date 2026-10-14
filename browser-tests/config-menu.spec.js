@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { DEV } from '../playwright.config.js';
-import { collectErrors, openConfig, panelPoint } from './helpers.js';
+import { collectErrors, menuLabelPoint, openConfig, panelPoint } from './helpers.js';
 
 test('C opens the title submenu, isolates its keys and preserves the selected match mode on reload', async ({ page }) => {
   const errors = collectErrors(page);
@@ -61,7 +61,7 @@ test('portrait config taps stay inside the game and the panel fits after resizin
   const errors = collectErrors(page);
   await page.goto(`${DEV}?engine=phaser`);
   await page.waitForFunction(() => window.__liano?.platform.world);
-  const entry = await panelPoint(page, 'title', 0, 180);
+  const entry = await menuLabelPoint(page, 'title', 'configEntry');
   await page.touchscreen.tap(entry.x, entry.y);
   await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.config.visible)).toBe(true);
   const top = await panelPoint(page, 'config', 0, -260), bottom = await panelPoint(page, 'config', 0, 260);
@@ -70,16 +70,20 @@ test('portrait config taps stay inside the game and the panel fits after resizin
   await page.screenshot({ path: '/tmp/liano-config-portrait.png' });
   await page.touchscreen.tap(10, 450); // outside the modal
   expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
-  const back = await panelPoint(page, 'config', 0, 213);
+  const back = await menuLabelPoint(page, 'config', 'configBack');
   await page.touchscreen.tap(back.x, back.y);
   await expect.poll(() => page.evaluate(() => window.__liano.platform.configMenu.open)).toBe(false);
   expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
   await page.setViewportSize({ width: 844, height: 390 });
   await page.waitForFunction(() => window.__liano.layout.orientation === 'landscape');
-  const landscapeEntry = await panelPoint(page, 'title', 0, 180);
+  const landscapeEntry = await menuLabelPoint(page, 'title', 'configEntry');
   await page.touchscreen.tap(landscapeEntry.x, landscapeEntry.y);
   await expect.poll(() => page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.config.visible)).toBe(true);
-  const sharp = await panelPoint(page, 'config', 0, 60);
+  const sharpAt = await page.evaluate(() => {
+    const label = window.__liano.app.scene.getScene('ui').overlays.graphicsItems.find((item) => item.choice === '2').label.text;
+    return { x: label.x, y: label.y };
+  });
+  const sharp = await panelPoint(page, 'config', sharpAt.x, sharpAt.y);
   await page.touchscreen.tap(sharp.x, sharp.y);
   await page.waitForURL((url) => url.searchParams.get('resolution') === '2');
   await page.waitForFunction(() => window.__liano?.platform.world);

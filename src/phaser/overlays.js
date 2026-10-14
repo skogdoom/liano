@@ -31,6 +31,7 @@ import { makeContainer } from './world/build.js';
 import { makeText, setTextOrigin, setTextResolution, textResolution } from './text.js';
 import { CONFIG_BACK_Y, CONFIG_PANEL, GRAPHICS_ITEMS } from './configMenu.js';
 import { inside } from '../controls.js';
+import { configMenuLayout, panelPoint, titleMenuLayout } from './menuLayout.js';
 
 // The overlays in the Phaser version, as the Pixi Overlays (views/overlays.js has what
 // both share): the title, results and pause panels, the stage banners and "out" notes per
@@ -68,6 +69,15 @@ class Label {
     return this;
   }
 
+  place({ x = 0, y = 0, size }) {
+    this.text.setPosition(x, y);
+    if (size && this.text.style.fontSize !== `${size}px`) {
+      this.text.setFontSize(size);
+      this.lay();
+    }
+    return this;
+  }
+
   // Pixels per unit to rasterize at.
   setResolution(resolution) {
     if (this.text.style.resolution !== resolution) {
@@ -88,8 +98,16 @@ class Label {
 function panel(scene, art, { width, height, shiftY }) {
   const view = makeContainer(scene);
   // The piece's box reaches a unit past the rectangle on each side (its edge's stroke).
-  view.add(art.nineSlice(scene, 'ui.panel', width + 2, height + 2).setPosition(-width / 2 - 1, -height / 2 + shiftY - 1));
+  view.surface = art.nineSlice(scene, 'ui.panel', width + 2, height + 2).setPosition(-width / 2 - 1, -height / 2 + shiftY - 1);
+  view.add(view.surface);
   return view;
+}
+
+function placePanel(view, geometry) {
+  view.setPosition(geometry.x, geometry.y).setScale(geometry.scale);
+  const surface = view.surface;
+  surface.setSize((geometry.width + 2) / surface.scaleX, (geometry.height + 2) / surface.scaleY);
+  surface.setPosition(-geometry.width / 2 - 1, -geometry.height / 2 - 1);
 }
 
 // "Stage 2" with the time of day (see StageBannerState).
@@ -112,10 +130,11 @@ class StageBanner {
 }
 
 export class Overlays {
-  constructor(scene, art, { configMenu = null } = {}) {
+  constructor(scene, art, { configMenu = null, mobile = false } = {}) {
     this.view = makeContainer(scene);
     this.time = 0;
     this.configMenu = configMenu;
+    this.mobile = mobile;
     this.labels = []; // every label with the scale it is drawn at: [label, () => scale]
     const label = (parent, spec, content, scale) => {
       const l = new Label(scene, spec, content);
@@ -124,33 +143,35 @@ export class Overlays {
       return l;
     };
     const ui = () => this.layout?.ui ?? 1;
+    const menuScale = () => configMenu ? this.title.scaleX : this.layout?.ui ?? 1;
+    const configScale = () => this.config?.scaleX ?? 1;
 
     const title = PANELS.title.texts;
-    this.title = panel(scene, art, PANELS.title);
-    label(this.title, title.name, undefined, ui);
-    this.tagline = label(this.title, title.tagline, undefined, ui);
-    this.titleControl = label(this.title, title.control, undefined, ui);
-    this.titlePrompt = label(this.title, title.prompt, undefined, ui);
+    this.title = panel(scene, art, configMenu ? { width: 520, height: 540, shiftY: 0 } : PANELS.title);
+    this.titleName = label(this.title, title.name, undefined, menuScale);
+    this.tagline = label(this.title, title.tagline, undefined, menuScale);
+    this.titleControl = label(this.title, title.control, undefined, menuScale);
+    this.titlePrompt = label(this.title, title.prompt, undefined, menuScale);
     this.modePicker = makeContainer(scene).setPosition(0, title.modes.y);
     this.title.add(this.modePicker);
-    this.modes = modeItems().map(({ id, text }) => ({ id, label: label(this.modePicker, MODE_FONT, text, ui) }));
+    this.modes = modeItems().map(({ id, text }) => ({ id, label: label(this.modePicker, MODE_FONT, text, menuScale) }));
     this.layModes = true;
-    this.livesLine = label(this.title, title.lives, undefined, ui);
-    this.slipLine = label(this.title, title.slip, undefined, ui);
-    this.shadowLine = label(this.title, title.shadow, undefined, ui);
-    this.keysHint = label(this.title, configMenu ? { ...title.keys, y: 216, size: 13 } : title.keys, undefined, ui);
-    label(this.title, title.version, `v${version}`, ui);
+    this.livesLine = label(this.title, title.lives, undefined, menuScale);
+    this.slipLine = label(this.title, title.slip, undefined, menuScale);
+    this.shadowLine = label(this.title, title.shadow, undefined, menuScale);
+    this.keysHint = label(this.title, configMenu ? { ...title.keys, y: 216, size: 13 } : title.keys, undefined, menuScale);
+    this.titleVersion = label(this.title, title.version, `v${version}`, menuScale);
 
     if (configMenu) {
-      this.configEntry = label(this.title, { y: 190, size: 18, bold: true, color: GOLD }, 'C · Config', ui);
+      this.configEntry = label(this.title, { y: 190, size: 18, bold: true, color: GOLD }, 'C · Config', menuScale);
       this.config = panel(scene, art, CONFIG_PANEL).setVisible(false);
-      label(this.config, { y: -194, size: 52, bold: true }, 'CONFIG', ui);
-      label(this.config, { y: -146, size: 22, color: GOLD }, 'Graphics', ui);
+      this.configHeading = label(this.config, { y: -194, size: 52, bold: true }, 'CONFIG', configScale);
+      this.configSubtitle = label(this.config, { y: -146, size: 22, color: GOLD }, 'Graphics', configScale);
       this.graphicsItems = GRAPHICS_ITEMS.map((item) => ({ ...item,
-        label: label(this.config, { y: item.y, size: item.choice === 'auto' ? 20 : 26, bold: true }, item.text, ui),
+        label: label(this.config, { y: item.y, size: item.choice === 'auto' ? 20 : 26, bold: true }, item.text, configScale),
       }));
-      label(this.config, { y: 172, size: 14, alpha: 0.7 }, 'Changes reload the game', ui);
-      this.configBack = label(this.config, { y: CONFIG_BACK_Y, size: 20 }, 'C / Esc · Back', ui);
+      this.configHint = label(this.config, { y: 172, size: 14, alpha: 0.7 }, 'Changes reload the game', configScale);
+      this.configBack = label(this.config, { y: CONFIG_BACK_Y, size: 20 }, 'C / Esc · Back', configScale);
       this.view.add(this.config);
     }
 
@@ -185,16 +206,11 @@ export class Overlays {
   }
 
   // `zoom`: device pixels per view unit, for the texts.
-  resize(layout, zoom = 1) {
+  resize(layout, zoom = 1, menuArea = null) {
     this.layout = layout;
     this.zoom = zoom;
     for (const name of ['title', 'gameOver', 'paused']) this[name].setPosition(layout.panels[name].x, layout.panels[name].y).setScale(layout.ui);
-    if (this.config) {
-      const margin = 16;
-      const half = CONFIG_PANEL.height / 2 * layout.ui;
-      const y = Math.max(half + margin, Math.min(layout.panels.title.y, layout.view.height - half - margin));
-      this.config.setPosition(layout.panels.title.x, y).setScale(layout.ui);
-    }
+    if (this.config && menuArea) this.#placeMenus(menuArea);
     for (const [l, scale] of this.labels) l.setResolution(textResolution(zoom, scale()));
     this.layModes = true;
     this.shown = null;
@@ -218,10 +234,13 @@ export class Overlays {
     this.config?.setVisible(configShown);
     this.title.setVisible(shown.title && !configShown);
     this.titlePrompt.text.setAlpha(glow);
-    if (shown.title) this.#updateTitle(game, inputType !== 'touch');
+    if (shown.title) {
+      if (this.titleGeometry) this.#updateMenuTitle(game, kind);
+      else this.#updateTitle(game, inputType !== 'touch');
+    }
     if (this.config) {
       this.configEntry.set(kind === 'touch' ? 'Config' : 'C · Config');
-      this.configEntry.text.y = kind === 'touch' ? 180 : 190;
+      if (!this.titleGeometry) this.configEntry.text.y = kind === 'touch' ? 180 : 190;
       this.configBack.set(kind === 'touch' ? 'Back' : 'C / Esc · Back');
       for (const item of this.graphicsItems) {
         const selected = item.choice === this.configMenu.choice;
@@ -260,20 +279,32 @@ export class Overlays {
     this.configMenu.sync(game);
     if (game.state !== 'TITLE' || !accepts) return this.configMenu.open;
     const rect = this.scene.sys.game.canvas.getBoundingClientRect();
-    const point = (view) => ({
-      x: ((event.clientX - rect.left - this.layout.x) / this.layout.scale - view.x) / this.layout.ui,
-      y: ((event.clientY - rect.top - this.layout.y) / this.layout.scale - view.y) / this.layout.ui,
-    });
+    const point = (view) => panelPoint(this.layout, rect, view, event.clientX, event.clientY);
     if (this.configMenu.open) {
       const p = point(this.config);
-      if (inside({ x: -200, y: CONFIG_BACK_Y - 32, w: 400, h: 64 }, p)) this.configMenu.close();
+      if (inside(this.configGeometry?.backHit ?? { x: -200, y: CONFIG_BACK_Y - 32, w: 400, h: 64 }, p)) this.configMenu.close();
       else {
-        const item = this.graphicsItems.find((item) => inside({ x: -200,
+        const item = this.graphicsItems.find((item, i) => inside(this.configGeometry?.items[i].hit ?? { x: -200,
           y: item.y - (item.choice === 'auto' ? 25 : 37), w: 400,
           h: item.choice === 'auto' ? 50 : 74 }, p));
         if (item) this.configMenu.choose(item.choice);
       }
       return true; // outside taps do not start the underlying title screen
+    }
+    if (this.titleGeometry) {
+      const p = point(this.title);
+      const mode = this.titleGeometry.modes.findIndex((item) => inside(item.hit, p));
+      if (mode !== -1) { this.configMenu.clear(); game.selectMode(this.modes[mode].id); return true; }
+      const setting = this.titleGeometry.settings.findIndex((item) => inside(item.hit, p));
+      if (setting !== -1) {
+        this.configMenu.clear();
+        if (setting === 0) game.toggleLives();
+        else if (setting === 1) game.toggleSlip();
+        else game.toggleShadow();
+        return true;
+      }
+      if (inside(this.titleGeometry.configHit, p)) return this.configMenu.show(game, accepts);
+      return false;
     }
     const y = event.pointerType === 'touch' ? 180 : 190;
     if (inside({ x: -190, y: y - (event.pointerType === 'touch' ? 30 : 12), w: 380,
@@ -281,6 +312,52 @@ export class Overlays {
       return this.configMenu.show(game, accepts);
     }
     return false;
+  }
+
+  #placeMenus(area) {
+    this.titleGeometry = titleMenuLayout(this.layout, area, { mobile: this.mobile });
+    this.configGeometry = configMenuLayout(this.layout, area);
+    const title = this.titleGeometry, config = this.configGeometry;
+    placePanel(this.title, title);
+    placePanel(this.config, config);
+    this.titleName.place(title.name);
+    this.tagline.place(title.tagline);
+    this.titleControl.place(title.control);
+    this.titlePrompt.place(title.prompt);
+    this.configEntry.place(title.config);
+    this.keysHint.place(title.keys);
+    this.titleVersion.place(title.version);
+    this.titleVersion.text.setVisible(!title.compact && !title.condensed);
+    this.modePicker.setPosition(0, 0);
+    this.modes.forEach((item, i) => { if (title.modes[i]) item.label.place({ ...title.modes[i], size: 22 }); });
+    [this.livesLine, this.slipLine, this.shadowLine].forEach((label, i) => label.place({ ...title.settings[i], size: 22 }));
+    this.configHeading.place(config.heading);
+    this.configSubtitle.place(config.subtitle);
+    this.configHint.place(config.hint).set(config.compact ? 'Changes reload\nthe game' : 'Changes reload the game');
+    this.configHint.text.setVisible(!config.condensed);
+    this.configBack.place({ ...config.back, size: 22 });
+    this.graphicsItems.forEach((item, i) => item.label.place({ ...config.items[i], size: config.compact ? 24 : item.choice === 'auto' ? 20 : 26 }));
+  }
+
+  #updateMenuTitle(game, kind) {
+    const keyboard = kind !== 'touch';
+    this.modePicker.setVisible(!this.mobile);
+    this.keysHint.text.setVisible(keyboard && !this.mobile && !this.titleGeometry.condensed);
+    this.modes.forEach(({ id, label }, i) => {
+      const look = modeLook(id, game.mode);
+      label.set(keyboard ? modeItems()[i].text : ['1P', '2P shared', '2P split'][i]).setColor(look.color);
+      label.text.setAlpha(look.alpha);
+    });
+    const solo = game.mode === 'solo';
+    const settings = [
+      [this.livesLine, 'H', 'Lives', solo ? game.lives : true, solo],
+      [this.slipLine, 'G', 'Slipping', game.slip, true],
+      [this.shadowLine, 'S', 'Shadow', game.shadowOn, solo],
+    ];
+    for (const [label, key, name, on, enabled] of settings) {
+      label.set(`${keyboard ? `${key} · ` : ''}${name}\n${on ? 'On' : 'Off'}`).setColor(enabled && on ? GOLD : CREAM);
+      label.text.setVisible(true).setAlpha(enabled ? 1 : 0.45);
+    }
   }
 
   #updatePanes(game, dt) {
