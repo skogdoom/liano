@@ -360,3 +360,55 @@ cost and perceived smoothness still need the on/off comparison.
 The optional frame trace records whether exposure is enabled, its maximum
 observed CSS width, and the number of moving obstacle images each frame. This
 helps distinguish an ineffective experiment from extra submission/display delays.
+
+### Safari on/off result (2026-10-14)
+
+The MacBook Air M1 Safari test felt worse with obstacle exposure enabled. Treat
+this experiment as unsuccessful on that device; ordinary play already keeps it
+off. Use `?engine=phaser&obstacleblur=off` (or omit `obstacleblur`) for the native
+rendering path. Toggling B off within an opt-in run disables exposure but retains
+the custom rendering nodes, so that is not the complete native baseline.
+
+Both submitted traces contain 1,800 callbacks, about 30 seconds, at the same
+2880×1646 canvas size, DPR 2 and camera zoom 2.25. The blur flag was on throughout
+the first capture; the second used the native path. Comparing only live,
+unpaused gameplay:
+
+| Measurement | Blur on | Blur off |
+| --- | ---: | ---: |
+| Active frames | 1,577 | 1,574 |
+| Callback interval, 99th percentile | 19 ms | 18 ms |
+| Callback intervals above 20 ms | 8 | 3 |
+| CPU work, 99th percentile | 3 ms | 3 ms |
+| Render submission, 99th percentile | 2 ms | 2 ms |
+| Largest callback interval | 28 ms | 78 ms |
+| Repeated active camera/monkey poses | 0 | 0 |
+
+These are different runs: the on trace contains nearby temples and 223 paused
+frames, while the off trace contains no nearby temples and ends with 226 results
+frames. Consequently, the increased callback variation cannot be attributed
+solely to the shader. Neither capture measures GPU completion or displayed
+frames. The visual regression is sufficient to reject the effect on this device,
+but it does not prove a GPU bottleneck. The earlier software-renderer benchmark
+does not override the Safari result.
+
+Exposure processes a median of 109 moving obstacle images per active frame,
+peaking at 267. Its maximum width reaches the 3 CSS pixel cap, while camera travel
+has a 95th percentile of about 14 CSS pixels per active frame in both recordings.
+Thus it adds sampling work while covering only a small part of the movement;
+increasing its width or sample count is not justified by this result.
+
+The submitted motion also exposes two separate discontinuities:
+
+- Every monkey screen-position jump above 15 CSS pixels occurs on a grab:
+  21 in the on trace and 22 in the off trace, with maximum jumps of 28.34 and
+  36.31 CSS pixels respectively. These are pose/grip transitions, not repeated
+  submitted frames. A future drawing-only catch transition should preserve the
+  simulation's collision and grip behavior.
+- In the on trace, a 28/10/8 ms callback sequence produces 28.1/10.1/8.1 ms
+  drawing-clock advances instead of approximately equal steps. The clock's debt
+  guard can fall back to raw timing during this disturbance. At that point camera
+  travel is 20.10/7.21/5.77 CSS pixels. Interpolation accurately follows those
+  uneven advances; it cannot make them uniform. This warrants investigating the
+  cadence-change fallback with the surrounding timing history, rather than
+  increasing the exposure or changing gameplay speed.
