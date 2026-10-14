@@ -1,10 +1,10 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is implemented and verified on `phaser-m8` (its report), started at the owner’s request after M7 was merged into `phaser` in PR #39. M9 follows.**
+Status: **agreed plan (fifth draft: adds the planned cartoon sprite pack, M8a). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a is planned on `phaser-sprites`, between M8 and M9; implementation awaits the owner’s explicit go-ahead. M9 follows M8a.**
 
-**Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
+**Nothing is merged into master until every milestone (M0 to M9, including M8a) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
-The goal is to replace PixiJS 8 with Phaser, and to keep every bit of the game as it is: the gameplay, all three modes, every feature and setting, the graphics, and the sounds. The player should not be able to tell the versions apart, except that the title screen says v3.
+The goal is to replace PixiJS 8 with Phaser, and to keep every bit of the game as it is: the gameplay, all three modes, every feature and setting, the graphics, and the sounds. The classic appearance remains the migration reference. M8a adds an optional cartoon art pack based on the two concepts in `docs/`; classic graphics stay the default for now. Gameplay and sounds stay the same with either pack.
 
 ## 1. Decisions
 
@@ -16,7 +16,9 @@ Made with the owner (answers to the planning questions):
 | How to port the graphics? | **Pre-rendered, replaceable art** (section 5): at build time today's drawing code generates an SVG for every piece of art; in the game each object is a rig of named pieces from texture atlases. Today's look stays pixel-identical. |
 | Custom art later? | Any piece can be replaced by a **custom PNG or SVG** with the same name. |
 | Variety per object? | **Kept exactly**: the code still picks colours, counts, flips, positions, lengths and patterns per object; only the pictures are files. |
-| When is art swapped? | **At build time**: drop the file in `art/custom/` and rebuild. |
+| When is art swapped? | Custom source files are compiled **at build time**. M8a builds complete classic and cartoon packs; the player selects a pack in Config and the game reloads to load it. |
+| Cartoon graphics? | **Planned in M8a, before M9.** Replace all visual asset families using `docs/cover_day.png` and `docs/cover_night.png` as the art-direction references. |
+| Classic graphics toggle? | Config shows **Classic graphics: On/Off**. On loads classic, Off loads cartoon. Fresh installs default to On; deliberate selections persist. Changing the value reloads the game. |
 | How to test the views? | **Pure view-models tested in Node, plus a few browser smoke tests** in CI. |
 | Branching? | **Long-lived `phaser` branch**: each milestone is a PR into `phaser`, master is merged into `phaser` regularly, and `phaser` is merged into master once, as 3.0.0, only after all milestones are finished and the owner explicitly says so. |
 | Which Phaser? | **Phaser 4.2.1** (the current `latest`), not 3.90. |
@@ -124,7 +126,7 @@ M4 lists every object kind with its pieces and how each kind of variety maps. Wh
 
 **Still drawn live:** text (Phaser Text, the same fonts) and the debug view (Phaser Graphics, dev only).
 
-**Not part of v3.0.0:** drawing the custom art itself, switching art packs at runtime, and changing hitboxes to fit new art.
+**Scope update for M8a:** producing the built-in cartoon artwork and selecting classic/cartoon through a Config-triggered reload are now planned before the v3.0.0 release. Arbitrary third-party pack selection, swapping loaded textures during play, and changing hitboxes to fit art remain outside this milestone.
 
 ## 6. Target device and budgets
 
@@ -159,6 +161,8 @@ Measuring on the phone: `?frames=1` shows a frame-time readout in either version
 | R16 | **Rig fidelity**: rebuilding each object from pieces must match today's drawing. | The parity tool on every kind and variant; the M4 inventory lists any case that can't match exactly, with its diff, for approval. | M4–M5, M7 |
 | R17 | **Rasterizers differ**: the same SVG renders slightly differently in different tools. | The spike compares a browser rasterizer (Chromium through Playwright, already in CI) with a pure-npm one (resvg) against Pixi's output, and the closest is used for every piece. | M1 |
 | R18 | **Custom art breaks things later** (wrong size, frames or pivot). | The contracts, the validator in CI and the gallery; a replacement drill in M7 proves the path. | M4, M7 |
+| R19 | **Detailed cartoon art obscures hazards or reintroduces visible stutter.** | Approve art at actual game sizes; keep readable silhouettes, established motion/softening and texture budgets; check fast pans and catches in Safari with both packs. | M8a |
+| R20 | **Pack selection mixes assets, downloads both packs, or loses settings on reload.** | Separate complete catalogs; resolve selection before loading; fetch only the selected pack; reuse and test the Config reload/settings behavior. | M8a |
 
 ## 8. Milestones
 
@@ -719,10 +723,89 @@ Only once M7 is accepted: until then the Pixi version is the reference.
   379,797 bytes with gzip level 9. Reference screenshots and dev pages are excluded
   from the production build.
 
+### M8a. Cartoon sprite sheets and the classic graphics toggle (L)
+
+**Status: planning only, on `phaser-sprites` from `phaser`. Implementation starts only after the owner explicitly gives the go-ahead.** This milestone is between M8 (Pixi removal) and M9 (cleanup/release). Planning does not generate artwork, change runtime code, introduce pack scaffolding, or bump the version.
+
+**Outcome.** Prepare and integrate a complete cartoon sprite pack that can replace all current graphics, alongside a complete classic pack. The Config menu selects between them through **Classic graphics: On/Off** and reloads the game when the value changes. Classic is the default for now. Both packs use the same rules, physics, generated levels, obstacles, animation timing, camera motion, modes and sounds.
+
+#### Art direction and source references
+
+The visual references are [the day concept](docs/cover_day.png) and [the night concept](docs/cover_night.png). They guide new artwork; they are not stretched over the game as full-screen backgrounds or mechanically cropped into finished sprites.
+
+- **Monkey:** the expressive brown monkey with a light muzzle/belly, large readable eyes, rounded ears, curled tail and long reaching limbs. Keep a distinct player-2 palette and the translucent grey shadow, with matching green/gold/shadow lianas.
+- **Jungle:** layered foliage framing the action, broad leaves and ferns, hanging vines, humid blue-green distance and mist, with warm daylight and cool moonlit night. Adapt the concepts' perspective to the game's side-view layers and seamless horizontal repeats.
+- **Temples:** stepped, weathered stone, carved geometric motifs, climbing greenery and warm firelight against cool night colours. Keep all four existing temple looks and their established fire behavior.
+- **Creatures and small props:** adapt the concepts' panther, snake, parrots, bats, spider and nest; extend the same shape language, materials and palette to every existing animal, plant, rock, hive, pickup and icon that is not pictured explicitly.
+- **Menus:** carry the stone lettering, vines and carved sun/spiral motif into the cartoon title treatment, panels and icons. Keep instructions, scores, settings and the version as crisp live text, rather than baking variable text into sheets.
+- **Art direction confirmed by the owner:** a cohesive painted cartoon style for both characters and scenery. Retain the concepts' atmosphere while simplifying fine detail for small screens; the backgrounds belong to the same cartoon world as the monkey.
+
+Approve a small style sample at actual game size before producing the full pack: a hanging/flying monkey, a liana, a branch with a creature, a temple, a day/night background strip and a menu sample. Check outline weight, palette, shading, joint overlaps and hazard readability together. The samples belong to implementation after the go-ahead; none are produced during this planning task.
+
+#### M8a.1. Inventory and sprite contracts
+
+Use `art/manifest.json` and the M4 inventory as the authoritative starting point: **175 pieces and 594 frames** at the M8 baseline. Prepare a coverage checklist mapping every stable piece/frame key to its cartoon source, sheet, cell, pivot, attachments, animation and completion/review state.
+
+| Asset family | Cartoon coverage and behavior to preserve |
+|---|---|
+| Players and shadow | Both monkey palettes; tail, torso, head, arms, legs, open/dead eyes; hanging, flight, facing, blinking and death poses; matching shadow assets and opacity. |
+| Lianas and supports | Green, gold and shadow ropes/leaves; slipping-tip flash; swinging, settling and shared pairs; branch trunks, canopy vines, stems, ledges, hive support and slings. |
+| Static obstacles | Branches, thorn bushes, all 24 rock outlines, beehives and their bees; high/low placements and existing obstacle scales. |
+| Branch decorations | Panther, perched bird, perched snake, hanging monkey, nest in all three states, hanging bat in all looks, owl, flowers and coconuts; every current variant and animation. |
+| Moving obstacles | Spider/thread, moving snake, red/blue/purple birds, flying and circling bats; all wing, leg, eye, coil and stalk frames/joints. |
+| Temples | All four looks; top, repeated base/stairs, details, moss/vines/leaves, haze, flame frames and additive glow. |
+| Scenery | Sky, far/mid/near layers, near canopy strip, ceiling canopy, floor shrubs and floor fill; day, afternoon, dusk, night and dawn presentation. |
+| Pickups and UI | Bananas/glints, field/HUD hearts, banana tally icons, mute/fullscreen icons, panels, off-screen indicator and cartoon title artwork; title, Config, pause, results and stage banners use a coherent theme. |
+
+Keep existing keys, frame ordering, logical dimensions, pivots, attachment points, strip lengths, 9-slice regions and tint/alpha contracts. Start with the existing joints and flipbook frame counts; the sheets must support continuously varying swing angles and poses through the rigs. A single painted swing pose is not a substitute for the monkey's complete rig.
+
+Allow presentation-only catalog additions where the concepts need them (for example the cartoon wordmark or a moon/cloud decoration). Specify their placement and stage visibility, include them in coverage and memory budgets, and leave classic unchanged. Pack-specific presentation metadata may extend the renderer; collision geometry, simulation state and motion behavior remain shared. Inspect every hazard silhouette against its existing hitbox guides so the new art communicates the same safe gaps and contacts.
+
+#### M8a.2. Produce the artwork and master sheets
+
+Produce clean transparent PNG sprites, with editable layered/vector masters where practical. Proposed source location: `art/packs/cartoon/`, with a source inventory and sheet-layout metadata kept under version control. Preserve `art/generated/` as the classic source; cartoon files must not globally overwrite it or the classic `art/custom/` overrides.
+
+- Work by coherent families: monkey/lianas first, obstacles/decorations/moving creatures next, then temples/scenery and UI. Review a family in the game before expanding to the next.
+- Keep component lighting, scale, palette and stroke weight consistent across sheets. Place joints with sufficient overlap, and check mirrored poses for seams. Align flipbook frames to a common pivot and scale, without frame-to-frame position drift.
+- Provide transparent padding and extruded atlas edges to prevent colour bleed and dark halos. Keep ropes/stalks straight for bending, panels sliced, and trunks/temple bases/stairs suitable for stretching or repetition.
+- Make horizontal scenery tiles seamless, including through stage transitions. Preserve the established build-time horizontal softening and layer speeds; adapt detail density rather than increasing runtime blur or changing movement to disguise artifacts.
+- Use the day and night references to define a readable palette through the complete time-of-day cycle. Prefer shared day-colour assets with the existing tint/emissive rules. Where tinting cannot express a needed night feature, use explicit decorative variants and a bounded presentation transition; account for both variants' memory if they overlap.
+- Ensure raster sources have sufficient resolution for their maximum logical scale and 1×/2×/4× outputs. Export sprite-sheet PNGs and machine-readable frame/cell metadata, together with previews and the source-to-runtime-key mapping. Keep deterministic atlas packing in the existing build pipeline.
+
+#### M8a.3. Build and load two complete packs
+
+Add pack-aware validation/build/catalog loading to the existing art pipeline. Proposed output layout: `public/art/classic/` and `public/art/cartoon/`, each with its own catalog, boot/main sheets, frames and repeating tiles at the existing supported scales. Keep the distinction between sprite sheets for packed pieces and separate repeating textures where the renderer needs tiles.
+
+- Classic wraps the current generated/override pipeline and preserves its appearance. Cartoon must cover every required frame; fail validation/build on missing, duplicate or incompatible entries instead of silently mixing classic pieces into it.
+- Validate sheet bounds, dimensions, frame ordering, alpha, padding, pivots, attachments, tint rules and animation metadata. Keep the existing validator's art-versus-hitbox checks and add pack coverage checks.
+- Resolve the pack choice before the first catalog/atlas request. Download, decode, prepare and warm only the selected pack. Ship both packs, but avoid fetching or holding both in memory for a normal session; a full reload disposes the previous game's resources.
+- Apply the existing quality/resolution choice independently of art style. Each loaded pack must satisfy the **120 MB at 2×** and **300 MB at 4×** texture limits. Report compressed download size, decode time and startup time for each; validate the section 6 startup and frame budgets on the iPhone 13 mini and Safari on the MacBook Air M1.
+- Keep the M7 improvements: prepared glyphs/sounds, warm rig paths, one texture per batch, movement interpolation and camera behavior. Cartoon selection does not enable motion-blur experiments.
+- Extend the dev gallery to select a pack and inspect sources, sheets, frame animations, pivots, hitboxes, repeating seams and representative assembled rigs. A failed pack load must show a clear error with an action to reload classic, without a reload loop or a partly mixed scene.
+
+#### M8a.4. Config selection and reload behavior
+
+Add a clearly labelled **Classic graphics: On/Off** row inside the existing title Config submenu, available by click/tap and a labelled keyboard shortcut confined to that submenu. It is a separate setting from Performance/Balanced/Sharp/Auto. Fit the added row and its touch target on the iPhone 13 mini in both orientations, including Safari's reduced visible area.
+
+- **On = classic; Off = cartoon.** With no valid saved choice, default to classic. Save deliberate choices in local storage so they survive browser reloads; blocked storage must still permit switching for the current URL.
+- Provide an explicit `?art=classic|cartoon` override for testing and blocked-storage fallback. If the URL contains `art`, use its value (an invalid value resolves to classic); otherwise use a valid saved preference, then classic. Invalid saved values also resolve to classic. Test URL overrides do not silently rewrite saved preferences.
+- Changing the value saves the choice, consumes the menu input and performs a full navigation/reload. Selecting the current value does not reload. Restart at the title; preserve the chosen player mode, lives, slipping, shadow, mute preference and quality setting, and retain unrelated query parameters/hash. Mobile continues to support 1P only.
+- Ensure quality changes preserve art selection and art changes preserve quality selection. Prevent double navigation and accidental game starts from the selecting key/tap. Identify the loaded pack in the existing frame trace to make device comparisons reproducible.
+
+#### M8a.5. Verification and completion
+
+- Unit tests cover complete pack contracts, coverage/validation, selection precedence, classic default, preference persistence/blocked storage and reload URL preservation. Simulation tests remain unchanged.
+- Browser checks exercise both packs: startup, every asset family/variant and animation, all supported modes, settings, HUD/results, resize/rotation, context loss/restore, and the Config toggle by keyboard, mouse and touch. Verify a single reload on change, no reload on the current choice, and that only the selected pack's requests are made.
+- Keep the M8 classic reference PNGs unchanged and passing. Add a small approved cartoon reference set for later regressions, including day/night scenes and small-screen menus; assess cartoon fidelity against the concepts and gameplay readability.
+- Inspect fast swings, catches, large temples, moving obstacles, lianas and foreground shrubs on Safari on the MacBook Air M1 and iPhone 13 mini at the current default quality. Record startup/texture/frame results against the existing budgets and any concrete exceptions for the owner to review before milestone merge.
+- Document the sheet formats, sources, key mapping, editing/export process, pack selection and build/gallery workflow in the art guide, and add the milestone report and measured sizes here.
+
+**Done when:** the owner approves the cohesive concept-derived artwork; cartoon assets replace every required current visual family without hidden classic fallbacks; both complete packs build and fit the existing budgets (or explicitly accepted exceptions); classic defaults to On; Config switches correctly by reload on desktop/mobile; tests and classic/cartoon visual checks pass; the milestone report and asset-editing guide are complete. M9 starts afterward. Keep classic as the default until a later explicit decision changes it.
+
 ### M9. Cleanup and release (S)
 
 - Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables, the art pipeline), the README's technology section and a short "Custom art" section pointing to `art/README.md`, and the `package.json` description; set the version to 3.0.0.
-- Merge master into `phaser` one last time, run CI and open the PR into master. It is merged only when the owner explicitly says so, after every milestone is finished. The owner tags `v3.0.0` and writes the release notes.
+- Merge master into `phaser` one last time, run CI and open the PR into master. It is merged only when the owner explicitly says so, after every milestone, including M8a, is finished. The owner tags `v3.0.0` and writes the release notes.
 
 ## 9. Tests
 
@@ -754,6 +837,8 @@ Everything below must work on the Phaser renderer as on v2.3:
 - Performance within the section 6 budgets on the iPhone 13 mini.
 
 ## 11. Open questions
+
+**M8a art direction, answered:** the owner chose a cohesive painted cartoon style for both characters and scenery, based on the day/night concepts. There are no unresolved planning questions for this milestone. Implementation awaits the owner’s explicit go-ahead.
 
 Every question from the first two drafts is answered in section 1. New questions that come up during a milestone are added here and asked before that milestone's PR is merged into `phaser`.
 
