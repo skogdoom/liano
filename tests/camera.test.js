@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Camera } from '../src/render/camera.js';
-import { CAMERA_TARGET_X } from '../src/config.js';
+import { CAMERA_LERP, CAMERA_TARGET_X } from '../src/config.js';
 
 describe('camera', () => {
   it('reset puts the target at CAMERA_TARGET_X on screen', () => {
@@ -64,6 +64,44 @@ describe('the pane camera (two lags) and the shared screen camera (one)', () => 
     const b = new Camera(0, CAMERA_TARGET_X, { lags: 1 });
     a.update(800, 0.1);
     for (let i = 0; i < 12; i++) b.update(800, 0.1 / 12);
+    expect(a.x).toBeCloseTo(b.x, 9);
+  });
+});
+
+describe('the smoother shared camera', () => {
+  const smooth = () => new Camera(0, 0, { lags: 2, rate: CAMERA_LERP * 2 });
+
+  it('eases into a target change in either direction without overshooting', () => {
+    for (const direction of [-1, 1]) {
+      const camera = smooth();
+      const moves = [];
+      for (let i = 0; i < 120; i++) {
+        const previous = camera.x;
+        camera.update(direction * 700, 1 / 120);
+        moves.push(direction * (camera.x - previous));
+        expect(direction * camera.x).toBeGreaterThanOrEqual(0);
+        expect(direction * camera.x).toBeLessThanOrEqual(700);
+      }
+      expect(moves[0]).toBeLessThan(6);
+      expect(moves[1]).toBeGreaterThan(moves[0]);
+      expect(direction * camera.x).toBeGreaterThan(699.9);
+    }
+  });
+
+  it('keeps the original shared-camera delay during steady forward travel', () => {
+    const original = new Camera(0, 0, { lags: 1 });
+    const camera = smooth();
+    for (let i = 1; i <= 1200; i++) {
+      original.update(i * 1000 / 120, 1 / 120);
+      camera.update(i * 1000 / 120, 1 / 120);
+    }
+    expect(Math.abs(camera.x - original.x)).toBeLessThan(0.1);
+  });
+
+  it('keeps the configured response independent of simulation step size', () => {
+    const a = smooth(), b = smooth();
+    a.update(700, 0.1);
+    for (let i = 0; i < 12; i++) b.update(700, 0.1 / 12);
     expect(a.x).toBeCloseTo(b.x, 9);
   });
 });

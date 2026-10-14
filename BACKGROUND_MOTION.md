@@ -568,3 +568,38 @@ New frame recordings identify `frameClock: phaser-callback-phase-v2` and
 `monkeyCatchOffset` in world units, so a drawing transition can be distinguished
 from a physics-position jump. These fixes also apply with the optional resolution
 cap; obstacle exposure remains off in ordinary play.
+
+## Phaser shared-screen camera response
+
+Shared screen still follows the leading eligible monkey, holds on its liana while
+it hangs, and uses the wider 0.75-scale view. Its original single-lag camera could
+change speed abruptly when a release, catch or change of leader moved that target.
+Phaser now selects two camera lags at rate 16 instead of one at rate 8. Their mean
+tracking delay remains 125 ms, while a target change starts with a gradual increase
+in speed. This response is faster than the ordinary pane's two lags at rate 12,
+and retains shared mode's anchor-based target rather than the single-player swing
+target. Pixi and default simulation callers retain the original shared response.
+
+The shared camera remains part of the game rules: the exact same camera is drawn
+and used for left-behind elimination and respawn placement. The smoother response
+can shift the timing of those edge crossings during a transition, but introduces
+no separate visual lag or different camera for the scenery. Tests cover leader
+selection, deaths, respawns and the hold while everyone waits to respawn with both
+camera responses.
+
+Phaser also always interpolates adjacent camera samples. The actor interpolation
+guard treats a movement over 30 world units in one simulation step as a teleport;
+a legitimate shared-camera pan can exceed that threshold. Applying that guard to
+the camera made fast pans skip interpolation. Camera resets already set both
+samples to the new position, so removing the cutoff for camera drawing preserves
+resets and interpolates actual motion at every speed. Actor teleport handling and
+Pixi interpolation retain their previous behavior.
+
+In a controlled one-liana pan back after the leader dies, the largest change in
+frame-to-frame camera movement falls from 65.53 to 23.77 CSS pixels at 60 Hz,
+33.86 to 10.01 at 90 Hz, and 33.86 to 4.27 at 144 Hz. The old movement is
+reconstructed using its single-lag camera and 30-unit cutoff. Native Phaser
+mid-layer quads follow the new camera within 0.00024 CSS pixels; world and debug
+layers use exactly its interpolated position. These are submitted-motion checks,
+not Safari presentation measurements. Frame traces now include each pane's
+`cameraLags` and `cameraRate` to identify the response used in a recording.

@@ -25,9 +25,12 @@ export const GameState = Object.freeze({
 export class Game {
   // `createWorld({ players, lives, hearts, seed })` can be replaced in tests. `slip`, `lives`
   // and `shadow` are the settings the game starts with (see toggleSlip, toggleLives,
-  // toggleShadow).
-  constructor({ createWorld = (options) => new World(options), slip = true, lives = false, shadow = false } = {}) {
+  // toggleShadow). `createSharedView` selects the platform's shared-camera response;
+  // that same camera still determines which monkeys fall behind and where they respawn.
+  constructor({ createWorld = (options) => new World(options), createSharedView = (world) => new SharedView(world),
+    slip = true, lives = false, shadow = false } = {}) {
     this.createWorld = createWorld;
+    this.createSharedView = createSharedView;
     this.mode = 'solo';
     // Slipping (G), for every world and match until the page is reloaded.
     this.slip = slip;
@@ -306,7 +309,7 @@ export class Game {
       this.createWorld({ players: players / panes, lives, hearts: lives > 1, seed, ...own, ...settings }),
     );
     // Shared screen's view is part of the rules: it leaves trailing monkeys behind.
-    this.sharedView = id === 'shared' ? new SharedView(this.worlds[0]) : null;
+    this.sharedView = id === 'shared' ? this.createSharedView(this.worlds[0]) : null;
   }
 
   // Back to the title screen with a new match in the current mode.

@@ -111,6 +111,7 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
           maximumCSS: pane.obstacleExposure.maximumCSS, images: pane.obstacleExposure.images } : null,
         roundPixels: camera.roundPixels,
         cameraX: pane.cameraX, cameraPreviousX: pane.camera.prevX, cameraCurrentX: pane.camera.x,
+        cameraLags: pane.camera.lags, cameraRate: pane.camera.rate,
         // Unwrapped layer position avoids treating a repeating seam as a jump.
         midX: -pane.cameraX * pane.backdrop.layers.find((l) => l.key === 'backdrop.mid').factor,
         foregroundX: pane.worldLayer.x,

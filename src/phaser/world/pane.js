@@ -114,7 +114,10 @@ export class WorldPane {
     if (shakes && events.some((e) => e.type === 'death')) shake.trigger(DEATH_SHAKE_PX, DEATH_SHAKE_TIME);
     shake.update(dt);
     this.scene.setPosition(shake.x, layout.bandTop * layout.scale + shake.y);
-    const cameraX = blend(camera.prevX, camera.x, alpha);
+    // Fast shared-mode pans can exceed the actors' teleport limit (30 units per
+    // step). Camera resets already collapse both samples, so every actual pan
+    // can be interpolated, including a long move after the leader dies.
+    const cameraX = blend(camera.prevX, camera.x, alpha, Infinity);
     this.cameraX = cameraX;
     this.worldLayer.x = -cameraX;
     this.overlay.x = -cameraX;

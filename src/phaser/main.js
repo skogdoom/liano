@@ -12,6 +12,7 @@ import { blockBrowserGestures, isHomeScreenApp, pixelRatio, safeAreaReader, watc
 import { Game } from '../sim/game.js';
 import { MODES } from '../sim/match.js';
 import { World } from '../sim/world.js';
+import { SharedView } from '../sim/sharedView.js';
 import { FpsMeter } from '../render/fpsMeter.js';
 import { createPhaserFullscreen } from './fullscreen.js';
 import { phaserKeys, phaserPointers } from './input.js';
@@ -107,6 +108,7 @@ const theGame = new Game({
   slip: titleSettings.get('slip') === 'on',
   lives: titleSettings.get('lives') === 'on',
   shadow: titleSettings.get('shadow') !== 'off',
+  createSharedView: (world) => new SharedView(world, undefined, { smoothCamera: true }),
   // Split screen's worlds share the match seed, and so the prefetched gaps.
   createWorld: (options) => {
     if (options.seed !== prefetch.seed) prefetch.reset(options.seed);

@@ -9,12 +9,13 @@ const FLIGHT_S = 0.5; // closing the gap to the monkey in flight (time constant)
 // A pane's camera eases through two lags in a row (`lags: 2`, CAMERA_EASE each): the first
 // follows the target, the camera follows the first. Its speed then changes smoothly when
 // the target's does (a catch turns the monkey's speed at once), where one lag would pass
-// that on as a jolt of the whole view. The shared screen's camera, whose position decides
-// who falls behind, keeps one lag (CAMERA_LERP).
+// that on as a jolt of the whole view. Shared screen defaults to one lag (CAMERA_LERP),
+// and can opt into two faster lags with the same average tracking delay.
 export class Camera {
-  constructor(targetX = 0, screenX = CAMERA_TARGET_X, { lags = 2 } = {}) {
+  constructor(targetX = 0, screenX = CAMERA_TARGET_X, { lags = 2, rate = lags === 1 ? CAMERA_LERP : CAMERA_EASE } = {}) {
     this.screenX = screenX;
     this.lags = lags;
+    this.rate = rate;
     this.reset(targetX);
   }
 
@@ -34,12 +35,12 @@ export class Camera {
   update(targetX, dt) {
     const desired = targetX - this.screenX;
     if (this.lags === 1) {
-      this.x += (desired - this.x) * (1 - Math.exp(-CAMERA_LERP * dt));
+      this.x += (desired - this.x) * (1 - Math.exp(-this.rate * dt));
       return;
     }
     // Two equal lags k in a row, towards D: e(t) = D + (e0 - D)·a and
     // x(t) = D + (x0 - D)·a + k·t·(e0 - D)·a, with a = exp(-k·t).
-    const k = CAMERA_EASE;
+    const k = this.rate;
     const a = Math.exp(-k * dt);
     const e0 = this.eased - desired;
     this.x = desired + (this.x - desired) * a + k * dt * e0 * a;

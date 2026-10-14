@@ -20,6 +20,8 @@ test('the production Phaser readout exports actual update/render frames', async 
   expect(frame.alpha).toBeLessThanOrEqual(1);
   expect(frame.panes[0].monkeyScreen.x).toBeDefined();
   expect(frame.panes[0].ropeTipScreen.x).toBeDefined();
+  expect(frame.panes[0].cameraLags).toBe(2);
+  expect(frame.panes[0].cameraRate).toBe(12);
   const downloadEvent = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Save frame trace' }).click();
   const download = await downloadEvent;
@@ -27,6 +29,18 @@ test('the production Phaser readout exports actual update/render frames', async 
   const data = JSON.parse(await readFile(await download.path(), 'utf8'));
   expect(data.frames.length).toBeGreaterThan(10);
   expect(data.frames.at(-1).panes[0].monkeyState).toBe('HANGING');
+  expect(errors).toEqual([]);
+});
+
+test('the production shared-mode trace identifies the smoother camera response', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto(`${PREVIEW}?engine=phaser&mode=shared&frames=1`);
+  await started(page, errors);
+  await page.waitForFunction(() => window.__phaserFrameTrace?.snapshot().frames.length > 10);
+  const frame = await page.evaluate(() => window.__phaserFrameTrace.snapshot().frames.at(-1));
+  expect(frame.mode).toBe('shared');
+  expect(frame.panes[0].cameraLags).toBe(2);
+  expect(frame.panes[0].cameraRate).toBe(16);
   expect(errors).toEqual([]);
 });
 

@@ -4,6 +4,7 @@ import { World } from '../src/sim/world.js';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { LianaState } from '../src/sim/liana.js';
 import { Banana } from '../src/sim/banana.js';
+import { SharedView } from '../src/sim/sharedView.js';
 import {
   CAMERA_LERP,
   LIANA_SPACING,
@@ -20,9 +21,10 @@ import { FORWARD_RELEASE_STEP, stepN } from './helpers.js';
 
 const steps = (ms) => Math.round(ms / 1000 / SIM_DT);
 
-function sharedGame() {
+function sharedGame(smoothCamera = false) {
   const game = new Game({
     createWorld: (options) => new World({ ...options, makeObstacle: () => null, makeBanana: () => null }),
+    createSharedView: (world) => new SharedView(world, undefined, { smoothCamera }),
   });
   game.selectMode('shared');
   return game;
@@ -160,9 +162,9 @@ describe('own lianas in shared screen', () => {
   });
 });
 
-describe('shared screen', () => {
+describe.each([false, true])('shared screen (smooth camera: %s)', (smoothCamera) => {
   it('follows the leader, the alive and non-invulnerable monkey furthest right', () => {
-    const game = sharedGame();
+    const game = sharedGame(smoothCamera);
     game.press('start');
     const world = game.world;
     const view = game.sharedView;
@@ -186,7 +188,7 @@ describe('shared screen', () => {
   });
 
   it('pans to the other monkey when the leader dies, without snapping', () => {
-    const game = sharedGame();
+    const game = sharedGame(smoothCamera);
     game.press('start');
     const world = game.world;
     const view = game.sharedView;
@@ -211,7 +213,7 @@ describe('shared screen', () => {
   });
 
   it('takes a life from a monkey left behind the left edge, and respawns it on the leftmost liana in view', () => {
-    const game = sharedGame();
+    const game = sharedGame(smoothCamera);
     game.press('start');
     const world = game.world;
     const view = game.sharedView;
@@ -240,7 +242,7 @@ describe('shared screen', () => {
   });
 
   it('holds still while the only monkey still in waits to respawn', () => {
-    const game = sharedGame();
+    const game = sharedGame(smoothCamera);
     game.press('start');
     const world = game.world;
     const view = game.sharedView;
@@ -273,16 +275,28 @@ describe('shared screen', () => {
   });
 
   it('starts both monkeys at the same height, each on its own first liana', () => {
-    const game = sharedGame();
+    const game = sharedGame(smoothCamera);
     const [a, b] = game.world.monkeys;
     expect([a.gripRadius, b.gripRadius]).toEqual([START_GRIP, START_GRIP]);
     expect(a.liana).not.toBe(b.liana);
   });
 
   it('never leaves a monkey behind on the title screen', () => {
-    const game = sharedGame();
+    const game = sharedGame(smoothCamera);
     game.world.monkeys[0].x = -5000;
     game.step(SIM_DT);
     expect(game.world.monkeys[0].state).not.toBe(MonkeyState.DEAD);
+  });
+
+  it('keeps the chosen camera response and resets its samples on a new match', () => {
+    const game = sharedGame(smoothCamera);
+    expect(game.sharedView.camera.lags).toBe(smoothCamera ? 2 : 1);
+    game.press('start');
+    stepN(game, 120);
+    game.press('menu');
+    const camera = game.sharedView.camera;
+    expect(camera.lags).toBe(smoothCamera ? 2 : 1);
+    expect(camera.prevX).toBe(camera.x);
+    expect(camera.eased).toBe(camera.x);
   });
 });

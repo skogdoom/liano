@@ -1,4 +1,4 @@
-import { LIANA_SPACING, MONKEY_RADIUS, SCREEN_WIDTH, SHARED_LEADER_X, SHARED_ZOOM } from '../config.js';
+import { CAMERA_LERP, LIANA_SPACING, MONKEY_RADIUS, SCREEN_WIDTH, SHARED_LEADER_X, SHARED_ZOOM } from '../config.js';
 import { Camera, cameraTarget } from '../render/camera.js';
 import { MonkeyState } from './monkey.js';
 
@@ -13,10 +13,15 @@ import { MonkeyState } from './monkey.js';
 // SHARED_LEADER_X of it: the next liana is in view ahead, and a monkey a liana behind
 // is still in view while the leader hangs; once the leader flies on, it has to follow.
 export class SharedView {
-  constructor(world, width = SCREEN_WIDTH / SHARED_ZOOM) {
+  constructor(world, width = SCREEN_WIDTH / SHARED_ZOOM, { smoothCamera = false } = {}) {
     this.world = world;
     this.width = width;
-    this.camera = new Camera(0, SHARED_LEADER_X * width, { lags: 1 });
+    // Two equal lags at twice the rate keep the average delay (2 / 16 = 1 / 8 s),
+    // but pick up speed gradually when a release, catch or leader change moves
+    // the target. Opt-in lets Phaser smooth this while Pixi keeps its camera.
+    this.camera = new Camera(0, SHARED_LEADER_X * width, {
+      lags: smoothCamera ? 2 : 1, rate: CAMERA_LERP * (smoothCamera ? 2 : 1),
+    });
     this.camera.reset(this.#target() ?? world.monkey.x);
     world.respawnLiana = (player) => this.respawnLiana(player);
   }
