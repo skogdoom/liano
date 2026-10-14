@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { DEV } from '../playwright.config.js';
 import { layoutFor } from '../src/layout.js';
-import { canvasSize, viewCamera } from '../src/phaser/view.js';
+import { canvasSize, viewCamera } from '../src/platform/view.js';
 import { collectErrors, started } from './helpers.js';
 
 // The platform (PHASER_PLAN.md, M2): layouts, full screen, a lost graphics context and
@@ -43,7 +43,7 @@ for (const [width, height, ratio] of SHAPES) {
   test(`the Phaser version draws the letterboxed view at ${width} × ${height}, ${ratio}×`, async ({ browser }) => {
     const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: ratio });
     const errors = collectErrors(page);
-    await page.goto(`${DEV}?engine=phaser`);
+    await page.goto(`${DEV}`);
     await started(page, errors);
     const r = Math.min(ratio, 2);
     const layout = layoutFor(width, height);
@@ -82,7 +82,7 @@ for (const [width, height, ratio] of SHAPES) {
 test('the Phaser version follows the window when it changes shape', async ({ page }) => {
   const errors = collectErrors(page);
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await started(page, errors);
   await page.setViewportSize({ width: 600, height: 900 });
   await expect.poll(() => page.evaluate(() => window.__liano.layout.orientation)).toBe('portrait');
@@ -90,43 +90,41 @@ test('the Phaser version follows the window when it changes shape', async ({ pag
   expect(errors).toEqual([]);
 });
 
-for (const engine of ['pixi', 'phaser']) {
-  test(`the ${engine} version goes full screen with F and back`, async ({ page }) => {
-    const errors = collectErrors(page);
-    await page.goto(`${DEV}?engine=${engine}`);
-    await started(page, errors);
-    expect(await page.evaluate(() => window.__liano.fullscreen.supported)).toBe(true);
-    // A refused request would show up here rather than as a timeout.
-    await page.evaluate(() => document.addEventListener('fullscreenerror', () => console.error('fullscreenerror')));
-    // Going full screen resizes the page, and the Pixi version's title scene draws
-    // slowly in software WebGL on a busy CI runner: allow it time.
-    const inFullscreen = () => page.evaluate(() => document.fullscreenElement === document.documentElement);
-    await page.keyboard.press('KeyF');
-    await expect.poll(inFullscreen, { timeout: 20_000 }).toBe(true);
-    await page.keyboard.press('KeyF');
-    await expect.poll(inFullscreen, { timeout: 20_000 }).toBe(false);
-    expect(errors).toEqual([]);
-  });
+test(`the Phaser version goes full screen with F and back`, async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto(`${DEV}`);
+  await started(page, errors);
+  expect(await page.evaluate(() => window.__liano.fullscreen.supported)).toBe(true);
+  // A refused request would show up here rather than as a timeout.
+  await page.evaluate(() => document.addEventListener('fullscreenerror', () => console.error('fullscreenerror')));
+  // Going full screen resizes the page; drawing is slow in software WebGL
+  // on a busy CI runner: allow it time.
+  const inFullscreen = () => page.evaluate(() => document.fullscreenElement === document.documentElement);
+  await page.keyboard.press('KeyF');
+  await expect.poll(inFullscreen, { timeout: 20_000 }).toBe(true);
+  await page.keyboard.press('KeyF');
+  await expect.poll(inFullscreen, { timeout: 20_000 }).toBe(false);
+  expect(errors).toEqual([]);
+});
 
-  test(`the ${engine} version pauses while the graphics context is lost, and carries on when it is back`, async ({ page }) => {
-    const errors = collectErrors(page);
-    await page.goto(`${DEV}?engine=${engine}`);
-    await started(page, errors);
-    const gl = 'window.__liano.app.renderer.gl';
-    await page.evaluate(`window.__lose = ${gl}.getExtension('WEBGL_lose_context'); window.__lose.loseContext()`);
-    await expect(page.locator('#notice')).toHaveClass(/shown/);
-    expect(await page.evaluate(() => window.__liano.pause.reason)).toBe('graphics');
-    await page.evaluate(() => window.__lose.restoreContext());
-    await expect(page.locator('#notice')).not.toHaveClass(/shown/);
-    await expect.poll(() => page.evaluate(() => window.__liano.pause.paused)).toBe(false);
-    await expect(page.locator('#fatal')).not.toHaveClass(/shown/);
-    expect(errors).toEqual([]);
-  });
-}
+test(`the Phaser version pauses while the graphics context is lost, and carries on when it is back`, async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto(`${DEV}`);
+  await started(page, errors);
+  const gl = 'window.__liano.app.renderer.gl';
+  await page.evaluate(`window.__lose = ${gl}.getExtension('WEBGL_lose_context'); window.__lose.loseContext()`);
+  await expect(page.locator('#notice')).toHaveClass(/shown/);
+  expect(await page.evaluate(() => window.__liano.pause.reason)).toBe('graphics');
+  await page.evaluate(() => window.__lose.restoreContext());
+  await expect(page.locator('#notice')).not.toHaveClass(/shown/);
+  await expect.poll(() => page.evaluate(() => window.__liano.pause.paused)).toBe(false);
+  await expect(page.locator('#fatal')).not.toHaveClass(/shown/);
+  expect(errors).toEqual([]);
+});
 
 test('the Phaser version goes full screen from a tap on its button, on release', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await started(page, errors);
   // The button's tap target (controls.js), in CSS pixels.
   const { x, y } = await page.evaluate(() => {
@@ -143,7 +141,7 @@ test('the Phaser version goes full screen from a tap on its button, on release',
 
 test('the Phaser version pauses a run on P and resumes on P', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await started(page, errors);
   await page.waitForFunction(() => window.__liano.input && window.__liano.pause.acceptsInput());
   // Not on the title screen: only a run pauses.
@@ -162,7 +160,7 @@ test('the Phaser version pauses a run on P and resumes on P', async ({ page }) =
 test('the Phaser version follows a change of pixel ratio (a window moved to another screen)', async ({ page }) => {
   const errors = collectErrors(page);
   await page.setViewportSize({ width: 1000, height: 600 });
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await started(page, errors);
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1000);
   const cdp = await page.context().newCDPSession(page);
@@ -185,7 +183,7 @@ for (const [ratio, scale] of [
   test(`the Phaser version loads its art at ${scale}× on a ${ratio}× screen: the boot set, then the main set`, async ({ browser }) => {
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: ratio });
     const errors = collectErrors(page);
-    await page.goto(`${DEV}?engine=phaser`);
+    await page.goto(`${DEV}`);
     await started(page, errors);
     await expect.poll(() => page.evaluate(() => window.__liano.platform.artLoad?.sets.map((s) => s.set))).toEqual(['boot', 'main']);
     expect(await page.evaluate(() => window.__liano.platform.art.scale)).toBe(scale);
@@ -208,7 +206,7 @@ for (const [width, ratio] of [
   test(`the Phaser version's backdrop tiles show no line at their edges at ${width} px, ${ratio}×`, async ({ browser }) => {
     const page = await browser.newPage({ viewport: { width, height: Math.round((width * 9) / 16) }, deviceScaleFactor: ratio });
     const errors = collectErrors(page);
-    await page.goto(`${DEV}?engine=phaser`);
+    await page.goto(`${DEV}`);
     await started(page, errors);
     await page.waitForFunction(() => window.__liano.platform.artLoad?.sets.length === 2);
     // The world alone: the buttons and panels have edges of their own.

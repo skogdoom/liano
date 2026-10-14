@@ -4,14 +4,14 @@ import { collectErrors } from './helpers.js';
 
 test('native Phaser quads ease real catches in both directions at 60/90/144 Hz', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser&frames=1`);
+  await page.goto(`${DEV}?frames=1`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const results = await page.evaluate(async () => {
     const { app, platform } = window.__liano;
     const { Game } = await import('/src/sim/game.js');
     const { World } = await import('/src/sim/world.js');
     const { createDriver } = await import('/src/driver.js');
-    const { PhaserFrameClock } = await import('/src/phaser/frameClock.js');
+    const { PhaserFrameClock } = await import('/src/platform/frameClock.js');
     const { ARM, LIMBS, POSES, MonkeyPose } = await import('/src/views/monkey.js');
     app.loop.sleep();
     app.events.removeAllListeners('step');

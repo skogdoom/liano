@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FrameClock } from '../src/frameClock.js';
-import { PhaserFrameClock } from '../src/phaser/frameClock.js';
+import { PhaserFrameClock } from '../src/platform/frameClock.js';
 import { createFixedStepLoop } from '../src/loop.js';
 
 const warm = (clock, hz = 60) => {

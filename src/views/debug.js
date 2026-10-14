@@ -3,11 +3,11 @@ import { MonkeyState } from '../sim/monkey.js';
 import { validReleaseSteps, longestRun, movingValidSteps } from '../sim/feasibility.js';
 import { heapMB } from '../render/fpsMeter.js';
 
-// The debug view (D): what both versions draw from (no Pixi here). Hitboxes, the flight
+// The debug view (D): plain drawing and placement data. Hitboxes, the flight
 // the monkey would take if released now, and the valid release steps for the gap ahead
 // of the current swing, from the grab (or the run start) up to the forced release at the
 // tip; and the numbers. In split screen each pane gets its own, with its player's text at
-// the top of the pane. The Pixi view is render/debugOverlay.js.
+// the top of the pane.
 
 export const COLORS = {
   lianaHitbox: 0xffe14d,

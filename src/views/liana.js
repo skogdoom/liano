@@ -4,9 +4,9 @@ import { mixSeed, mulberry32 } from '../sim/rng.js';
 import { leafPoints } from '../render/shapes.js';
 import { MAX_STEP_TURN, blend } from '../render/interpolate.js';
 
-// Lianas: what both versions draw from (no Pixi here). Colours, sizes, the drawing
-// functions (the Pixi view draws with them, and the art pieces are generated from them),
-// and where things go and how they move. The Pixi view is render/lianaView.js.
+// Lianas: plain drawing and placement data. Colours, sizes, the drawing
+// functions (the art pieces are generated from them),
+// and where things go and how they move.
 
 // Vine colours: green, and in shared screen golden for player 2's own lianas.
 export const LIANA_PALETTES = [

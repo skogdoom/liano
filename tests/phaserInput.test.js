@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createInput } from '../src/input.js';
-import { phaserKeys, phaserPointers, pointerEvent } from '../src/phaser/input.js';
-import { ConfigMenu } from '../src/phaser/configMenu.js';
+import { phaserKeys, phaserPointers, pointerEvent } from '../src/platform/input.js';
+import { ConfigMenu } from '../src/render/configMenu.js';
 
 // A Phaser event emitter (on, off, emit), enough for the keyboard and input plugins.
 function emitter() {

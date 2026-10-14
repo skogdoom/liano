@@ -3,8 +3,6 @@ import { blend, MAX_STEP_JUMP, MAX_STEP_TURN } from '../src/render/interpolate.j
 import { Camera } from '../src/render/camera.js';
 import { Liana } from '../src/sim/liana.js';
 import { Monkey, MonkeyState } from '../src/sim/monkey.js';
-import { LianaView } from '../src/render/lianaView.js';
-import { MonkeyView } from '../src/render/monkeyView.js';
 import { SIM_DT } from '../src/config.js';
 
 describe('drawing between sim steps', () => {
@@ -61,49 +59,4 @@ describe('drawing between sim steps', () => {
     expect(liana.prevAngle).toBe(liana.angle);
   });
 
-  it('the liana turns half way between the steps at alpha 0.5', () => {
-    const liana = new Liana(2, 1400);
-    liana.grab(1);
-    for (let i = 0; i < 40; i++) liana.step(SIM_DT);
-    const view = new LianaView();
-    view.update([liana], 1000, 1280, [], 0.5);
-    const g = view.entries.get(liana).g;
-    expect(g.rotation).toBeCloseTo(-(liana.prevAngle + liana.angle) / 2, 12);
-    view.update([liana], 1000, 1280, [], 0);
-    expect(g.rotation).toBeCloseTo(-liana.prevAngle, 12);
-    view.update([liana], 1000);
-    expect(g.rotation).toBe(-liana.angle);
-  });
-
-  it('the monkey is drawn between its two positions, and at the current one without alpha', () => {
-    const monkey = new Monkey();
-    monkey.state = MonkeyState.AIRBORNE;
-    monkey.x = 100;
-    monkey.y = 200;
-    monkey.vx = 300;
-    monkey.vy = -100;
-    monkey.step(SIM_DT);
-    const view = new MonkeyView({ fur: 1, furDark: 2, skin: 3 });
-    view.update(monkey, SIM_DT, false, 0.5);
-    expect(view.view.x).toBeCloseTo((monkey.prevX + monkey.x) / 2, 12);
-    expect(view.view.y).toBeCloseTo((monkey.prevY + monkey.y) / 2, 12);
-    view.update(monkey, SIM_DT);
-    expect([view.view.x, view.view.y]).toEqual([monkey.x, monkey.y]);
-  });
-
-  it('a monkey that teleported (a respawn) is not slid across the screen', () => {
-    const monkey = new Monkey();
-    monkey.x = 100;
-    monkey.step(SIM_DT);
-    monkey.x = 900;
-    const view = new MonkeyView({ fur: 1, furDark: 2, skin: 3 });
-    view.update(monkey, SIM_DT, false, 0.5);
-    expect(view.view.x).toBe(900);
-  });
-
-  it('frames without a previous position (the shadow) are drawn as they are', () => {
-    const view = new MonkeyView({ fur: 1, furDark: 2, skin: 3 });
-    view.update({ x: 40, y: 60, state: MonkeyState.AIRBORNE, vx: 0, vy: 0 }, SIM_DT, false, 0.5);
-    expect([view.view.x, view.view.y]).toEqual([40, 60]);
-  });
 });

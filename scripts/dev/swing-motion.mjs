@@ -11,7 +11,7 @@ try {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   const url = new URL(process.env.URL ?? 'http://localhost:5174/');
-  url.searchParams.set('engine', 'phaser');
+
   await page.goto(url.href);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const results = await page.evaluate(async () => {

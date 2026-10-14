@@ -9,11 +9,11 @@ for (const [width, height, ratio] of [[1280, 720, 1], [1920, 800, 2], [375, 812,
   test(`the image backdrop matches the tiles at ${width} × ${height}, ${ratio}×`, async ({ browser }) => {
     const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: ratio });
     const errors = collectErrors(page);
-    await page.goto(`${DEV}?engine=phaser`);
+    await page.goto(`${DEV}`);
     await started(page, errors);
     await page.waitForFunction(() => window.__liano?.platform.world);
     const results = await page.evaluate(async () => {
-      const { BackdropRig } = await import('/src/phaser/world/backdrop.js');
+      const { BackdropRig } = await import('/src/render/world/backdrop.js');
       const { app, platform } = window.__liano;
       app.loop.sleep();
       app.scene.getScene('ui').cameras.main.setVisible(false);
@@ -62,7 +62,7 @@ for (const [width, height, ratio] of [[1280, 720, 1], [1920, 800, 2], [375, 812,
 
 test('Phaser uses phaser-m7 speeds and one interpolated camera for all layers', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await started(page, errors);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const result = await page.evaluate(() => {
@@ -113,7 +113,7 @@ test('Phaser uses phaser-m7 speeds and one interpolated camera for all layers', 
 test('moving trees average their exposure without darkening, seams or shader recompiles', async ({ browser }) => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 2 });
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser&motionblur=on`);
+  await page.goto(`${DEV}?motionblur=on`);
   await started(page, errors);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const results = await page.evaluate(() => {
@@ -182,7 +182,7 @@ test('moving trees average their exposure without darkening, seams or shader rec
 
 test('default scenery uses the standard image shader without experimental exposure', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await started(page, errors);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => {

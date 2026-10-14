@@ -2,11 +2,11 @@ import { paneLayouts } from '../layout.js';
 import { GameState } from '../sim/game.js';
 import { heartsFor } from './hearts.js';
 
-// The HUD: what both versions draw from (no Pixi here). Top right: in single player the
+// The HUD: plain drawing and placement data. Top right: in single player the
 // score and the best score of this page session; in split screen each player's score at
 // the top right of their pane; in shared screen both players' side by side. Under each
 // score, how many bananas that player has taken and, in games with lives, their hearts.
-// The Pixi view is render/hud.js.
+//
 
 // Label colours per player, matching their monkeys' fur.
 export const PLAYER_COLORS = [0xf4e7c5, 0xffb061];

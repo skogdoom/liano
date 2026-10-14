@@ -1,7 +1,7 @@
 {
   "name": "liano",
   "private": true,
-  "version": "3.0.0-dev.8",
+  "version": "3.0.0-dev.9",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -14,7 +14,6 @@
     "art": "node --import ./scripts/lib/json.mjs scripts/art.mjs",
     "art:build": "node scripts/build-art.mjs",
     "art:check": "node scripts/art-check.mjs",
-    "spike:bench": "node scripts/spike/bench.mjs",
     "prebuild": "node scripts/build-windows.mjs && npm run art:build",
     "build": "vite build",
     "preview": "vite preview",
@@ -23,8 +22,7 @@
     "test:browser": "playwright test"
   },
   "dependencies": {
-    "phaser": "4.2.1",
-    "pixi.js": "^8.21.0"
+    "phaser": "4.2.1"
   },
   "devDependencies": {
     "@playwright/test": "1.64.0",

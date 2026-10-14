@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { exposureWidth } from '../src/phaser/world/exposure.js';
+import { exposureWidth } from '../src/render/world/exposure.js';
 
 describe('Phaser scenery exposure', () => {
   it('covers the frame travel in either direction', () => {

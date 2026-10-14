@@ -8,7 +8,7 @@ import { MonkeyState } from '../src/sim/monkey.js';
 import { Liana, LianaState } from '../src/sim/liana.js';
 import { SIM_DT, WORLD_HEIGHT } from '../src/config.js';
 
-// The view-models both versions draw from (PHASER_PLAN.md, M5): plain data, no Pixi or Phaser.
+// Pure view-models for the renderer and generated art: plain data, no rendering library.
 
 describe('the monkey pose', () => {
   const hanging = (liana) => ({ state: MonkeyState.HANGING, liana, x: 100, y: 200, vx: 0, vy: 0 });

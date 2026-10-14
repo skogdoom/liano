@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 follows once M7 is accepted.**
+Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is implemented and verified on `phaser-m8` (its report), started at the owner’s request after M7 was merged into `phaser` in PR #39. M9 follows.**
 
 **Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -682,6 +682,42 @@ Only once M7 is accepted: until then the Pixi version is the reference.
 - Remove the tests of the Pixi views and modules; their view-model and adapter counterparts stay. Move `src/phaser/` to its final place.
 - Keep a small set of reference screenshots of the parity scenarios from the last two-version build (a few MB at most), for later visual checks.
 - **Done when:** the build contains no Pixi code, all tests and smoke tests pass, and the bundle size is recorded.
+
+**M8 report (implementation done, version 3.0.0-dev.9, branch `phaser-m8`).**
+
+- Removed `pixi.js` and its transitive packages, the old game entry and view adapters,
+  the DOM fullscreen implementation, the engine selector, the parity page and M1 spike
+  pages. An old `?engine=pixi` URL now opens the sole Phaser game.
+- Put the game entry in `src/main.js`, scenes/platform adapters in `src/platform/`,
+  rendering adapters and world rigs in `src/render/`, and the sound manager/cache in
+  `src/audio/`. Pure view-models stay in `src/views/`.
+- Kept the input queue/toggle semantics, pause state, fullscreen gesture controls and
+  sound synthesis/recovery used by Phaser. They are shared infrastructure, not a
+  second engine. Simulation, generation, physics and worker logic are unchanged.
+- Removed Pixi-object tests and retained the view-model, native adapter, gameplay and
+  lifecycle checks. The long-run and motion tools now use the sole game.
+- Saved 12 Phaser-side images from the last two-engine build, commit
+  `b60325c3a55b7d609b5569fc092b7134bf85954f`: about 864 KB, at 1×. They cover monkeys,
+  shared lianas, the shadow, static/moving obstacles, bananas, day/night scenes,
+  temple fire, HUD, title and results. `browser-tests/references/README.md` records
+  their origin and how to inspect them. The dev-only `reference.html` and browser
+  check compare the renderer against them with the established tolerance. Fixed
+  fixtures retain the captured title version; the real game uses the current version.
+- Kept the artist’s gallery, comparing atlas frames against browser-rasterized generated
+  SVGs instead of importing Pixi. All 594 frames pass at 2×, with 0.17% differing pixels.
+- **Validation:** `npm test`: 66 files, 727 tests passed. `npm run art:check` and
+  `npm run build` passed; the generated art and window table remain unchanged.
+  All 72 Chromium browser checks passed across the full run and one focused retry:
+  71 passed in the full run, and the landscape game-over touch check timed out during
+  a tap, then passed on its own in 5.7 s. Two unit timing assertions failed while
+  browser rendering ran concurrently; the subsequent isolated full unit run passed.
+  No assertions or timing budgets were relaxed. A source comparison also confirmed
+  that moved native modules changed only their imports, comments and worker URL.
+- **Bundle:** the build emits no Pixi library or alternate-engine chunk. The main
+  chunk is 1,381.93 KB raw / 368.14 KB gzipped (Vite's report). All emitted JavaScript,
+  including the worker and optional diagnostics, totals 1,440,082 bytes raw and
+  379,797 bytes with gzip level 9. Reference screenshots and dev pages are excluded
+  from the production build.
 
 ### M9. Cleanup and release (S)
 

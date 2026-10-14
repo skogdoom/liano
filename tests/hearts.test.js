@@ -5,7 +5,7 @@ import { Banana } from '../src/sim/banana.js';
 import { createInput } from '../src/input.js';
 import { soundsFor } from '../src/audio/sounds.js';
 import { lifeUp, pling } from '../src/audio/recipes.js';
-import { HeartRow, heartsFor } from '../src/render/heartView.js';
+import { heartsFor } from '../src/views/hearts.js';
 import { BANANAS_PER_HEART, LIANA_SPACING, LIVES_2P, MAX_LIVES, SIM_DT } from '../src/config.js';
 
 // A banana in each of the given gaps, at the same height in the middle of the gap.
@@ -239,26 +239,6 @@ describe('hearts shown and heard', () => {
     expect(heartsFor(99)).toEqual({ filled: 5, empty: 0, count: 99 });
   });
 
-  it('draws the row, with the number at the top left of the leftmost heart only for more than five', () => {
-    const row = new HeartRow(11);
-    row.update(3);
-    expect(row.hearts.children).toHaveLength(3);
-    expect(row.count.visible).toBe(false);
-    row.update(1);
-    expect(row.hearts.children).toHaveLength(3); // one filled, two outlines
-    row.update(7);
-    expect(row.hearts.children).toHaveLength(5);
-    expect(row.count.visible).toBe(true);
-    expect(row.count.text).toBe('7');
-    // At the top left of the leftmost heart (the first child, furthest left).
-    const leftmost = row.hearts.children[0];
-    expect(row.count.x).toBeLessThan(leftmost.x);
-    expect(row.count.y).toBeLessThan(leftmost.y);
-    row.update(99);
-    expect(row.count.text).toBe('99');
-    row.update(5);
-    expect(row.count.visible).toBe(false);
-  });
 
   it('plays its own sound for a heart, apart from the banana’s', () => {
     const [heart] = soundsFor([{ type: 'heart', gap: 6, lives: 4, player: 0 }]);

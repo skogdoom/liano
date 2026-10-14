@@ -4,11 +4,11 @@ import { collectErrors } from './helpers.js';
 
 test('obstacle blur is opt-in and toggles without starting/restarting the game', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => !!window.__liano.app.renderer.renderNodes.getNode('ObjectExposureBatch'))).toBe(false);
   await expect(page.locator('#obstacle-blur-toggle')).toHaveCount(0);
-  await page.goto(`${DEV}?engine=phaser&obstacleblur=on&frames=1`);
+  await page.goto(`${DEV}?obstacleblur=on&frames=1`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const button = page.locator('#obstacle-blur-toggle');
   await expect(button).toContainText('ON');
@@ -29,11 +29,11 @@ test('obstacle blur is opt-in and toggles without starting/restarting the game',
 for (const ratio of [1, 2]) test(`blurred WebGL pixels match five translated poses at ${ratio}×, without atlas bleed or a stationary smear`, async ({ browser }) => {
   const page = await browser.newPage({ viewport: { width: 640, height: 480 }, deviceScaleFactor: ratio });
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const results = await page.evaluate(async (ratio) => {
-    const { ObjectExposure } = await import('/src/phaser/world/objectExposure.js');
-    const { exposeImages, exposureNodes } = await import('/src/phaser/world/objectExposureShader.js');
+    const { ObjectExposure } = await import('/src/render/world/objectExposure.js');
+    const { exposeImages, exposureNodes } = await import('/src/render/world/objectExposureShader.js');
     const { app, platform } = window.__liano;
     app.loop.sleep();
     app.scene.getScene('ui').cameras.main.setVisible(false);
@@ -119,11 +119,11 @@ for (const ratio of [1, 2]) test(`blurred WebGL pixels match five translated pos
 
 test('different velocities share one batch, without framebuffer or texture allocation during motion', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const result = await page.evaluate(async () => {
-    const { ObjectExposure } = await import('/src/phaser/world/objectExposure.js');
-    const { exposeImages, exposureNodes } = await import('/src/phaser/world/objectExposureShader.js');
+    const { ObjectExposure } = await import('/src/render/world/objectExposure.js');
+    const { exposeImages, exposureNodes } = await import('/src/render/world/objectExposureShader.js');
     const { app, platform } = window.__liano;
     app.loop.sleep();
     // Count only the test images, excluding every UI camera.

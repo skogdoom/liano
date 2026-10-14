@@ -2,9 +2,9 @@ import { WORLD_HEIGHT } from '../config.js';
 import { mulberry32 } from '../sim/rng.js';
 import { leafPoints, mixColor } from '../render/shapes.js';
 
-// The backdrop: what both versions draw from (no Pixi here). Colours, sizes, the drawing
-// functions (the Pixi view draws with them, and the art pieces are generated from them),
-// and where things go and how they move. The Pixi view is render/background.js.
+// The backdrop: plain drawing and placement data. Colours, sizes, the drawing
+// functions (the art pieces are generated from them),
+// and where things go and how they move.
 
 // Jungle backdrop: a fixed sky gradient, three parallax layers behind the world, and
 // a canopy strip and floor band in front of it that scroll with the world.
@@ -201,7 +201,7 @@ export function tintBetween(from, to, t) {
   return mixColor(from, to, u * u * (3 - 2 * u));
 }
 
-// The background's tint as the stages change (the view-model both versions use): it eases
+// The background's tint as the stages change (the pure view-model): it eases
 // over TINT_TIME towards the tint of the stage `world` has reached; a new world starts at
 // once from its first. `color` is the tint now.
 export class StageTint {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { layoutFor } from '../src/layout.js';
-import { configMenuLayout, panelPoint, resultsMenuLayout, titleMenuLayout, visibleMenuArea } from '../src/phaser/menuLayout.js';
+import { configMenuLayout, panelPoint, resultsMenuLayout, titleMenuLayout, visibleMenuArea } from '../src/render/menuLayout.js';
 
 describe('Phaser menus in the visible browser area', () => {
   const screens = [

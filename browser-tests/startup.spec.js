@@ -4,7 +4,7 @@ import { collectErrors } from './helpers.js';
 
 async function ready(page) {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   return errors;
 }
@@ -60,7 +60,7 @@ test('cached Phaser audio matches synthesis, including overlapping sounds at bot
   const errors = await ready(page);
   const results = await page.evaluate(async () => {
     const { SoundPlayer } = await import('/src/audio/player.js');
-    const { SoundCache } = await import('/src/phaser/soundCache.js');
+    const { SoundCache } = await import('/src/audio/cache.js');
     const { BONG_PITCH, bong, crash, lifeUp, pling } = await import('/src/audio/recipes.js');
     const all = [...Object.keys(BONG_PITCH).map((type) => [bong(type)]), [crash()], [pling()], [lifeUp()], [bong('temple'), lifeUp(), pling()]];
     const out = [];

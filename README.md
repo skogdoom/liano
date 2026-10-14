@@ -36,7 +36,7 @@ Press **1**, **2** or **3** on the title screen for one player, two players on a
 
 ## Technology
 
-JavaScript (ES modules), [PixiJS](https://pixijs.com/) 8 for rendering, [Vite](https://vite.dev/) for dev and build, [Vitest](https://vitest.dev/) for tests. Art is drawn in code, sounds are synthesized with the Web Audio API, and there is no backend.
+JavaScript (ES modules), [Phaser](https://phaser.io/) 4 for rendering, input and sound, [Vite](https://vite.dev/) for dev and build, [Vitest](https://vitest.dev/) for tests. Art is generated as SVG and packed into replaceable texture atlases, sounds are synthesized with the Web Audio API, and there is no backend.
 
 ## Running it
 

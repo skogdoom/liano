@@ -7,8 +7,8 @@
 // (the browser or the audio device left it stuck after a window switch) is replaced at
 // the next gesture.
 //
-// The Phaser version plays through Phaser's context and output (phaser/sound.js), with
-// the hooks below; their defaults are the Pixi version's own context.
+// The game's manager adapter (audio/manager.js) uses Phaser's context and output.
+// The defaults also support standalone and offline synthesis.
 
 const MASTER_GAIN = 0.6;
 const STOP_FADE = 0.05; // s

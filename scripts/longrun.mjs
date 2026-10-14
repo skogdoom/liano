@@ -1,13 +1,13 @@
 // A long-run check of the real game in headless Chromium: a bot plays perfectly (it solves each
 // grab's release window) while the frame loop is fed `frameMs` of game time per frame as fast as it
-// will go, with performance.now() following the game time so Pixi's time-based clean-up runs as in
+// will go, with performance.now() following the game time so resource timing runs as in
 // play. Every `every` game seconds it samples the heap (after a GC every GC_EVERY samples), the
 // frame times (JS side; the renderer runs every RENDER_EVERY-th frame), the GPU work of the drawn
 // frames (counted at the WebGL calls) and counts of what the game and the renderer hold, to see
 // leaks and slowdowns. See PLAN.md, "Performance and hardening", and PHASER_PLAN.md, M7.
 //
-// ENGINE=phaser runs the Phaser version (its loop stopped and stepped by hand: `game.step` on the
-// drawn frames, `game.headlessStep` on the others); the default is the Pixi version.
+// The game loop is stopped and stepped by hand: `game.step` on drawn frames,
+// `game.headlessStep` on the others.
 //
 // HITCHES=1 times every frame (use RENDER_EVERY=1) and, at the end, sets those that built the
 // view of an obstacle seen for the first time against the others. MOTION=1 counts the drawn
@@ -16,7 +16,7 @@
 //
 // Needs `playwright-core` (`npm i --no-save playwright-core`) and a Chromium (set CHROMIUM, default
 // /opt/pw-browsers/chromium), and the dev server running (`npm run dev -- --port 5199`: the game's `window.__liano` hooks are dev-only).
-// Usage: [ENGINE=pixi|phaser] [KEYS=KeyG,KeyH,KeyS] [RENDER_EVERY=90] [GC_EVERY=4] node scripts/longrun.mjs <game minutes>
+// Usage: [KEYS=KeyG,KeyH,KeyS] [RENDER_EVERY=90] [GC_EVERY=4] node scripts/longrun.mjs <game minutes>
 //        <sample every game seconds> [frameMs=33] [out.json] [mode=solo|shared|split]
 import { chromium } from 'playwright-core';
 import { writeFileSync } from 'node:fs';
@@ -28,10 +28,9 @@ const browser = await chromium.launch({
 const page = await (await browser.newContext({ viewport: { width: 640, height: 360 }, deviceScaleFactor: 1 })).newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
-const engine = process.env.ENGINE ?? 'pixi';
-await page.goto(`${process.env.URL ?? 'http://localhost:5199/'}?engine=${engine}`);
+await page.goto(process.env.URL ?? 'http://localhost:5199/');
 // The Phaser version plays once its main art set is in.
-await page.waitForFunction(() => window.__liano?.game && (window.__liano.engine !== 'phaser' || window.__liano.platform.world), null, { timeout: 90000 });
+await page.waitForFunction(() => window.__liano?.platform.world, null, { timeout: 90000 });
 const cdp = await page.context().newCDPSession(page);
 await cdp.send('HeapProfiler.enable');
 await page.waitForTimeout(500);
@@ -40,38 +39,29 @@ await page.evaluate(({ keys, every }) => { window.__keys = keys; window.__render
 await page.evaluate(async ({ frameMs, mode, hitches, motion }) => {
   const L = window.__liano;
   const { app, game } = L;
-  const phaser = L.engine === 'phaser';
   const F = await import('/src/sim/feasibility.js');
   const SIM_DT = 1 / 120;
   const bot = (window.__bot = { t: performance.now(), key: null, target: null, frames: [], render: [], deaths: 0, pressed: 0, renderMs: 0, frameMs, draws: 0, drawn: 0, hitches, motion });
   // What the first pane draws: its obstacles' views, the camera, player 1's monkey.
-  const pane = () => (phaser ? L.platform.world.panes[0] : L.views.panes[0]);
-  const obstacleViews = () => (phaser ? pane().obstacles.rigs : pane().obstacleViews.views);
+  const pane = () => L.platform.world.panes[0];
+  const obstacleViews = () => pane().obstacles.rigs;
   const drawnAt = () => {
     const p = pane();
-    const monkey = phaser ? p.monkeys[0]?.view : p.monkeyViews[0]?.view;
+    const monkey = p.monkeys[0]?.view;
     return [p.worldLayer.x, monkey?.x ?? 0, monkey?.y ?? 0];
   };
   bot.seen = new Set();
   bot.frameLog = []; // HITCHES: [ms, a new obstacle view]
   bot.still = 0; bot.moving = 0; bot.last = null; // MOTION
-  if (phaser) app.loop.sleep();
-  else {
-    app.ticker.stop();
-    app.ticker.lastTime = bot.t;
-  }
-  // Pixi's resource clean-up goes by performance.now(): make it follow the game's fast-forwarded time.
+  app.loop.sleep();
+  // Make resource timing follow the game's fast-forwarded time.
   const real = performance.now.bind(performance);
   performance.now = () => bot.t;
   // Time the renderer apart from the rest of the frame.
   bot.renderEvery = +(window.__renderEvery ?? 8); bot.n = 0;
   const timed = (render) => (...a) => { const t0 = real(); render(...a); bot.renderMs += real() - t0; bot.drawn++; };
   const r = app.renderer;
-  if (phaser) app.scene.render = timed(app.scene.render.bind(app.scene));
-  else {
-    const orig = timed(r.render.bind(r));
-    r.render = (...a) => { if (bot.n++ % bot.renderEvery) return; orig(...a); };
-  }
+  app.scene.render = timed(app.scene.render.bind(app.scene));
   // The GPU work, at the WebGL calls: draw calls, and the textures alive.
   const gl = r.gl;
   for (const name of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced']) {
@@ -142,8 +132,7 @@ await page.evaluate(async ({ frameMs, mode, hitches, motion }) => {
       const hanging = game.world.monkey.state === 'HANGING';
       const u0 = bot.uploads;
       const t0 = real();
-      if (!phaser) app.ticker.update(bot.t);
-      else if (bot.n++ % bot.renderEvery) app.headlessStep(bot.t, bot.frameMs);
+      if (bot.n++ % bot.renderEvery) app.headlessStep(bot.t, bot.frameMs);
       else app.step(bot.t, bot.frameMs);
       const ms = real() - t0;
       times.push(ms);
@@ -166,20 +155,12 @@ await page.evaluate(async ({ frameMs, mode, hitches, motion }) => {
   };
   bot.census = () => {
     let nodes = 0; const types = {};
-    const walk = (c) => { nodes++; const n = c.constructor.name; types[n] = (types[n] ?? 0) + 1; for (const ch of (phaser ? c.list : c.children) ?? []) walk(ch); };
-    if (phaser) for (const scene of app.scene.getScenes(true)) for (const o of scene.children.list) walk(o);
-    else walk(app.stage);
+    const walk = (c) => { nodes++; const n = c.constructor.name; types[n] = (types[n] ?? 0) + 1; for (const ch of c.list ?? []) walk(ch); };
+    for (const scene of app.scene.getScenes(true)) for (const o of scene.children.list) walk(o);
     const w = game.world;
-    const counts = phaser
-      ? (() => {
-          const pane = L.platform.world.panes[0];
-          return { obstacleViews: pane.obstacles.rigs.size, bananaViews: pane.bananas.entries.size, gpuContexts: null, textures: app.textures.getTextureKeys().length };
-        })()
-      : (() => {
-          const v = L.views.panes[0];
-          const gc = r.graphicsContext;
-          return { obstacleViews: v.obstacleViews.views.size, bananaViews: v.bananaViews.views.size, gpuContexts: gc?._gpuContextHash ? Object.keys(gc._gpuContextHash).length : null, textures: r.texture?.managedTextures?.length ?? null };
-        })();
+    const p = pane();
+    const counts = { obstacleViews: p.obstacles.rigs.size, bananaViews: p.bananas.entries.size,
+      textures: app.textures.getTextureKeys().length };
     return {
       nodes, types,
       lianas: w.lianas.size, obstacles: w.obstacles.size, bananas: w.bananas.size,

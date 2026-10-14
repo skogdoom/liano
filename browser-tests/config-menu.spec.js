@@ -4,7 +4,7 @@ import { collectErrors, menuLabelPoint, openConfig, panelPoint } from './helpers
 
 test('C opens the title submenu, isolates its keys and preserves the selected match mode on reload', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   await expect(page.locator('#graphics-quality')).toHaveCount(0);
   await page.keyboard.press('Digit2');
@@ -30,7 +30,7 @@ test('C opens the title submenu, isolates its keys and preserves the selected ma
 test('config uses the title artwork and shows the selected graphics choice', async ({ page }) => {
   const errors = collectErrors(page);
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto(`${DEV}?engine=phaser&resolution=1.5`);
+  await page.goto(`${DEV}?resolution=1.5`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   await page.screenshot({ path: '/tmp/liano-title-config.png' });
   await openConfig(page);
@@ -59,7 +59,7 @@ test('config uses the title artwork and shows the selected graphics choice', asy
 test('portrait config taps stay inside the game and the panel fits after resizing', async ({ browser }) => {
   const page = await browser.newPage({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const entry = await menuLabelPoint(page, 'title', 'configEntry');
   await page.touchscreen.tap(entry.x, entry.y);

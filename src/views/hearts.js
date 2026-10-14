@@ -1,8 +1,8 @@
 import { LIVES_2P } from '../config.js';
 
-// Hearts: what both versions draw from (no Pixi here). Colours, sizes, the drawing
-// functions (the Pixi view draws with them, and the art pieces are generated from them),
-// and where things go and how they move. The Pixi view is render/heartView.js.
+// Hearts: plain drawing and placement data. Colours, sizes, the drawing
+// functions (the art pieces are generated from them),
+// and where things go and how they move.
 
 export const RED = 0xe8334a;
 export const RED_DARK = 0x9c1f33;

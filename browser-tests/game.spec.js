@@ -8,7 +8,7 @@ import { collectErrors, started } from './helpers.js';
 // Opens the Phaser version and waits until it takes presses.
 async function phaser(page) {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await started(page, errors);
   await page.waitForFunction(() => window.__liano.input && window.__liano.pause.acceptsInput());
   return errors;
@@ -183,11 +183,11 @@ test('the Phaser version starts its sound at the first gesture, plays on Phaser�
 // 16-bit step (3e-5).
 const SAME_WITHIN = 1e-6;
 
-test('every sound renders the same, sample for sample, through Phaser’s nodes as through the Pixi version’s', async ({ page }) => {
+test('every sound renders the same, sample for sample, through the sound manager as through the synthesized recipes', async ({ page }) => {
   const errors = await phaser(page);
   const results = await page.evaluate(async () => {
     const { SoundPlayer } = await import('/src/audio/player.js');
-    const { createPhaserSoundPlayer } = await import('/src/phaser/sound.js');
+    const { createPhaserSoundPlayer } = await import('/src/audio/manager.js');
     const recipes = await import('/src/audio/recipes.js');
     const all = [...Object.keys(recipes.BONG_PITCH).map((type) => recipes.bong(type)), recipes.crash(), recipes.pling(), recipes.lifeUp()];
     const RATE = 44100;
@@ -203,11 +203,11 @@ test('every sound renders the same, sample for sample, through Phaser’s nodes 
     for (const recipe of all) {
       const length = Math.ceil(recipe.duration * RATE) + 128;
       seeded();
-      const pixiCtx = new OfflineAudioContext(1, length, RATE);
-      const pixi = new SoundPlayer({ createContext: () => pixiCtx });
-      pixi.unlock();
-      pixi.play(recipe);
-      const a = (await pixiCtx.startRendering()).getChannelData(0);
+      const recipeCtx = new OfflineAudioContext(1, length, RATE);
+      const reference = new SoundPlayer({ createContext: () => recipeCtx });
+      reference.unlock();
+      reference.play(recipe);
+      const a = (await recipeCtx.startRendering()).getChannelData(0);
       seeded();
       const phaserCtx = new OfflineAudioContext(1, length, RATE);
       // Phaser closes the context it leaves; an offline one has no close().
@@ -237,7 +237,7 @@ test('every sound renders the same, sample for sample, through Phaser’s nodes 
   expect(errors).toEqual([]);
 });
 
-// A batch takes one texture (phaser/shaders.js), so each kind of batch (images,
+// A batch takes one texture (render/shaders.js), so each kind of batch (images,
 // ropes) has one shader, the cheapest, compiled before the title: an obstacle first
 // showing compiles nothing in play, which stalled Safari.
 test('the Phaser version draws every batch of a kind with one shader', async ({ page }) => {
