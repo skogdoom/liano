@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { MAX_RESOLUTION } from '../config.js';
 import { FULLSCREEN_HIT, MUTE_HIT, controlsPoint, inside } from '../controls.js';
 import { createDriver } from '../driver.js';
 import { PhaserFrameClock } from './frameClock.js';
@@ -18,7 +17,7 @@ import { createPhaserFullscreen } from './fullscreen.js';
 import { phaserKeys, phaserPointers } from './input.js';
 import { BootScene, PlayScene, UiScene } from './scenes.js';
 import { createPhaserSoundPlayer } from './sound.js';
-import { canvasSize, viewCamera } from './view.js';
+import { canvasSize, resolutionLimit, viewCamera } from './view.js';
 import { oneTexturePerBatch } from './shaders.js';
 import { installObstacleBlur } from './obstacleBlur.js';
 
@@ -42,7 +41,8 @@ window.addEventListener('error', (event) => {
 });
 window.addEventListener('unhandledrejection', (event) => fail(event.reason));
 
-const ratio = () => pixelRatio(window, MAX_RESOLUTION);
+const resolutionCap = resolutionLimit(location.search);
+const ratio = () => pixelRatio(window, resolutionCap);
 const initial = canvasSize(window.innerWidth, window.innerHeight, ratio());
 
 game = new Phaser.Game({
@@ -72,6 +72,7 @@ oneTexturePerBatch(game.renderer);
 
 const platform = new Phaser.Events.EventEmitter();
 game.registry.set('platform', platform);
+platform.resolutionLimit = resolutionCap;
 installObstacleBlur(platform);
 blockBrowserGestures(game.canvas);
 

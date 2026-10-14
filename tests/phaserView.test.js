@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { layoutFor } from '../src/layout.js';
-import { applyViewCamera, canvasSize, rectCamera, viewCamera } from '../src/phaser/view.js';
+import { applyViewCamera, canvasSize, rectCamera, resolutionLimit, viewCamera } from '../src/phaser/view.js';
 import { paneLayouts } from '../src/layout.js';
 import { ENTER_FULLSCREEN, LEAVE_FULLSCREEN, createPhaserFullscreen } from '../src/phaser/fullscreen.js';
 
@@ -8,6 +8,16 @@ import { ENTER_FULLSCREEN, LEAVE_FULLSCREEN, createPhaserFullscreen } from '../s
 const onCanvas = (camera, vx, vy) => [camera.x + (vx - camera.scrollX) * camera.zoom, camera.y + (vy - camera.scrollY) * camera.zoom];
 
 describe('the Phaser view on the screen', () => {
+  it('accepts a rendering-density cap without allowing invalid or oversized canvases', () => {
+    expect(resolutionLimit('?resolution=1')).toBe(1);
+    expect(resolutionLimit('?resolution=1.5')).toBe(1.5);
+    expect(resolutionLimit('?resolution=2')).toBe(2);
+    for (const search of ['', '?resolution=', '?resolution=0', '?resolution=-1',
+      '?resolution=0.5', '?resolution=3', '?resolution=Infinity', '?resolution=oops']) {
+      expect(resolutionLimit(search)).toBe(2);
+    }
+  });
+
   it('sizes the canvas in device pixels', () => {
     expect(canvasSize(375, 812, 2)).toEqual({ width: 750, height: 1624 });
     expect(canvasSize(1001, 601, 1.5)).toEqual({ width: 1502, height: 902 });

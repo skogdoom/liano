@@ -58,6 +58,7 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
     userAgent: win.navigator.userAgent,
     url: `${win.location.origin}${win.location.pathname}${win.location.search}`,
     devicePixelRatio: win.devicePixelRatio,
+    resolutionLimit: platform.resolutionLimit,
     context: app.renderer.gl.getContextAttributes(),
     frameClock: 'phaser-callback-phase-v1',
     gpuTimingMeasured: false,
@@ -129,10 +130,12 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
       paused: frame.paused, alive: platform.game.worlds.some((w) => w.alive),
       state: platform.game.state, mode: platform.game.mode, world: worldId, zoom,
       canvas: [app.canvas.width, app.canvas.height],
+      renderPixelRatio: 1 / app.scale.zoom,
       events: frame.events.map((e) => e.type), panes,
     });
   });
-  const snapshot = () => trace.snapshot({ ...info, prepared: platform.prepared, capturedAt: new Date().toISOString() });
+  const snapshot = () => trace.snapshot({ ...info, artScale: platform.art?.scale,
+    prepared: platform.prepared, capturedAt: new Date().toISOString() });
   const button = doc.createElement('button');
   button.id = 'save-frame-trace';
   button.textContent = 'Save frame trace';

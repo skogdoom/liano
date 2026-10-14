@@ -412,3 +412,29 @@ The submitted motion also exposes two separate discontinuities:
   uneven advances; it cannot make them uniform. This warrants investigating the
   cadence-change fallback with the surrounding timing history, rather than
   increasing the exposure or changing gameplay speed.
+
+## Optional Phaser rendering-resolution experiment
+
+Use `?engine=phaser&resolution=1.5&frames=1` to cap rendering at 1.5 device pixels
+per CSS pixel. Compare with `?engine=phaser&frames=1` for the ordinary cap of 2.
+`resolution=1` provides a stronger reduction if needed. Keep obstacle blur off
+for this comparison. Reload to change the cap; this avoids texture regeneration
+or resizing during a measured swing. Values from 1 through 2 are accepted;
+missing, invalid and out-of-range values retain the ordinary cap. Lower-density
+screens are never upscaled to meet the cap. Pixi does not read this option.
+
+The CSS canvas size, world layout, camera's position in world units, simulation,
+controls and movement speed use their existing rules. Only canvas pixel density
+and its corresponding camera/text rendering scale change. On the tested 1440×823
+CSS viewport at DPR 2, the canvas changes from 2880×1646 to 2160×1235: about 44%
+fewer pixels. Edges and text may look softer. Density changes and window resizing
+continue to respect the selected cap.
+
+The art loader uses its existing atlas-scale selection at the reduced camera
+zoom, so this experiment can also reduce texture size/memory when it crosses an
+atlas-scale threshold. It therefore tests a reduction in overall rendering load,
+not solely pixel fill rate. Frame captures now include `info.resolutionLimit`,
+`info.artScale` and each frame's `renderPixelRatio`, alongside the existing canvas
+dimensions. These identify the actual resolution used rather than inferring it
+from the browser's device pixel ratio. They still do not measure GPU completion
+or physical presentation; Safari smoothness needs the device comparison.
