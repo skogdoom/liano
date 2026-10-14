@@ -1,8 +1,8 @@
 import { BANANA_RADIUS } from '../config.js';
 
-// Bananas: what both versions draw from (no Pixi here). Colours, sizes, the drawing
-// functions (the Pixi view draws with them, and the art pieces are generated from them),
-// and where things go and how they move. The Pixi view is render/bananaView.js.
+// Bananas: plain drawing and placement data. Colours, sizes, the drawing
+// functions (the art pieces are generated from them),
+// and where things go and how they move.
 
 export const PEEL = 0xffd23f;
 export const RIDGE = 0xfff3a0;

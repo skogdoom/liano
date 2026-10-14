@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyResolutionChoice, resolutionChoice, resolutionLimit, RESOLUTION_STORAGE_KEY } from '../src/phaser/resolution.js';
+import { applyResolutionChoice, resolutionChoice, resolutionLimit, RESOLUTION_STORAGE_KEY } from '../src/platform/resolution.js';
 import { pixelRatio } from '../src/screen.js';
 
 const safari = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/26.5.2 Safari/605.1.15';

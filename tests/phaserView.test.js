@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { layoutFor } from '../src/layout.js';
-import { applyViewCamera, canvasSize, rectCamera, resolutionLimit, viewCamera } from '../src/phaser/view.js';
+import { applyViewCamera, canvasSize, rectCamera, resolutionLimit, viewCamera } from '../src/platform/view.js';
 import { paneLayouts } from '../src/layout.js';
-import { ENTER_FULLSCREEN, LEAVE_FULLSCREEN, createPhaserFullscreen } from '../src/phaser/fullscreen.js';
+import { ENTER_FULLSCREEN, LEAVE_FULLSCREEN, createPhaserFullscreen } from '../src/platform/fullscreen.js';
 
 // Where a camera placed by viewCamera draws a view point, in canvas pixels.
 const onCanvas = (camera, vx, vy) => [camera.x + (vx - camera.scrollX) * camera.zoom, camera.y + (vy - camera.scrollY) * camera.zoom];

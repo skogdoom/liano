@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ObjectExposure, expandExposure } from '../src/phaser/world/objectExposure.js';
+import { ObjectExposure, expandExposure } from '../src/render/world/objectExposure.js';
 
 const quad = (x, y = 0) => new Float32Array([x, y, x, y + 10, x + 20, y + 10, x + 20, y]);
 const frame = () => ({ u0: 0.2, v0: 0.3, u1: 0.4, v1: 0.5 });

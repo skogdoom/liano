@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SoundCache } from '../src/phaser/soundCache.js';
+import { SoundCache } from '../src/audio/cache.js';
 import { BONG_PITCH, bong, crash, lifeUp, pling } from '../src/audio/recipes.js';
 import { SoundPlayer } from '../src/audio/player.js';
 import { FakeAudioContext } from './fakeAudio.js';

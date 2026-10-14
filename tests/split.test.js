@@ -142,7 +142,7 @@ describe('split screen', () => {
 
 describe('two-player HUD', () => {
   it('shows each player’s score, and OUT when they have no lives (the hearts are drawn, see hearts.test.js)', async () => {
-    const { playerLine } = await import('../src/render/hud.js');
+    const { playerLine } = await import('../src/views/hud.js');
     const game = splitGame();
     game.press('start');
     game.worlds[1].scores[0] = 7;

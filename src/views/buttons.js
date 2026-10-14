@@ -1,7 +1,6 @@
-// The mute and full-screen buttons: what both versions draw from (no Pixi here). They sit
+// The mute and full-screen buttons: plain drawing and placement data. They sit
 // in the top-left corner inside the safe area, scaled by the layout's `ui`; their tap
-// targets are in controls.js. The Pixi views are render/muteButton.js and
-// render/fullscreenButton.js.
+// targets are in controls.js.
 
 const CREAM = 0xf4e7c5;
 const OUTLINE = 0x2a1a0c;

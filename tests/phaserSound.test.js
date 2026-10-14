@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { crash } from '../src/audio/recipes.js';
-import { createPhaserSoundPlayer, ignoreRefusals } from '../src/phaser/sound.js';
+import { createPhaserSoundPlayer, ignoreRefusals } from '../src/audio/manager.js';
 import { FakeAudioContext } from './fakeAudio.js';
 
 // Phaser's WebAudioSoundManager, as far as the player uses it: its context, its master

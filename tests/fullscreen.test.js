@@ -1,32 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createFullscreen, bindFullscreenControls } from '../src/fullscreen.js';
+import { bindFullscreenControls } from '../src/fullscreen.js';
 import { createInput } from '../src/input.js';
-
-// A document with the standard API, the webkit-prefixed one, or none (iPhone).
-function fakeDocument(api = 'standard', { rejects = false } = {}) {
-  const doc = new EventTarget();
-  const root = {};
-  doc.documentElement = root;
-  let element = null;
-  const set = (value, type) => {
-    element = value;
-    doc.dispatchEvent(new Event(type));
-  };
-  if (api === 'standard') {
-    doc.fullscreenEnabled = true;
-    Object.defineProperty(doc, 'fullscreenElement', { get: () => element });
-    root.requestFullscreen = vi.fn(() => (rejects ? Promise.reject(new Error('denied')) : (set(root, 'fullscreenchange'), Promise.resolve())));
-    doc.exitFullscreen = vi.fn(() => (set(null, 'fullscreenchange'), Promise.resolve()));
-  } else if (api === 'webkit') {
-    doc.webkitFullscreenEnabled = true;
-    Object.defineProperty(doc, 'webkitFullscreenElement', { get: () => element });
-    root.webkitRequestFullscreen = vi.fn(() => set(root, 'webkitfullscreenchange'));
-    doc.webkitExitFullscreen = vi.fn(() => set(null, 'webkitfullscreenchange'));
-  } else {
-    doc.fullscreenEnabled = undefined;
-  }
-  return doc;
-}
 
 function keydown(target, props) {
   target.dispatchEvent(Object.assign(new Event('keydown', { cancelable: true }), { repeat: false, ...props }));
@@ -36,59 +10,6 @@ function pointer(target, type, { pointerId = 1, onButton = true } = {}) {
   const event = Object.assign(new Event(type, { cancelable: true }), { pointerId, pointerType: 'touch', button: 0, onButton });
   target.dispatchEvent(event);
 }
-
-describe('fullscreen', () => {
-  it('enters and leaves with the standard API, reporting each change', () => {
-    const doc = fakeDocument('standard');
-    const onChange = vi.fn();
-    const fs = createFullscreen(doc, { onChange });
-    expect(fs.supported).toBe(true);
-    fs.toggle();
-    expect(doc.documentElement.requestFullscreen).toHaveBeenCalledOnce();
-    expect(fs.active).toBe(true);
-    fs.toggle();
-    expect(doc.exitFullscreen).toHaveBeenCalledOnce();
-    expect(fs.active).toBe(false);
-    expect(onChange.mock.calls).toEqual([[true], [false]]);
-  });
-
-  it('falls back to the webkit-prefixed API', () => {
-    const doc = fakeDocument('webkit');
-    const onChange = vi.fn();
-    const fs = createFullscreen(doc, { onChange });
-    expect(fs.supported).toBe(true);
-    fs.toggle();
-    expect(fs.active).toBe(true);
-    fs.toggle();
-    expect(fs.active).toBe(false);
-    expect(onChange.mock.calls).toEqual([[true], [false]]);
-  });
-
-  it('is unsupported without the API (iPhone Safari), and toggling does nothing', () => {
-    const fs = createFullscreen(fakeDocument('none'));
-    expect(fs.supported).toBe(false);
-    expect(() => fs.toggle()).not.toThrow();
-    expect(fs.active).toBe(false);
-  });
-
-  it('ignores a refused request', async () => {
-    const doc = fakeDocument('standard', { rejects: true });
-    const fs = createFullscreen(doc);
-    fs.toggle();
-    await Promise.resolve();
-    expect(fs.active).toBe(false);
-  });
-
-  it('follows a change made outside the game (Esc)', () => {
-    const doc = fakeDocument('standard');
-    const onChange = vi.fn();
-    const fs = createFullscreen(doc, { onChange });
-    fs.toggle();
-    doc.exitFullscreen(); // what the browser does on Esc
-    expect(onChange).toHaveBeenLastCalledWith(false);
-    expect(fs.active).toBe(false);
-  });
-});
 
 describe('fullscreen controls', () => {
   function setup() {

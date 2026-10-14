@@ -571,38 +571,3 @@ describe('the shadow key', () => {
     expect(input.consumePress('primary')).toBe(false);
   });
 });
-
-describe('the shadow drawn', () => {
-  it('shows a grey, see-through liana of its own while the shadow hangs on it, and nothing without', async () => {
-    const { ShadowView, SHADOW_ALPHA, SHADOW_FUR } = await import('../src/render/shadowView.js');
-    const view = new ShadowView();
-    expect(view.view.visible).toBe(false);
-    expect(view.view.alpha).toBe(SHADOW_ALPHA);
-    expect(SHADOW_ALPHA).toBeLessThan(0.5);
-    // Grey: the three channels of every fur colour are close.
-    for (const color of Object.values(SHADOW_FUR)) {
-      const [r, g, b] = [(color >> 16) & 255, (color >> 8) & 255, color & 255];
-      expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThan(24);
-    }
-    const frame = shadowMonkey();
-    const held = new Liana(1, 700);
-    held.grab(1);
-    Object.assign(frame, { x: 1000, y: 200, state: MonkeyState.HANGING, liana: held, lianas: [{ liana: held, alpha: 1 }] });
-    view.update(frame, 0.016);
-    expect(view.view.visible).toBe(true);
-    expect(view.monkey.view.position.x).toBe(1000);
-    expect(view.lianas).toHaveLength(1);
-    expect(view.lianas[0].visible).toBe(true);
-    expect(view.lianas[0].alpha).toBe(1);
-    // Fading: the liana's own alpha, on top of the shadow's.
-    frame.lianas = [{ liana: held, alpha: 0.3 }];
-    view.update(frame, 0.016);
-    expect(view.lianas[0].alpha).toBeCloseTo(0.3, 9);
-    // Flying: no liana, not even one that still sways.
-    Object.assign(frame, { state: MonkeyState.AIRBORNE, liana: null, lianas: [] });
-    view.update(frame, 0.016);
-    expect(view.lianas[0].visible).toBe(false);
-    view.update(null, 0.016);
-    expect(view.view.visible).toBe(false);
-  });
-});

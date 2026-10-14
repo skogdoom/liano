@@ -1,0 +1,67 @@
+{
+  "sourceCommit": "b60325c3a55b7d609b5569fc092b7134bf85954f",
+  "renderer": "Phaser 4.2.1 / Chromium / SwiftShader",
+  "references": [
+    {
+      "id": "world.monkeys",
+      "width": 640,
+      "height": 220
+    },
+    {
+      "id": "world.lianas",
+      "width": 2300,
+      "height": 470
+    },
+    {
+      "id": "world.shadow",
+      "width": 560,
+      "height": 470
+    },
+    {
+      "id": "world.decoration.panther",
+      "width": 1200,
+      "height": 626
+    },
+    {
+      "id": "world.moving.spider",
+      "width": 1080,
+      "height": 626
+    },
+    {
+      "id": "world.bananas",
+      "width": 1280,
+      "height": 360
+    },
+    {
+      "id": "scene.day",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "id": "scene.night",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "id": "scene.temple.3.dusk",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "id": "ui.hud.shared",
+      "width": 640,
+      "height": 160
+    },
+    {
+      "id": "ui.title.shared",
+      "width": 500,
+      "height": 520
+    },
+    {
+      "id": "ui.results.2p",
+      "width": 560,
+      "height": 420
+    }
+  ],
+  "version": "3.0.0-dev.8"
+}

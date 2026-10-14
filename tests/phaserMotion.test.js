@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { GRAVITY, SIM_DT } from '../src/config.js';
 import { World } from '../src/sim/world.js';
-import { WorldMotion } from '../src/phaser/world/motion.js';
+import { WorldMotion } from '../src/render/world/motion.js';
 import { LianaState } from '../src/sim/liana.js';
 import { MonkeyPose } from '../src/views/monkey.js';
 import { createFixedStepLoop } from '../src/loop.js';

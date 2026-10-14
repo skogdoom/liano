@@ -13,7 +13,7 @@ try {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     const url = new URL(process.env.URL ?? 'http://localhost:5174/');
-    url.searchParams.set('engine', 'phaser');
+
     if (enabled) url.searchParams.set('obstacleblur', 'on');
     await page.goto(url.href);
     await page.waitForFunction(() => window.__liano?.platform.world);

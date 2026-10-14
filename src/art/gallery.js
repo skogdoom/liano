@@ -1,11 +1,10 @@
-import { Application, Container, Graphics } from 'pixi.js';
-import { PARITY, compareImages, solidPixels } from '../parity/diff.js';
+import { PARITY, compareImages, solidPixels } from '../visualDiff.js';
 import { ATLAS_SCALES, TILE_EDGE } from './catalog.js';
 import { frameName } from './piece.js';
 import { PIECES } from './pieces/index.js';
 
 // The art gallery (art.html, dev only): every piece and frame from the built atlases next
-// to the game's drawing of it, the difference between them (as on the parity page), the
+// to the game's drawing of it, the difference between them, the
 // contract and the guides. Results on `window.__gallery` for the browser tests.
 //
 // What counts as identical (PHASER_PLAN.md, section 1) is for scenes. A small piece's cell
@@ -21,7 +20,6 @@ const scale = ATLAS_SCALES.includes(Number(params.get('scale'))) ? Number(params
 const frameSolidLimit = (PARITY.solidPerMillion * SCENE_PIXELS * scale ** 2) / 1e6;
 const guides = params.get('guides') !== 'off';
 const only = params.get('piece');
-const BACKGROUND = 0x4a8060;
 const css = '#4a8060';
 
 const controls = document.querySelector('.controls');
@@ -87,57 +85,23 @@ function drawGuides(context, contract, zoom) {
   }
 }
 
-const app = new Application();
-await app.init({ width: 64, height: 64, preference: 'webgl', antialias: true, resolution: 1, background: BACKGROUND, preserveDrawingBuffer: true, autoStart: false });
-
-// A Graphics that draws everything `zoom` times larger. Pixi builds a drawing's triangles
-// in its own units, so a container scaled up shows a small round end or join as the few
-// corners it was built with; drawn at the final size, it is as round as in the atlas.
-const SCALED_ARGS = { rect: 4, roundRect: 5, circle: 3, ellipse: 4, moveTo: 2, lineTo: 2, quadraticCurveTo: 4, bezierCurveTo: 6, arc: 3 };
-function zoomed(g, zoom) {
-  const proxy = new Proxy(g, {
-    get(target, name) {
-      const value = target[name];
-      if (typeof value !== 'function') return value;
-      return (...args) => {
-        if (name in SCALED_ARGS) args = args.map((a, k) => (k < SCALED_ARGS[name] ? a * zoom : a));
-        else if (name === 'poly') args = [args[0].map((a) => a * zoom), ...args.slice(1)];
-        else if (name === 'stroke') {
-          const style = typeof args[0] === 'number' ? { color: args[0] } : (args[0] ?? {});
-          args = [{ ...style, width: (style.width ?? 1) * zoom }];
-        }
-        const result = value.apply(target, args);
-        return result === target ? proxy : result;
-      };
-    },
-  });
-  return proxy;
-}
-
-// The game's drawing of one frame, in a w × h cell at `zoom` px per unit, the cell's
-// corner at `box`'s.
-function pixiFrame(piece, i, box, w, h, zoom) {
-  app.renderer.resize(w, h);
-  const world = new Container();
-  const g = new Graphics();
-  // A see-through piece: Pixi blends each shape on its own at the Graphics' alpha.
-  g.alpha = piece.alpha ?? 1;
-  piece.frames[i](zoomed(g, zoom));
-  // Nothing to draw (a wing seen edge on): the renderer would leave the last picture.
-  if (g.bounds.width === 0 || g.bounds.height === 0) {
-    g.destroy();
-    const blank = canvasOf(w, h);
-    return { canvas: blank.canvas, data: blank.context.getImageData(0, 0, w, h).data };
+// Rasterize the generated SVG at the exact cell size used by the atlas build.
+// This keeps the artist's gallery independent of a game rendering library.
+async function svgFrame(piece, i, box, w, h, zoom) {
+  const source = await (await fetch(`/art/generated/${frameName(piece, i)}.svg`)).text();
+  const svg = new DOMParser().parseFromString(source, 'image/svg+xml').documentElement;
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', `${box.x} ${box.y} ${w / zoom} ${h / zoom}`);
+  const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' }));
+  try {
+    const image = await loadImage(url);
+    const { canvas, context } = canvasOf(w, h);
+    context.drawImage(image, 0, 0);
+    return { canvas, data: context.getImageData(0, 0, w, h).data };
+  } finally {
+    URL.revokeObjectURL(url);
   }
-  world.addChild(g);
-  world.position.set(-box.x * zoom, -box.y * zoom);
-  app.stage.removeChildren();
-  app.stage.addChild(world);
-  app.render();
-  const { canvas, context } = canvasOf(w, h);
-  context.drawImage(app.canvas, 0, 0, w, h);
-  world.destroy({ children: true });
-  return { canvas, data: context.getImageData(0, 0, w, h).data };
 }
 
 // Blurs RGBA `data` (w × h) sideways, wrapping around as a repeating tile does, with a
@@ -219,7 +183,7 @@ for (const piece of PIECES) {
     }
     const builtData = built.context.getImageData(0, 0, w, h).data;
     if (guides) drawGuides(built.context, contract, at.zoom);
-    const drawn = pixiFrame(piece, i, contract.box, w, h, at.zoom);
+    const drawn = await svgFrame(piece, i, contract.box, w, h, at.zoom);
     // A softened piece: the drawing blurred sideways as the build blurs it.
     if (contract.soften) {
       blurSideways(drawn.data, w, h, contract.soften * at.zoom, contract.kind === 'tile');

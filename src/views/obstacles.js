@@ -3,9 +3,9 @@ import { mixSeed, mulberry32 } from '../sim/rng.js';
 import { FLOOR_Y } from './backdrop.js';
 import { leafPoints } from '../render/shapes.js';
 
-// Obstacles and their decorations: what both versions draw from (no Pixi here). Colours, sizes, the drawing
-// functions (the Pixi view draws with them, and the art pieces are generated from them),
-// and where things go and how they move. The Pixi view is render/obstacleViews.js.
+// Obstacles and their decorations: plain drawing and placement data. Colours, sizes, the drawing
+// functions (the art pieces are generated from them),
+// and where things go and how they move.
 
 // Obstacle art, built once per obstacle from its (unscaled) hitbox shapes so the two
 // match, then scaled like the hitbox.

@@ -16,7 +16,7 @@ async function phone(browser, viewport, visibleHeight, query = '') {
     });
   }, visibleHeight);
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser${query}`);
+  await page.goto(`${DEV}${query ? `?${query.slice(1)}` : ''}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   return { page, errors };
 }
@@ -142,7 +142,7 @@ test('mobile stays single-player and preserves settings through graphics reloads
 
 test('desktop player-mode choices and settings respond to clicks without starting a run', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   for (const [index, mode] of [[1, 'shared'], [2, 'split'], [0, 'solo']]) {
     const at = await page.evaluate((index) => window.__liano.app.scene.getScene('ui').overlays.titleGeometry.modes[index], index);
@@ -195,7 +195,7 @@ for (const [orientation, viewport, visibleHeight] of [
 
 test('the game-over title-menu option also responds to a desktop click', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   await page.keyboard.press('Space');
   await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');

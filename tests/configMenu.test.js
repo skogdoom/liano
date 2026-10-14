@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfigMenu } from '../src/phaser/configMenu.js';
+import { ConfigMenu } from '../src/render/configMenu.js';
 
 const key = (code, extras = {}) => Object.assign(new Event('keydown', { cancelable: true }), { code, ...extras });
 const title = () => ({ state: 'TITLE', mode: 'shared' });

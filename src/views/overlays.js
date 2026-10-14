@@ -4,10 +4,9 @@ import { GameState } from '../sim/game.js';
 import { MODES, MODE_ORDER } from '../sim/match.js';
 import { bananaLine } from './hud.js';
 
-// The overlays: what both versions draw from (no Pixi here). The title, results and
+// The overlays: plain drawing and placement data. The title, results and
 // pause panels, the stage banners and "out" notes per pane, and the arrow over a monkey
-// above the view: their texts, sizes and places, and how they fade and pulse. The Pixi
-// view is render/overlays.js.
+// above the view: their texts, sizes and places, and how they fade and pulse.
 
 export const CREAM = 0xf4e7c5;
 export const GOLD = 0xffcf4a;

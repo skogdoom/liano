@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 
 test('the production Phaser readout exports actual update/render frames', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${PREVIEW}?engine=phaser&frames=1`);
+  await page.goto(`${PREVIEW}?frames=1`);
   await started(page, errors);
   await page.waitForFunction(() => window.__phaserFrameTrace?.snapshot().frames.length > 10);
   const recorded = await page.evaluate(() => window.__phaserFrameTrace.snapshot());
@@ -34,7 +34,7 @@ test('the production Phaser readout exports actual update/render frames', async 
 
 test('the production shared-mode trace identifies the smoother camera response', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${PREVIEW}?engine=phaser&mode=shared&frames=1`);
+  await page.goto(`${PREVIEW}?mode=shared&frames=1`);
   await started(page, errors);
   await page.waitForFunction(() => window.__phaserFrameTrace?.snapshot().frames.length > 10);
   const frame = await page.evaluate(() => window.__phaserFrameTrace.snapshot().frames.at(-1));
@@ -44,21 +44,19 @@ test('the production shared-mode trace identifies the smoother camera response',
   expect(errors).toEqual([]);
 });
 
-test('normal Phaser play and the Pixi readout do not install the recorder', async ({ page }) => {
+test('normal play does not install the recorder', async ({ page }) => {
   const errors = collectErrors(page);
-  for (const query of ['engine=phaser', 'engine=pixi&frames=1']) {
-    await page.goto(`${PREVIEW}?${query}`);
-    await started(page, errors);
-    expect(await page.evaluate(() => window.__phaserFrameTrace)).toBeUndefined();
-    await expect(page.getByRole('button', { name: 'Save frame trace' })).toHaveCount(0);
-  }
+  await page.goto(PREVIEW);
+  await started(page, errors);
+  expect(await page.evaluate(() => window.__phaserFrameTrace)).toBeUndefined();
+  await expect(page.getByRole('button', { name: 'Save frame trace' })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
 
 test('the real Phaser loop normalizes the Safari trace disturbances before drawing', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser&frames=1`);
+  await page.goto(`${DEV}?frames=1`);
   await started(page, errors);
   await page.waitForFunction(() => window.__liano?.platform.world && window.__phaserFrameTrace);
   const result = await page.evaluate(() => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Graphics } from 'pixi.js';
-import { ROCK_VARIANTS, drawRockBody, rockVariant } from '../src/render/obstacleViews.js';
+import { RecordingGraphics } from '../src/art/recorder.js';
+import { ROCK_VARIANTS, drawRockBody, rockVariant } from '../src/views/obstacles.js';
 
 describe('rock outlines', () => {
   it('picks one of the variants per gap, all of them over a run of gaps, not in a cycle', () => {
@@ -11,7 +11,7 @@ describe('rock outlines', () => {
   });
 
   it('draws the same outline for the same variant, and different ones for different variants', () => {
-    const outline = (variant) => drawRockBody(new Graphics(), variant).context.instructions[0].data.path.shapePath.shapePrimitives[0].shape.points;
+    const outline = (variant) => drawRockBody(new RecordingGraphics(), variant).instructions[0].path[0].points;
     expect(outline(3)).toEqual(outline(3));
     expect(outline(3)).not.toEqual(outline(4));
   });

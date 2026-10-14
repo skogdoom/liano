@@ -1,14 +1,10 @@
-import { engineFrom } from './engine.js';
 import { createFatalOverlay } from './fatal.js';
 
-// The page's entry: starts the version of the game the URL asks for (see engine.js).
-// Each version is its own chunk, so a page downloads only its own library.
-const engine = engineFrom(location.search);
-document.documentElement.dataset.engine = engine;
+// Load the game behind an error boundary, including a failed script download.
+document.documentElement.dataset.engine = 'phaser';
 try {
-  if (engine === 'phaser') await import('./phaser/main.js');
-  else await import('./main.js');
-  // For the browser tests: the version has started.
+  await import('./main.js');
+  // For the browser tests: the game has started.
   document.documentElement.dataset.ready = 'true';
   // `?frames=1`: a frame-time readout, for checking smoothness on a device (frameStats.js).
   // Started after the game's frame loop, so its frame callback runs after the game's.

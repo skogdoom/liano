@@ -3,9 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// The Phaser version must not pull in Pixi (each version downloads only its own library,
-// PHASER_PLAN.md section 3): what it shares with the Pixi version lives in Pixi-free
-// modules (src/views/ and the like).
+// The runtime must use Phaser, without an obsolete rendering dependency.
 const src = resolve(dirname(fileURLToPath(import.meta.url)), '../src');
 
 function importsOf(file) {
@@ -32,9 +30,8 @@ function reach(entry) {
 
 describe('the Phaser version’s modules', () => {
   it('import no Pixi, directly or through what they share', () => {
-    const { files, packages } = reach(resolve(src, 'phaser/main.js'));
+    const { files, packages } = reach(resolve(src, 'main.js'));
     expect(packages.has('pixi.js')).toBe(false);
-    expect([...files].filter((f) => f.includes('/render/') && !/\/(camera|interpolate|shake|shapes|fpsMeter)\.js$/.test(f))).toEqual([]);
     expect(packages.has('phaser')).toBe(true);
   });
 });

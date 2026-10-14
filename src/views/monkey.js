@@ -2,9 +2,9 @@ import { MonkeyState } from '../sim/monkey.js';
 import { SWING_OMEGA } from '../sim/liana.js';
 import { blend } from '../render/interpolate.js';
 
-// The monkey: what both versions draw from (no Pixi here). Colours, sizes, the drawing
-// functions (the Pixi view draws with them, and the art pieces are generated from them),
-// and where things go and how they move. The Pixi view is render/monkeyView.js.
+// The monkey: plain drawing and placement data. Colours, sizes, the drawing
+// functions (the art pieces are generated from them),
+// and where things go and how they move.
 
 // The body and head fit inside the MONKEY_RADIUS hitbox circle; only the limbs, ears
 // and tail reach outside it. Local +y is down, and the monkey faces +x (mirrored when
@@ -108,7 +108,7 @@ export const POSES = {
   dead: { armBack: 2.7, armFront: -2.7, legBack: 0.9, legFront: -0.9 },
 };
 
-// How a monkey shows, frame by frame (the view-model both versions draw from): where it
+// How a monkey shows, frame by frame (the pure view-model): where it
 // is, the way it faces, the body's turn (eased towards its target, spinning when dead),
 // the limbs' turns, whether its eyes are crossed, and how see-through it is (blinking
 // while invulnerable after a respawn).

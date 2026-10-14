@@ -5,7 +5,7 @@ import { collectErrors } from './helpers.js';
 test('Phaser shared camera eases leader loss and interpolates fast pans at 60/90/144 Hz', async ({ page }) => {
   const errors = collectErrors(page);
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(`${DEV}?engine=phaser&mode=shared`);
+  await page.goto(`${DEV}?mode=shared`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const results = await page.evaluate(async () => {
     const { app, platform } = window.__liano;

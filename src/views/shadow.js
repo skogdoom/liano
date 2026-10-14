@@ -1,6 +1,6 @@
-// The shadow monkey: what both versions draw from (no Pixi here). Colours, sizes, the drawing
-// functions (the Pixi view draws with them, and the art pieces are generated from them),
-// and where things go and how they move. The Pixi view is render/shadowView.js.
+// The shadow monkey: plain drawing and placement data. Colours, sizes, the drawing
+// functions (the art pieces are generated from them),
+// and where things go and how they move.
 
 // The shadow monkey (see Game.shadowFrame): a grey, see-through monkey on lianas of its
 // own, grey and see-through too, as it swung on them in the best earlier game. A liana fades

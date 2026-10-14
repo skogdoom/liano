@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
-import { Graphics } from 'pixi.js';
 import { generateArt } from '../src/art/generate.js';
 import { artGuide } from '../src/art/guide.js';
 import { DEFAULT_STROKE, RecordingGraphics } from '../src/art/recorder.js';
@@ -8,14 +7,12 @@ import { PIECES } from '../src/art/pieces/index.js';
 import { TAIL_FRAMES, TAIL_SWISH, tailFrameFor, tailSwishOf } from '../src/art/pieces/branch.js';
 import { BAT_LOOK_NAMES, BIRD_LOOKS, flipbook } from '../src/art/pieces/decorations.js';
 import { FLAME_HEIGHT, FLAME_SWAY, TEMPLE_BASE_Y, TEMPLE_LOOKS, flameFrameFor } from '../src/art/pieces/temple.js';
-import { BAT_LOOKS, BIRD_COLORS, ROCK_VARIANTS, TEMPLE_STYLES } from '../src/render/obstacleViews.js';
+import { BAT_LOOKS, BIRD_COLORS, ROCK_VARIANTS, TEMPLE_STYLES } from '../src/views/obstacles.js';
 import { TEMPLE_VARIANTS } from '../src/config.js';
 import { bounds, elements, guideLayer, shapeD, toSvg, unionBox } from '../src/art/svg.js';
 import { definePiece, definePieces, frameName } from '../src/art/piece.js';
 import { atlasScaleFor, cellOf, placement } from '../src/art/catalog.js';
-import { Art, bendStrip } from '../src/phaser/art.js';
-import { drawLiana, leafLayout, LIANA_PALETTES } from '../src/render/lianaView.js';
-import { Liana } from '../src/sim/liana.js';
+import { Art, bendStrip } from '../src/render/art.js';
 
 describe('recording the drawing calls', () => {
   it('fills and strokes the path drawn since the last fill or stroke', () => {
@@ -61,23 +58,6 @@ describe('recording the drawing calls', () => {
     expect(g.instructions[0].path[0].start).toEqual([2, 2]);
   });
 
-  it('records the same fills and strokes as Pixi for real drawing code (a liana)', () => {
-    const liana = new Liana(7, 0);
-    const pixi = new Graphics();
-    const recorded = new RecordingGraphics();
-    for (const flash of [false, true]) {
-      drawLiana(pixi.clear(), liana, leafLayout(7), flash, LIANA_PALETTES[0]);
-      drawLiana(recorded.clear(), liana, leafLayout(7), flash, LIANA_PALETTES[0]);
-      const theirs = pixi.context.instructions;
-      expect(recorded.instructions.map((i) => i.action)).toEqual(theirs.map((i) => i.action));
-      recorded.instructions.forEach((mine, k) => {
-        const style = theirs[k].data.style;
-        expect(mine.style.color).toBe(style.color);
-        expect(mine.style.alpha).toBeCloseTo(style.alpha, 9);
-        if (mine.action === 'stroke') expect([mine.style.width, mine.style.cap, mine.style.join]).toEqual([style.width, style.cap, style.join]);
-      });
-    }
-  });
 });
 
 describe('writing SVG', () => {

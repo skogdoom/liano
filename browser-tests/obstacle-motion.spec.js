@@ -5,7 +5,7 @@ import { collectErrors } from './helpers.js';
 for (const blur of [false, true]) test(`native Phaser frames continuously draw temples, moving obstacles and settling vines at 60/90/144 Hz${blur ? ' with obstacle exposure' : ''}`, async ({ page }) => {
   test.setTimeout(120_000);
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser${blur ? '&obstacleblur=on' : ''}`);
+  await page.goto(`${DEV}${blur ? '?obstacleblur=on' : ''}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   const results = await page.evaluate(async () => {
     const { app, platform } = window.__liano;
@@ -14,7 +14,7 @@ for (const blur of [false, true]) test(`native Phaser frames continuously draw t
     const { World } = await import('/src/sim/world.js');
     const { Obstacle } = await import('/src/sim/obstacle.js');
     const { createDriver } = await import('/src/driver.js');
-    const { PhaserFrameClock } = await import('/src/phaser/frameClock.js');
+    const { PhaserFrameClock } = await import('/src/platform/frameClock.js');
     const { MAX_STEP_TURN, blend } = await import('/src/render/interpolate.js');
     const { ropePoints } = await import('/src/views/liana.js');
     app.events.removeAllListeners('step');

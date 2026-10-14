@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { DEV, PREVIEW } from '../playwright.config.js';
 import { layoutFor } from '../src/layout.js';
-import { viewCamera } from '../src/phaser/view.js';
+import { viewCamera } from '../src/platform/view.js';
 import { collectErrors, menuLabelPoint, openConfig, panelPoint, started } from './helpers.js';
 
 const SAFARI_MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/26.5.2 Safari/605.1.15';
@@ -10,7 +10,7 @@ for (const [query, ratio] of [['', 2], ['&resolution=1.5', 1.5], ['&resolution=1
   test(`Phaser resolution ${ratio}× preserves CSS layout, controls and trace measurements`, async ({ browser }) => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 823 }, deviceScaleFactor: 2 });
     const errors = collectErrors(page);
-    await page.goto(`${DEV}?engine=phaser&frames=1${query}`);
+    await page.goto(`${DEV}?frames=1${query}`);
     await page.waitForFunction(() => window.__liano?.platform.world && window.__phaserFrameTrace?.snapshot().frames.length);
     const inspect = () => page.evaluate(() => {
       const { app, platform, layout, camera } = window.__liano;
@@ -60,7 +60,7 @@ for (const [query, ratio] of [['', 2], ['&resolution=1.5', 1.5], ['&resolution=1
 test('the resolution cap follows screen density without upscaling or restarting the world', async ({ page }) => {
   const errors = collectErrors(page);
   await page.setViewportSize({ width: 1000, height: 600 });
-  await page.goto(`${DEV}?engine=phaser&resolution=1.5`);
+  await page.goto(`${DEV}?resolution=1.5`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   await page.evaluate(() => { window.testResolutionWorld = window.__liano.game.world; });
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1000);
@@ -77,7 +77,7 @@ test('the resolution cap follows screen density without upscaling or restarting 
 test('the production trace identifies the reduced resolution', async ({ browser }) => {
   const page = await browser.newPage({ viewport: { width: 1000, height: 600 }, deviceScaleFactor: 2 });
   const errors = collectErrors(page);
-  await page.goto(`${PREVIEW}?engine=phaser&resolution=1.5&frames=1`);
+  await page.goto(`${PREVIEW}?resolution=1.5&frames=1`);
   await page.waitForFunction(() => window.__phaserFrameTrace?.snapshot().frames.length);
   const trace = await page.evaluate(() => window.__phaserFrameTrace.snapshot());
   expect(trace.info.resolutionLimit).toBe(1.5);
@@ -88,23 +88,13 @@ test('the production trace identifies the reduced resolution', async ({ browser 
   await page.close();
 });
 
-test('the resolution experiment leaves Pixi at its ordinary screen density', async ({ browser }) => {
-  const page = await browser.newPage({ viewport: { width: 1000, height: 600 }, deviceScaleFactor: 2 });
-  const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=pixi&resolution=1`);
-  await started(page, errors);
-  expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(2000);
-  await expect(page.locator('#graphics-quality')).toHaveCount(0);
-  expect(errors).toEqual([]);
-  await page.close();
-});
 
 test('Safari Auto and all manual choices persist without changing explicit test overrides', async ({ browser }) => {
   // Emulate browser identity to test selection policy; rendering still uses
   // Chromium and does not predict actual Safari GPU performance.
   const page = await browser.newPage({ viewport: { width: 1000, height: 600 }, deviceScaleFactor: 2, userAgent: SAFARI_MAC });
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser&frames=1`);
+  await page.goto(`${DEV}?frames=1`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.platform.configMenu.choice)).toBe('auto');
   await expect(page.locator('#graphics-quality')).toHaveCount(0);
@@ -124,16 +114,16 @@ test('Safari Auto and all manual choices persist without changing explicit test 
     expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(width);
     const trace = await page.evaluate(() => window.__phaserFrameTrace.snapshot());
     expect(trace.info.resolutionMode).toBe(choice);
-    await page.goto(`${DEV}?engine=phaser&frames=1`);
+    await page.goto(`${DEV}?frames=1`);
     await page.waitForFunction(() => window.__liano?.platform.world);
     expect(await page.evaluate(() => window.__liano.platform.configMenu.choice)).toBe(choice);
     expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(width);
   }
   // An A/B URL temporarily overrides the stored choice; it does not save itself.
-  await page.goto(`${DEV}?engine=phaser&resolution=1`);
+  await page.goto(`${DEV}?resolution=1`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.platform.configMenu.choice)).toBe('1');
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.platform.configMenu.choice)).toBe('auto');
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1500);
@@ -160,7 +150,7 @@ test('Safari Auto caps a high-density phone and graphics taps do not start play'
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1',
   });
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(563);
   const entry = await menuLabelPoint(page, 'title', 'configEntry');
@@ -183,7 +173,7 @@ test('blocked preference storage keeps Safari Auto and manual selection function
   await page.addInitScript(() => {
     Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('Blocked', 'SecurityError'); } });
   });
-  await page.goto(`${DEV}?engine=phaser`);
+  await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => window.__liano.app.canvas.width)).toBe(1500);
   await openConfig(page);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { FrameTrace } from '../src/phaser/frameTrace.js';
+import { FrameTrace } from '../src/platform/frameTrace.js';
 
 const frame = (timestamp, overrides = {}) => ({
   timestamp, rawMs: 1000 / 60, cpuMs: 2, stepMs: 1000 / 60,
