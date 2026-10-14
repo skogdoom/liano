@@ -119,7 +119,8 @@ test('moving trees average their exposure without darkening, seams or shader rec
   const results = await page.evaluate(() => {
     const { app, platform } = window.__liano;
     app.loop.sleep();
-    app.scene.getScene('ui').cameras.main.setVisible(false);
+    // Hide every UI camera, including the title-menu camera.
+    app.scene.getScene('ui').sys.setVisible(false);
     const pane = platform.world.panes[0], rig = pane.backdrop;
     pane.worldLayer.setVisible(false); pane.overlay.setVisible(false); rig.front.setVisible(false);
     for (const { key, view } of rig.layers) view.setVisible(key === 'backdrop.mid');

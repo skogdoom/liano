@@ -125,7 +125,9 @@ test('different velocities share one batch, without framebuffer or texture alloc
     const { ObjectExposure } = await import('/src/phaser/world/objectExposure.js');
     const { exposeImages, exposureNodes } = await import('/src/phaser/world/objectExposureShader.js');
     const { app, platform } = window.__liano;
-    app.loop.sleep(); app.scene.getScene('ui').cameras.main.setVisible(false);
+    app.loop.sleep();
+    // Count only the test images, excluding every UI camera.
+    app.scene.getScene('ui').sys.setVisible(false);
     const scene = platform.world;
     scene.panes.forEach((p) => p.view.setVisible(false)); scene.paneCameras.forEach((c) => c.setVisible(false));
     scene.cameras.main.setVisible(true).setViewport(0, 0, app.canvas.width, app.canvas.height).setOrigin(0, 0).setZoom(1).setScroll(0, 0);
