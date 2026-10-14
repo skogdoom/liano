@@ -192,12 +192,12 @@ export class UiScene extends Phaser.Scene {
     // D: the debug view, over each pane, with its numbers.
     this.debug = new DebugOverlay(this);
     this.debugPanes = null;
-    // Title/config panels can use the visible screen even when a two-player
+    // Title/config/results panels can use the visible screen even when a two-player
     // game is letterboxed into a small landscape frame on a portrait phone.
     this.menuCamera = this.cameras.add(0, 0, 1, 1);
-    this.cameras.main.ignore([this.overlays.title, this.overlays.config]);
+    this.cameras.main.ignore([this.overlays.title, this.overlays.config, this.overlays.gameOver]);
     this.menuCamera.ignore([this.buttons.view, this.hud.view, this.debug.view,
-      this.overlays.indicator, this.overlays.paneLayer, this.overlays.gameOver, this.overlays.paused]);
+      this.overlays.indicator, this.overlays.paneLayer, this.overlays.paused]);
     followLayout(this, (layout, camera) => {
       this.hud.resize(layout, camera.zoom);
       this.overlays.resize(layout, camera.zoom, platform.menuArea);
@@ -218,7 +218,7 @@ export class UiScene extends Phaser.Scene {
     this.hud.update(game);
     const cameraX = platform.world?.panes[0]?.camera.x ?? 0;
     this.overlays.update(game, cameraX, { pauseReason: platform.pause.reason, inputType: platform.input?.lastType, dt: platform.frame?.frameDt ?? 0 });
-    this.menuCamera.setVisible(game.state === 'TITLE' && !platform.pause.paused);
+    this.menuCamera.setVisible((game.state === 'TITLE' || game.state === 'RESULTS') && !platform.pause.paused);
     const panes = platform.world?.panes ?? [];
     if (panes.length !== this.debugPanes?.length || panes.some((pane, i) => pane !== this.debugPanes[i])) {
       this.debug.attach(panes);

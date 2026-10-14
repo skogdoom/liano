@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { layoutFor } from '../src/layout.js';
-import { configMenuLayout, panelPoint, titleMenuLayout, visibleMenuArea } from '../src/phaser/menuLayout.js';
+import { configMenuLayout, panelPoint, resultsMenuLayout, titleMenuLayout, visibleMenuArea } from '../src/phaser/menuLayout.js';
 
 describe('Phaser menus in the visible browser area', () => {
   const screens = [
@@ -19,8 +19,9 @@ describe('Phaser menus in the visible browser area', () => {
       const area = visibleMenuArea(win, insets);
       const layout = layoutFor(width, height, undefined, { fixed });
       const title = titleMenuLayout(layout, area, { mobile }), config = configMenuLayout(layout, area);
+      const results = resultsMenuLayout(layout, area);
       expect(title.modes).toHaveLength(mobile ? 0 : 3);
-      for (const menu of [title, config]) {
+      for (const menu of [title, config, results]) {
         const x = layout.x + menu.x * layout.scale, y = layout.y + menu.y * layout.scale;
         expect(x - menu.width * menu.cssScale / 2).toBeGreaterThanOrEqual(area.x - 1e-8);
         expect(x + menu.width * menu.cssScale / 2).toBeLessThanOrEqual(area.x + area.width + 1e-8);
@@ -36,6 +37,12 @@ describe('Phaser menus in the visible browser area', () => {
         expect(hit.h * config.cssScale).toBeGreaterThanOrEqual(44);
         expect(hit.w * config.cssScale).toBeGreaterThanOrEqual(44);
       }
+      for (const hit of [results.replayHit, results.menuHit]) {
+        expect(hit.h * results.cssScale).toBeGreaterThanOrEqual(44);
+        expect(hit.w * results.cssScale).toBeGreaterThanOrEqual(44);
+      }
+      expect(results.menu.y).toBeGreaterThan(results.replay.y);
+      expect(results.menuHit.y).toBeGreaterThan(results.replayHit.y + results.replayHit.h);
     });
   }
 

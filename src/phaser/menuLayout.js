@@ -17,10 +17,9 @@ export function visibleMenuArea(win, insets = {}) {
     height: Math.max(1, bottom - (insets.bottom ?? 0) - MARGIN - top) };
 }
 
-function placement(layout, area, width, height) {
+function placement(layout, area, width, height, preferred = layout.panels.title) {
   const desired = Math.max(MIN_SCALE, layout.scale * layout.ui);
   const cssScale = Math.min(desired, area.width / width, area.height / height);
-  const preferred = layout.panels.title;
   const x = clamp(layout.x + preferred.x * layout.scale,
     area.x + width * cssScale / 2, area.x + area.width - width * cssScale / 2);
   const y = clamp(layout.y + preferred.y * layout.scale,
@@ -81,6 +80,28 @@ export function configMenuLayout(layout, area) {
     backHit: hit(back.x, back.y, compact ? 300 : width - 32, compact ? 74 : 68),
     items: points.map(([x, y]) => ({ x, y, hit: hit(x, y, compact ? 190 : width - 32,
       condensed || !compact && y === 139 ? 68 : 74) })),
+  };
+}
+
+export function resultsMenuLayout(layout, area) {
+  const compact = area.height < 450 * MIN_SCALE && area.width >= 740 * MIN_SCALE;
+  const width = compact ? 740 : Math.min(520, area.width / MIN_SCALE);
+  const height = compact ? 300 : 450;
+  const at = placement(layout, area, width, height, layout.panels.gameOver);
+  const contentX = compact ? -190 : 0;
+  const actionX = compact ? 170 : 0;
+  const replayY = compact ? -30 : 104;
+  const menuY = compact ? 62 : 180;
+  return { ...at, compact,
+    heading: { x: contentX, y: compact ? -92 : -166, size: compact ? 50 : 64 },
+    score: { x: contentX, y: compact ? -28 : -95, size: compact ? 34 : 44 },
+    best: { x: contentX, y: compact ? 14 : -50, size: compact ? 22 : 26 },
+    bananas: { x: contentX, y: compact ? 50 : -12, size: compact ? 22 : 24 },
+    newBest: { x: contentX, y: compact ? 93 : 30, size: compact ? 24 : 28 },
+    replay: { x: actionX, y: replayY, size: 28 },
+    menu: { x: actionX, y: menuY, size: 24 },
+    replayHit: hit(actionX, replayY, compact ? 370 : width - 32, compact ? 74 : 68),
+    menuHit: hit(actionX, menuY, compact ? 370 : width - 32, compact ? 74 : 68),
   };
 }
 

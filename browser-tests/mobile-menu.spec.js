@@ -38,9 +38,11 @@ async function checkPanel(page, name) {
     const cssScale = root.scaleX * layout.scale;
     const x = layout.x + root.x * layout.scale, y = layout.y + root.y * layout.scale;
     const hits = name === 'title' ? [...geometry.modes, ...geometry.settings].map((item) => item.hit)
-      .concat([geometry.startHit, geometry.configHit]) : geometry.items.map((item) => item.hit).concat([geometry.backHit]);
-    const labels = name === 'title' ? [o.titleName, o.tagline, o.titleControl, o.titlePrompt, o.configEntry,
+      .concat([geometry.startHit, geometry.configHit]) : name === 'gameOver' ? [geometry.replayHit, geometry.menuHit]
+      : geometry.items.map((item) => item.hit).concat([geometry.backHit]);
+    const labels = name === 'title' ? [o.titleName, o.tagline, o.titleControl, o.titlePrompt, o.configEntry, o.titleVersion,
       ...(platform.mobile ? [] : o.modes.map((item) => item.label)), o.livesLine, o.slipLine, o.shadowLine]
+      : name === 'gameOver' ? [o.gameOverTitle, o.scoreText, o.bestText, o.bananasText, o.gameOverPrompt, o.gameOverMenu]
       : [o.configHeading, o.configSubtitle, o.configBack, ...o.graphicsItems.map((item) => item.label)];
     return { area: platform.menuArea, cameraVisible: ui.menuCamera.visible,
       bounds: { left: x - geometry.width * cssScale / 2, right: x + geometry.width * cssScale / 2,
@@ -79,6 +81,8 @@ for (const [orientation, viewport, visibleHeight] of [
   const { page, errors } = await phone(browser, viewport, visibleHeight);
   await checkPanel(page, 'title');
   expect(await page.evaluate(() => window.__liano.game.shadowOn)).toBe(true);
+  expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.shadowLine.text.text)).toBe('Shadow\nOn');
+  expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.titleVersion.text.visible)).toBe(true);
   for (const [index, setting, initial] of [[0, 'lives', false], [1, 'slip', false], [2, 'shadow', true]]) {
     await tapMenu(page, 'settings', index);
     await expect.poll(() => page.evaluate((setting) => window.__liano.game[setting], setting)).toBe(!initial);
@@ -110,6 +114,7 @@ for (const [orientation, viewport, visibleHeight] of [
 test('mobile stays single-player and preserves settings through graphics reloads', async ({ browser }) => {
   const { page, errors } = await phone(browser, { width: 375, height: 812 }, 600, '&mode=split');
   expect(await page.evaluate(() => window.__liano.game.mode)).toBe('solo');
+  expect(await page.evaluate(() => window.__liano.game.shadowOn)).toBe(true);
   expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.modePicker.visible)).toBe(false);
   for (const key of ['Digit2', 'Digit3']) await page.keyboard.press(key);
   expect(await page.evaluate(() => window.__liano.game.mode)).toBe('solo');
@@ -153,5 +158,54 @@ test('desktop player-mode choices and settings respond to clicks without startin
     await expect.poll(() => page.evaluate((setting) => window.__liano.game[setting], setting)).toBe(expected);
     expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
   }
+  expect(errors).toEqual([]);
+});
+
+for (const [orientation, viewport, visibleHeight] of [
+  ['portrait', { width: 375, height: 812 }, 600],
+  ['landscape', { width: 812, height: 375 }, 250],
+]) test(`mobile game-over ${orientation} offers distinct replay and title-menu taps`, async ({ browser }) => {
+  const { page, errors } = await phone(browser, viewport, visibleHeight);
+  const finishRun = async () => {
+    const start = await menuLabelPoint(page, 'title', 'titlePrompt');
+    await page.touchscreen.tap(start.x, start.y);
+    await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');
+    await page.touchscreen.tap(20, visibleHeight / 2);
+    await expect.poll(() => page.evaluate(() => window.__liano.game.world.monkey.state)).toBe('AIRBORNE');
+    await page.evaluate(() => { window.__liano.game.world.monkey.y = 5000; });
+    await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('RESULTS');
+    await expect.poll(() => page.evaluate(() => window.__liano.game.canRestart())).toBe(true);
+  };
+  await finishRun();
+  await checkPanel(page, 'gameOver');
+  expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.gameOverPrompt.text.text)).toBe('Tap to play again');
+  await page.screenshot({ path: `/tmp/liano-mobile-results-${orientation}.png` });
+  const menu = await menuLabelPoint(page, 'gameOver', 'gameOverMenu');
+  await page.touchscreen.tap(menu.x, menu.y);
+  await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
+  expect(await page.evaluate(() => window.__liano.game.shadowOn)).toBe(true);
+  await checkPanel(page, 'title');
+  await finishRun();
+  const replay = await menuLabelPoint(page, 'gameOver', 'gameOverPrompt');
+  await page.touchscreen.tap(replay.x, replay.y);
+  await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');
+  expect(errors).toEqual([]);
+  await page.close();
+});
+
+test('the game-over title-menu option also responds to a desktop click', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto(`${DEV}?engine=phaser`);
+  await page.waitForFunction(() => window.__liano?.platform.world);
+  await page.keyboard.press('Space');
+  await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');
+  await page.keyboard.press('Space');
+  await expect.poll(() => page.evaluate(() => window.__liano.game.world.monkey.state)).toBe('AIRBORNE');
+  await page.evaluate(() => { window.__liano.game.world.monkey.y = 5000; });
+  await expect.poll(() => page.evaluate(() => window.__liano.game.canRestart())).toBe(true);
+  await checkPanel(page, 'gameOver');
+  const menu = await menuLabelPoint(page, 'gameOver', 'gameOverMenu');
+  await page.mouse.click(menu.x, menu.y);
+  await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
   expect(errors).toEqual([]);
 });

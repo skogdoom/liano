@@ -31,7 +31,7 @@ import { makeContainer } from './world/build.js';
 import { makeText, setTextOrigin, setTextResolution, textResolution } from './text.js';
 import { CONFIG_BACK_Y, CONFIG_PANEL, GRAPHICS_ITEMS } from './configMenu.js';
 import { inside } from '../controls.js';
-import { configMenuLayout, panelPoint, titleMenuLayout } from './menuLayout.js';
+import { configMenuLayout, panelPoint, resultsMenuLayout, titleMenuLayout } from './menuLayout.js';
 
 // The overlays in the Phaser version, as the Pixi Overlays (views/overlays.js has what
 // both share): the title, results and pause panels, the stage banners and "out" notes per
@@ -145,6 +145,7 @@ export class Overlays {
     const ui = () => this.layout?.ui ?? 1;
     const menuScale = () => configMenu ? this.title.scaleX : this.layout?.ui ?? 1;
     const configScale = () => this.config?.scaleX ?? 1;
+    const resultsScale = () => configMenu ? this.gameOver.scaleX : this.layout?.ui ?? 1;
 
     const title = PANELS.title.texts;
     this.title = panel(scene, art, configMenu ? { width: 520, height: 540, shiftY: 0 } : PANELS.title);
@@ -177,16 +178,17 @@ export class Overlays {
 
     const over = PANELS.gameOver.texts;
     this.gameOver = panel(scene, art, PANELS.gameOver);
-    this.gameOverTitle = label(this.gameOver, over.title, undefined, ui);
-    this.scoreText = label(this.gameOver, over.score, undefined, ui);
-    this.bestText = label(this.gameOver, over.best, undefined, ui);
+    this.gameOverTitle = label(this.gameOver, over.title, undefined, resultsScale);
+    this.scoreText = label(this.gameOver, over.score, undefined, resultsScale);
+    this.bestText = label(this.gameOver, over.best, undefined, resultsScale);
     this.bananas = makeContainer(scene).setPosition(0, over.bananas.y);
     this.gameOver.add(this.bananas);
     this.bananaIcon = art.image(scene, 'banana.results');
     this.bananas.add(this.bananaIcon);
-    this.bananasText = label(this.bananas, { ...over.bananas, y: 0 }, undefined, ui);
-    this.newBestText = label(this.gameOver, over.newBest, undefined, ui);
-    this.gameOverPrompt = label(this.gameOver, over.prompt, undefined, ui);
+    this.bananasText = label(this.bananas, { ...over.bananas, y: 0 }, undefined, resultsScale);
+    this.newBestText = label(this.gameOver, over.newBest, undefined, resultsScale);
+    this.gameOverPrompt = label(this.gameOver, over.prompt, undefined, resultsScale);
+    if (configMenu) this.gameOverMenu = label(this.gameOver, { y: 180, size: 24, color: GOLD }, 'Title menu', resultsScale);
 
     this.paused = panel(scene, art, PANELS.paused);
     label(this.paused, PANELS.paused.texts.title, undefined, ui);
@@ -258,7 +260,7 @@ export class Overlays {
         this.scoreText.set(results.score);
         this.bestText.set(results.best);
         this.bananasText.set(results.bananas);
-        this.bananas.y = results.bananasY;
+        this.bananas.y = this.gameOverGeometry?.bananas.y ?? results.bananasY;
         const at = resultsBananas(this.bananasText.width);
         this.bananaIcon.setPosition(at.iconX, at.iconY);
         this.bananasText.text.x = at.textX;
@@ -266,6 +268,7 @@ export class Overlays {
       }
       this.newBestText.text.setVisible(results.newBest);
       this.gameOverPrompt.text.setVisible(game.canRestart()).setAlpha(glow);
+      this.gameOverMenu?.text.setVisible(game.canRestart());
     }
 
     this.paused.setVisible(shown.paused);
@@ -277,9 +280,19 @@ export class Overlays {
   interceptConfigPointer(event, game, accepts) {
     if (!this.configMenu) return false;
     this.configMenu.sync(game);
-    if (game.state !== 'TITLE' || !accepts) return this.configMenu.open;
+    if (!accepts) return this.configMenu.open;
     const rect = this.scene.sys.game.canvas.getBoundingClientRect();
     const point = (view) => panelPoint(this.layout, rect, view, event.clientX, event.clientY);
+    if (game.state === 'RESULTS' && this.gameOverGeometry) {
+      if (!game.canRestart()) return true;
+      if (inside(this.gameOverGeometry.menuHit, point(this.gameOver))) {
+        this.configMenu.clear();
+        game.press('menu');
+        return true;
+      }
+      return false;
+    }
+    if (game.state !== 'TITLE') return this.configMenu.open;
     if (this.configMenu.open) {
       const p = point(this.config);
       if (inside(this.configGeometry?.backHit ?? { x: -200, y: CONFIG_BACK_Y - 32, w: 400, h: 64 }, p)) this.configMenu.close();
@@ -317,6 +330,7 @@ export class Overlays {
   #placeMenus(area) {
     this.titleGeometry = titleMenuLayout(this.layout, area, { mobile: this.mobile });
     this.configGeometry = configMenuLayout(this.layout, area);
+    this.gameOverGeometry = resultsMenuLayout(this.layout, area);
     const title = this.titleGeometry, config = this.configGeometry;
     placePanel(this.title, title);
     placePanel(this.config, config);
@@ -327,7 +341,7 @@ export class Overlays {
     this.configEntry.place(title.config);
     this.keysHint.place(title.keys);
     this.titleVersion.place(title.version);
-    this.titleVersion.text.setVisible(!title.compact && !title.condensed);
+    this.titleVersion.text.setVisible(true);
     this.modePicker.setPosition(0, 0);
     this.modes.forEach((item, i) => { if (title.modes[i]) item.label.place({ ...title.modes[i], size: 22 }); });
     [this.livesLine, this.slipLine, this.shadowLine].forEach((label, i) => label.place({ ...title.settings[i], size: 22 }));
@@ -337,6 +351,16 @@ export class Overlays {
     this.configHint.text.setVisible(!config.condensed);
     this.configBack.place({ ...config.back, size: 22 });
     this.graphicsItems.forEach((item, i) => item.label.place({ ...config.items[i], size: config.compact ? 24 : item.choice === 'auto' ? 20 : 26 }));
+    const results = this.gameOverGeometry;
+    placePanel(this.gameOver, results);
+    this.gameOverTitle.place(results.heading);
+    this.scoreText.place(results.score);
+    this.bestText.place(results.best);
+    this.bananas.setPosition(results.bananas.x, results.bananas.y);
+    this.bananasText.place({ size: results.bananas.size });
+    this.newBestText.place(results.newBest);
+    this.gameOverPrompt.place(results.replay);
+    this.gameOverMenu.place(results.menu);
   }
 
   #updateMenuTitle(game, kind) {
@@ -429,7 +453,7 @@ export class Overlays {
     const p = prompts(kind, players);
     this.titlePrompt.set(p.start);
     this.titleControl.set(p.control);
-    this.gameOverPrompt.set(p.again);
+    this.gameOverPrompt.set(this.gameOverMenu ? (kind === 'touch' ? 'Tap to play again' : 'Press Space to play again') : p.again);
     this.promptsFor = key;
   }
 }

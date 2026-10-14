@@ -429,7 +429,15 @@ phone screens. Desktop 1P/shared/split choices and Lives, Slipping and Shadow se
 are tappable. Mobile uses single-player only, hides the player-mode row, and keeps
 all three settings tappable. Multiplayer URL choices and match-mode keys are ignored
 on mobile; graphics-mode keys continue to work inside Config.
-Phaser enables Shadow by default; `shadow=off` explicitly disables it.
+Phaser enables Shadow by default on desktop and mobile; `shadow=off` explicitly
+disables it. The title version stays visible in the compact landscape layout.
+
+The Phaser game-over panel fits the visible browser area too. A tappable/clickable
+**Title menu** option appears below **Tap to play again** (or the keyboard replay
+prompt). Both actions become available after the existing 400 ms input lock; the
+menu action returns to the title with the current settings, and replay starts a
+new run. Short landscape screens put the score details beside these two actions
+so both retain usable tap targets.
 
 Changing the choice saves it for this origin and reloads the game, so graphics
 preparation happens before play. The selected 1P/shared/split match mode is kept
