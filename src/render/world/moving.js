@@ -45,10 +45,8 @@ function snake(b, o) {
   const top = o.baseY - o.motion.ay - 40;
   const bottom = FLOOR_Y + 20;
   const x = o.baseX;
-  const stalk = [
-    ...b.curve('snake.stalk', cubicPoints([[x, bottom], [x - 6, bottom - 120], [x + 6, top + 80], [x, top]])),
-    ...snakeStalkLeaves(top, bottom).map((leaf) => b.image('snake.stalkLeaf', leaf.side > 0 ? 0 : 1).setPosition(x, leaf.y)),
-  ];
+  const vine = b.curve('snake.stalk', cubicPoints([[x, bottom], [x - 6, bottom - 120], [x + 6, top + 80], [x, top]]));
+  const leaves = snakeStalkLeaves(top, bottom).map((leaf) => b.image('snake.stalkLeaf', leaf.side > 0 ? 0 : 1).setPosition(x, leaf.y));
   const body = b.container();
   if (b.art.catalog.presentation?.climbingSnake === 'articulated') {
     const rear = b.container().setScale(o.scale);
@@ -71,7 +69,9 @@ function snake(b, o) {
     body.add([neck, front, head]);
     const pose = paintedSnakePose(o, o.time);
     return {
-      parts: [rear, ...stalk, body], body,
+      // Only the stem threads through the wraps. Leaves stay behind the entire
+      // snake rather than protruding through the upper arc and middle return.
+      parts: [...leaves, rear, ...vine, body], body,
       animate(t, position) {
         rear.setPosition(position.x, position.y);
         paintedSnakePose(o, t, pose);
@@ -86,7 +86,7 @@ function snake(b, o) {
   body.add([b.image('snake.coil'), head]);
   const unit = b.art.unit('snake.head');
   return {
-    parts: [...stalk, body],
+    parts: [...vine, ...leaves, body],
     body,
     animate(t) {
       // Pointing up while climbing, down while going down.

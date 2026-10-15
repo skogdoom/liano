@@ -430,6 +430,40 @@
         "scene.flying.night"
       ],
       "renderer": "Chromium/SwiftShader; verified at 1x and 2x"
+    },
+    {
+      "change": "Drawing defects: registered player/ghost tail roots, leaves behind climbing coils, short cheek-connected snake neck, clear sandstone doorway",
+      "baseCommit": "9b5338c",
+      "refreshed": [
+        "scene.flying.day",
+        "scene.flying.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "scene.temple.0.day",
+        "scene.temple.0.night",
+        "scene.temple.1.day",
+        "scene.temple.1.night",
+        "scene.temple.2.day",
+        "scene.temple.2.night",
+        "scene.temple.3.day",
+        "scene.temple.3.dusk",
+        "scene.temple.3.night",
+        "world.shadow",
+        "lighting-day",
+        "lighting-afternoon",
+        "lighting-dusk",
+        "lighting-night",
+        "lighting-dawn",
+        "runtime/monkey-joints.png",
+        "runtime/monkeys.png",
+        "runtime/shadow.png",
+        "runtime/snakes-moving.png",
+        "runtime/snakes-moving-second.png",
+        "media/rig-motion.mp4",
+        "media/snake-turn.mp4"
+      ],
+      "renderer": "Chromium/SwiftShader; single-texture batches",
+      "validation": "16 focused unit checks; gallery, monkey rigs and unchanged classic-reference browser checks pass; 18 monkey poses and 21 snake position samples inspected; same eight comparison flags remain"
     }
   ]
 }

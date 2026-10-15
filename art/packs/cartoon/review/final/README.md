@@ -1,5 +1,11 @@
 # M8a final artwork review candidates
 
+The drawing-defect pass refreshes the player/ghost tail attachments, climbing
+snake leaf/neck overlap and sandstone doorway. Inspect the Characters, Motion,
+World and Temples tabs. Both motion clips and the affected runtime captures are
+updated. Larger wings, feet/face, nests and other decoration requests remain for
+subsequent passes. These captures remain review candidates.
+
 These are captures of `phaser-sprites` at `3f72b69`, not approved baselines.
 Open `/art-review.html` through `npm run dev` (or `npm run dev:host` on a phone).
 The page also links to the live rigs and atlas comparison for subsequent edits.

@@ -54,6 +54,9 @@ component**, not in the whole master. They register shoulders, palms and hips to
 the unchanged rig anchors and limb lengths (`src/art/registration.js`). Recheck
 them when replacing a master; fitting a limb's whole bounding box does not align
 its visible shoulder or gripping palm with its pivot.
+The player and ghost tails register their painted `root` to the torso's
+`tailRoot` landmark in the rear hip. The curl retains its size, while the fur
+covers the cut socket through mirrored swings, flight and falls.
 The hanging decoration reuses those landmarks to connect its painted shoulders
 to its raised arms and place both palms at the branch. The head's `eyeBack`/`eyeFront`
 landmarks locate the hanging monkey's pupils in the existing painted whites.
@@ -96,7 +99,9 @@ places one large and one small fall outside the mirrored forest group per full
 connected neck. The coil is split into non-overlapping atlas-row sections: the
 upper arc and middle return pass behind the green stalk, while the two belly
 bands and tail cross in front. Both layers use the same interpolated position
-and obstacle scale. At a reversal the head tucks inward and briefly fades out, changes
+and obstacle scale. Stalk leaves stay behind both coil layers. The short neck
+joins a root inside the band to the rotated/scaled cheek, avoiding an exposed
+sideways loop above the upper coil. At a reversal the head tucks inward and briefly fades out, changes
 ends while fully concealed, then emerges with its face upright. Both neck and
 head fade together, avoiding a face sliding across the front of the coils. The
 retreat uses seconds rather than frame history (fully concealed within 30 ms of

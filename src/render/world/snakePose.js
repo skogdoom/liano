@@ -18,11 +18,16 @@ export function paintedSnakePose(obstacle, time, pose = {
   head.x = -10 + 16 * alpha;
   head.y = -20 * direction;
   head.rotation = -.28 * direction;
-  const fromY = 2 - 12 * direction, toX = head.x - 10, toY = head.y + 3 * direction;
+  // Join the back of the cheek directly to a root inside the upper/lower band.
+  // The former long sideways bend exposed a handle-shaped neck above the coil.
+  const fromY = 2 - 8 * direction;
+  const c = Math.cos(head.rotation), s = Math.sin(head.rotation);
+  const toX = head.x + (-9 * c - 4 * s) * head.scale;
+  const toY = head.y + (-9 * s + 4 * c) * head.scale;
   for (let i = 0; i < pose.neck.length; i++) {
     const u = i / (pose.neck.length - 1), v = 1 - u;
-    pose.neck[i].x = v * v * -17 + 2 * v * u * -23 + u * u * toX;
-    pose.neck[i].y = v * v * fromY + 2 * v * u * head.y + u * u * toY;
+    pose.neck[i].x = v * v * -9 + 2 * v * u * -10 + u * u * toX;
+    pose.neck[i].y = v * v * fromY + 2 * v * u * (head.y + 8 * direction) + u * u * toY;
   }
   return pose;
 }

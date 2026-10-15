@@ -1,5 +1,14 @@
 # Runtime review candidates
 
+The drawing-defect follow-up registers player/ghost tail sockets inside the rear
+hip, keeps climbing-vine leaves behind both coil layers, shortens the upper snake
+neck into the cheek, and removes the sandstone doorway motif. The 18-pose monkey
+sheet, player/ghost fixtures, both climbing-snake fixtures, day/night scenes and
+sandstone temple are refreshed. The final review also refreshes all five lighting
+stages, affected scene images and both motion clips. Sixteen focused unit checks,
+three gallery/rig/classic-reference browser checks, source checks and the build
+pass. The same eight comparison flags remain; these images are still candidates.
+
 These images show the first complete cartoon pack through the real Phaser rigs.
 They are **review candidates**, not owner-approved regression baselines. The
 classic references under `browser-tests/references/` are unchanged.

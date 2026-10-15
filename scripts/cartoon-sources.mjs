@@ -61,6 +61,11 @@ const hangingTorsoMatrix = () => {
   return registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [[-7, 25], [7, 25], [0, 41]]);
 };
 const registeredPoint = ([a, b, c, d, e, f], [x, y]) => [a * x + c * y + e, b * x + d * y + f];
+const playerTorsoMatrix = (piece) => {
+  const { landmarks } = pictures.get('monkey-torso');
+  const hip = piece.attach.legBack.map((v, i) => (v + piece.attach.legFront[i]) / 2);
+  return registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [piece.attach.armBack, piece.attach.armFront, hip]);
+};
 // Share the painted head's placement with its animated eye overlay.
 const hangingHeadMatrix = () => {
   const head = pictures.get('monkey-head');
@@ -124,8 +129,7 @@ function monkey(p, frame) {
   if (who === 'eyes' || part === 'eyes') return [[-.8, -12.2, 2.3, 3.4], [5.8, -10.5, 1.9, 2.8]].map(([x, y, rx, ry]) => frame
     ? line(`M${x - 1.6} ${y - 1.8}l3.2 3.6 M${x + 1.6} ${y - 1.8}l-3.2 3.6`, '#33251e', 1.1)
     : ellipse(x, y, rx, ry, '#fff4db') + ellipse(x + .55, y + .25, rx * .58, ry * .62, '#40271d') + ellipse(x + .8, y - .8, .5, .65, '#fff')).join('');
-  const box = part === 'tail' ? { x: -41, y: -19, w: 35, h: 36 }
-    : part === 'arm' ? { x: -6, y: -9, w: 12, h: 39 }
+  const box = part === 'arm' ? { x: -6, y: -9, w: 12, h: 39 }
     : part === 'leg' ? { x: -6.5, y: -9, w: 13, h: 27 } : { ...p.box };
   if (part === 'head') box.w = 30;
   if (part === 'arm' || part === 'leg') {
@@ -134,10 +138,18 @@ function monkey(p, frame) {
     return colorize(`<use href="#picture-monkey-${part}" transform="matrix(${matrix.join(' ')})"/>`, who);
   }
   if (part === 'torso') {
-    const { landmarks } = pictures.get('monkey-torso');
-    const hip = p.attach.legBack.map((v, i) => (v + p.attach.legFront[i]) / 2);
-    const matrix = registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [p.attach.armBack, p.attach.armFront, hip]);
+    const matrix = playerTorsoMatrix(p);
     return colorize(`<use href="#picture-monkey-torso" transform="matrix(${matrix.join(' ')})"/>`, who);
+  }
+  if (part === 'tail') {
+    const tail = pictures.get('monkey-tail');
+    const torso = baseline.pieces.find(piece => piece.key === `monkey.${who}.torso`);
+    const target = registeredPoint(playerTorsoMatrix(torso), pictures.get('monkey-torso').landmarks.tailRoot);
+    // Preserve the curl's size, but bury its painted cut end in the rear hip.
+    // A fitted rectangle alone left the tail socket outside the torso silhouette.
+    const sx = 33 / tail.w, sy = 34 / tail.h;
+    const matrix = [sx, 0, 0, sy, target[0] - sx * tail.landmarks.root[0], target[1] - sy * tail.landmarks.root[1]];
+    return colorize(`<use href="#picture-monkey-tail" transform="matrix(${matrix.join(' ')})"/>`, who);
   }
   return colorize(picture(`monkey-${part}`, box), who);
 }
@@ -240,7 +252,7 @@ function temple(p, frame) {
     body += path('M-24 64V23L-16 14H16L24 23V64Z', colors[2], colors[0], 2);
     body += block(-54, 0, 108, 8);
     for (const y of [64, 110, 156]) for (const x of [-1, 1]) body += spiral(x * (y * .68 + 10), y + 24, .7);
-    if (look === 'sandstone') body += block(-39, 8, 78, 8) + spiral(0, 25, .5);
+    if (look === 'sandstone') body += block(-39, 8, 78, 8);
     if (look === 'basalt') for (const x of TEMPLE_BRAZIERS) {
       const base = OBSTACLE_HITBOXES.temple[1].dy - 16;
       body += path(`M${x - 10} ${base} H${x + 10} L${x + 5} ${base + 10} H${x - 5}Z`, '#9f7136', '#4c3b30', 1)

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { registerLimb, registerTriangle } from '../src/art/registration.js';
 import { readFileSync } from 'node:fs';
 import { imageSize } from '../src/art/custom.js';
+import { Resvg } from '@resvg/resvg-js';
 
 const apply = ([a, b, c, d, e, f], [x, y]) => [a * x + c * y + e, b * x + d * y + f];
 const near = (actual, expected) => actual.forEach((v, i) => expect(v).toBeCloseTo(expected[i], 10));
@@ -35,6 +36,29 @@ describe('painted joint registration', () => {
     for (const [i, name] of ['hipBack', 'hipFront'].entries()) {
       near(manifest.presentation.hangingMonkeyHips[i], apply(matrix, [marks[name][0] * width, marks[name][1] * height]));
       expect(manifest.presentation.hangingMonkeyHips[i][1]).toBeLessThan(42);
+    }
+  });
+
+  it('buries each player and ghost tail socket inside the painted rear hip', () => {
+    const root = new URL('../art/packs/cartoon/', import.meta.url);
+    const layout = JSON.parse(readFileSync(new URL('source-layout.json', root)));
+    const manifest = JSON.parse(readFileSync(new URL('manifest.json', root)));
+    const size = name => imageSize(`${name}.png`, readFileSync(new URL(`components/${name}.png`, root)));
+    const tailSize = size('monkey-tail'), torsoSize = size('monkey-torso');
+    const point = (name, mark, dimensions) => layout.components[name].landmarks[mark].map((v, i) => v * [dimensions.width, dimensions.height][i]);
+    const matrix = (svg, name) => svg.match(new RegExp(`href="#[^"]*picture-${name}" transform="matrix\\(([^)]+)\\)"`))[1].split(' ').map(Number);
+    for (const fur of ['p1', 'p2', 'shadow']) {
+      const source = part => readFileSync(new URL(`generated/monkey.${fur}.${part}.svg`, root), 'utf8');
+      const tailRoot = apply(matrix(source('tail'), 'monkey-tail'), point('monkey-tail', 'root', tailSize));
+      near(tailRoot, apply(matrix(source('torso'), 'monkey-torso'), point('monkey-torso', 'tailRoot', torsoSize)));
+      // The root must be covered by actual fur, not just lie inside its box.
+      const piece = manifest.pieces.find(p => p.key === `monkey.${fur}.torso`);
+      const image = new Resvg(source('torso'), { fitTo: { mode: 'zoom', value: 4 } }).render();
+      for (const dx of [-1, 0, 1]) for (const dy of [-1, 0, 1]) {
+        const x = Math.round((tailRoot[0] + dx - piece.box.x) * 4);
+        const y = Math.round((tailRoot[1] + dy - piece.box.y) * 4);
+        expect(image.pixels[(y * image.width + x) * 4 + 3]).toBeGreaterThan(255 * (piece.alpha ?? 1) * .95);
+      }
     }
   });
 
