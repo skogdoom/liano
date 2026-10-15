@@ -10,6 +10,11 @@ import { imageSize } from '../src/art/custom.js';
 import { packAlpha } from '../src/art/packs.js';
 import { registerLimb, registerTriangle } from '../src/art/registration.js';
 import { ARM, LEG } from '../src/views/monkey.js';
+import { TEMPLE_BRAZIERS } from '../src/views/obstacles.js';
+
+// The hanging decoration shares the painted player limbs, with its own fur.
+// Match this baked multiplier with the runtime tint on those reused leg images.
+const hangingMonkeyTint = 0xd09a9a;
 
 const root = new URL('../art/packs/cartoon/', import.meta.url);
 const baseline = JSON.parse(readFileSync(new URL('../art/manifest.json', import.meta.url)));
@@ -34,12 +39,15 @@ for (const [key, { source, cell }] of Object.entries(layout.components)) {
   }
   if (x0 >= x1 || y0 >= y1) throw new Error(`Empty painted component: ${key}`);
   const box = { x: cell.x + x0, y: cell.y + y0, w: x1 - x0, h: y1 - y0 };
-  const cropped = new Resvg(document(picture, box)).render().asPng();
+  const maxWidth = layout.components[key].maxWidth;
+  if (maxWidth !== undefined && (!Number.isInteger(maxWidth) || maxWidth < 1)) throw new Error(`Invalid export width: ${key}`);
+  const exported = new Resvg(document(picture, box), maxWidth && maxWidth < box.w ? { fitTo: { mode: 'width', value: maxWidth } } : {}).render();
+  const cropped = exported.asPng();
   writeFileSync(new URL(`components/${key}.png`, root), cropped);
   const landmarks = layout.components[key].landmarks ?? {};
   if (Object.values(landmarks).some((point) => !Array.isArray(point) || point.length !== 2 || point.some((v) => !Number.isFinite(v) || v < 0 || v > 1))) throw new Error(`Invalid landmarks: ${key}`);
-  pictures.set(key, { uri: uri(cropped), w: box.w, h: box.h,
-    landmarks: Object.fromEntries(Object.entries(landmarks).map(([name, point]) => [name, [point[0] * box.w, point[1] * box.h]])) });
+  pictures.set(key, { uri: uri(cropped), w: exported.width, h: exported.height,
+    landmarks: Object.fromEntries(Object.entries(landmarks).map(([name, point]) => [name, [point[0] * exported.width, point[1] * exported.height]])) });
 }
 
 const n = (v) => Math.round(v * 1000) / 1000;
@@ -63,16 +71,17 @@ const picture = (key, box, margin = 1) => {
   return `<use href="#picture-${key}" transform="translate(${box.x + margin} ${box.y + margin}) scale(${(box.w - 2 * margin) / p.w} ${(box.h - 2 * margin) / p.h})"/>`;
 };
 // Filters are baked into the exported images, never applied during gameplay.
-const colorMatrix = (content, id, matrix) => `<defs><filter id="${id}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${matrix}"/></filter></defs><g filter="url(#${id})">${content}</g>`;
-const colorize = (content, look) => {
+const colorMatrix = (content, id, matrix, box) => `<defs><filter id="${id}"${box ? ` filterUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}"` : ''} color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${matrix}"/></filter></defs><g filter="url(#${id})">${content}</g>`;
+const colorize = (content, look, box) => {
   if (!look || look === 'p1' || look === 'red' || look === 'purple') return content;
   const matrix = look === 'p2' ? '1.05 0 0 0 .1 0 1.15 0 0 .06 0 0 .9 0 .04 0 0 0 1 0'
+    : look === 'russet' ? '.815686 0 0 0 0 0 .603922 0 0 0 0 0 .603922 0 0 0 0 0 1 0'
     : look === 'blue' ? '.15 .1 .3 0 0 .55 .55 .3 0 0 .95 .3 .65 0 0 0 0 0 1 0'
     : look === 'brown' ? '.65 .3 0 0 .05 .12 .58 0 0 .03 .1 .1 .3 0 .02 0 0 0 1 0'
     : look === 'green' ? '.22 .2 0 0 0 .3 .44 0 0 .02 .2 .36 .15 0 .04 0 0 0 1 0'
     : look === 'black' ? '.13 .2 .1 0 0 .15 .22 .12 0 0 .15 .25 .2 0 0 0 0 0 1 0'
     : '.25 .5 .25 0 0 .25 .5 .25 0 0 .25 .5 .25 0 0 0 0 0 1 0';
-  return colorMatrix(content, 'palette', matrix);
+  return colorMatrix(content, 'palette', matrix, box);
 };
 const leaf = (length, halfWidth, fill = 'url(#paint)') => path(`M0 0 Q${length * .3} ${-halfWidth * 1.7} ${length} 0 Q${length * .4} ${halfWidth * 1.6} 0 0Z`, fill) + line(`M0 0 Q${length * .5} -1 ${length * .91} 0`, '#c6d66f', .45);
 const roundStrip = (p, colors) => defs(colors) + rect(0, -p.box.h * .36, p.length ?? 20, p.box.h * .72, 'url(#paint)', `rx="${p.box.h * .36}"`) + line(`M0 ${-p.box.h * .13} H${p.length ?? 20}`, colors[0], Math.min(.7, p.box.h * .15));
@@ -176,15 +185,25 @@ function scenery(p) {
 
 function temple(p, frame) {
   const [, look, part] = p.key.split('.');
+  const foliage = (length, halfWidth) => {
+    const source = pictures.get('leaf');
+    const matrix = registerLimb([source.w * .02, source.h * .62], [source.w * .99, source.h * .76], 84);
+    return `<g transform="scale(${length / 86} ${halfWidth / 21 * .85}) rotate(-90)"><use href="#picture-leaf" transform="matrix(${matrix.join(' ')})"/></g>`;
+  };
   if (!part) {
-    if (look === 'leaf') return defs(['#89b95c', ['#35613b', '#548745', '#377548', '#6b9e4a', '#456e3b', '#91b44b', '#599c47', '#86ba5b'][frame], '#264d36']) + leaf(86, 21);
+    if (look === 'leaf') {
+      const tones = [.62, .77, .71, .9, .8, 1, .72, .87];
+      const tone = tones[frame];
+      return colorMatrix(foliage(86, 21), 'temple-foliage', `${tone} 0 0 0 0 0 ${Math.min(1, tone + .08)} 0 0 0 0 0 ${tone} 0 0 0 0 0 1 0`);
+    }
     if (look === 'moss') return defs(frame ? ['#a6c85d', '#6d9947', '#437146'] : ['#648a40', '#376434', '#254b35']) + path('M-22 0 Q-20 -7 -10 -3 Q-5 -8 3 -3 Q12 -8 22 0 Q18 5 7 3 Q0 8 -10 4Q-20 6 -22 0Z', 'url(#paint)', 'none');
     if (look === 'vine') return roundStrip(p, palettes.green);
     if (look === 'haze') return `<defs><radialGradient id="mist"><stop stop-color="#5b8470" stop-opacity=".18"/><stop offset="1" stop-color="#416452" stop-opacity="0"/></radialGradient></defs>${ellipse(0, 0, 330, 280, 'url(#mist)')}`;
     if (look === 'glow') return `<defs><radialGradient id="fire"><stop stop-color="#ffb340" stop-opacity=".42"/><stop offset="1" stop-color="#ff8a2a" stop-opacity="0"/></radialGradient></defs>${ellipse(0, 0, 73, 73, 'url(#fire)')}`;
     if (look === 'flame') {
-      const sway = Math.floor(frame / 7) - 3, height = frame % 7 * 1.5, top = 29 - height;
-      return defs(palettes.gold) + path(`M-6 47 Q-10 35 ${sway} ${top} Q${sway + 7} 34 6 47Z`, '#f6a036', '#d97024', .6) + path(`M-3 47 Q-5 40 ${sway} ${top + 8} Q5 43 3 47Z`, '#fff3b0', 'none');
+      const base = OBSTACLE_HITBOXES.temple[1].dy - 16;
+      const sway = Math.floor(frame / 7) - 3, height = frame % 7 * 1.5, top = base - 19 - height;
+      return defs(palettes.gold) + path(`M-6 ${base} Q-10 ${base - 12} ${sway} ${top} Q${sway + 7} ${base - 13} 6 ${base}Z`, '#f6a036', '#d97024', .6) + path(`M-3 ${base} Q-5 ${base - 7} ${sway} ${top + 8} Q5 ${base - 4} 3 ${base}Z`, '#fff3b0', 'none');
     }
     throw new Error(`Unpainted temple component ${p.key}`);
   }
@@ -201,9 +220,14 @@ function temple(p, frame) {
     body += block(-54, 0, 108, 8);
     for (const y of [64, 110, 156]) for (const x of [-1, 1]) body += spiral(x * (y * .68 + 10), y + 24, .7);
     if (look === 'sandstone') body += block(-39, 8, 78, 8) + spiral(0, 25, .5);
-    if (look === 'basalt') for (const x of [-75, 75]) body += rect(x - 6, 47, 12, 18, '#be9951') + spiral(x, 37, .7);
+    if (look === 'basalt') for (const x of TEMPLE_BRAZIERS) {
+      const base = OBSTACLE_HITBOXES.temple[1].dy - 16;
+      body += path(`M${x - 10} ${base} H${x + 10} L${x + 5} ${base + 10} H${x - 5}Z`, '#9f7136', '#4c3b30', 1)
+        + rect(x - 12, base - 1, 24, 3, '#e8bf6b', 'rx="1"')
+        + rect(x - 3, base + 10, 6, 6, '#bd934e');
+    }
     for (let y = 64; y < 202; y += 12) body += block(-30, y, 60, 12);
-    for (const side of [-1, 1]) body += `<g transform="translate(${side * 46} 10) rotate(${side * 48})">${leaf(44, 9, '#75994b')}</g>`;
+    for (const side of [-1, 1]) body += `<g transform="translate(${side * 46} 10) rotate(${side < 0 ? 132 : 48})">${foliage(44, 9)}</g>`;
   } else if (part === 'stairs') {
     body += rect(-38, 0, 76, 96, colors[2]);
     for (let y = 0; y < 96; y += 12) body += block(-30, y, 60, 12);
@@ -252,11 +276,13 @@ function creature(p, frame) {
     if (component === 'ear') return body + path(`M2 36 L${6 + frame * .2} ${30 - frame * .2} L9 37Z`, colors[1], colors[2]);
     if (component === 'wing') {
       const lift = -1 + frame * 2 / (p.frames.length - 1), span = look === 'grey' ? 1.1 : look === 'black' ? .9 : 1;
-      const tx = n((-23 - 3 * Math.abs(lift)) * span), ty = n((-5 - 22 * lift) * span), ey = n((-4 - 11 * lift) * span);
-      body += path(`M0 -3 Q-5 ${ey} ${tx} ${ty} Q${tx + 8} ${ty + 9} ${tx + 7} ${ty + 16} Q${tx + 15} ${ty + 14} -7 13 Q-3 8 -3 4Z`, 'url(#paint)', colors[2], 1.2);
-      body += line(`M0 -3 Q-5 ${ey} ${tx} ${ty}`, colors[0], .9);
-      body += line(`M0 -3 L${tx} ${ty} M0 -3 L${tx + 7} ${ty + 16} M0 -3 L-7 13`, colors[0], .55, 'opacity=".7"');
-      return body;
+      const { landmarks } = pictures.get('bat-wing');
+      const dx = (-23 - 3 * Math.abs(lift)) * span + 2, dy = (-5 - 22 * lift) * span + 4;
+      const matrix = registerLimb(landmarks.joint, landmarks.tip, Math.hypot(dx, dy));
+      // Rotate the membrane with its arm; pinning its lower edge to the torso
+      // shears the scallops inside out during the downstroke.
+      const wing = `<g transform="translate(-2 -4) rotate(${Math.atan2(-dx, dy) * 180 / Math.PI}) scale(1.4 1)"><use href="#picture-bat-wing" transform="matrix(${matrix.join(' ')})"/></g>`;
+      return look === 'black' ? colorMatrix(wing, 'charcoal', '.15 .3 .15 0 .08 .15 .3 .15 0 .08 .17 .34 .17 0 .10 0 0 0 1 0', p.box) : colorize(wing, look, p.box);
     }
   }
   if (family === 'spider') {
@@ -292,14 +318,14 @@ function creature(p, frame) {
       return colorize([-1, 1].map((side) => {
         const angle = Math.atan2(-side * 2.5, -25) * 180 / Math.PI;
         return `<g transform="translate(${side * 7} 25) rotate(${angle}) scale(${side * .55} 1)"><use href="#picture-monkey-arm" transform="matrix(${matrix.join(' ')})"/></g>`;
-      }).join(''), 'grey');
+      }).join(''), 'russet');
     }
     if (component === 'body') {
       const { landmarks } = pictures.get('monkey-torso');
       const matrix = registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [[-7, 25], [7, 25], [0, 41]]);
-      return colorize(`<use href="#picture-monkey-torso" transform="matrix(${matrix.join(' ')})"/>` + picture('monkey-head', { x: -12, y: 12, w: 24, h: 18 }), 'grey');
+      return colorize(`<use href="#picture-monkey-torso" transform="matrix(${matrix.join(' ')})"/>` + picture('monkey-head', { x: -12, y: 12, w: 24, h: 18 }), 'russet');
     }
-    if (component === 'tail') return colorize(`<g transform="translate(3 32) rotate(${177 + frame * 6 / (p.frames.length - 1)})">${picture('monkey-tail', { x: -24, y: -20, w: 24, h: 20 }, 0)}</g>`, 'grey');
+    if (component === 'tail') return colorize(`<g transform="translate(3 32) rotate(${177 + frame * 6 / (p.frames.length - 1)})">${picture('monkey-tail', { x: -24, y: -20, w: 24, h: 20 }, 0)}</g>`, 'russet');
     if (component === 'eyes') return [[2, 19.8, 1.7, 1.7], [6.8, 22, .85, .8]].map(([ex, ey, rx, ry]) => frame
       ? line(`M${ex - rx} ${ey} Q${ex} ${ey + 1} ${ex + rx} ${ey}`, '#3c3b34', .6)
       : ellipse(ex, ey, rx, ry, '#f4eee0') + ellipse(ex + .35, ey + .1, rx * .55, ry * .7, '#36392d') + ellipse(ex + .5, ey - .3, .3, .3, '#fff8e5')).join('');
@@ -456,7 +482,7 @@ letters += ellipse(98, 1, 34, 33, 'url(#paint)', 'stroke="#6c5939" stroke-width=
 for (let i = 0; i < 10; i++) letters += `<g transform="translate(98 1) rotate(${i * 36})">${path('M-5 -36L-7 -40H7L5 -36Z', 'url(#paint)', '#846b3d', 1)}</g>`;
 writeFileSync(new URL(wordmark.frames[0], root), document(letters + guideLayer(wordmark), wordmark.box));
 manifest.pieces.push(wordmark);
-manifest.presentation = { title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, climbingSnake: 'articulated', monkeyRootY: 1 };
+manifest.presentation = { title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, climbingSnake: 'articulated', monkeyRootY: 1, monkeyFaceInFront: true, hangingMonkeyLegTint: hangingMonkeyTint };
 writeFileSync(new URL('manifest.json', root), JSON.stringify(manifest, null, 2) + '\n');
 const previous = JSON.parse(readFileSync(new URL('inventory.json', root)));
 const inventory = cartoonInventory(baseline, previous);

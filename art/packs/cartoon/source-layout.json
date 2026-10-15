@@ -16,6 +16,7 @@
     "parrot-body": { "source": "masters/birds-bats.png", "cell": { "x": 697, "y": 60, "w": 393, "h": 440 } },
     "parrot-head": { "source": "masters/birds-bats.png", "cell": { "x": 1090, "y": 0, "w": 446, "h": 500 } },
     "bat-hanging": { "source": "masters/birds-bats.png", "cell": { "x": 0, "y": 500, "w": 445, "h": 524 } },
+    "bat-wing": { "source": "masters/bat-wing.png", "cell": { "x": 0, "y": 0, "w": 1536, "h": 1024 }, "maxWidth": 400, "landmarks": { "joint": [0.9490403706, 0.7761806982], "tip": [0.0072799471, 0.0328542094], "trailing": [0.9920582396, 0.9815195072] } },
     "bat-flying": { "source": "masters/birds-bats.png", "cell": { "x": 445, "y": 550, "w": 655, "h": 474 } },
     "snake-coil": { "source": "masters/climbing-snake.png", "cell": { "x": 0, "y": 0, "w": 1315, "h": 1196 } },
     "snake-head": { "source": "masters/snakes.png", "cell": { "x": 800, "y": 0, "w": 736, "h": 1024 } },

@@ -6,7 +6,9 @@ export function paintedSnakePose(obstacle, time, pose = {
 }) {
   const phase = 2 * Math.PI * time / obstacle.motion.period + obstacle.motion.phase;
   const velocity = Math.sin(phase);
-  const direction = velocity / Math.hypot(velocity, .2);
+  // Keep the turn continuous, but pass across the coils quickly at a reversal
+  // instead of lingering with the face halfway through the body.
+  const direction = velocity / Math.hypot(velocity, .07);
   const head = pose.head;
   head.x = 6 + 10 * (1 - direction * direction);
   head.y = -20 * direction;

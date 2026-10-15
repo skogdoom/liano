@@ -42,6 +42,7 @@ import {
   perchedSnakePose,
 } from '../../views/obstacles.js';
 import { quadraticPoints } from './build.js';
+import { LEG, aim } from '../../views/monkey.js';
 
 // The decorations a branch carries, in the Phaser version (as the Pixi DECORATIONS): each
 // builds its part from pieces (`b`, a Builder) and the decoration's random stream, and
@@ -120,9 +121,12 @@ function monkey(b, rand) {
   // Everything hangs from the hands at (0, 0): the pendulum swings about that point.
   const swing = b.container();
   const tail = b.image('hangingMonkey.tail');
-  const legs = [0, 1].map(() => b.line('hangingMonkey.leg', [[0, 0], [0, 1]]));
+  const legTint = b.art.catalog.presentation?.hangingMonkeyLegTint;
+  const painted = legTint !== undefined;
+  const legs = [0, 1].map(() => painted ? b.image('monkey.p1.leg').setTint(legTint) : b.line('hangingMonkey.leg', [[0, 0], [0, 1]]));
   const eyes = b.image('hangingMonkey.eyes');
-  swing.add([tail, ...legs.flat(), b.image('hangingMonkey.body'), b.image('hangingMonkey.arms'), eyes]);
+  const body = b.image('hangingMonkey.body'), arms = b.image('hangingMonkey.arms');
+  swing.add([tail, ...legs.flat(), ...(painted ? [arms, body] : [body, arms]), eyes]);
   part.add(swing);
   return {
     part,
@@ -130,6 +134,12 @@ function monkey(b, rand) {
       const pose = hangingMonkeyPose(t, phase);
       swing.rotation = pose.swing;
       pose.legs.forEach(({ from, to }, i) => {
+        if (painted) {
+          const leg = legs[i];
+          leg.setPosition(...from).setRotation(aim({ x: from[0], y: from[1] }, { x: to[0], y: to[1] }));
+          leg.scaleY = b.art.unit('monkey.p1.leg') * Math.hypot(to[0] - from[0], to[1] - from[1]) / LEG.length;
+          return;
+        }
         const [segment, start, end] = legs[i];
         b.setSegment(segment, 'hangingMonkey.leg', from, to);
         start.setPosition(...from);

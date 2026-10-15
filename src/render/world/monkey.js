@@ -3,7 +3,7 @@ import { MonkeyState } from '../../sim/monkey.js';
 import { makeContainer } from './build.js';
 
 // A monkey in the Phaser version (PHASER_PLAN.md, M5a): the pieces of one fur (p1, p2 or
-// shadow) in the order the Pixi view stacks its parts, posed by the same MonkeyPose.
+// shadow), posed by MonkeyPose. Packs can put the face ahead of the front arm.
 export class MonkeyRig {
   constructor(scene, art, fur) {
     const piece = (part, frame = 0) => art.image(scene, `monkey.${fur}.${part}`, frame);
@@ -19,7 +19,9 @@ export class MonkeyRig {
     // Open (frame 0), or crossed after a fall (frame 1); the shadow's are see-through.
     this.eyesKey = fur === 'shadow' ? 'monkey.shadow.eyes' : 'monkey.eyes';
     this.eyes = art.image(scene, this.eyesKey);
-    this.body.add([piece('tail'), this.legBack, this.legFront, this.armBack, piece('torso'), piece('head'), this.eyes, this.armFront]);
+    const face = [piece('head'), this.eyes];
+    const front = art.catalog.presentation?.monkeyFaceInFront ? [this.armFront, ...face] : [...face, this.armFront];
+    this.body.add([piece('tail'), this.legBack, this.legFront, this.armBack, piece('torso'), ...front]);
     this.view.add(this.body);
     this.pose = new MonkeyPose();
   }

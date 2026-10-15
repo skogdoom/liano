@@ -3838,6 +3838,8 @@
     "coconutRootY": 1,
     "snakeLimbThickness": 10,
     "climbingSnake": "articulated",
-    "monkeyRootY": 1
+    "monkeyRootY": 1,
+    "monkeyFaceInFront": true,
+    "hangingMonkeyLegTint": 13671066
   }
 }

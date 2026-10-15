@@ -22,6 +22,16 @@ describe('painted climbing snake pose', () => {
     }
   });
 
+  it('completes most of the head turn within 80 ms of each reversal', () => {
+    for (const time of [0, 2, 4]) {
+      const before = paintedSnakePose(snake, time - .08).head;
+      const after = paintedSnakePose(snake, time + .08).head;
+      expect(Math.abs(before.y)).toBeGreaterThan(17);
+      expect(Math.abs(after.y)).toBeGreaterThan(17);
+      expect(Math.sign(before.y)).toBe(-Math.sign(after.y));
+    }
+  });
+
   it('keeps the neck attached inside the body and head throughout a cycle', () => {
     for (let time = 0; time <= 4; time += .025) {
       const { head, neck } = paintedSnakePose(snake, time);

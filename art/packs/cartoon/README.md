@@ -30,17 +30,20 @@ sampling differences in painted edges; keep the flags visible for art review.
 
 ## Sources and exports
 
-`masters/` contains ten painted PNG component masters: monkey,
+`masters/` contains eleven painted PNG component masters: monkey,
 creatures, foliage/wood, the distant jungle, a level branch aligned with its
 collision guide, cleaned snake components without the original faint matte,
-a lighter plum spider body with clearer contour highlights, and highlighted
-birds/bats with clean transparency, a separate large/small waterfall pair, and
-refined climbing-snake coils with a short tapered tail.
+a lighter plum spider body with clearer contour highlights, highlighted
+birds/bats with clean transparency, a separate large/small waterfall pair,
+refined climbing-snake coils with a short tapered tail, and a scalloped bat wing.
 They were generated for this pack
 in the approved style. `source-layout.json` names each component's crop in source
 pixels. `components/` contains deterministic, tightly trimmed PNG exports from
 those crops, preserving their alpha. No manual changes to generated exports are
-needed. Keep source cell bounds inside each master's actual PNG dimensions.
+needed. Optional `maxWidth` limits a trimmed component export before embedding it
+in flipbooks; the wing uses 400 pixels, above its largest runtime size, to avoid
+embedding the full master in all 164 frames. Keep source cell bounds inside each
+master's actual PNG dimensions.
 
 Monkey torso/arm/leg `landmarks` are normalized coordinates in the **trimmed
 component**, not in the whole master. They register shoulders, palms and hips to
@@ -49,6 +52,9 @@ them when replacing a master; fitting a limb's whole bounding box does not align
 its visible shoulder or gripping palm with its pivot.
 The hanging decoration reuses those landmarks to connect its painted shoulders
 to its raised arms and place both palms at the branch.
+`presentation.monkeyFaceInFront` draws the cartoon head and eyes ahead of the
+gripping arm, keeping the face readable during swings in both player palettes
+and the shadow. Classic retains its original layer order.
 
 `scripts/cartoon-sources.mjs` produces all **594 required frames** plus the new
 `ui.wordmark`: **176 pieces / 595 frames**. It combines painted components with
@@ -71,8 +77,21 @@ places one large and one small fall outside the mirrored forest group per full
 
 `presentation.climbingSnake: articulated` selects the smaller upright face and
 connected neck; its pose follows the obstacle's drawing phase continuously rather
-than flipping the face on descent. `presentation.monkeyRootY` attaches the hanging
-monkey's painted hands to the branch. Classic keeps its original poses/placement.
+than flipping the face on descent. The short reversal keeps its head from
+lingering halfway across the coils. `presentation.monkeyRootY` attaches the hanging
+monkey's painted hands to the branch. `presentation.hangingMonkeyLegTint` selects
+painted articulated player-leg components for that decoration, with a russet tint
+matching its baked arms, torso and tail; its face renders ahead of its arms.
+Classic keeps its original poses/placement.
+
+Temple braziers use the same `TEMPLE_BRAZIERS` centers as the flames; rims and
+flame bases share the first tier's offset. Temple corner/roof/fringe leaves use
+painted foliage rooted at the placement point, with the roof leaves kept inside
+the sprite box. Flying bat wings register the painted shoulder and tip
+landmarks through the 41 original flap frames, retaining their finger bones and
+scalloped membranes. The membrane turns with its shoulder instead of being
+sheared against a fixed lower root; recoloring uses an explicit filter region
+to keep transformed edges inside the frame visible.
 
 Each generated SVG keeps the logical box and hidden guide layer. Gradient/filter
 names are local to a frame; vector gradients use fixed coordinates to avoid

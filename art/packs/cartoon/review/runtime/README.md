@@ -35,10 +35,21 @@ Validation for this pass: 14 focused unit checks and ten browser checks includin
 the unchanged classic reference fixtures.
 
 The latest monkey poses register the painted shoulders, palms and hips directly
-to the player's rig. The hanging monkey now uses joined grey painted arms,
-torso and curled tail, with its hands at the branch and small feet. The two
+to the player's rig. The hanging monkey now uses joined russet painted arms,
+torso and curled tail, with its hands at the branch and articulated painted
+legs/feet. The two
 climbing-snake fixtures show rounded coils, a tapered tail and an upright head
 that leads continuously through changes of climbing direction. These are still
-review candidates; 21 focused unit checks cover the registration, snake pose and
+review candidates; 22 focused unit checks cover the registration, snake pose and
 existing pack/decoration contracts. Ten browser checks pass, including the
 unchanged classic reference fixtures; the production build and source checks pass.
+
+The player and shadow monkey pose captures also show the cartoon face/eyes drawn
+in front of the gripping arm. Classic keeps its existing layer order.
+
+The temple day/dusk/night and variant captures show holders aligned to their
+flames and painted foliage with complete roof silhouettes. Bat poses show the
+painted scalloped membrane rotating at the shoulder through down/up strokes;
+`bats-flap-cycle.png` shows nine samples for each palette through the native
+Phaser image renderer at 2.5×. The climbing snake turns its head more quickly
+at reversals, while keeping its pose continuous.
