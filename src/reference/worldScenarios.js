@@ -168,7 +168,7 @@ function sceneWorld(stage, temple = null) {
   return world;
 }
 const SCENE = { width: 1280, height: 720 };
-const sceneScenario = (id, title, stage, ahead = 0, temple = null) =>
+const sceneScenario = (id, title, stage, ahead = 0, temple = null, makeWorld = () => sceneWorld(stage, temple)) =>
   withArt({
     id,
     title: `${title}`,
@@ -176,12 +176,38 @@ const sceneScenario = (id, title, stage, ahead = 0, temple = null) =>
     background: 0x000000,
     draw(scene, zoom) {
       const pane = new WorldPane(scene, artFor(scene, zoom));
-      pane.setWorld(sceneWorld(stage, temple), [0]);
+      pane.setWorld(makeWorld(), [0]);
       pane.resize(paneLayouts(layoutFor(SCENE.width, SCENE.height), 1, 1)[0], zoom);
       pane.camera.x = pane.camera.prevX = pane.camera.x + ahead;
       pane.update([], 10, false, null, 1);
     },
   });
+
+// Readability at actual game size, with the same scenery and rigs as gameplay.
+function obstacleReadabilityWorld(stage) {
+  const world = sceneWorld(stage);
+  world.obstacles.clear();
+  for (const [i, x] of [80, 620].entries()) {
+    const spider = movingObstacle('spider', i);
+    spider.baseX = x;
+    world.obstacles.set(i, spider);
+    world.obstacles.set(i + 2, new Obstacle(i + 2, 'rock', x + 240, i ? 220 : 470, null, 1.2));
+  }
+  return world;
+}
+
+function flyingReadabilityWorld(stage) {
+  const world = sceneWorld(stage);
+  world.obstacles.clear();
+  for (const [i, type] of ['bird', 'blueBird', 'purpleBird', 'bat', 'circleBat'].entries()) {
+    const actor = movingObstacle(type, 0);
+    // Preserve its generated animation, with an uncluttered review placement.
+    actor.baseX = 60 + i * 190;
+    actor.baseY = i < 3 ? 210 : 420;
+    world.obstacles.set(i, actor);
+  }
+  return world;
+}
 
 export const WORLD_SCENARIOS = [
   withArt({
@@ -256,6 +282,10 @@ export const WORLD_SCENARIOS = [
   sceneScenario('scene.ahead', 'The same run further on, by day', 1, 1500),
   sceneScenario('scene.dusk', 'The same run at dusk (tinted)', 3, 700),
   sceneScenario('scene.night', 'The same run at night', 4, 2200),
+  ...[[1, 'day'], [4, 'night']].map(([stage, light]) => sceneScenario(
+    `scene.obstacles.${light}`, `Spiders and rocks against the jungle by ${light}`, stage, 0, null, () => obstacleReadabilityWorld(stage))),
+  ...[[1, 'day'], [4, 'night']].map(([stage, light]) => sceneScenario(
+    `scene.flying.${light}`, `Birds and bats against the jungle by ${light}`, stage, 0, null, () => flyingReadabilityWorld(stage))),
   // The temple in each look, in the view as the game shows it (its foot buried in the
   // floor, the canopy over the lianas), by day and at night; the one with the fire at dusk.
   ...[0, 1, 2, 3].flatMap((look) => [

@@ -13,12 +13,16 @@ fixtures for inspection. The capture renderer is Chromium/SwiftShader, not Safar
 Day/night/temple and menu captures include the readability follow-up: muted
 distant scenery, outlined green vines with a consistent highlight, and varied
 background tree shapes and colors. The rebuilt pack retains its texture sizes;
-source/contract checks, seven focused unit tests and nine pack browser checks pass.
+source/contract checks, nine focused unit tests and nine pack browser checks pass.
 
 Approve the artwork before promoting selected fixed fixtures to automated cartoon
-references. Five raw source/atlas edge comparisons remain recorded in
+references. Ten raw source/atlas edge comparisons remain recorded in
 `PHASER_PLAN.md`; no comparison threshold has been changed to hide them.
 
 The snake, shadow and button fixtures show the transparency/legibility repairs at
 native 2×: clean snake silhouettes, the more visible ghost monkey, and separate
 speaker/waves in both sound states.
+
+The obstacle/flying day/night scenes and the spider, rock, bird and bat fixtures
+show the visibility pass against both the real jungle and a flat inspection
+background. Larger native sprites use 2× fixtures; whole scenes stay at game size.

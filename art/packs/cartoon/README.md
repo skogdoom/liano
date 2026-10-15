@@ -30,14 +30,16 @@ sampling differences in painted edges; keep the flags visible for art review.
 
 ## Sources and exports
 
-`masters/` contains six painted PNG component masters: monkey,
+`masters/` contains eight painted PNG component masters: monkey,
 creatures, foliage/wood, the distant jungle, a level branch aligned with its
-collision guide, and cleaned snake components without the original faint matte.
+collision guide, cleaned snake components without the original faint matte,
+a lighter plum spider body with clearer contour highlights, and highlighted
+birds/bats with clean transparency.
 They were generated for this pack
 in the approved style. `source-layout.json` names each component's crop in source
 pixels. `components/` contains deterministic, tightly trimmed PNG exports from
 those crops, preserving their alpha. No manual changes to generated exports are
-needed. Keep source cell bounds inside the 1536×1024 masters.
+needed. Keep source cell bounds inside each master's actual PNG dimensions.
 
 `scripts/cartoon-sources.mjs` produces all **594 required frames** plus the new
 `ui.wordmark`: **176 pieces / 595 frames**. It combines painted components with

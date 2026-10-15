@@ -72,6 +72,11 @@ const colorize = (content, look) => {
 const leaf = (length, halfWidth, fill = 'url(#paint)') => path(`M0 0 Q${length * .3} ${-halfWidth * 1.7} ${length} 0 Q${length * .4} ${halfWidth * 1.6} 0 0Z`, fill) + line(`M0 0 Q${length * .5} -1 ${length * .91} 0`, '#c6d66f', .45);
 const roundStrip = (p, colors) => defs(colors) + rect(0, -p.box.h * .36, p.length ?? 20, p.box.h * .72, 'url(#paint)', `rx="${p.box.h * .36}"`) + line(`M0 ${-p.box.h * .13} H${p.length ?? 20}`, colors[0], Math.min(.7, p.box.h * .15));
 const lianaGreen = ['#dce99a', '#a4c859', '#61883c'];
+const spiderLeg = ['#e0cde5', '#ab8caf', '#68546f'];
+const batPalettes = {
+  purple: ['#e7c9ee', '#b58bc5', '#655175'], brown: ['#ecd6bb', '#b5977f', '#66504b'],
+  grey: ['#e5e4e0', '#acaeb3', '#676e7d'], black: ['#c4c4d4', '#828397', '#44465d'],
+};
 const greenRope = (p) => {
   const halfWidth = p.box.h * .36, length = p.length;
   // Shade across the rope, rather than fading its lower end into the jungle.
@@ -193,7 +198,7 @@ function temple(p, frame) {
 function creature(p, frame) {
   const [family, look, part] = p.key.split('.');
   const component = part ?? look;
-  const colors = palettes[part ? look : 'green'] ?? palettes.green;
+  const colors = (family === 'bat' || family === 'hangingBat' ? batPalettes[look] : null) ?? palettes[part ? look : 'green'] ?? palettes.green;
   let body = defs(colors);
   if (family === 'panther') {
     if (component === 'body') return picture('panther', p.box);
@@ -212,23 +217,33 @@ function creature(p, frame) {
       const lift = -1 + frame * 2 / (p.frames.length - 1);
       const tipX = -2 - 5 * lift, tipY = -3 - 13 * lift;
       body += path(`M-8 -3 Q-2 -7 4 -3 Q${n(tipX + 4)} ${n(tipY - 3 * lift)} ${n(tipX)} ${n(tipY)} Q${n(tipX - 3)} ${n(tipY + 3 * lift)} -8 -3Z`, 'url(#paint)', colors[2], .6);
+      body += line(`M-8 -3 Q-2 -7 4 -3 Q${n(tipX + 4)} ${n(tipY - 3 * lift)} ${n(tipX)} ${n(tipY)}`, colors[0], .7);
       for (let i = 0; i < 3; i++) body += line(`M${-6 + i * 2.5} -3 L${n(tipX + i * 1.2)} ${n(tipY + i * lift * 2)}`, colors[0], .6);
       return body;
     }
   }
   if (family === 'bat' || family === 'hangingBat') {
-    if (component === 'body') return colorize(picture(family === 'bat' ? 'bat-flying' : 'bat-hanging', p.box), look);
+    if (component === 'body') {
+      const painted = picture(family === 'bat' ? 'bat-flying' : 'bat-hanging', p.box);
+      return look === 'black' ? colorMatrix(painted, 'charcoal', '.15 .3 .15 0 .08 .15 .3 .15 0 .08 .17 .34 .17 0 .10 0 0 0 1 0') : colorize(painted, look);
+    }
     if (component === 'eyes') return eyePair(frame === 1, [-3, 3], 30);
     if (component === 'ear') return body + path(`M2 36 L${6 + frame * .2} ${30 - frame * .2} L9 37Z`, colors[1], colors[2]);
     if (component === 'wing') {
       const lift = -1 + frame * 2 / (p.frames.length - 1), span = look === 'grey' ? 1.1 : look === 'black' ? .9 : 1;
       const tx = n((-23 - 3 * Math.abs(lift)) * span), ty = n((-5 - 22 * lift) * span), ey = n((-4 - 11 * lift) * span);
       body += path(`M0 -3 Q-5 ${ey} ${tx} ${ty} Q${tx + 8} ${ty + 9} ${tx + 7} ${ty + 16} Q${tx + 15} ${ty + 14} -7 13 Q-3 8 -3 4Z`, 'url(#paint)', colors[2], 1.2);
+      body += line(`M0 -3 Q-5 ${ey} ${tx} ${ty}`, colors[0], .9);
       body += line(`M0 -3 L${tx} ${ty} M0 -3 L${tx + 7} ${ty + 16} M0 -3 L-7 13`, colors[0], .55, 'opacity=".7"');
       return body;
     }
   }
-  if (family === 'spider' && component === 'body') return picture('spider', p.box);
+  if (family === 'spider') {
+    if (component === 'body') return picture('spider', p.box);
+    if (component === 'leg') return roundStrip(p, spiderLeg);
+    if (component === 'legEnd') return defs(spiderLeg) + ellipse(0, 0, 2.4, 2.4);
+    if (component === 'thread') return roundStrip(p, ['#e5e2cb', '#bcc9be', '#859f9a']);
+  }
   if ((family === 'snake' && component === 'coil') || (family === 'perchedSnake' && component === 'band')) return picture('snake-coil', p.box);
   if ((family === 'snake' || family === 'perchedSnake') && component === 'head') return picture('snake-head', p.box);
   if (family === 'perchedSnake' && component === 'tail') return body + path(`M0 0 Q-18 9 -10 20 Q-5 29 5 19`, 'none', '#5a9945', 5 - frame);
@@ -277,8 +292,9 @@ function prop(p, frame) {
   if (family === 'rock') {
     if (part === 'body') {
       const pts = Array.from({ length: 9 }, (_, i) => { const a = i * 2 * Math.PI / 9; const r = 29 + 3 * Math.sin(i * 2.7 + frame * 1.9); return [n(Math.cos(a) * r), n(Math.sin(a) * r)]; });
-      body = defs(palettes.grey) + path(`M${pts.map((v) => v.join(' ')).join('L')}Z`, 'url(#paint)', '#48594e', 1.1);
-      body += path(`M${pts[0].join(' ')}L-6 -15L${pts[5].join(' ')}L-16 6Z`, '#c1c6ad', 'none', 0, 'opacity=".55"') + line('M-16 -7L-4 -10L3 -3', '#e0ddbf', 1);
+      body = defs(['#eee1c6', '#b8aa96', '#78717a']) + path(`M${pts.map((v) => v.join(' ')).join('L')}Z`, 'url(#paint)', '#443c48', 1.4);
+      body += path(`M${pts[0].join(' ')}L-6 -15L${pts[5].join(' ')}L-16 6Z`, '#f0e5ce', 'none', 0, 'opacity=".82"') + line('M-16 -7L-4 -10L3 -3', '#fff0d5', 1.2);
+      body += line(`M${pts.slice(5).map(([px, py]) => `${n(px * .94)} ${n(py * .94)}`).join('L')}`, '#f5e8d1', 1.1);
       body += path('M-24 19Q-12 17 -3 24L-6 29 -22 26Z', '#628650', 'none');
       return body;
     }
