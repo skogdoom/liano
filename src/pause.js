@@ -45,7 +45,10 @@ export function createPause(win, doc, { now = () => performance.now() } = {}) {
     toggle(reason) {
       this.hold(reason, !held.has(reason));
     },
-    acceptsInput() {
+    acceptsInput(role) {
+      // Manual pause still accepts its resume/menu controls. Backgrounding and
+      // graphics loss keep blocking input, even if manual pause is also held.
+      if (['primary', 'start', 'menu'].includes(role) && !blurred && !hidden && held.size === 1 && held.has('manual')) return true;
       return !isPaused() && now() - resumedAt >= RESUME_GRACE_MS;
     },
     destroy() {

@@ -43,7 +43,9 @@ pixels. `components/` contains deterministic, tightly trimmed PNG exports from
 those crops, preserving their alpha. No manual changes to generated exports are
 needed. Optional `maxWidth` limits a trimmed component export before embedding it
 in flipbooks; the wing uses 400 pixels, above its largest runtime size, to avoid
-embedding the full master in all 164 frames. Keep source cell bounds inside each
+embedding the full master in all 164 frames. The floor tile fades the foreground
+frond roots into the same dark shadow color as `backdrop.floorFill`, keeping the
+join continuous in tall views without runtime filters. Keep source cell bounds inside each
 master's actual PNG dimensions.
 
 Monkey torso/arm/leg `landmarks` are normalized coordinates in the **trimmed

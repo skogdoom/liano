@@ -100,3 +100,10 @@ still apply. Twenty-seven focused unit checks pass; all 17 art/menu/reference
 browser checks pass across the full run and the mobile title-art assertion
 update. Three gallery/pose/classic-reference checks also pass after brightening
 the hanging monkey. No comparison threshold was relaxed.
+
+The day/night scenes and `floor-blend-day.png` show the frond roots fading into
+a matching dark floor fill, replacing the hard teal boundary. The final review
+artifact contains fresh fixed rigs, all five lighting stages, current menus,
+motion clips and the eight flagged built/source comparisons. These remain review
+candidates. The pause/floor follow-up passes 71 unit files / 760 tests and three
+browser checks, including unchanged classic references.

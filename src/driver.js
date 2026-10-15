@@ -49,8 +49,20 @@ export function createDriver({ game, input, pause, sound, prefetch, ready = () =
       if (input.consumeLivesToggle()) game.toggleLives();
       // S turns the shadow monkey on and off for single player, on the title screen.
       if (input.consumeShadowToggle()) game.toggleShadow();
+      const wasPaused = pause.paused;
       // P pauses a run, and resumes whatever it paused.
       if (input.consumePauseToggle() && (game.pausable || pause.reason === 'manual')) pause.toggle('manual');
+      if (wasPaused && pause.reason === 'manual') {
+        if (input.consumePress('menu')) {
+          game.press('menu');
+          pause.toggle('manual');
+          input.clear();
+        } else if (input.consumePress('primary') || input.consumePress('start')) {
+          pause.toggle('manual');
+          // Resuming must not release the monkey or start a new run.
+          input.clear();
+        }
+      }
       // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
       const paused = pause.paused;
       if (paused) input.clear(); // a press made just before pausing must not act on resume

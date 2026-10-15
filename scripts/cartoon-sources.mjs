@@ -15,6 +15,7 @@ import { TEMPLE_BRAZIERS } from '../src/views/obstacles.js';
 // The hanging decoration shares the painted player limbs, with its own fur.
 // Match this baked multiplier with the runtime tint on those reused leg images.
 const hangingMonkeyTint = 0xffb8b8;
+const forestFloorColor = '#111c18';
 
 const root = new URL('../art/packs/cartoon/', import.meta.url);
 const baseline = JSON.parse(readFileSync(new URL('../art/manifest.json', import.meta.url)));
@@ -145,7 +146,7 @@ function scenery(p) {
   const { x, y, w, h } = p.box;
   const part = p.key.split('.')[1];
   if (part === 'sky') return defs(['#6cbed0', '#b9dbe0', '#dfecd3']) + rect(x, y, w, h);
-  if (part === 'floorFill') return rect(x, y, w, h, '#143329');
+  if (part === 'floorFill') return rect(x, y, w, h, forestFloorColor);
   const wrap = (body) => [-2048, 0, 2048].map((dx) => `<g transform="translate(${dx} 0)">${body}</g>`).join('');
   let body = '';
   if (part === 'far') {
@@ -185,7 +186,7 @@ function scenery(p) {
     const top = part === 'nearTop' || part === 'canopy';
     const floor = part === 'floor';
     if (part === 'canopy') body += rect(0, -18, 2048, 48, '#1c5035');
-    if (floor) body += rect(0, 657, 2048, 43, '#143329');
+    if (floor) body += rect(0, 657, 2048, 43, forestFloorColor);
     const count = floor ? 24 : 16;
     for (let i = 0; i < count; i++) {
       const sx = i * 2048 / count, sy = top ? y + (part === 'canopy' ? 16 : -32) : y + h - (floor ? 11 : 0);
@@ -193,6 +194,10 @@ function scenery(p) {
       const shape = picture(top ? 'canopy' : 'fern', { x: sx - pw / 2, y: top ? sy : sy - ph, w: pw, h: ph }, 0);
       body += floor ? `<g opacity=".8">${colorize(shape, 'black')}</g>` : shape;
     }
+    // Fade the painted frond roots into the same shadow color as the extended
+    // floor. Bake this into the tile so tall views have no hard teal boundary.
+    if (floor) body += `<defs><linearGradient id="forest-ground" gradientUnits="userSpaceOnUse" x1="0" y1="652" x2="0" y2="689"><stop stop-color="${forestFloorColor}" stop-opacity="0"/><stop offset="1" stop-color="${forestFloorColor}"/></linearGradient></defs>`
+      + rect(0, 652, 2048, 48, 'url(#forest-ground)');
   }
   return wrap(body);
 }

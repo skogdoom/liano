@@ -218,8 +218,8 @@ function toggleMute() {
 }
 
 // The game's input on Phaser's keyboard and pointers (input.js), read through the UI
-// scene, which is always running. Presses count only while running, and not just after
-// resuming (see pause.js). A tap on the mute button toggles sound instead, and one on
+// scene, which is always running. Manual pause accepts resume/menu controls;
+// gameplay presses wait until the resume grace period ends (see pause.js). A tap on the mute button toggles sound instead, and one on
 // the full-screen button is handled by its own controls.
 const ui = await new Promise((resolve) => platform.once('ui', resolve));
 const buttonAt = (hit, event) =>
@@ -235,7 +235,7 @@ const input = createInput(phaserKeys(ui.input.keyboard, {
   },
 }), phaserPointers(ui.input), {
   initialType: coarsePointer ? 'touch' : 'keyboard',
-  accepts: () => pause.acceptsInput(),
+  accepts: (role) => pause.acceptsInput(role),
   intercept: (event) => {
     if (platform.fullscreenButton && buttonAt(FULLSCREEN_HIT, event)) return true;
     if (buttonAt(MUTE_HIT, event)) { toggleMute(); return true; }
