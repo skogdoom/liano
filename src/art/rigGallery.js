@@ -19,7 +19,10 @@ for (const scenario of scenarios) {
     const canvas = await new Promise((resolve, reject) => {
       game = new Phaser.Game({ type: Phaser.WEBGL, parent, width: scenario.width * zoom, height: scenario.height * zoom,
         banner: false, audio: { noAudio: true }, backgroundColor: scenario.background,
-        render: { antialias: true, preserveDrawingBuffer: true },
+        // Set this before renderer boot, including its first/loading frames.
+        // Match gameplay's single-texture batching; multi-texture sampling can
+        // drop fragments of the grey bat over the backdrop at the 1× atlas scale.
+        render: { antialias: true, preserveDrawingBuffer: true, maxTextures: 1 },
         scene: {
           preload() {
             this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file) => reject(new Error(`Could not load ${file.url}`)));

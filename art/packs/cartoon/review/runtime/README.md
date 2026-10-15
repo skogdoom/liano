@@ -113,3 +113,8 @@ upper arc and middle return now pass behind the green stalk, with both belly
 bands and tail in front. Crops share exact atlas-pixel boundaries, and the rear
 layer follows the same interpolated position and scale as the front. Both motion
 clips in `/art-review.html` also include the wrap. These remain review candidates.
+
+The day/night flying scenes use the same single-texture batching as gameplay.
+The gallery now sets this before renderer boot; multi-texture sampling could
+drop rectangular fragments of the gray bat at 1×. Both scenes are refreshed and
+inspected at 1×/2×; gameplay already uses single-texture batches.

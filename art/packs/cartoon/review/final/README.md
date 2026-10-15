@@ -16,3 +16,6 @@ automatically. Safari device/performance acceptance remains a separate task.
 
 The climbing-snake wrap follow-up refreshes both snake fixtures and both motion
 clips. Other captures remain from the original snapshot; none are approved.
+
+The day/night flying scenes are refreshed after matching the rig gallery to
+gameplay single-texture batching. The gray bat stays intact at both 1× and 2×.

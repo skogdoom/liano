@@ -20,7 +20,8 @@ it; invalid explicit/saved values resolve to cartoon. Blocked storage uses the U
 - `/rigs.html?art=cartoon`: fixed assembled poses, all obstacle families, day/night
   scenes, temples and UI, rendered by the real game rigs. Add `only=world.monkeys`
   or another fixture ID to inspect one; `zoom=2` renders at 2× rather than enlarging
-  a low-resolution screenshot.
+  a low-resolution screenshot. The gallery uses gameplay’s single-texture batching
+  from renderer boot, avoiding missing fragments in small rotated sprites.
 
 The full sheet remains an art-direction illustration, not a production atlas.
 Its missing arm, unnatural grip and truncated ring finger were corrected during

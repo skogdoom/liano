@@ -421,6 +421,15 @@
         "media/snake-turn.mp4"
       ],
       "renderer": "Chromium/SwiftShader"
+    },
+    {
+      "change": "Match gameplay single-texture batching in the rig gallery; prevents missing gray-bat fragments at 1x",
+      "baseCommit": "0ed7744",
+      "refreshed": [
+        "scene.flying.day",
+        "scene.flying.night"
+      ],
+      "renderer": "Chromium/SwiftShader; verified at 1x and 2x"
     }
   ]
 }
