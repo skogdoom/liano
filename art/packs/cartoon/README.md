@@ -30,11 +30,11 @@ sampling differences in painted edges; keep the flags visible for art review.
 
 ## Sources and exports
 
-`masters/` contains eight painted PNG component masters: monkey,
+`masters/` contains nine painted PNG component masters: monkey,
 creatures, foliage/wood, the distant jungle, a level branch aligned with its
 collision guide, cleaned snake components without the original faint matte,
 a lighter plum spider body with clearer contour highlights, and highlighted
-birds/bats with clean transparency.
+birds/bats with clean transparency, plus a separate large/small waterfall pair.
 They were generated for this pack
 in the approved style. `source-layout.json` names each component's crop in source
 pixels. `components/` contains deterministic, tightly trimmed PNG exports from
@@ -51,6 +51,14 @@ retain 36%. This explicit cartoon-only alpha policy is shared by source exports,
 inventory and validation (`src/art/packs.js`); classic remains at 36%.
 No classic drawing is read or
 used as a fallback. The classic manifest supplies only rendering/hitbox contracts.
+
+Branch snakes use single-strand band recipes with separate animated neck/head and
+tail; the climbing snake's full coil image is not a repeatable branch band. The
+pack's `presentation.snakeLimbThickness` fits wraps to the painted wood, and
+`presentation.coconutRootY` sets where coconuts meet it. Packs without those values
+retain classic placement. The far-jungle master has no waterfalls: the generator
+places one large and one small fall outside the mirrored forest group per full
+2048-unit tile. Keep their soft edges inside the tile so the repeat stays seamless.
 
 Each generated SVG keeps the logical box and hidden guide layer. Gradient/filter
 names are local to a frame; vector gradients use fixed coordinates to avoid

@@ -16,7 +16,7 @@ background tree shapes and colors. The rebuilt pack retains its texture sizes;
 source/contract checks, nine focused unit tests and nine pack browser checks pass.
 
 Approve the artwork before promoting selected fixed fixtures to automated cartoon
-references. Ten raw source/atlas edge comparisons remain recorded in
+references. Eight raw source/atlas edge comparisons remain recorded in
 `PHASER_PLAN.md`; no comparison threshold has been changed to hide them.
 
 The snake, shadow and button fixtures show the transparency/legibility repairs at
@@ -26,3 +26,10 @@ speaker/waves in both sound states.
 The obstacle/flying day/night scenes and the spider, rock, bird and bat fixtures
 show the visibility pass against both the real jungle and a flat inspection
 background. Larger native sprites use 2× fixtures; whole scenes stay at game size.
+
+The latest branch fixtures show single-strand snake wraps fitted to the painted
+wood and raised coconut attachments. Bananas (including HUD/results), beehives
+and blue birds show the outline/color/support corrections. Whole scenes now
+include the sparser waterfall pair and higher-contrast hanging support vines.
+Validation for this pass: 14 focused unit checks and ten browser checks including
+the unchanged classic reference fixtures.

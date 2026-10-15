@@ -47,7 +47,7 @@ let paintBox;
 const gradient = (id, colors, radial = false) => `<${radial ? 'radial' : 'linear'}Gradient id="${id}" ${radial ? '' : `gradientUnits="userSpaceOnUse" x1="${paintBox.x}" y1="${paintBox.y}" x2="${paintBox.x + paintBox.w}" y2="${paintBox.y + paintBox.h}"`}>${colors.map((c, i) => `<stop offset="${i / (colors.length - 1)}" stop-color="${c}"/>`).join('')}</${radial ? 'radial' : 'linear'}Gradient>`;
 const palettes = {
   green: ['#a6cf55', '#589b3d', '#254e2c'], brown: ['#cc9654', '#93562d', '#4c2d22'],
-  red: ['#ffb352', '#df5143', '#823042'], blue: ['#8bdbeb', '#3b91c0', '#315477'],
+  red: ['#ffb352', '#df5143', '#823042'], blue: ['#d5f4e8', '#68bdd7', '#315477'],
   purple: ['#c19dde', '#805aab', '#423458'], grey: ['#b0babc', '#788688', '#3c494e'],
   black: ['#657277', '#303b42', '#172429'], gold: ['#ffe8a0', '#e7ac41', '#94632c'],
 };
@@ -62,7 +62,7 @@ const colorMatrix = (content, id, matrix) => `<defs><filter id="${id}" color-int
 const colorize = (content, look) => {
   if (!look || look === 'p1' || look === 'red' || look === 'purple') return content;
   const matrix = look === 'p2' ? '1.05 0 0 0 .1 0 1.15 0 0 .06 0 0 .9 0 .04 0 0 0 1 0'
-    : look === 'blue' ? '0 0 1 0 0 0 .6 .6 0 0 1 0 0 0 0 0 0 0 1 0'
+    : look === 'blue' ? '.15 .1 .3 0 0 .55 .55 .3 0 0 .95 .3 .65 0 0 0 0 0 1 0'
     : look === 'brown' ? '.65 .3 0 0 .05 .12 .58 0 0 .03 .1 .1 .3 0 .02 0 0 0 1 0'
     : look === 'green' ? '.22 .2 0 0 0 .3 .44 0 0 .02 .2 .36 .15 0 .04 0 0 0 1 0'
     : look === 'black' ? '.13 .2 .1 0 0 .15 .22 .12 0 0 .15 .25 .2 0 0 0 0 0 1 0'
@@ -77,13 +77,14 @@ const batPalettes = {
   purple: ['#e7c9ee', '#b58bc5', '#655175'], brown: ['#ecd6bb', '#b5977f', '#66504b'],
   grey: ['#e5e4e0', '#acaeb3', '#676e7d'], black: ['#c4c4d4', '#828397', '#44465d'],
 };
-const greenRope = (p) => {
+const greenRope = (p, colors = lianaGreen) => {
   const halfWidth = p.box.h * .36, length = p.length;
+  const rim = Math.min(1, p.box.h * .2), highlight = Math.min(1, p.box.h * .18);
   // Shade across the rope, rather than fading its lower end into the jungle.
   // The rim stays within the original box and leaves the rig/contact unchanged.
-  return `<defs><linearGradient id="rope" gradientUnits="userSpaceOnUse" x1="0" y1="${-halfWidth}" x2="0" y2="${halfWidth}">${lianaGreen.map((c, i) => `<stop offset="${i / 2}" stop-color="${c}"/>`).join('')}</linearGradient></defs>`
-    + rect(0, -halfWidth, length, halfWidth * 2, 'url(#rope)', `rx="${halfWidth}" stroke="#293f28" stroke-width="1"`)
-    + line(`M2 ${-halfWidth * .45} H${length - 2}`, lianaGreen[0], 1);
+  return `<defs><linearGradient id="rope" gradientUnits="userSpaceOnUse" x1="0" y1="${-halfWidth}" x2="0" y2="${halfWidth}">${colors.map((c, i) => `<stop offset="${i / 2}" stop-color="${c}"/>`).join('')}</linearGradient></defs>`
+    + rect(0, -halfWidth, length, halfWidth * 2, 'url(#rope)', `rx="${halfWidth}" stroke="#293f28" stroke-width="${rim}"`)
+    + line(`M2 ${-halfWidth * .45} H${length - 2}`, colors[0], highlight);
 };
 const eyePair = (closed, xs = [-3.5, 3.5], y = -11) => xs.map((x) => closed
   ? line(`M${x - 2} ${y - .5} Q${x} ${y + 1.5} ${x + 2} ${y - .5}`, '#33251e', 1.3)
@@ -114,7 +115,11 @@ function scenery(p) {
     const landscape = picture('far-jungle', { x: 0, y: -60, w: 1024, h: 730 }, 0);
     // Atmospheric color/contrast compression separates painted scenery from
     // interactive vines, without changing the existing day/night runtime tints.
-    body += colorMatrix(landscape + `<g transform="translate(2048 0) scale(-1 1)">${landscape}</g>`, 'distance',
+    // Waterfalls are separate landmarks, so reflecting the forest doesn't also
+    // duplicate them: one large and one small fall per complete 2048-unit tile.
+    const falls = picture('waterfall-big', { x: 210, y: 140, w: 150, h: 300 }, 0)
+      + picture('waterfall-small', { x: 1470, y: 280, w: 85, h: 175 }, 0);
+    body += colorMatrix(landscape + `<g transform="translate(2048 0) scale(-1 1)">${landscape}</g>` + falls, 'distance',
       '.616 .213 .021 0 .071 .063 .766 .021 0 .084 .063 .213 .574 0 .088 0 0 0 1 0');
   } else if (part === 'mid') {
     const tones = [
@@ -244,9 +249,23 @@ function creature(p, frame) {
     if (component === 'legEnd') return defs(spiderLeg) + ellipse(0, 0, 2.4, 2.4);
     if (component === 'thread') return roundStrip(p, ['#e5e2cb', '#bcc9be', '#859f9a']);
   }
-  if ((family === 'snake' && component === 'coil') || (family === 'perchedSnake' && component === 'band')) return picture('snake-coil', p.box);
-  if ((family === 'snake' || family === 'perchedSnake') && component === 'head') return picture('snake-head', p.box);
-  if (family === 'perchedSnake' && component === 'tail') return body + path(`M0 0 Q-18 9 -10 20 Q-5 29 5 19`, 'none', '#5a9945', 5 - frame);
+  if (family === 'snake' && component === 'coil') return picture('snake-coil', p.box);
+  if (family === 'snake' && component === 'head') return picture('snake-head', p.box);
+  if (family === 'perchedSnake') {
+    // A band is one strand crossing the wood, repeated by the rig. An entire
+    // painted climbing-snake body here produces several overlapping snakes.
+    if (component === 'band') {
+      const strand = frame ? 'M-4 0 Q4 11 4 22' : 'M-14 0 Q0 5 14 6';
+      return line(strand, '#294323', 8) + line(strand, '#69a83b', 6.6)
+        + line(strand, '#aad75d', 2.2) + line(strand, '#e3df8d', .7);
+    }
+    if (component === 'neck') return `<defs><linearGradient id="neck" gradientUnits="userSpaceOnUse" x1="0" y1="-3" x2="0" y2="3"><stop stop-color="#b5d76b"/><stop offset=".45" stop-color="#7fb745"/><stop offset="1" stop-color="#477a30"/></linearGradient></defs>`
+      + rect(0, -3, p.length, 6, 'url(#neck)', 'stroke="#294323" stroke-width=".6"');
+    if (component === 'neckEnd') return ellipse(0, 0, 3, 3, '#7fb745');
+    if (component === 'head') return picture('snake-head', p.box, 0);
+    if (component === 'tail') return defs(['#b5d76b', '#7fb745', '#477a30'])
+      + path(frame ? 'M-1 -3 Q-9 -4 -16 4 Q-6 4 2 3Z' : 'M-3 -1 Q0 8 -6 18 Q4 13 3 0Z', 'url(#paint)', '#294323', .8);
+  }
   if (family === 'perchedSnake' && component === 'tongue') return line('M8 0H16L19 -3M16 0L19 3', '#d16765', 1.1);
   if (family === 'perchedSnake' && component === 'mark') return body + path('M-2 0L0 -2 2 0 0 2Z', '#37572c', 'none');
   if ((family === 'snake' && component === 'stalkLeaf')) return `<g transform="scale(${frame ? -1 : 1} 1) translate(0 -3)">${defs()}${leaf(15, 4)}</g>`;
@@ -281,8 +300,8 @@ function prop(p, frame) {
   }
   if (family === 'support') {
     if (part === 'stem' || part === 'hiveTrunk') return picture('trunk', p.box);
-    if (part === 'vine') return roundStrip(p, palettes.green);
-    if (part === 'vineEnd') return defs() + ellipse(0, 0, 2.4, 2.4);
+    if (part === 'vine') return greenRope(p, ['#f0edb4', '#bfce72', '#6d8c42']);
+    if (part === 'vineEnd') return ellipse(0, 0, 1.3, 1.3, '#bfce72', 'stroke="#293f28" stroke-width=".5"');
   }
   if (family === 'thornBush') {
     if (part === 'body') return picture('thorn-bush', p.box);
@@ -307,7 +326,10 @@ function prop(p, frame) {
       for (const y of [-21, -8, 6, 20, 32]) body += line(`M-17 ${y} Q0 ${y + 5} 17 ${y}`, '#936335', 1.3);
       return body + ellipse(3, 26, 6, 6, '#392d24') + line('M-3 20Q3 18 9 20', '#ffe8a0', .8);
     }
-    return body + path('M-11 -31Q-4 -58 12 -52L42 -41Q25 -44 6 -43L-6 -26Z') + line('M25 -41V-30', '#668e43', 3);
+    return line('M38 -48 Q14 -57 -5 -48', '#433026', 8)
+      + line('M38 -48 Q14 -57 -5 -48', '#91603a', 5.8)
+      + line('M34 -50 Q14 -56 -3 -49', '#d4a366', 1)
+      + line('M0 -49 V-32', '#344d29', 3.2) + line('M-.5 -48 V-33', '#a5b957', 1.3);
   }
   if (family === 'bee') {
     if (part === 'wing') return ellipse(0, 0, 3, 3.4, '#e0f5ec', 'opacity=".76" stroke="#95c7c9" stroke-width=".5"');
@@ -315,7 +337,8 @@ function prop(p, frame) {
   }
   if (family === 'banana') {
     if (part === 'glint') return path('M0 -8L2 -2 8 0 2 2 0 8 -2 2 -8 0 -2 -2Z', '#fff6bd', 'none');
-    body += `<g transform="translate(${x + w / 2} ${y + h / 2}) scale(${w / 44} ${h / 34})">${path('M-18 -9Q-4 6 13 -11Q20 -5 11 8Q-3 19 -19 5Q-23 -1 -18 -9Z', 'url(#paint)', '#9c7035', 1)}${line('M-16 -6Q-5 9 11 0', '#fff2a4', 2)}${path('M10 -10L12 -15 17 -14 16 -9Z', '#65533a', 'none')}</g>`;
+    body = defs(['#fff3ad', '#ffd653', '#d8952e']);
+    body += `<g transform="translate(${x + w / 2} ${y + h / 2}) scale(${w / 44} ${h / 34})">${path('M-18 -9Q-4 6 13 -11Q20 -5 11 8Q-3 19 -19 5Q-23 -1 -18 -9Z', 'url(#paint)', '#443122', 2.3)}${line('M-16 -6Q-5 9 11 0', '#fff6bf', 2)}${path('M10 -10L12 -15 17 -14 16 -9Z', '#71532c', '#443122', .8)}</g>`;
     return body;
   }
   if (family === 'heart') return `<g transform="translate(${x + w / 2} ${y + h / 2}) scale(${w / 40} ${h / 32})">${defs(['#ffb2a0', '#df6570', '#a13e57'])}${path('M0 13C-7 8 -20 0 -17 -8C-13 -16 -4 -12 0 -6C4 -12 13 -16 17 -8C20 0 7 8 0 13Z', frame ? 'none' : 'url(#paint)', '#edc4a0', frame ? 2 : 1)}${frame ? '' : line('M-12 -7Q-8 -11 -3 -6', '#ffe6c9', 1.8)}</g>`;
@@ -401,7 +424,7 @@ letters += ellipse(98, 1, 34, 33, 'url(#paint)', 'stroke="#6c5939" stroke-width=
 for (let i = 0; i < 10; i++) letters += `<g transform="translate(98 1) rotate(${i * 36})">${path('M-5 -36L-7 -40H7L5 -36Z', 'url(#paint)', '#846b3d', 1)}</g>`;
 writeFileSync(new URL(wordmark.frames[0], root), document(letters + guideLayer(wordmark), wordmark.box));
 manifest.pieces.push(wordmark);
-manifest.presentation = { title: 'ui.wordmark' };
+manifest.presentation = { title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10 };
 writeFileSync(new URL('manifest.json', root), JSON.stringify(manifest, null, 2) + '\n');
 const previous = JSON.parse(readFileSync(new URL('inventory.json', root)));
 const inventory = cartoonInventory(baseline, previous);

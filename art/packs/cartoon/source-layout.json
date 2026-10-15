@@ -3,6 +3,8 @@
   "description": "Production component master crops in source pixels; exports trim transparent padding before fitting the rig boxes.",
   "components": {
     "far-jungle": { "source": "masters/far-jungle.png", "cell": { "x": 0, "y": 0, "w": 1536, "h": 1024 } },
+    "waterfall-big": { "source": "masters/waterfalls.png", "cell": { "x": 0, "y": 0, "w": 768, "h": 1024 } },
+    "waterfall-small": { "source": "masters/waterfalls.png", "cell": { "x": 768, "y": 0, "w": 768, "h": 1024 } },
     "monkey-torso": { "source": "masters/monkey.png", "cell": { "x": 58, "y": 65, "w": 315, "h": 450 } },
     "monkey-head": { "source": "masters/monkey.png", "cell": { "x": 419, "y": 132, "w": 371, "h": 347 } },
     "monkey-arm": { "source": "masters/monkey.png", "cell": { "x": 867, "y": 65, "w": 223, "h": 478 } },

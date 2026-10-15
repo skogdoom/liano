@@ -30,6 +30,17 @@ describe('complete cartoon pack contracts', () => {
     }
   });
 
+  it('draws branch-snake bands as single strands between the rig attachments', () => {
+    const piece = cartoon.pieces.find((p) => p.key === 'perchedSnake.band');
+    for (const [frame, from, to, outside] of [[0, [-14, 0], [14, 6], [0, 24]], [1, [-4, 0], [4, 22], [-20, 5]]]) {
+      const image = new Resvg(readFileSync(new URL(`../art/packs/cartoon/${piece.frames[frame]}`, import.meta.url))).render();
+      const alphaAt = ([x, y]) => image.pixels[((y - piece.box.y) * image.width + x - piece.box.x) * 4 + 3];
+      expect(alphaAt(from)).toBeGreaterThan(200);
+      expect(alphaAt(to)).toBeGreaterThan(200);
+      expect(alphaAt(outside)).toBe(0);
+    }
+  });
+
   it('covers every required frame plus the explicitly allowed title artwork', () => {
     expect(validatePack(classic, cartoon, 'cartoon')).toEqual([]);
     expect(cartoon.pieces).toHaveLength(176);

@@ -71,6 +71,16 @@ function bird(b, rand) {
 
 function snake(b, rand, { hangs = false } = {}) {
   const coil = perchedSnake(rand, hangs);
+  const limbThickness = b.art.catalog.presentation?.snakeLimbThickness;
+  if (!coil.pole && limbThickness !== undefined) {
+    // Keep the wrap tight to this pack's painted wood. Updating the existing
+    // endpoints also moves tailRoot, which shares the first band's endpoint.
+    coil.thick = limbThickness;
+    for (const band of coil.bands) {
+      band.to[1] = limbThickness + 1;
+      band.bulge[1] = limbThickness / 2;
+    }
+  }
   const part = b.container(coil.x, coil.y).setScale(coil.dir, 1);
   const art = b.art;
   const pieces = [b.image('perchedSnake.tail', coil.pole ? 0 : 1).setPosition(...coil.tailRoot)];
@@ -272,8 +282,9 @@ function flowers(b, rand) {
 
 function coconuts(b, rand) {
   const { x: cx, dir, nuts } = coconutBunch(rand);
-  const part = b.container(cx, under()).setScale(dir, 1);
   const art = b.art;
+  // The painted branch's visible underside is higher than its collision box.
+  const part = b.container(cx, art.catalog.presentation?.coconutRootY ?? under()).setScale(dir, 1);
   const swaying = nuts.map((n) => {
     const nut = b.container(n.x * 0.4, 1);
     const nx = n.x - n.x * 0.4;
