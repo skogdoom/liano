@@ -15,6 +15,7 @@
     "art:build": "node scripts/build-art.mjs",
     "art:check": "node scripts/art-check.mjs",
     "art:cartoon:inventory": "node scripts/cartoon-inventory.mjs",
+    "art:cartoon:sources": "node scripts/cartoon-sources.mjs",
     "art:cartoon:check": "node scripts/cartoon-inventory.mjs --check",
     "prebuild": "node scripts/build-windows.mjs && npm run art:build",
     "build": "vite build",

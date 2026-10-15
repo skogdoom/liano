@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "description": "Production component master crops in source pixels; exports trim transparent padding before fitting the rig boxes.",
+  "components": {
+    "far-jungle": { "source": "masters/far-jungle.png", "cell": { "x": 0, "y": 0, "w": 1536, "h": 1024 } },
+    "monkey-torso": { "source": "masters/monkey.png", "cell": { "x": 58, "y": 65, "w": 315, "h": 450 } },
+    "monkey-head": { "source": "masters/monkey.png", "cell": { "x": 419, "y": 132, "w": 371, "h": 347 } },
+    "monkey-arm": { "source": "masters/monkey.png", "cell": { "x": 867, "y": 65, "w": 223, "h": 478 } },
+    "monkey-leg": { "source": "masters/monkey.png", "cell": { "x": 1238, "y": 50, "w": 211, "h": 484 } },
+    "monkey-tail": { "source": "masters/monkey.png", "cell": { "x": 15, "y": 550, "w": 399, "h": 430 } },
+    "monkey-eyes": { "source": "masters/monkey.png", "cell": { "x": 465, "y": 643, "w": 275, "h": 231 } },
+    "panther": { "source": "masters/creatures.png", "cell": { "x": 15, "y": 40, "w": 505, "h": 283 } },
+    "parrot-flying": { "source": "masters/creatures.png", "cell": { "x": 525, "y": 30, "w": 613, "h": 300 } },
+    "parrot-body": { "source": "masters/creatures.png", "cell": { "x": 1190, "y": 55, "w": 290, "h": 270 } },
+    "parrot-head": { "source": "masters/creatures.png", "cell": { "x": 120, "y": 350, "w": 355, "h": 320 } },
+    "bat-hanging": { "source": "masters/creatures.png", "cell": { "x": 665, "y": 331, "w": 223, "h": 347 } },
+    "bat-flying": { "source": "masters/creatures.png", "cell": { "x": 1060, "y": 400, "w": 453, "h": 262 } },
+    "snake-coil": { "source": "masters/creatures.png", "cell": { "x": 139, "y": 670, "w": 309, "h": 340 } },
+    "snake-head": { "source": "masters/creatures.png", "cell": { "x": 620, "y": 695, "w": 360, "h": 267 } },
+    "spider": { "source": "masters/creatures.png", "cell": { "x": 1110, "y": 690, "w": 367, "h": 310 } },
+    "leaf": { "source": "masters/foliage.png", "cell": { "x": 0, "y": 90, "w": 535, "h": 335 } },
+    "fern": { "source": "masters/foliage.png", "cell": { "x": 535, "y": 0, "w": 525, "h": 510 } },
+    "thorn-bush": { "source": "masters/foliage.png", "cell": { "x": 1060, "y": 0, "w": 476, "h": 505 } },
+    "canopy": { "source": "masters/foliage.png", "cell": { "x": 0, "y": 515, "w": 556, "h": 373 } },
+    "trunk": { "source": "masters/foliage.png", "cell": { "x": 594, "y": 512, "w": 355, "h": 500 } },
+    "branch": { "source": "masters/branch.png", "cell": { "x": 0, "y": 0, "w": 1536, "h": 1024 } }
+  }
+}

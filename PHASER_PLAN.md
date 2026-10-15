@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fifth draft: adds the planned cartoon sprite pack, M8a). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a implementation has started on `phaser-sprites`, between M8 and M9; its coverage inventory and first style review are being prepared before full asset production. M9 follows M8a.**
+Status: **agreed plan (fifth draft: adds the planned cartoon sprite pack, M8a). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a’s first complete cartoon pack and Config reload selector are implemented on `phaser-sprites`, between M8 and M9; final artwork and real-device acceptance remain pending. M9 follows M8a.**
 
 **Nothing is merged into master until every milestone (M0 to M9, including M8a) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -725,7 +725,7 @@ Only once M7 is accepted: until then the Pixi version is the reference.
 
 ### M8a. Cartoon sprite sheets and the classic graphics toggle (L)
 
-**Status: implementation started on `phaser-sprites` from `phaser`, after the owner’s go-ahead.** This milestone is between M8 (Pixi removal) and M9 (cleanup/release). Full asset production follows review of the concrete style sample below; the game stays on classic while that review is pending.
+**Status: implementation started on `phaser-sprites` from `phaser`, after the owner’s go-ahead.** This milestone is between M8 (Pixi removal) and M9 (cleanup/release). The owner approved continuing from the corrected style sample. The first complete production pack and reload selector are implemented for review; classic remains the default, and final artwork/device acceptance is pending.
 
 **Outcome.** Prepare and integrate a complete cartoon sprite pack that can replace all current graphics, alongside a complete classic pack. The Config menu selects between them through **Classic graphics: On/Off** and reloads the game when the value changes. Classic is the default for now. Both packs use the same rules, physics, generated levels, obstacles, animation timing, camera motion, modes and sounds.
 
@@ -740,7 +740,7 @@ The visual references are [the day concept](docs/cover_day.png) and [the night c
 - **Menus:** carry the stone lettering, vines and carved sun/spiral motif into the cartoon title treatment, panels and icons. Keep instructions, scores, settings and the version as crisp live text, rather than baking variable text into sheets.
 - **Art direction confirmed by the owner:** a cohesive painted cartoon style for both characters and scenery. Retain the concepts' atmosphere while simplifying fine detail for small screens; the backgrounds belong to the same cartoon world as the monkey.
 
-Approve a small style sample at actual game size before producing the full pack: a hanging/flying monkey, a liana, a branch with a creature, a temple, a day/night background strip and a menu sample. Check outline weight, palette, shading, joint overlaps and hazard readability together. The first sample and its game-scale review page are being prepared as the initial implementation step.
+Approve a small style sample at actual game size before producing the full pack: a hanging/flying monkey, a liana, a branch with a creature, a temple, a day/night background strip and a menu sample. Check outline weight, palette, shading, joint overlaps and hazard readability together. The owner approved continuing from the corrected sample; the production pack now uses component masters and the existing articulated rigs.
 
 #### M8a.1. Inventory and sprite contracts
 
@@ -802,14 +802,23 @@ Add a clearly labelled **Classic graphics: On/Off** row inside the existing titl
 
 **Done when:** the owner approves the cohesive concept-derived artwork; cartoon assets replace every required current visual family without hidden classic fallbacks; both complete packs build and fit the existing budgets (or explicitly accepted exceptions); classic defaults to On; Config switches correctly by reload on desktop/mobile; tests and classic/cartoon visual checks pass; the milestone report and asset-editing guide are complete. M9 starts afterward. Keep classic as the default until a later explicit decision changes it.
 
-**M8a progress: inventory and first style review.**
+**M8a implementation report (draft artwork ready for review, version 3.0.0-dev.9).**
 
-- Added `art/packs/cartoon/inventory.json`: every one of the 175 classic contracts and 594 stable frame keys, with pivots, joins, hitbox guides, tint/alpha/softening, export dimensions and per-frame source/sheet/cell/status fields. `npm run art:cartoon:inventory` refreshes contracts while retaining artist progress; `npm run art:cartoon:check` checks synchronization. All production frames are still pending.
-- Generated concept-derived style samples, simplifying the scenery and temple into the same painted cartoon style as the monkey. The owner flagged a missing arm in the airborne pose, an unnatural grip and a truncated ring finger on the restored hand; the revised sample restores a distinct far arm, redraws the gripping hand and completes the ring finger. Added close-ups for those details, with enough space to show every fingertip.
-- Added the development-only `cartoon.html` review page, with desktop/phone landscape/portrait views, day/night scenes, actual-size/fitted display, asset close-ups and coverage. Monkey envelopes use bounds from the existing classic rig; these are static style mockups, not finished modular rigs, seamless tiles or collision-ready assets.
-- The sample sheet is reviewed separately from production coverage. No default-game assets, classic reference images, simulation, camera, sound or Config behavior are changed in this step. The runtime toggle and complete dual-pack build follow style approval.
-- Validation: the inventory synchronization check, four authoring unit tests and Vite production build pass. Chromium checks pass for the review page (viewport/light controls, no game loading and transparent cutouts) and the unchanged classic renderer references. Inspected the corrected hand enlarged and the mockups at game scale; full sprite-pack integration and real-device gameplay checks remain for the next steps.
-- Style review status: awaiting the owner's review of the corrected sample, available at `/cartoon.html` on the development server. The version remains 3.0.0-dev.9 until this milestone is complete.
+- Produced an independent cartoon source set covering all **175 baseline pieces / 594 required frames**, plus the explicit stone/sun wordmark: **176 pieces / 595 frames**. Five painted PNG masters supply monkey components, creatures, foliage/wood, distant scenery and a level branch aligned with its collision guide. Editable vector recipes supply strips, repeatable stone, animated wings/fire, small props and UI. No classic drawing is reused as a fallback. Production frames are marked painted; complete owner review is not claimed.
+- Kept the classic generated/override pipeline intact. Builds emit separate `public/art/classic/` and `public/art/cartoon/` catalogs, boot/main sheets and tiles at 1×/2×/4×. Coverage, frame order, box/scale/pivot/attachment/tint/alpha/animation contracts are validated. Missing/incompatible sources, empty sprites, incorrect shadow alpha and texture-budget overruns fail the build. Cartoon cells have isolated rasterization and two-pixel extrusion; tiles retain wrapped softening and edge rows.
+- Config now has **X · Classic graphics: On/Off**, clickable/tappable on desktop and mobile. On means classic; Off means cartoon. Choices persist, explicit `?art=classic|cartoon` overrides do not rewrite storage, and invalid/blocked storage defaults safely to classic. Changes navigate once to the title, preserving mode, lives, slipping, shadow, mute, resolution, unrelated parameters and the hash; selecting the current value does not reload. The added row fits the existing small-screen layouts with 44-pixel minimum targets. Mobile remains 1P only.
+- Resolve selection before loading and prepare only the selected pack. The frame trace and startup metadata identify `artPack`. Failed cartoon loading displays a clear error and an explicit action to reload classic. Physics, world generation, camera/interpolation, layer speeds, animation timing and sound recipes remain unchanged; M7 preparation and softening stay in place.
+- Extended `/art.html` with pack selection, source/atlas comparison, frame sliders/animation and repeat seams. `/rigs.html` uses the actual game rigs for fixed poses, every obstacle family, day/night/temple scenes and UI, with optional 2× rendering. `/cartoon.html` retains the approved style sample and points to the playable pack. The authoring guide documents masters, crops, recipes, coverage, exported placements and editing/build commands.
+- **Texture/download sizes:** decimal MB; downloads include the selected catalog, atlas JSON/PNG and unique tiles, before any HTTP transfer compression. Texture sizes include both sets and tiles; PNG sources/review pages are excluded from the production build.
+
+| Pack | Texture 1× | Texture 2× | Texture 4× | Download 1× | Download 2× | Download 4× |
+|---|---:|---:|---:|---:|---:|---:|
+| Classic | 46.6 MB | 105.6 MB | 254.2 MB | 1.17 MB | 2.20 MB | 4.09 MB |
+| Cartoon | 46.6 MB | 106.2 MB | 256.4 MB | 7.76 MB | 11.19 MB | 19.93 MB |
+
+- Both packs satisfy 120 MB at 2× and 300 MB at 4×. The painted pack has a larger compressed download; the loader still fetches only that pack and scale. Startup/decode timing and the cached 1.5-second/60 Hz budgets must be checked on Safari M1 and iPhone 13 mini before acceptance; Chromium software rendering is not a substitute for those device results.
+- Validation: production build and source/inventory checks pass; the full unit run passed **69 files / 740 tests**, with focused checks after later changes. Classic references and the classic gallery remain passing (0.17% differing pixels). The cartoon gallery's aggregate comparison improved to about **0.55%** after fixed-coordinate gradients and removal of a conflicting rock gradient. Four small 2× raw-SVG versus PNG/blur edge comparisons remain flagged (canopy, player-1 monkey leg, snake coil, red bird body); they remain visible for owner review rather than being suppressed or given a relaxed threshold. All **82 Chromium browser checks** pass across the full run and focused retries: 81 passed in the full run; the newly added mode test queued a redundant mode key with Start, then passed after waiting for mode selection appropriately. The final nine pack checks also pass after the last artwork/recovery updates. No visual or timing thresholds were relaxed.
+- **Acceptance remaining:** inspect/approve the full artwork and the five source-comparison flags, approve the captured `art/packs/cartoon/review/runtime/` reference candidates, and complete the real-device gameplay/startup/frame pass. The milestone is not marked done and M9 has not started.
 
 ### M9. Cleanup and release (S)
 
@@ -847,7 +856,7 @@ Everything below must work on the Phaser renderer as on v2.3:
 
 ## 11. Open questions
 
-**M8a art direction, answered:** the owner chose a cohesive painted cartoon style for both characters and scenery, based on the day/night concepts. There are no unresolved planning questions for this milestone. The owner has authorized implementation; review of the first concrete style sample precedes full sprite production.
+**M8a art direction, answered:** the owner chose a cohesive painted cartoon style for both characters and scenery, based on the day/night concepts. There are no unresolved planning questions for this milestone. The owner authorized implementation and approved continuing from the corrected style sample. Full-pack artwork acceptance and real-device checks are the remaining review steps.
 
 Every question from the first two drafts is answered in section 1. New questions that come up during a milestone are added here and asked before that milestone's PR is merged into `phaser`.
 

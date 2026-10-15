@@ -1,50 +1,92 @@
-# Cartoon pack · M8a authoring
+# Cartoon pack · M8a
 
-The art direction uses `docs/cover_day.png` and `docs/cover_night.png`: a cohesive
-painted cartoon style for characters and scenery. Implementation is underway on
-`phaser-sprites`. The first style sample needs review before full sprite production.
+The owner approved continuing from the corrected style sample. The direction is a
+cohesive painted cartoon jungle, based on `docs/cover_day.png` and
+`docs/cover_night.png`. Those covers are references, not cropped runtime sprites.
 
-## Review
+## Play and review
 
-Run the dev server and open `/cartoon.html`. It shows the current sample sheet,
-anatomy close-ups, day/night mockups and desktop/small-phone sizes. Actual CSS size
-avoids shrinking a desktop mockup to fit the review page. The monkey envelopes
-come from the classic rig at the shown sample poses; the new poses are uniformly
-fitted inside those envelopes. Backgrounds are concept strips, not finished tiles.
+Run `npm run dev` and open `/?art=cartoon`, or use **Classic graphics: Off** in
+the title Config menu. On desktop, C opens Config and X switches art. Click/tap
+works too. On means classic; Off means cartoon. Classic is the default when there
+is no valid saved choice. Art changes reload to the title and preserve mode,
+lives, slipping, shadow, mute, quality, other URL options and the hash. Mobile
+remains 1P only. Explicit `?art=classic|cartoon` overrides storage without rewriting
+it; invalid explicit/saved values resolve to classic. Blocked storage uses the URL.
 
-The sheet is an art-direction sample. It is **not a production atlas**, a complete
-monkey rig, or approved coverage of its component keys. No sample frame is marked
-painted/reviewed in the production inventory. Production work will separate body,
-head, limbs and tail with the existing pivots, replace the mockup vine with bendable
-strips, and prepare seamless scenery and repeated temple pieces.
+- `/cartoon.html`: original style samples, anatomy close-ups and coverage.
+- `/art.html?art=cartoon`: production frames, source/atlas differences, origin,
+  attachments, hitboxes, slices, animation sliders and repeat seams. Choose 1×/2×/4×.
+- `/rigs.html?art=cartoon`: fixed assembled poses, all obstacle families, day/night
+  scenes, temples and UI, rendered by the real game rigs. Add `only=world.monkeys`
+  or another fixture ID to inspect one; `zoom=2` renders at 2× rather than enlarging
+  a low-resolution screenshot.
 
-The owner flagged a missing arm and an unnatural gripping hand in the first draft.
-The current sample restores the flying pose's far arm, redraws the grip and
-repairs the truncated ring finger on the restored hand;
-the review page includes close-ups of both. Check those details before approval.
+The full sheet remains an art-direction illustration, not a production atlas.
+Its missing arm, unnatural grip and truncated ring finger were corrected during
+style review. The production monkey uses separate components and the existing
+continuous pose/joint calculations. Source/atlas comparisons expose browser/resvg
+sampling differences in painted edges; keep the flags visible for art review.
 
-## Inventory
+## Sources and exports
 
-`inventory.json` covers 175 pieces and 594 stable frame keys from
-`art/manifest.json`. It records each classic rendering contract, logical box,
-pivot, attachments, hitbox guides, tint/alpha, repeat/strip/slice rules, softening
-and output pixel sizes at 1×/2×/4×. These are the constraints for new artwork.
+`masters/` contains five transparent painted PNG component masters: monkey,
+creatures, foliage/wood, the distant jungle and a level branch aligned with its
+collision guide. They were generated for this pack
+in the approved style. `source-layout.json` names each component's crop in source
+pixels. `components/` contains deterministic, tightly trimmed PNG exports from
+those crops, preserving their alpha. No manual changes to generated exports are
+needed. Keep source cell bounds inside the 1536×1024 masters.
 
-Each frame tracks:
+`scripts/cartoon-sources.mjs` produces all **594 required frames** plus the new
+`ui.wordmark`: **176 pieces / 595 frames**. It combines painted components with
+editable vector recipes for bent strips, repeatable stone courses, feather/membrane
+animation, small props and UI. Variants share the same pivots and scale; bird/bat
+wings and fire use the original frame ordering. Player 2 has a distinct ginger
+palette; the shadow is grey at the contracted alpha. No classic drawing is read or
+used as a fallback. The classic manifest supplies only rendering/hitbox contracts.
 
-- `status`: pending, painted or reviewed.
-- `source`: the eventual PNG/SVG source path, relative to this pack; null until assigned.
-- `sourceCell`: optional rectangle in a master source sheet; null for a whole-file source.
-- `sheet`: proposed asset family, editable as sheets are organized.
-- `cell`: the eventual packed cell, null until assigned.
-- `notes`: review or production notes.
+Each generated SVG keeps the logical box and hidden guide layer. Gradient/filter
+names are local to a frame; vector gradients use fixed coordinates to avoid
+browser/resvg differences in curved-path bounds. Painted distant scenery uses
+reflected halves; foliage/tree repeats wrap their edge objects. Stage tint,
+horizontal softening, animation timing and all layer speeds are preserved.
 
-Run `npm run art:cartoon:inventory` to refresh authoritative contracts. Existing
-frame progress survives regeneration; duplicate or removed frame keys are errors
-instead of silently losing progress. Run `npm run art:cartoon:check` to check that
-the inventory matches the current manifest. The script does not claim that source
-files are valid production assets; full pack validation is a later M8a step.
+Run these from the repository root after editing a master or a vector recipe:
 
-The `review/` directory holds sample artwork and its review layout metadata.
-Keep approved component sources separate from review illustrations. Keep classic
-generated art and overrides unchanged.
+```sh
+npm run art:cartoon:sources
+npm run art:build
+npm run art:check
+npm run art:cartoon:check
+```
+
+Commit masters, layout, components, generated SVGs, manifest and inventory together.
+The build writes both complete packs into `public/art/classic/` and
+`public/art/cartoon/`: catalog, boot/main sheets, standalone tiles, metadata and
+`metrics.json` with texture bytes and compressed downloads per scale. Outputs are
+ignored by Git. Each cartoon atlas cell has isolated rasterization and a two-pixel
+extruded gutter. The original tile edge rows and softening are retained. The build
+rejects missing/incompatible frames, empty sprite exports, incorrect shadow alpha
+and texture budgets above 120 MB at 2× or 300 MB at 4×.
+
+Normal gameplay requests and warms only the selected pack. A failed cartoon load
+offers an explicit reload into classic. Art style and resolution are independent;
+the trace identifies `artPack` as well as resolution. Variable wording, scores,
+settings and the version remain live text.
+
+## Inventory and completion
+
+`inventory.json` tracks all 175 baseline contracts and 594 stable frame keys:
+logical boxes, pivots, joins, hitbox guides, tint/alpha, strip/slice/softening rules,
+1×/2×/4× export sizes and source/sheet/cell/status fields. The build records the
+actual 2× atlas placement; tiles reference their separate image. `ui.wordmark` is
+the explicit presentation addition in the pack manifest.
+
+`npm run art:cartoon:inventory` refreshes baseline contracts while preserving
+artist progress. Re-exporting retains notes and keeps reviewed status only for
+unchanged sources. Duplicate/stale keys are errors. `art:cartoon:check` checks
+synchronization; `art:check` also requires complete cartoon sources. Production
+frames are **painted**, rather than claiming the owner has reviewed every family.
+Final artwork approval and the Safari M1/iPhone 13 mini gameplay/startup pass remain
+milestone acceptance steps. Classic references are kept unchanged.

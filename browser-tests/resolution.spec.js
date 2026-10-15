@@ -157,7 +157,8 @@ test('Safari Auto caps a high-density phone and graphics taps do not start play'
   await page.touchscreen.tap(entry.x, entry.y);
   await expect.poll(() => page.evaluate(() => window.__liano.platform.configMenu.open)).toBe(true);
   expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
-  const sharp = await panelPoint(page, 'config', 0, 60);
+  const point = await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.configGeometry.items[2]);
+  const sharp = await panelPoint(page, 'config', point.x, point.y);
   await page.touchscreen.tap(sharp.x, sharp.y);
   await page.waitForURL((url) => url.searchParams.get('resolution') === '2');
   await page.waitForFunction(() => window.__liano?.platform.world);

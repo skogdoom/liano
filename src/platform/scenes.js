@@ -43,15 +43,23 @@ export class BootScene extends Phaser.Scene {
 
   preload() {
     this.started = performance.now();
-    queueCatalog(this.load);
+    // main installs this before boot, ahead of its READY continuation/platform.
+    const pack = this.registry.get('artPack');
+    this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file) => {
+      const error = new Error(`${pack === 'cartoon' ? 'Cartoon' : 'Classic'} graphics could not be loaded.`, { cause: file.url });
+      error.name = 'ArtLoadError';
+      platformOf(this).fail(error);
+    });
+    queueCatalog(this.load, pack);
   }
 
   create() {
     const platform = platformOf(this);
     const catalog = this.cache.json.get(CATALOG);
+    if (catalog.pack !== platform.artPack) throw new Error('The loaded graphics catalog does not match the selected pack');
     const scale = Art.scaleFor(platform.camera.zoom);
     platform.art = new Art(catalog, scale);
-    platform.artLoad = { scale, sets: [] };
+    platform.artLoad = { pack: platform.artPack, scale, sets: [] };
     const loadSet = (set, then) => {
       queueSet(this.load, catalog, set, scale);
       this.load.once(Phaser.Loader.Events.COMPLETE, () => {

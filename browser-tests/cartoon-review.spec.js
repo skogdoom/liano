@@ -13,7 +13,7 @@ test('cartoon style review shows all samples and switches game-scale views witho
   await page.waitForFunction(() => document.documentElement.dataset.cartoonReview === 'ready');
   await expect(page.locator('#cards article')).toHaveCount(9);
   await expect(page.locator('#coverage')).toContainText('175 pieces / 594 required frames');
-  await expect(page.locator('#coverage')).toContainText('594 pending');
+  await expect(page.locator('#coverage')).toContainText('594 painted');
   await expect(page.locator('#scale')).toContainText('1280 × 720');
   await page.selectOption('#viewport', 'portrait');
   await page.selectOption('#light', 'night');

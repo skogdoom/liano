@@ -33,9 +33,14 @@ describe('Phaser menus in the visible browser area', () => {
         expect(hit.h * title.cssScale).toBeGreaterThanOrEqual(44);
         expect(hit.w * title.cssScale).toBeGreaterThanOrEqual(44);
       }
-      for (const hit of config.items.map((item) => item.hit).concat([config.backHit])) {
+      for (const hit of config.items.map((item) => item.hit).concat([config.backHit, config.artHit])) {
         expect(hit.h * config.cssScale).toBeGreaterThanOrEqual(44);
         expect(hit.w * config.cssScale).toBeGreaterThanOrEqual(44);
+      }
+      const hits = [...config.items.map((item) => item.hit), config.backHit, config.artHit];
+      for (let i = 0; i < hits.length; i++) for (let j = i + 1; j < hits.length; j++) {
+        const a = hits[i], b = hits[j];
+        expect(a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h).toBe(false);
       }
       for (const hit of [results.replayHit, results.menuHit]) {
         expect(hit.h * results.cssScale).toBeGreaterThanOrEqual(44);

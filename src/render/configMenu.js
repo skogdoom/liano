@@ -6,17 +6,21 @@ export const GRAPHICS_ITEMS = [
   { key: 'Digit3', choice: '2', text: '3 · Sharp', y: 60 },
   { key: 'KeyA', choice: 'auto', text: 'A · Auto', y: 127 },
 ];
-export const CONFIG_PANEL = { width: 440, height: 520, shiftY: 0 };
-export const CONFIG_BACK_Y = 213;
+export const CONFIG_PANEL = { width: 440, height: 600, shiftY: 0 };
+export const CONFIG_BACK_Y = 263;
+export const ART_KEY = 'KeyX';
 
 export class ConfigMenu {
-  constructor(choice, { apply, remember = () => {}, clear = () => {} } = {}) {
+  constructor(choice, { apply, remember = () => {}, clear = () => {}, art = 'classic', applyArt, rememberArt = () => {} } = {}) {
     this.choice = choice;
     this.apply = apply;
     this.remember = remember;
     this.clear = clear;
     this.open = false;
     this.applying = false;
+    this.art = art;
+    this.applyArt = applyArt;
+    this.rememberArt = rememberArt;
   }
 
   sync(game) {
@@ -44,6 +48,15 @@ export class ConfigMenu {
     this.apply(choice);
   }
 
+  chooseArt(choice) {
+    if (!this.open || this.applying || !['classic', 'cartoon'].includes(choice)) return;
+    if (choice === this.art) { this.rememberArt(choice); this.close(); return; }
+    if (!this.applyArt) return;
+    this.applying = true;
+    this.clear();
+    this.applyArt(choice);
+  }
+
   interceptKey(event, game, accepts) {
     this.sync(game);
     if (!this.open && !(event.code === 'KeyC' && game.state === 'TITLE')) return false;
@@ -55,6 +68,10 @@ export class ConfigMenu {
       if (this.open) this.close();
       else this.show(game, accepts);
     } else if (this.open) {
+      if (event.code === ART_KEY) {
+        this.chooseArt(this.art === 'classic' ? 'cartoon' : 'classic');
+        return true;
+      }
       const item = GRAPHICS_ITEMS.find((item) => item.key === event.code);
       if (item) this.choose(item.choice);
     }
