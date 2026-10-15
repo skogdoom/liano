@@ -41,6 +41,29 @@ describe('complete cartoon pack contracts', () => {
     }
   });
 
+  it('retains full painted wings throughout the flap without clipping atlas edges', () => {
+    for (const piece of cartoon.pieces.filter(p => /^(bird|bat)\.[^.]+\.wing$/.test(p.key))) {
+      const areas = [];
+      for (const frame of piece.frames) {
+        const image = new Resvg(readFileSync(new URL(`../art/packs/cartoon/${frame}`, import.meta.url)),
+          { fitTo: { mode: 'width', value: piece.box.w * 4 } }).render();
+        const pixels = image.pixels;
+        let area = 0, edge = 0;
+        for (let y = 0; y < image.height; y++) for (let x = 0; x < image.width; x++) {
+          if (pixels[(y * image.width + x) * 4 + 3] < 32) continue;
+          area++;
+          if (x === 0 || x === image.width - 1 || y === 0 || y === image.height - 1) edge++;
+        }
+        expect(edge, `${frame}: clipped feather or membrane`).toBe(0);
+        areas.push(area);
+      }
+      // The old bird triangle vanished at mid-stroke; the bat's shortening
+      // membrane also lost much of its area. Check the actual painted pixels.
+      expect(Math.min(...areas), piece.key).toBeGreaterThan(Math.max(...areas) * .85);
+      expect(Math.min(...areas), piece.key).toBeGreaterThan(50);
+    }
+  });
+
   it('covers every required frame plus the explicitly allowed title artwork', () => {
     expect(validatePack(classic, cartoon, 'cartoon')).toEqual([]);
     expect(cartoon.pieces).toHaveLength(176);

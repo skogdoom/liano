@@ -729,8 +729,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1524,
-            "y": 486,
+            "x": 882,
+            "y": 1368,
             "w": 160,
             "h": 200
           },
@@ -780,8 +780,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1887,
-            "y": 2165,
+            "x": 88,
+            "y": 3266,
             "w": 80,
             "h": 128
           },
@@ -831,8 +831,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1892,
-            "y": 1287,
+            "x": 1906,
+            "y": 2348,
             "w": 72,
             "h": 156
           },
@@ -900,8 +900,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1098,
-            "y": 2700,
+            "x": 776,
+            "y": 3785,
             "w": 112,
             "h": 120
           },
@@ -951,8 +951,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 233,
-            "y": 2832,
+            "x": 1079,
+            "y": 3906,
             "w": 136,
             "h": 96
           },
@@ -1003,8 +1003,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1686,
-            "y": 685,
+            "x": 2,
+            "y": 1371,
             "w": 160,
             "h": 200
           },
@@ -1055,8 +1055,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1780,
-            "y": 2175,
+            "x": 346,
+            "y": 3266,
             "w": 80,
             "h": 128
           },
@@ -1107,8 +1107,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1966,
-            "y": 1287,
+            "x": 1906,
+            "y": 2506,
             "w": 72,
             "h": 156
           },
@@ -1177,8 +1177,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1722,
-            "y": 2801,
+            "x": 890,
+            "y": 3789,
             "w": 112,
             "h": 120
           },
@@ -1229,8 +1229,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 371,
-            "y": 2832,
+            "x": 431,
+            "y": 3907,
             "w": 136,
             "h": 96
           },
@@ -1344,10 +1344,10 @@
           "status": "painted",
           "source": "generated/monkey.shadow.eyes.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 741,
-            "y": 3392,
+            "x": 1337,
+            "y": 197,
             "w": 72,
             "h": 48
           },
@@ -1358,10 +1358,10 @@
           "status": "painted",
           "source": "generated/monkey.shadow.eyes.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 962,
-            "y": 3393,
+            "x": 1100,
+            "y": 199,
             "w": 72,
             "h": 48
           },
@@ -1578,10 +1578,10 @@
           "status": "painted",
           "source": "generated/liana.gold.leaf.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 230,
-            "y": 3392,
+            "x": 1337,
+            "y": 147,
             "w": 76,
             "h": 48
           },
@@ -1592,10 +1592,10 @@
           "status": "painted",
           "source": "generated/liana.gold.leaf.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 507,
-            "y": 3392,
+            "x": 2,
+            "y": 150,
             "w": 76,
             "h": 48
           },
@@ -1697,10 +1697,10 @@
           "status": "painted",
           "source": "generated/liana.shadow.leaf.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 585,
-            "y": 3392,
+            "x": 80,
+            "y": 150,
             "w": 76,
             "h": 48
           },
@@ -1711,10 +1711,10 @@
           "status": "painted",
           "source": "generated/liana.shadow.leaf.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 663,
-            "y": 3392,
+            "x": 158,
+            "y": 150,
             "w": 76,
             "h": 48
           },
@@ -2524,10 +2524,10 @@
           "status": "painted",
           "source": "generated/support.vineEnd.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 308,
-            "y": 3392,
+            "x": 1319,
+            "y": 235,
             "w": 16,
             "h": 16
           },
@@ -2688,8 +2688,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 776,
-            "y": 2822,
+            "x": 2,
+            "y": 3907,
             "w": 427,
             "h": 99
           },
@@ -2737,10 +2737,10 @@
           "status": "painted",
           "source": "generated/branch.barkLine.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 942,
-            "y": 3443,
+            "x": 1028,
+            "y": 229,
             "w": 58,
             "h": 21
           },
@@ -2847,8 +2847,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 402,
-            "y": 1312,
+            "x": 848,
+            "y": 2369,
             "w": 458,
             "h": 162
           },
@@ -2896,10 +2896,10 @@
           "status": "painted",
           "source": "generated/panther.ear.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 85,
-            "y": 3431,
+            "x": 2010,
+            "y": 202,
             "w": 32,
             "h": 32
           },
@@ -2947,10 +2947,10 @@
           "status": "painted",
           "source": "generated/panther.eyes.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1180,
-            "y": 3394,
+            "x": 856,
+            "y": 201,
             "w": 84,
             "h": 37
           },
@@ -2961,10 +2961,10 @@
           "status": "painted",
           "source": "generated/panther.eyes.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1266,
-            "y": 3394,
+            "x": 942,
+            "y": 201,
             "w": 84,
             "h": 37
           },
@@ -3285,8 +3285,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1836,
-            "y": 2801,
+            "x": 1560,
+            "y": 3893,
             "w": 115,
             "h": 115
           },
@@ -3334,10 +3334,10 @@
           "status": "painted",
           "source": "generated/perchedBird.red.tail.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1366,
-            "y": 3393,
+            "x": 1724,
+            "y": 199,
             "w": 68,
             "h": 42
           },
@@ -3385,10 +3385,10 @@
           "status": "painted",
           "source": "generated/perchedBird.red.head.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1918,
-            "y": 3211,
+            "x": 1442,
+            "y": 2,
             "w": 99,
             "h": 73
           },
@@ -3448,8 +3448,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 542,
-            "y": 2815,
+            "x": 1677,
+            "y": 3893,
             "w": 115,
             "h": 115
           },
@@ -3497,10 +3497,10 @@
           "status": "painted",
           "source": "generated/perchedBird.blue.tail.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1436,
-            "y": 3393,
+            "x": 2,
+            "y": 200,
             "w": 68,
             "h": 42
           },
@@ -3548,10 +3548,10 @@
           "status": "painted",
           "source": "generated/perchedBird.blue.head.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1268,
-            "y": 3254,
+            "x": 1543,
+            "y": 2,
             "w": 99,
             "h": 73
           },
@@ -3611,8 +3611,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 659,
-            "y": 2815,
+            "x": 1794,
+            "y": 3893,
             "w": 115,
             "h": 115
           },
@@ -3660,10 +3660,10 @@
           "status": "painted",
           "source": "generated/perchedBird.purple.tail.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1506,
-            "y": 3393,
+            "x": 72,
+            "y": 200,
             "w": 68,
             "h": 42
           },
@@ -3711,10 +3711,10 @@
           "status": "painted",
           "source": "generated/perchedBird.purple.head.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 773,
-            "y": 3263,
+            "x": 1644,
+            "y": 2,
             "w": 99,
             "h": 73
           },
@@ -3764,8 +3764,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1402,
-            "y": 1287,
+            "x": 532,
+            "y": 2367,
             "w": 156,
             "h": 167
           },
@@ -3778,8 +3778,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1560,
-            "y": 1287,
+            "x": 690,
+            "y": 2367,
             "w": 156,
             "h": 167
           },
@@ -3892,10 +3892,10 @@
           "status": "painted",
           "source": "generated/perchedSnake.mark.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 908,
-            "y": 3432,
+            "x": 451,
+            "y": 205,
             "w": 32,
             "h": 32
           },
@@ -3995,10 +3995,10 @@
           "status": "painted",
           "source": "generated/perchedSnake.neckEnd.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1082,
-            "y": 3391,
+            "x": 1175,
+            "y": 147,
             "w": 52,
             "h": 52
           },
@@ -4046,10 +4046,10 @@
           "status": "painted",
           "source": "generated/perchedSnake.head.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 124,
-            "y": 3267,
+            "x": 590,
+            "y": 82,
             "w": 84,
             "h": 63
           },
@@ -4097,10 +4097,10 @@
           "status": "painted",
           "source": "generated/perchedSnake.tongue.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1186,
-            "y": 3264,
+            "x": 676,
+            "y": 82,
             "w": 78,
             "h": 63
           },
@@ -4150,8 +4150,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 560,
-            "y": 1128,
+            "x": 374,
+            "y": 2367,
             "w": 156,
             "h": 172
           },
@@ -4201,8 +4201,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1386,
-            "y": 486,
+            "x": 744,
+            "y": 1368,
             "w": 136,
             "h": 203
           },
@@ -4250,10 +4250,10 @@
           "status": "painted",
           "source": "generated/hangingMonkey.leg.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 732,
-            "y": 3442,
+            "x": 432,
+            "y": 239,
             "w": 104,
             "h": 22
           },
@@ -4301,10 +4301,10 @@
           "status": "painted",
           "source": "generated/hangingMonkey.legEnd.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 2000,
-            "y": 3351,
+            "x": 604,
+            "y": 201,
             "w": 42,
             "h": 42
           },
@@ -4354,8 +4354,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1718,
-            "y": 1287,
+            "x": 2,
+            "y": 2368,
             "w": 172,
             "h": 156
           },
@@ -4368,8 +4368,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1202,
-            "y": 1291,
+            "x": 176,
+            "y": 2368,
             "w": 172,
             "h": 156
           },
@@ -4382,8 +4382,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 862,
-            "y": 1312,
+            "x": 2,
+            "y": 2526,
             "w": 172,
             "h": 156
           },
@@ -4396,8 +4396,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 1328,
+            "x": 176,
+            "y": 2526,
             "w": 172,
             "h": 156
           },
@@ -4410,8 +4410,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 176,
-            "y": 1328,
+            "x": 1732,
+            "y": 2527,
             "w": 172,
             "h": 156
           },
@@ -4424,8 +4424,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1718,
-            "y": 1445,
+            "x": 848,
+            "y": 2533,
             "w": 172,
             "h": 156
           },
@@ -4438,8 +4438,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1036,
-            "y": 1449,
+            "x": 1022,
+            "y": 2533,
             "w": 172,
             "h": 156
           },
@@ -4452,8 +4452,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1210,
-            "y": 1449,
+            "x": 532,
+            "y": 2536,
             "w": 172,
             "h": 156
           },
@@ -4466,8 +4466,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1384,
-            "y": 1456,
+            "x": 350,
+            "y": 2541,
             "w": 172,
             "h": 156
           },
@@ -4480,8 +4480,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 862,
-            "y": 1470,
+            "x": 1196,
+            "y": 2545,
             "w": 172,
             "h": 156
           },
@@ -4494,8 +4494,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 350,
-            "y": 1476,
+            "x": 1370,
+            "y": 2545,
             "w": 172,
             "h": 156
           },
@@ -4508,8 +4508,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 524,
-            "y": 1476,
+            "x": 1544,
+            "y": 2545,
             "w": 172,
             "h": 156
           },
@@ -4523,7 +4523,7 @@
           "sheet": "main@2x-1.png",
           "cell": {
             "x": 2,
-            "y": 1486,
+            "y": 2684,
             "w": 172,
             "h": 156
           },
@@ -4571,10 +4571,10 @@
           "status": "painted",
           "source": "generated/hangingMonkey.eyes.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1302,
-            "y": 3437,
+            "x": 1794,
+            "y": 236,
             "w": 84,
             "h": 26
           },
@@ -4585,10 +4585,10 @@
           "status": "painted",
           "source": "generated/hangingMonkey.eyes.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1388,
-            "y": 3437,
+            "x": 1880,
+            "y": 236,
             "w": 84,
             "h": 26
           },
@@ -4687,10 +4687,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.eyes.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1474,
-            "y": 3437,
+            "x": 1966,
+            "y": 236,
             "w": 73,
             "h": 26
           },
@@ -4701,10 +4701,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.eyes.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1549,
-            "y": 3437,
+            "x": 1411,
+            "y": 238,
             "w": 73,
             "h": 26
           },
@@ -4752,10 +4752,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.ear.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 345,
-            "y": 3330,
+            "x": 447,
+            "y": 85,
             "w": 58,
             "h": 58
           },
@@ -4766,10 +4766,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.ear.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 405,
-            "y": 3331,
+            "x": 507,
+            "y": 85,
             "w": 58,
             "h": 58
           },
@@ -4780,10 +4780,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.ear.2.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 465,
-            "y": 3331,
+            "x": 1544,
+            "y": 142,
             "w": 58,
             "h": 58
           },
@@ -4794,10 +4794,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.ear.3.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1082,
-            "y": 3331,
+            "x": 1604,
+            "y": 142,
             "w": 58,
             "h": 58
           },
@@ -4808,10 +4808,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.ear.4.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 978,
-            "y": 3333,
+            "x": 1664,
+            "y": 142,
             "w": 58,
             "h": 58
           },
@@ -4822,10 +4822,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.ear.5.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1366,
-            "y": 3333,
+            "x": 1805,
+            "y": 142,
             "w": 58,
             "h": 58
           },
@@ -4836,10 +4836,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.ear.6.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1426,
-            "y": 3333,
+            "x": 1865,
+            "y": 142,
             "w": 58,
             "h": 58
           },
@@ -4850,10 +4850,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.ear.7.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1486,
-            "y": 3333,
+            "x": 1925,
+            "y": 142,
             "w": 58,
             "h": 58
           },
@@ -4864,10 +4864,10 @@
           "status": "painted",
           "source": "generated/hangingBat.purple.ear.8.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1546,
-            "y": 3333,
+            "x": 1985,
+            "y": 142,
             "w": 58,
             "h": 58
           },
@@ -4966,10 +4966,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.eyes.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1857,
-            "y": 3439,
+            "x": 1486,
+            "y": 238,
             "w": 73,
             "h": 26
           },
@@ -4980,10 +4980,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.eyes.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1932,
-            "y": 3439,
+            "x": 1561,
+            "y": 238,
             "w": 73,
             "h": 26
           },
@@ -5031,10 +5031,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.ear.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1369,
-            "y": 3263,
+            "x": 1953,
+            "y": 2,
             "w": 58,
             "h": 68
           },
@@ -5045,10 +5045,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.ear.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1429,
-            "y": 3263,
+            "x": 1849,
+            "y": 72,
             "w": 58,
             "h": 68
           },
@@ -5059,10 +5059,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.ear.2.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1489,
-            "y": 3263,
+            "x": 1909,
+            "y": 72,
             "w": 58,
             "h": 68
           },
@@ -5073,10 +5073,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.ear.3.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1549,
-            "y": 3263,
+            "x": 1969,
+            "y": 72,
             "w": 58,
             "h": 68
           },
@@ -5087,10 +5087,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.ear.4.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1609,
-            "y": 3263,
+            "x": 1745,
+            "y": 75,
             "w": 58,
             "h": 68
           },
@@ -5101,10 +5101,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.ear.5.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1669,
-            "y": 3263,
+            "x": 1200,
+            "y": 77,
             "w": 58,
             "h": 68
           },
@@ -5115,10 +5115,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.ear.6.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1729,
-            "y": 3263,
+            "x": 1260,
+            "y": 77,
             "w": 58,
             "h": 68
           },
@@ -5129,10 +5129,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.ear.7.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1789,
-            "y": 3263,
+            "x": 1320,
+            "y": 77,
             "w": 58,
             "h": 68
           },
@@ -5143,10 +5143,10 @@
           "status": "painted",
           "source": "generated/hangingBat.brown.ear.8.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1849,
-            "y": 3263,
+            "x": 1380,
+            "y": 77,
             "w": 58,
             "h": 68
           },
@@ -5245,10 +5245,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.eyes.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 230,
-            "y": 3442,
+            "x": 1636,
+            "y": 238,
             "w": 73,
             "h": 26
           },
@@ -5259,10 +5259,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.eyes.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 507,
-            "y": 3442,
+            "x": 207,
+            "y": 239,
             "w": 73,
             "h": 26
           },
@@ -5310,10 +5310,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.ear.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 600,
-            "y": 3338,
+            "x": 1724,
+            "y": 145,
             "w": 58,
             "h": 52
           },
@@ -5324,10 +5324,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.ear.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 660,
-            "y": 3338,
+            "x": 550,
+            "y": 147,
             "w": 58,
             "h": 52
           },
@@ -5338,10 +5338,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.ear.2.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 720,
-            "y": 3338,
+            "x": 610,
+            "y": 147,
             "w": 58,
             "h": 52
           },
@@ -5352,10 +5352,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.ear.3.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 780,
-            "y": 3338,
+            "x": 670,
+            "y": 147,
             "w": 58,
             "h": 52
           },
@@ -5366,10 +5366,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.ear.4.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1880,
-            "y": 3351,
+            "x": 730,
+            "y": 147,
             "w": 58,
             "h": 52
           },
@@ -5380,10 +5380,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.ear.5.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1940,
-            "y": 3351,
+            "x": 790,
+            "y": 147,
             "w": 58,
             "h": 52
           },
@@ -5394,10 +5394,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.ear.6.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 327,
-            "y": 3390,
+            "x": 850,
+            "y": 147,
             "w": 58,
             "h": 52
           },
@@ -5408,10 +5408,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.ear.7.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 387,
-            "y": 3391,
+            "x": 910,
+            "y": 147,
             "w": 58,
             "h": 52
           },
@@ -5422,10 +5422,10 @@
           "status": "painted",
           "source": "generated/hangingBat.grey.ear.8.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 447,
-            "y": 3391,
+            "x": 970,
+            "y": 147,
             "w": 58,
             "h": 52
           },
@@ -5524,10 +5524,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.eyes.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 582,
-            "y": 3442,
+            "x": 282,
+            "y": 239,
             "w": 73,
             "h": 26
           },
@@ -5538,10 +5538,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.eyes.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 657,
-            "y": 3442,
+            "x": 357,
+            "y": 239,
             "w": 73,
             "h": 26
           },
@@ -5589,10 +5589,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.ear.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 457,
-            "y": 3266,
+            "x": 756,
+            "y": 82,
             "w": 58,
             "h": 63
           },
@@ -5603,10 +5603,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.ear.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 285,
-            "y": 3267,
+            "x": 816,
+            "y": 82,
             "w": 58,
             "h": 63
           },
@@ -5617,10 +5617,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.ear.2.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1909,
-            "y": 3286,
+            "x": 876,
+            "y": 82,
             "w": 58,
             "h": 63
           },
@@ -5631,10 +5631,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.ear.3.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1969,
-            "y": 3286,
+            "x": 936,
+            "y": 82,
             "w": 58,
             "h": 63
           },
@@ -5645,10 +5645,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.ear.4.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1186,
-            "y": 3329,
+            "x": 996,
+            "y": 82,
             "w": 58,
             "h": 63
           },
@@ -5659,10 +5659,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.ear.5.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1246,
-            "y": 3329,
+            "x": 2,
+            "y": 85,
             "w": 58,
             "h": 63
           },
@@ -5673,10 +5673,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.ear.6.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1306,
-            "y": 3329,
+            "x": 62,
+            "y": 85,
             "w": 58,
             "h": 63
           },
@@ -5687,10 +5687,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.ear.7.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 2,
-            "y": 3330,
+            "x": 122,
+            "y": 85,
             "w": 58,
             "h": 63
           },
@@ -5701,10 +5701,10 @@
           "status": "painted",
           "source": "generated/hangingBat.black.ear.8.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 62,
-            "y": 3330,
+            "x": 182,
+            "y": 85,
             "w": 58,
             "h": 63
           },
@@ -5754,8 +5754,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 402,
-            "y": 1128,
+            "x": 1732,
+            "y": 2348,
             "w": 156,
             "h": 177
           },
@@ -5805,8 +5805,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1892,
-            "y": 1445,
+            "x": 706,
+            "y": 2536,
             "w": 125,
             "h": 146
           },
@@ -5854,10 +5854,10 @@
           "status": "painted",
           "source": "generated/owl.disc.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1284,
-            "y": 3174,
+            "x": 821,
+            "y": 2,
             "w": 125,
             "h": 78
           },
@@ -5905,10 +5905,10 @@
           "status": "painted",
           "source": "generated/owl.beak.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1036,
-            "y": 3393,
+            "x": 207,
+            "y": 200,
             "w": 32,
             "h": 37
           },
@@ -5956,10 +5956,10 @@
           "status": "painted",
           "source": "generated/owl.eyeball.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1606,
-            "y": 3333,
+            "x": 1440,
+            "y": 144,
             "w": 52,
             "h": 58
           },
@@ -6007,10 +6007,10 @@
           "status": "painted",
           "source": "generated/owl.pupil.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 2,
-            "y": 3395,
+            "x": 1239,
+            "y": 201,
             "w": 32,
             "h": 37
           },
@@ -6058,10 +6058,10 @@
           "status": "painted",
           "source": "generated/owl.shutEye.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1805,
-            "y": 3393,
+            "x": 1174,
+            "y": 201,
             "w": 63,
             "h": 37
           },
@@ -6111,8 +6111,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 2837,
+            "x": 569,
+            "y": 3907,
             "w": 208,
             "h": 94
           },
@@ -6160,10 +6160,10 @@
           "status": "painted",
           "source": "generated/nest.front.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 639,
-            "y": 3183,
+            "x": 590,
+            "y": 2,
             "w": 229,
             "h": 78
           },
@@ -6211,10 +6211,10 @@
           "status": "painted",
           "source": "generated/nest.rim.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 531,
-            "y": 3263,
+            "x": 1200,
+            "y": 2,
             "w": 240,
             "h": 73
           },
@@ -6262,10 +6262,10 @@
           "status": "painted",
           "source": "generated/nest.twig.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 119,
-            "y": 3456,
+            "x": 2,
+            "y": 244,
             "w": 104,
             "h": 7
           },
@@ -6313,10 +6313,10 @@
           "status": "painted",
           "source": "generated/nest.twigEnd.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1136,
-            "y": 3435,
+            "x": 1273,
+            "y": 235,
             "w": 21,
             "h": 21
           },
@@ -6364,10 +6364,10 @@
           "status": "painted",
           "source": "generated/nest.lightTwig.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 305,
-            "y": 3457,
+            "x": 538,
+            "y": 245,
             "w": 104,
             "h": 7
           },
@@ -6415,10 +6415,10 @@
           "status": "painted",
           "source": "generated/nest.lightTwigEnd.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 838,
-            "y": 3436,
+            "x": 1296,
+            "y": 235,
             "w": 21,
             "h": 21
           },
@@ -6466,10 +6466,10 @@
           "status": "painted",
           "source": "generated/nest.rimTwig.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 119,
-            "y": 3446,
+            "x": 862,
+            "y": 240,
             "w": 104,
             "h": 8
           },
@@ -6517,10 +6517,10 @@
           "status": "painted",
           "source": "generated/nest.rimTwigEnd.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 2007,
-            "y": 3439,
+            "x": 692,
+            "y": 240,
             "w": 21,
             "h": 21
           },
@@ -6570,8 +6570,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1376,
-            "y": 2818,
+            "x": 1911,
+            "y": 3893,
             "w": 73,
             "h": 94
           },
@@ -6619,10 +6619,10 @@
           "status": "painted",
           "source": "generated/nest.shell.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 210,
-            "y": 3267,
+            "x": 1666,
+            "y": 77,
             "w": 73,
             "h": 63
           },
@@ -6672,8 +6672,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1953,
-            "y": 2679,
+            "x": 1004,
+            "y": 3789,
             "w": 84,
             "h": 99
           },
@@ -6721,10 +6721,10 @@
           "status": "painted",
           "source": "generated/nest.chickBeak.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1142,
-            "y": 3331,
+            "x": 1494,
+            "y": 144,
             "w": 42,
             "h": 58
           },
@@ -6735,10 +6735,10 @@
           "status": "painted",
           "source": "generated/nest.chickBeak.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1038,
-            "y": 3333,
+            "x": 242,
+            "y": 145,
             "w": 42,
             "h": 58
           },
@@ -6749,10 +6749,10 @@
           "status": "painted",
           "source": "generated/nest.chickBeak.2.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1660,
-            "y": 3333,
+            "x": 286,
+            "y": 145,
             "w": 42,
             "h": 58
           },
@@ -6763,10 +6763,10 @@
           "status": "painted",
           "source": "generated/nest.chickBeak.3.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1704,
-            "y": 3333,
+            "x": 330,
+            "y": 145,
             "w": 42,
             "h": 58
           },
@@ -6777,10 +6777,10 @@
           "status": "painted",
           "source": "generated/nest.chickBeak.4.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1748,
-            "y": 3333,
+            "x": 374,
+            "y": 145,
             "w": 42,
             "h": 58
           },
@@ -6791,10 +6791,10 @@
           "status": "painted",
           "source": "generated/nest.chickBeak.5.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1792,
-            "y": 3333,
+            "x": 418,
+            "y": 145,
             "w": 42,
             "h": 58
           },
@@ -6805,10 +6805,10 @@
           "status": "painted",
           "source": "generated/nest.chickBeak.6.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1836,
-            "y": 3333,
+            "x": 462,
+            "y": 145,
             "w": 42,
             "h": 58
           },
@@ -6819,10 +6819,10 @@
           "status": "painted",
           "source": "generated/nest.chickBeak.7.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 874,
-            "y": 3336,
+            "x": 506,
+            "y": 145,
             "w": 42,
             "h": 58
           },
@@ -6833,10 +6833,10 @@
           "status": "painted",
           "source": "generated/nest.chickBeak.8.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 918,
-            "y": 3336,
+            "x": 1056,
+            "y": 145,
             "w": 42,
             "h": 58
           },
@@ -6884,10 +6884,10 @@
           "status": "painted",
           "source": "generated/nest.cap.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 525,
-            "y": 3338,
+            "x": 1100,
+            "y": 145,
             "w": 73,
             "h": 52
           },
@@ -6935,10 +6935,10 @@
           "status": "painted",
           "source": "generated/nest.leaf.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1576,
-            "y": 3393,
+            "x": 142,
+            "y": 200,
             "w": 63,
             "h": 42
           },
@@ -6988,8 +6988,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1594,
-            "y": 1752,
+            "x": 188,
+            "y": 2980,
             "w": 47,
             "h": 146
           },
@@ -7037,10 +7037,10 @@
           "status": "painted",
           "source": "generated/flower.leaf.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1992,
-            "y": 3405,
+            "x": 1273,
+            "y": 201,
             "w": 47,
             "h": 32
           },
@@ -7051,10 +7051,10 @@
           "status": "painted",
           "source": "generated/flower.leaf.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 36,
-            "y": 3431,
+            "x": 363,
+            "y": 205,
             "w": 47,
             "h": 32
           },
@@ -7102,10 +7102,10 @@
           "status": "painted",
           "source": "generated/flower.petal.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 122,
-            "y": 3392,
+            "x": 1229,
+            "y": 147,
             "w": 52,
             "h": 52
           },
@@ -7153,10 +7153,10 @@
           "status": "painted",
           "source": "generated/flower.heart.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 176,
-            "y": 3392,
+            "x": 1283,
+            "y": 147,
             "w": 52,
             "h": 52
           },
@@ -7206,8 +7206,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 564,
-            "y": 2932,
+            "x": 569,
+            "y": 4003,
             "w": 177,
             "h": 84
           },
@@ -7255,10 +7255,10 @@
           "status": "painted",
           "source": "generated/coconut.stem.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 305,
-            "y": 3445,
+            "x": 756,
+            "y": 240,
             "w": 104,
             "h": 10
           },
@@ -7306,10 +7306,10 @@
           "status": "painted",
           "source": "generated/coconut.stemEnd.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1002,
-            "y": 3443,
+            "x": 715,
+            "y": 240,
             "w": 21,
             "h": 21
           },
@@ -7359,8 +7359,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 2933,
+            "x": 1217,
+            "y": 3906,
             "w": 84,
             "h": 84
           },
@@ -7408,10 +7408,10 @@
           "status": "painted",
           "source": "generated/coconut.hair.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 869,
-            "y": 3432,
+            "x": 412,
+            "y": 205,
             "w": 37,
             "h": 32
           },
@@ -7530,10 +7530,10 @@
           "status": "painted",
           "source": "generated/thornBush.thorn.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 2,
-            "y": 3434,
+            "x": 485,
+            "y": 205,
             "w": 24,
             "h": 26
           },
@@ -7581,10 +7581,10 @@
           "status": "painted",
           "source": "generated/thornBush.mound.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1641,
-            "y": 3393,
+            "x": 692,
+            "y": 201,
             "w": 162,
             "h": 37
           },
@@ -7642,8 +7642,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1386,
-            "y": 691,
+            "x": 164,
+            "y": 1371,
             "w": 198,
             "h": 198
           },
@@ -7656,8 +7656,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 822,
-            "y": 712,
+            "x": 364,
+            "y": 1371,
             "w": 198,
             "h": 198
           },
@@ -7670,8 +7670,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1022,
-            "y": 712,
+            "x": 1624,
+            "y": 1551,
             "w": 198,
             "h": 198
           },
@@ -7684,8 +7684,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 728,
+            "x": 1824,
+            "y": 1551,
             "w": 198,
             "h": 198
           },
@@ -7698,8 +7698,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 202,
-            "y": 728,
+            "x": 882,
+            "y": 1570,
             "w": 198,
             "h": 198
           },
@@ -7712,8 +7712,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 402,
-            "y": 728,
+            "x": 164,
+            "y": 1571,
             "w": 198,
             "h": 198
           },
@@ -7726,8 +7726,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 602,
-            "y": 728,
+            "x": 364,
+            "y": 1571,
             "w": 198,
             "h": 198
           },
@@ -7740,8 +7740,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1586,
-            "y": 887,
+            "x": 564,
+            "y": 1573,
             "w": 198,
             "h": 198
           },
@@ -7754,8 +7754,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1786,
-            "y": 887,
+            "x": 1082,
+            "y": 1575,
             "w": 198,
             "h": 198
           },
@@ -7768,8 +7768,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1222,
-            "y": 891,
+            "x": 1282,
+            "y": 1575,
             "w": 198,
             "h": 198
           },
@@ -7782,8 +7782,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 802,
-            "y": 912,
+            "x": 1482,
+            "y": 1751,
             "w": 198,
             "h": 198
           },
@@ -7796,8 +7796,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1002,
-            "y": 912,
+            "x": 1682,
+            "y": 1751,
             "w": 198,
             "h": 198
           },
@@ -7810,8 +7810,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 928,
+            "x": 764,
+            "y": 1770,
             "w": 198,
             "h": 198
           },
@@ -7824,8 +7824,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 202,
-            "y": 928,
+            "x": 2,
+            "y": 1771,
             "w": 198,
             "h": 198
           },
@@ -7838,8 +7838,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 402,
-            "y": 928,
+            "x": 202,
+            "y": 1771,
             "w": 198,
             "h": 198
           },
@@ -7852,8 +7852,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 602,
-            "y": 928,
+            "x": 402,
+            "y": 1773,
             "w": 198,
             "h": 198
           },
@@ -7866,8 +7866,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1422,
-            "y": 1087,
+            "x": 964,
+            "y": 1775,
             "w": 198,
             "h": 198
           },
@@ -7880,8 +7880,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1622,
-            "y": 1087,
+            "x": 1164,
+            "y": 1775,
             "w": 198,
             "h": 198
           },
@@ -7894,8 +7894,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1822,
-            "y": 1087,
+            "x": 1364,
+            "y": 1951,
             "w": 198,
             "h": 198
           },
@@ -7908,8 +7908,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1202,
-            "y": 1091,
+            "x": 1564,
+            "y": 1951,
             "w": 198,
             "h": 198
           },
@@ -7922,8 +7922,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 802,
-            "y": 1112,
+            "x": 1764,
+            "y": 1951,
             "w": 198,
             "h": 198
           },
@@ -7936,8 +7936,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1002,
-            "y": 1112,
+            "x": 602,
+            "y": 1970,
             "w": 198,
             "h": 198
           },
@@ -7951,7 +7951,7 @@
           "sheet": "main@2x-1.png",
           "cell": {
             "x": 2,
-            "y": 1128,
+            "y": 1971,
             "w": 198,
             "h": 198
           },
@@ -7965,7 +7965,7 @@
           "sheet": "main@2x-1.png",
           "cell": {
             "x": 202,
-            "y": 1128,
+            "y": 1971,
             "w": 198,
             "h": 198
           },
@@ -8013,10 +8013,10 @@
           "status": "painted",
           "source": "generated/rock.sling.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 122,
-            "y": 3332,
+            "x": 242,
+            "y": 85,
             "w": 203,
             "h": 58
           },
@@ -8064,10 +8064,10 @@
           "status": "painted",
           "source": "generated/rock.ledge.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1641,
-            "y": 3432,
+            "x": 1794,
+            "y": 202,
             "w": 214,
             "h": 32
           },
@@ -8137,8 +8137,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1248,
-            "y": 486,
+            "x": 1486,
+            "y": 1365,
             "w": 136,
             "h": 206
           },
@@ -8188,8 +8188,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1212,
-            "y": 2818,
+            "x": 1329,
+            "y": 3904,
             "w": 162,
             "h": 104
           },
@@ -8237,10 +8237,10 @@
           "status": "painted",
           "source": "generated/bee.body.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 815,
-            "y": 3392,
+            "x": 550,
+            "y": 201,
             "w": 52,
             "h": 42
           },
@@ -8288,10 +8288,10 @@
           "status": "painted",
           "source": "generated/bee.wing.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1136,
-            "y": 3391,
+            "x": 648,
+            "y": 201,
             "w": 42,
             "h": 42
           },
@@ -9322,8 +9322,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 80,
-            "y": 2593,
+            "x": 1098,
+            "y": 3662,
             "w": 229,
             "h": 120
           },
@@ -9336,8 +9336,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1708,
-            "y": 2679,
+            "x": 1576,
+            "y": 3771,
             "w": 229,
             "h": 120
           },
@@ -9350,8 +9350,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 636,
-            "y": 2693,
+            "x": 1807,
+            "y": 3771,
             "w": 229,
             "h": 120
           },
@@ -9364,8 +9364,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1260,
-            "y": 2696,
+            "x": 1329,
+            "y": 3782,
             "w": 229,
             "h": 120
           },
@@ -9378,8 +9378,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 867,
-            "y": 2700,
+            "x": 314,
+            "y": 3784,
             "w": 229,
             "h": 120
           },
@@ -9392,8 +9392,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 311,
-            "y": 2710,
+            "x": 1098,
+            "y": 3784,
             "w": 229,
             "h": 120
           },
@@ -9406,8 +9406,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 2715,
+            "x": 80,
+            "y": 3785,
             "w": 229,
             "h": 120
           },
@@ -9420,8 +9420,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1491,
-            "y": 2801,
+            "x": 545,
+            "y": 3785,
             "w": 229,
             "h": 120
           },
@@ -9469,10 +9469,10 @@
           "status": "painted",
           "source": "generated/temple.moss.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1870,
-            "y": 3405,
+            "x": 1411,
+            "y": 204,
             "w": 120,
             "h": 32
           },
@@ -9483,10 +9483,10 @@
           "status": "painted",
           "source": "generated/temple.moss.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1180,
-            "y": 3433,
+            "x": 241,
+            "y": 205,
             "w": 120,
             "h": 32
           },
@@ -9640,8 +9640,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 3019,
+            "x": 1986,
+            "y": 3893,
             "w": 47,
             "h": 81
           },
@@ -9654,8 +9654,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 51,
-            "y": 3019,
+            "x": 1493,
+            "y": 3904,
             "w": 47,
             "h": 81
           },
@@ -9668,8 +9668,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 100,
-            "y": 3019,
+            "x": 917,
+            "y": 3911,
             "w": 47,
             "h": 81
           },
@@ -9682,8 +9682,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 149,
-            "y": 3019,
+            "x": 1986,
+            "y": 3976,
             "w": 47,
             "h": 81
           },
@@ -9696,8 +9696,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 198,
-            "y": 3021,
+            "x": 1493,
+            "y": 3987,
             "w": 47,
             "h": 81
           },
@@ -9710,8 +9710,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 247,
-            "y": 3021,
+            "x": 966,
+            "y": 3989,
             "w": 47,
             "h": 81
           },
@@ -9724,8 +9724,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 296,
-            "y": 3021,
+            "x": 1015,
+            "y": 3989,
             "w": 47,
             "h": 81
           },
@@ -9738,8 +9738,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 345,
-            "y": 3021,
+            "x": 1911,
+            "y": 3989,
             "w": 47,
             "h": 81
           },
@@ -9752,8 +9752,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 394,
-            "y": 3021,
+            "x": 1217,
+            "y": 3992,
             "w": 47,
             "h": 81
           },
@@ -9766,8 +9766,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 443,
-            "y": 3021,
+            "x": 1266,
+            "y": 3992,
             "w": 47,
             "h": 81
           },
@@ -9780,8 +9780,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 492,
-            "y": 3023,
+            "x": 917,
+            "y": 3994,
             "w": 47,
             "h": 81
           },
@@ -9794,8 +9794,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1964,
-            "y": 3048,
+            "x": 1064,
+            "y": 4004,
             "w": 47,
             "h": 81
           },
@@ -9808,8 +9808,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1315,
-            "y": 3091,
+            "x": 1113,
+            "y": 4004,
             "w": 47,
             "h": 81
           },
@@ -9822,8 +9822,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1364,
-            "y": 3091,
+            "x": 1162,
+            "y": 4004,
             "w": 47,
             "h": 81
           },
@@ -9836,8 +9836,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 696,
-            "y": 3100,
+            "x": 431,
+            "y": 4005,
             "w": 47,
             "h": 81
           },
@@ -9850,8 +9850,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 745,
-            "y": 3100,
+            "x": 480,
+            "y": 4005,
             "w": 47,
             "h": 81
           },
@@ -9864,8 +9864,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 794,
-            "y": 3100,
+            "x": 748,
+            "y": 4007,
             "w": 47,
             "h": 81
           },
@@ -9878,8 +9878,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 843,
-            "y": 3100,
+            "x": 797,
+            "y": 4007,
             "w": 47,
             "h": 81
           },
@@ -9892,8 +9892,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 892,
-            "y": 3100,
+            "x": 846,
+            "y": 4007,
             "w": 47,
             "h": 81
           },
@@ -9906,8 +9906,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 941,
-            "y": 3100,
+            "x": 2,
+            "y": 4008,
             "w": 47,
             "h": 81
           },
@@ -9920,8 +9920,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 990,
-            "y": 3100,
+            "x": 51,
+            "y": 4008,
             "w": 47,
             "h": 81
           },
@@ -9934,8 +9934,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1039,
-            "y": 3100,
+            "x": 100,
+            "y": 4008,
             "w": 47,
             "h": 81
           },
@@ -9948,8 +9948,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1088,
-            "y": 3100,
+            "x": 149,
+            "y": 4008,
             "w": 47,
             "h": 81
           },
@@ -9962,8 +9962,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1413,
-            "y": 3100,
+            "x": 198,
+            "y": 4008,
             "w": 47,
             "h": 81
           },
@@ -9976,8 +9976,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1462,
-            "y": 3100,
+            "x": 247,
+            "y": 4008,
             "w": 47,
             "h": 81
           },
@@ -9990,8 +9990,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1511,
-            "y": 3100,
+            "x": 296,
+            "y": 4008,
             "w": 47,
             "h": 81
           },
@@ -10004,8 +10004,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1560,
-            "y": 3100,
+            "x": 345,
+            "y": 4008,
             "w": 47,
             "h": 81
           },
@@ -10018,8 +10018,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1609,
-            "y": 3100,
+            "x": 1315,
+            "y": 4010,
             "w": 47,
             "h": 81
           },
@@ -10032,8 +10032,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1658,
-            "y": 3100,
+            "x": 1364,
+            "y": 4010,
             "w": 47,
             "h": 81
           },
@@ -10046,8 +10046,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1707,
-            "y": 3100,
+            "x": 1413,
+            "y": 4010,
             "w": 47,
             "h": 81
           },
@@ -10060,8 +10060,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1756,
-            "y": 3100,
+            "x": 1542,
+            "y": 4010,
             "w": 47,
             "h": 81
           },
@@ -10074,8 +10074,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1805,
-            "y": 3100,
+            "x": 1591,
+            "y": 4010,
             "w": 47,
             "h": 81
           },
@@ -10088,8 +10088,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1854,
-            "y": 3100,
+            "x": 1640,
+            "y": 4010,
             "w": 47,
             "h": 81
           },
@@ -10102,8 +10102,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1903,
-            "y": 3100,
+            "x": 1689,
+            "y": 4010,
             "w": 47,
             "h": 81
           },
@@ -10116,8 +10116,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1137,
-            "y": 3101,
+            "x": 1738,
+            "y": 4010,
             "w": 47,
             "h": 81
           },
@@ -10130,8 +10130,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1186,
-            "y": 3101,
+            "x": 1787,
+            "y": 4010,
             "w": 47,
             "h": 81
           },
@@ -10144,8 +10144,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1235,
-            "y": 3101,
+            "x": 1836,
+            "y": 4010,
             "w": 47,
             "h": 81
           },
@@ -10156,10 +10156,10 @@
           "status": "painted",
           "source": "generated/temple.flame.37.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
             "x": 2,
-            "y": 3102,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10170,10 +10170,10 @@
           "status": "painted",
           "source": "generated/temple.flame.38.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
             "x": 51,
-            "y": 3102,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10184,10 +10184,10 @@
           "status": "painted",
           "source": "generated/temple.flame.39.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
             "x": 100,
-            "y": 3102,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10198,10 +10198,10 @@
           "status": "painted",
           "source": "generated/temple.flame.40.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
             "x": 149,
-            "y": 3102,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10212,10 +10212,10 @@
           "status": "painted",
           "source": "generated/temple.flame.41.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
             "x": 198,
-            "y": 3104,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10226,10 +10226,10 @@
           "status": "painted",
           "source": "generated/temple.flame.42.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
             "x": 247,
-            "y": 3104,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10240,10 +10240,10 @@
           "status": "painted",
           "source": "generated/temple.flame.43.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
             "x": 296,
-            "y": 3104,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10254,10 +10254,10 @@
           "status": "painted",
           "source": "generated/temple.flame.44.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
             "x": 345,
-            "y": 3104,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10268,10 +10268,10 @@
           "status": "painted",
           "source": "generated/temple.flame.45.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
             "x": 394,
-            "y": 3104,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10282,10 +10282,10 @@
           "status": "painted",
           "source": "generated/temple.flame.46.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
             "x": 443,
-            "y": 3104,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10296,10 +10296,10 @@
           "status": "painted",
           "source": "generated/temple.flame.47.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 541,
-            "y": 3104,
+            "x": 492,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10310,10 +10310,10 @@
           "status": "painted",
           "source": "generated/temple.flame.48.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 590,
-            "y": 3104,
+            "x": 541,
+            "y": 2,
             "w": 47,
             "h": 81
           },
@@ -10422,8 +10422,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 233,
-            "y": 2715,
+            "x": 1004,
+            "y": 3890,
             "w": 73,
             "h": 97
           },
@@ -10471,10 +10471,10 @@
           "status": "painted",
           "source": "generated/spider.leg.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 411,
-            "y": 3445,
+            "x": 968,
+            "y": 240,
             "w": 52,
             "h": 7
           },
@@ -10522,10 +10522,10 @@
           "status": "painted",
           "source": "generated/spider.legEnd.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 308,
-            "y": 3410,
+            "x": 738,
+            "y": 240,
             "w": 16,
             "h": 16
           },
@@ -10573,10 +10573,10 @@
           "status": "painted",
           "source": "generated/spider.thread.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1064,
-            "y": 3445,
+            "x": 1174,
+            "y": 240,
             "w": 52,
             "h": 4
           },
@@ -10676,10 +10676,10 @@
           "status": "painted",
           "source": "generated/snake.stalkEnd.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1036,
-            "y": 3432,
+            "x": 1028,
+            "y": 201,
             "w": 26,
             "h": 26
           },
@@ -10727,10 +10727,10 @@
           "status": "painted",
           "source": "generated/snake.stalkLeaf.0.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 36,
-            "y": 3395,
+            "x": 1538,
+            "y": 202,
             "w": 84,
             "h": 34
           },
@@ -10741,10 +10741,10 @@
           "status": "painted",
           "source": "generated/snake.stalkLeaf.1.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 869,
-            "y": 3396,
+            "x": 1624,
+            "y": 202,
             "w": 84,
             "h": 34
           },
@@ -10802,8 +10802,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1643,
-            "y": 1899,
+            "x": 641,
+            "y": 2987,
             "w": 156,
             "h": 143
           },
@@ -10853,8 +10853,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1836,
-            "y": 2918,
+            "x": 779,
+            "y": 3911,
             "w": 136,
             "h": 94
           },
@@ -10910,10 +10910,10 @@
           "status": "painted",
           "source": "generated/bird.red.body.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 2,
-            "y": 3265,
+            "x": 1544,
+            "y": 77,
             "w": 120,
             "h": 63
           },
@@ -10963,10 +10963,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 492,
-            "y": 3106,
-            "w": 37,
-            "h": 78
+            "x": 802,
+            "y": 1970,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -10977,10 +10977,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1952,
-            "y": 3131,
-            "w": 37,
-            "h": 78
+            "x": 402,
+            "y": 1973,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -10991,10 +10991,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1991,
-            "y": 3131,
-            "w": 37,
-            "h": 78
+            "x": 495,
+            "y": 1973,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11005,10 +11005,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 995,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 895,
+            "y": 1975,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11019,10 +11019,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1034,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 988,
+            "y": 1975,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11033,10 +11033,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1073,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 1081,
+            "y": 1975,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11047,10 +11047,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1411,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 1174,
+            "y": 1975,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11061,10 +11061,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1450,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 1267,
+            "y": 1975,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11075,10 +11075,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1489,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 1360,
+            "y": 2151,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11089,10 +11089,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1528,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 1453,
+            "y": 2151,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11103,10 +11103,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1567,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 1546,
+            "y": 2151,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11117,10 +11117,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1606,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 1639,
+            "y": 2151,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11131,10 +11131,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1645,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 1732,
+            "y": 2151,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11145,10 +11145,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1684,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 1825,
+            "y": 2151,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11159,10 +11159,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1723,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 1918,
+            "y": 2151,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11173,10 +11173,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1762,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 802,
+            "y": 2167,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11187,10 +11187,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1801,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 402,
+            "y": 2170,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11201,10 +11201,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1840,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 495,
+            "y": 2170,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11215,10 +11215,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1879,
-            "y": 3183,
-            "w": 37,
-            "h": 78
+            "x": 588,
+            "y": 2170,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11229,10 +11229,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1112,
-            "y": 3184,
-            "w": 37,
-            "h": 78
+            "x": 681,
+            "y": 2170,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11243,10 +11243,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1151,
-            "y": 3184,
-            "w": 37,
-            "h": 78
+            "x": 2,
+            "y": 2171,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11257,10 +11257,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1190,
-            "y": 3184,
-            "w": 37,
-            "h": 78
+            "x": 95,
+            "y": 2171,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11271,10 +11271,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1229,
-            "y": 3184,
-            "w": 37,
-            "h": 78
+            "x": 188,
+            "y": 2171,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11285,10 +11285,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 3185,
-            "w": 37,
-            "h": 78
+            "x": 281,
+            "y": 2171,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11299,10 +11299,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 41,
-            "y": 3185,
-            "w": 37,
-            "h": 78
+            "x": 895,
+            "y": 2172,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11313,10 +11313,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 80,
-            "y": 3185,
-            "w": 37,
-            "h": 78
+            "x": 988,
+            "y": 2172,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11327,10 +11327,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 119,
-            "y": 3185,
-            "w": 37,
-            "h": 78
+            "x": 1081,
+            "y": 2172,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11341,10 +11341,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 158,
-            "y": 3185,
-            "w": 37,
-            "h": 78
+            "x": 1174,
+            "y": 2172,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11355,10 +11355,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 492,
-            "y": 3186,
-            "w": 37,
-            "h": 78
+            "x": 1267,
+            "y": 2172,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11369,10 +11369,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 197,
-            "y": 3187,
-            "w": 37,
-            "h": 78
+            "x": 1360,
+            "y": 2348,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11383,10 +11383,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 236,
-            "y": 3187,
-            "w": 37,
-            "h": 78
+            "x": 1453,
+            "y": 2348,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11397,10 +11397,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 275,
-            "y": 3187,
-            "w": 37,
-            "h": 78
+            "x": 1546,
+            "y": 2348,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11411,10 +11411,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 314,
-            "y": 3187,
-            "w": 37,
-            "h": 78
+            "x": 1639,
+            "y": 2348,
+            "w": 91,
+            "h": 195
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         }
@@ -11468,10 +11468,10 @@
           "status": "painted",
           "source": "generated/bird.blue.body.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 870,
-            "y": 3183,
+            "x": 948,
+            "y": 2,
             "w": 123,
             "h": 78
           },
@@ -11521,10 +11521,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1974,
-            "y": 2780,
-            "w": 42,
-            "h": 89
+            "x": 1248,
+            "y": 486,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11535,10 +11535,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1974,
-            "y": 2871,
-            "w": 42,
-            "h": 89
+            "x": 1354,
+            "y": 486,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11549,10 +11549,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1376,
-            "y": 2914,
-            "w": 42,
-            "h": 89
+            "x": 1460,
+            "y": 486,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11563,10 +11563,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1420,
-            "y": 2914,
-            "w": 42,
-            "h": 89
+            "x": 1566,
+            "y": 486,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11577,10 +11577,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 776,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 1672,
+            "y": 486,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11591,10 +11591,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 820,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 1778,
+            "y": 685,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11605,10 +11605,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 864,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 1884,
+            "y": 685,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11619,10 +11619,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 908,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 1248,
+            "y": 709,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11633,10 +11633,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 952,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 1354,
+            "y": 709,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11647,10 +11647,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 996,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 1460,
+            "y": 709,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11661,10 +11661,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1040,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 1566,
+            "y": 709,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11675,10 +11675,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1084,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 1672,
+            "y": 709,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11689,10 +11689,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1128,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 822,
+            "y": 712,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11703,10 +11703,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1464,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 928,
+            "y": 712,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11717,10 +11717,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1508,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 1034,
+            "y": 712,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11731,10 +11731,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1552,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 1140,
+            "y": 712,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11745,10 +11745,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1596,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 2,
+            "y": 728,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11759,10 +11759,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1640,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 108,
+            "y": 728,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11773,10 +11773,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1684,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 214,
+            "y": 728,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11787,10 +11787,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1728,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 320,
+            "y": 728,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11801,10 +11801,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1772,
-            "y": 2923,
-            "w": 42,
-            "h": 89
+            "x": 426,
+            "y": 728,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11815,10 +11815,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1172,
-            "y": 2924,
-            "w": 42,
-            "h": 89
+            "x": 532,
+            "y": 728,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11829,10 +11829,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1216,
-            "y": 2924,
-            "w": 42,
-            "h": 89
+            "x": 638,
+            "y": 728,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11843,10 +11843,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1260,
-            "y": 2924,
-            "w": 42,
-            "h": 89
+            "x": 1778,
+            "y": 908,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11857,10 +11857,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1304,
-            "y": 2924,
-            "w": 42,
-            "h": 89
+            "x": 1884,
+            "y": 908,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11871,10 +11871,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 212,
-            "y": 2930,
-            "w": 42,
-            "h": 89
+            "x": 1246,
+            "y": 932,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11885,10 +11885,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 256,
-            "y": 2930,
-            "w": 42,
-            "h": 89
+            "x": 1352,
+            "y": 932,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11899,10 +11899,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 300,
-            "y": 2930,
-            "w": 42,
-            "h": 89
+            "x": 1458,
+            "y": 932,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11913,10 +11913,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 344,
-            "y": 2930,
-            "w": 42,
-            "h": 89
+            "x": 1564,
+            "y": 932,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11927,10 +11927,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 388,
-            "y": 2930,
-            "w": 42,
-            "h": 89
+            "x": 1670,
+            "y": 932,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11941,10 +11941,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 432,
-            "y": 2930,
-            "w": 42,
-            "h": 89
+            "x": 744,
+            "y": 935,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11955,10 +11955,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 476,
-            "y": 2930,
-            "w": 42,
-            "h": 89
+            "x": 850,
+            "y": 935,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -11969,10 +11969,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 520,
-            "y": 2932,
-            "w": 42,
-            "h": 89
+            "x": 956,
+            "y": 935,
+            "w": 104,
+            "h": 221
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         }
@@ -12026,10 +12026,10 @@
           "status": "painted",
           "source": "generated/bird.purple.body.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 353,
-            "y": 3187,
+            "x": 1073,
+            "y": 2,
             "w": 125,
             "h": 76
           },
@@ -12079,10 +12079,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 88,
-            "y": 2933,
-            "w": 42,
-            "h": 84
+            "x": 1062,
+            "y": 935,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12093,10 +12093,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 132,
-            "y": 2933,
-            "w": 42,
-            "h": 84
+            "x": 2,
+            "y": 951,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12107,10 +12107,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1974,
-            "y": 2962,
-            "w": 42,
-            "h": 84
+            "x": 108,
+            "y": 951,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12121,10 +12121,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1348,
-            "y": 3005,
-            "w": 42,
-            "h": 84
+            "x": 214,
+            "y": 951,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12135,10 +12135,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1392,
-            "y": 3005,
-            "w": 42,
-            "h": 84
+            "x": 320,
+            "y": 951,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12149,10 +12149,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 743,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 426,
+            "y": 951,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12163,10 +12163,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 787,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 532,
+            "y": 951,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12177,10 +12177,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 831,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 638,
+            "y": 951,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12191,10 +12191,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 875,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 1776,
+            "y": 1131,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12205,10 +12205,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 919,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 1882,
+            "y": 1131,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12219,10 +12219,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 963,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 1062,
+            "y": 1145,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12233,10 +12233,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1007,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 1168,
+            "y": 1155,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12247,10 +12247,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1051,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 1274,
+            "y": 1155,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12261,10 +12261,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1095,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 1380,
+            "y": 1155,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12275,10 +12275,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1436,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 1486,
+            "y": 1155,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12289,10 +12289,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1480,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 1592,
+            "y": 1155,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12303,10 +12303,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1524,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 744,
+            "y": 1158,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12317,10 +12317,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1568,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 850,
+            "y": 1158,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12331,10 +12331,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1612,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 956,
+            "y": 1158,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12345,10 +12345,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1656,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 2,
+            "y": 1161,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12359,10 +12359,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1700,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 108,
+            "y": 1161,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12373,10 +12373,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1744,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 214,
+            "y": 1161,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12387,10 +12387,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1788,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 320,
+            "y": 1161,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12401,10 +12401,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1832,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 426,
+            "y": 1161,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12415,10 +12415,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1876,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 532,
+            "y": 1161,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12429,10 +12429,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1920,
-            "y": 3014,
-            "w": 42,
-            "h": 84
+            "x": 638,
+            "y": 1161,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12443,10 +12443,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1139,
-            "y": 3015,
-            "w": 42,
-            "h": 84
+            "x": 1698,
+            "y": 1341,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12457,10 +12457,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1183,
-            "y": 3015,
-            "w": 42,
-            "h": 84
+            "x": 1804,
+            "y": 1341,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12471,10 +12471,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1227,
-            "y": 3015,
-            "w": 42,
-            "h": 84
+            "x": 1910,
+            "y": 1341,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12485,10 +12485,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1271,
-            "y": 3015,
-            "w": 42,
-            "h": 84
+            "x": 1062,
+            "y": 1355,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12499,10 +12499,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 564,
-            "y": 3018,
-            "w": 42,
-            "h": 84
+            "x": 1168,
+            "y": 1365,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12513,10 +12513,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 608,
-            "y": 3018,
-            "w": 42,
-            "h": 84
+            "x": 1274,
+            "y": 1365,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         },
@@ -12527,10 +12527,10 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 652,
-            "y": 3018,
-            "w": 42,
-            "h": 84
+            "x": 1380,
+            "y": 1365,
+            "w": 104,
+            "h": 208
           },
           "notes": "Exported from painted component masters and cartoon vector recipes; gameplay review pending."
         }
@@ -12584,10 +12584,10 @@
           "status": "painted",
           "source": "generated/bat.purple.body.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 1082,
-            "y": 3264,
+            "x": 1440,
+            "y": 77,
             "w": 102,
             "h": 65
           },
@@ -12637,8 +12637,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1930,
-            "y": 1889,
+            "x": 1733,
+            "y": 2981,
             "w": 84,
             "h": 136
           },
@@ -12651,8 +12651,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1442,
-            "y": 1900,
+            "x": 799,
+            "y": 2987,
             "w": 84,
             "h": 136
           },
@@ -12665,8 +12665,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1528,
-            "y": 1900,
+            "x": 885,
+            "y": 2987,
             "w": 84,
             "h": 136
           },
@@ -12679,8 +12679,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 920,
-            "y": 1903,
+            "x": 971,
+            "y": 2987,
             "w": 84,
             "h": 136
           },
@@ -12693,8 +12693,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1006,
-            "y": 1903,
+            "x": 2,
+            "y": 2990,
             "w": 84,
             "h": 136
           },
@@ -12707,8 +12707,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1092,
-            "y": 1903,
+            "x": 455,
+            "y": 2990,
             "w": 84,
             "h": 136
           },
@@ -12721,8 +12721,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1178,
-            "y": 1910,
+            "x": 237,
+            "y": 2995,
             "w": 84,
             "h": 136
           },
@@ -12735,8 +12735,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1264,
-            "y": 1910,
+            "x": 323,
+            "y": 2995,
             "w": 84,
             "h": 136
           },
@@ -12749,8 +12749,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1350,
-            "y": 1910,
+            "x": 1057,
+            "y": 2999,
             "w": 84,
             "h": 136
           },
@@ -12763,8 +12763,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 560,
-            "y": 1920,
+            "x": 1143,
+            "y": 2999,
             "w": 84,
             "h": 136
           },
@@ -12777,8 +12777,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 646,
-            "y": 1920,
+            "x": 1229,
+            "y": 2999,
             "w": 84,
             "h": 136
           },
@@ -12791,8 +12791,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 732,
-            "y": 1924,
+            "x": 1315,
+            "y": 2999,
             "w": 84,
             "h": 136
           },
@@ -12805,8 +12805,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 818,
-            "y": 1924,
+            "x": 1401,
+            "y": 2999,
             "w": 84,
             "h": 136
           },
@@ -12819,8 +12819,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 95,
-            "y": 1930,
+            "x": 1819,
+            "y": 3108,
             "w": 84,
             "h": 136
           },
@@ -12833,8 +12833,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 181,
-            "y": 1930,
+            "x": 1905,
+            "y": 3108,
             "w": 84,
             "h": 136
           },
@@ -12847,8 +12847,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 267,
-            "y": 1930,
+            "x": 1733,
+            "y": 3119,
             "w": 84,
             "h": 136
           },
@@ -12861,8 +12861,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 353,
-            "y": 1930,
+            "x": 799,
+            "y": 3125,
             "w": 84,
             "h": 136
           },
@@ -12875,8 +12875,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 439,
-            "y": 1930,
+            "x": 885,
+            "y": 3125,
             "w": 84,
             "h": 136
           },
@@ -12889,8 +12889,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 1940,
+            "x": 971,
+            "y": 3125,
             "w": 84,
             "h": 136
           },
@@ -12903,8 +12903,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1930,
-            "y": 2027,
+            "x": 2,
+            "y": 3128,
             "w": 84,
             "h": 136
           },
@@ -12917,8 +12917,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1801,
-            "y": 2037,
+            "x": 88,
+            "y": 3128,
             "w": 84,
             "h": 136
           },
@@ -12931,8 +12931,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1436,
-            "y": 2038,
+            "x": 409,
+            "y": 3128,
             "w": 84,
             "h": 136
           },
@@ -12945,8 +12945,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1522,
-            "y": 2038,
+            "x": 495,
+            "y": 3128,
             "w": 84,
             "h": 136
           },
@@ -12959,8 +12959,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 904,
-            "y": 2041,
+            "x": 1487,
+            "y": 3129,
             "w": 84,
             "h": 136
           },
@@ -12973,8 +12973,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 990,
-            "y": 2041,
+            "x": 1573,
+            "y": 3129,
             "w": 84,
             "h": 136
           },
@@ -12987,8 +12987,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1076,
-            "y": 2041,
+            "x": 581,
+            "y": 3132,
             "w": 84,
             "h": 136
           },
@@ -13001,8 +13001,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1608,
-            "y": 2044,
+            "x": 667,
+            "y": 3132,
             "w": 84,
             "h": 136
           },
@@ -13015,8 +13015,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1694,
-            "y": 2044,
+            "x": 174,
+            "y": 3133,
             "w": 84,
             "h": 136
           },
@@ -13029,8 +13029,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1162,
-            "y": 2048,
+            "x": 260,
+            "y": 3133,
             "w": 84,
             "h": 136
           },
@@ -13043,8 +13043,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1248,
-            "y": 2048,
+            "x": 1057,
+            "y": 3137,
             "w": 84,
             "h": 136
           },
@@ -13057,8 +13057,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1334,
-            "y": 2048,
+            "x": 1143,
+            "y": 3137,
             "w": 84,
             "h": 136
           },
@@ -13071,8 +13071,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 525,
-            "y": 2058,
+            "x": 1229,
+            "y": 3137,
             "w": 84,
             "h": 136
           },
@@ -13085,8 +13085,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 611,
-            "y": 2058,
+            "x": 1315,
+            "y": 3137,
             "w": 84,
             "h": 136
           },
@@ -13099,8 +13099,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 697,
-            "y": 2062,
+            "x": 1401,
+            "y": 3137,
             "w": 84,
             "h": 136
           },
@@ -13113,8 +13113,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 783,
-            "y": 2062,
+            "x": 1819,
+            "y": 3246,
             "w": 84,
             "h": 136
           },
@@ -13127,8 +13127,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 88,
-            "y": 2068,
+            "x": 1905,
+            "y": 3246,
             "w": 84,
             "h": 136
           },
@@ -13141,8 +13141,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 174,
-            "y": 2068,
+            "x": 1659,
+            "y": 3257,
             "w": 84,
             "h": 136
           },
@@ -13155,8 +13155,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 260,
-            "y": 2068,
+            "x": 753,
+            "y": 3263,
             "w": 84,
             "h": 136
           },
@@ -13169,8 +13169,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 346,
-            "y": 2068,
+            "x": 839,
+            "y": 3263,
             "w": 84,
             "h": 136
           },
@@ -13183,8 +13183,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 432,
-            "y": 2068,
+            "x": 925,
+            "y": 3263,
             "w": 84,
             "h": 136
           },
@@ -13198,7 +13198,7 @@
           "sheet": "main@2x-1.png",
           "cell": {
             "x": 2,
-            "y": 2078,
+            "y": 3266,
             "w": 84,
             "h": 136
           },
@@ -13254,10 +13254,10 @@
           "status": "painted",
           "source": "generated/bat.brown.body.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 874,
-            "y": 3263,
+            "x": 1745,
+            "y": 2,
             "w": 102,
             "h": 71
           },
@@ -13307,8 +13307,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1420,
-            "y": 2176,
+            "x": 428,
+            "y": 3266,
             "w": 78,
             "h": 128
           },
@@ -13321,8 +13321,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1500,
-            "y": 2176,
+            "x": 1487,
+            "y": 3267,
             "w": 78,
             "h": 128
           },
@@ -13335,8 +13335,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 869,
-            "y": 2179,
+            "x": 1567,
+            "y": 3267,
             "w": 78,
             "h": 128
           },
@@ -13349,8 +13349,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 949,
-            "y": 2179,
+            "x": 508,
+            "y": 3270,
             "w": 78,
             "h": 128
           },
@@ -13363,8 +13363,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1029,
-            "y": 2179,
+            "x": 588,
+            "y": 3270,
             "w": 78,
             "h": 128
           },
@@ -13377,8 +13377,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1580,
-            "y": 2182,
+            "x": 668,
+            "y": 3270,
             "w": 78,
             "h": 128
           },
@@ -13391,8 +13391,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1660,
-            "y": 2182,
+            "x": 170,
+            "y": 3271,
             "w": 78,
             "h": 128
           },
@@ -13405,8 +13405,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1109,
-            "y": 2186,
+            "x": 250,
+            "y": 3271,
             "w": 78,
             "h": 128
           },
@@ -13419,8 +13419,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1189,
-            "y": 2186,
+            "x": 1011,
+            "y": 3275,
             "w": 78,
             "h": 128
           },
@@ -13433,8 +13433,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1269,
-            "y": 2186,
+            "x": 1091,
+            "y": 3275,
             "w": 78,
             "h": 128
           },
@@ -13447,8 +13447,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 518,
-            "y": 2196,
+            "x": 1171,
+            "y": 3275,
             "w": 78,
             "h": 128
           },
@@ -13461,8 +13461,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 598,
-            "y": 2196,
+            "x": 1251,
+            "y": 3275,
             "w": 78,
             "h": 128
           },
@@ -13475,8 +13475,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 678,
-            "y": 2200,
+            "x": 1331,
+            "y": 3275,
             "w": 78,
             "h": 128
           },
@@ -13489,8 +13489,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 758,
-            "y": 2200,
+            "x": 1745,
+            "y": 3384,
             "w": 78,
             "h": 128
           },
@@ -13503,8 +13503,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 88,
-            "y": 2206,
+            "x": 1825,
+            "y": 3384,
             "w": 78,
             "h": 128
           },
@@ -13517,8 +13517,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 168,
-            "y": 2206,
+            "x": 1905,
+            "y": 3384,
             "w": 78,
             "h": 128
           },
@@ -13531,8 +13531,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 248,
-            "y": 2206,
+            "x": 1647,
+            "y": 3395,
             "w": 78,
             "h": 128
           },
@@ -13545,8 +13545,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 328,
-            "y": 2206,
+            "x": 88,
+            "y": 3396,
             "w": 78,
             "h": 128
           },
@@ -13559,8 +13559,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 408,
-            "y": 2206,
+            "x": 330,
+            "y": 3396,
             "w": 78,
             "h": 128
           },
@@ -13573,8 +13573,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 2216,
+            "x": 410,
+            "y": 3396,
             "w": 78,
             "h": 128
           },
@@ -13587,8 +13587,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1862,
-            "y": 2295,
+            "x": 1411,
+            "y": 3397,
             "w": 78,
             "h": 128
           },
@@ -13601,8 +13601,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1942,
-            "y": 2295,
+            "x": 1491,
+            "y": 3397,
             "w": 78,
             "h": 128
           },
@@ -13615,8 +13615,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1740,
-            "y": 2305,
+            "x": 490,
+            "y": 3400,
             "w": 78,
             "h": 128
           },
@@ -13629,8 +13629,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1349,
-            "y": 2306,
+            "x": 570,
+            "y": 3400,
             "w": 78,
             "h": 128
           },
@@ -13643,8 +13643,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1429,
-            "y": 2306,
+            "x": 650,
+            "y": 3400,
             "w": 78,
             "h": 128
           },
@@ -13657,8 +13657,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 838,
-            "y": 2309,
+            "x": 168,
+            "y": 3401,
             "w": 78,
             "h": 128
           },
@@ -13671,8 +13671,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 918,
-            "y": 2309,
+            "x": 248,
+            "y": 3401,
             "w": 78,
             "h": 128
           },
@@ -13685,8 +13685,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 998,
-            "y": 2309,
+            "x": 730,
+            "y": 3401,
             "w": 78,
             "h": 128
           },
@@ -13699,8 +13699,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1509,
-            "y": 2312,
+            "x": 810,
+            "y": 3401,
             "w": 78,
             "h": 128
           },
@@ -13713,8 +13713,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1589,
-            "y": 2312,
+            "x": 890,
+            "y": 3401,
             "w": 78,
             "h": 128
           },
@@ -13727,8 +13727,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1078,
-            "y": 2316,
+            "x": 2,
+            "y": 3404,
             "w": 78,
             "h": 128
           },
@@ -13741,8 +13741,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1158,
-            "y": 2316,
+            "x": 970,
+            "y": 3405,
             "w": 78,
             "h": 128
           },
@@ -13755,8 +13755,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1238,
-            "y": 2316,
+            "x": 1050,
+            "y": 3405,
             "w": 78,
             "h": 128
           },
@@ -13769,8 +13769,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 488,
-            "y": 2326,
+            "x": 1130,
+            "y": 3405,
             "w": 78,
             "h": 128
           },
@@ -13783,8 +13783,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 568,
-            "y": 2326,
+            "x": 1210,
+            "y": 3405,
             "w": 78,
             "h": 128
           },
@@ -13797,8 +13797,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 648,
-            "y": 2330,
+            "x": 1290,
+            "y": 3405,
             "w": 78,
             "h": 128
           },
@@ -13811,8 +13811,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 728,
-            "y": 2330,
+            "x": 1727,
+            "y": 3514,
             "w": 78,
             "h": 128
           },
@@ -13825,8 +13825,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 82,
-            "y": 2336,
+            "x": 1807,
+            "y": 3514,
             "w": 78,
             "h": 128
           },
@@ -13839,8 +13839,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 162,
-            "y": 2336,
+            "x": 1887,
+            "y": 3514,
             "w": 78,
             "h": 128
           },
@@ -13853,8 +13853,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 242,
-            "y": 2336,
+            "x": 1571,
+            "y": 3525,
             "w": 78,
             "h": 128
           },
@@ -13867,8 +13867,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 322,
-            "y": 2336,
+            "x": 82,
+            "y": 3526,
             "w": 78,
             "h": 128
           },
@@ -13924,10 +13924,10 @@
           "status": "painted",
           "source": "generated/bat.grey.body.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 353,
-            "y": 3265,
+            "x": 1073,
+            "y": 80,
             "w": 102,
             "h": 63
           },
@@ -13977,8 +13977,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1558,
-            "y": 1456,
+            "x": 1906,
+            "y": 2664,
             "w": 91,
             "h": 146
           },
@@ -13991,8 +13991,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 698,
-            "y": 1476,
+            "x": 176,
+            "y": 2684,
             "w": 91,
             "h": 146
           },
@@ -14005,8 +14005,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 176,
-            "y": 1486,
+            "x": 706,
+            "y": 2684,
             "w": 91,
             "h": 146
           },
@@ -14019,8 +14019,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1892,
-            "y": 1593,
+            "x": 1718,
+            "y": 2685,
             "w": 91,
             "h": 146
           },
@@ -14033,8 +14033,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1651,
-            "y": 1603,
+            "x": 1811,
+            "y": 2685,
             "w": 91,
             "h": 146
           },
@@ -14047,8 +14047,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1744,
-            "y": 1603,
+            "x": 799,
+            "y": 2691,
             "w": 91,
             "h": 146
           },
@@ -14061,8 +14061,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1558,
-            "y": 1604,
+            "x": 892,
+            "y": 2691,
             "w": 91,
             "h": 146
           },
@@ -14075,8 +14075,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1036,
-            "y": 1607,
+            "x": 985,
+            "y": 2691,
             "w": 91,
             "h": 146
           },
@@ -14089,8 +14089,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1129,
-            "y": 1607,
+            "x": 1078,
+            "y": 2691,
             "w": 91,
             "h": 146
           },
@@ -14103,8 +14103,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1222,
-            "y": 1607,
+            "x": 524,
+            "y": 2694,
             "w": 91,
             "h": 146
           },
@@ -14117,8 +14117,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1315,
-            "y": 1614,
+            "x": 269,
+            "y": 2699,
             "w": 91,
             "h": 146
           },
@@ -14131,8 +14131,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1408,
-            "y": 1614,
+            "x": 362,
+            "y": 2699,
             "w": 91,
             "h": 146
           },
@@ -14145,8 +14145,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 698,
-            "y": 1624,
+            "x": 1171,
+            "y": 2703,
             "w": 91,
             "h": 146
           },
@@ -14159,8 +14159,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 791,
-            "y": 1628,
+            "x": 1264,
+            "y": 2703,
             "w": 91,
             "h": 146
           },
@@ -14173,8 +14173,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 884,
-            "y": 1628,
+            "x": 1357,
+            "y": 2703,
             "w": 91,
             "h": 146
           },
@@ -14187,8 +14187,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 176,
-            "y": 1634,
+            "x": 1450,
+            "y": 2703,
             "w": 91,
             "h": 146
           },
@@ -14201,8 +14201,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 269,
-            "y": 1634,
+            "x": 1543,
+            "y": 2703,
             "w": 91,
             "h": 146
           },
@@ -14215,8 +14215,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 362,
-            "y": 1634,
+            "x": 1904,
+            "y": 2812,
             "w": 91,
             "h": 146
           },
@@ -14229,8 +14229,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 455,
-            "y": 1634,
+            "x": 176,
+            "y": 2832,
             "w": 91,
             "h": 146
           },
@@ -14243,8 +14243,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 548,
-            "y": 1634,
+            "x": 617,
+            "y": 2832,
             "w": 91,
             "h": 146
           },
@@ -14257,8 +14257,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 1644,
+            "x": 1636,
+            "y": 2833,
             "w": 91,
             "h": 146
           },
@@ -14271,8 +14271,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1837,
-            "y": 1741,
+            "x": 1729,
+            "y": 2833,
             "w": 91,
             "h": 146
           },
@@ -14285,8 +14285,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1930,
-            "y": 1741,
+            "x": 710,
+            "y": 2839,
             "w": 91,
             "h": 146
           },
@@ -14299,8 +14299,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1651,
-            "y": 1751,
+            "x": 803,
+            "y": 2839,
             "w": 91,
             "h": 146
           },
@@ -14313,8 +14313,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1744,
-            "y": 1751,
+            "x": 896,
+            "y": 2839,
             "w": 91,
             "h": 146
           },
@@ -14327,8 +14327,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1501,
-            "y": 1752,
+            "x": 989,
+            "y": 2839,
             "w": 91,
             "h": 146
           },
@@ -14341,8 +14341,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 977,
-            "y": 1755,
+            "x": 2,
+            "y": 2842,
             "w": 91,
             "h": 146
           },
@@ -14355,8 +14355,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1070,
-            "y": 1755,
+            "x": 455,
+            "y": 2842,
             "w": 91,
             "h": 146
           },
@@ -14369,8 +14369,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1163,
-            "y": 1755,
+            "x": 269,
+            "y": 2847,
             "w": 91,
             "h": 146
           },
@@ -14383,8 +14383,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1256,
-            "y": 1762,
+            "x": 362,
+            "y": 2847,
             "w": 91,
             "h": 146
           },
@@ -14397,8 +14397,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1349,
-            "y": 1762,
+            "x": 1082,
+            "y": 2851,
             "w": 91,
             "h": 146
           },
@@ -14411,8 +14411,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 641,
-            "y": 1772,
+            "x": 1175,
+            "y": 2851,
             "w": 91,
             "h": 146
           },
@@ -14425,8 +14425,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 734,
-            "y": 1776,
+            "x": 1268,
+            "y": 2851,
             "w": 91,
             "h": 146
           },
@@ -14439,8 +14439,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 827,
-            "y": 1776,
+            "x": 1361,
+            "y": 2851,
             "w": 91,
             "h": 146
           },
@@ -14453,8 +14453,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 95,
-            "y": 1782,
+            "x": 1454,
+            "y": 2851,
             "w": 91,
             "h": 146
           },
@@ -14467,8 +14467,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 188,
-            "y": 1782,
+            "x": 1822,
+            "y": 2960,
             "w": 91,
             "h": 146
           },
@@ -14481,8 +14481,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 281,
-            "y": 1782,
+            "x": 1915,
+            "y": 2960,
             "w": 91,
             "h": 146
           },
@@ -14495,8 +14495,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 374,
-            "y": 1782,
+            "x": 95,
+            "y": 2980,
             "w": 91,
             "h": 146
           },
@@ -14509,8 +14509,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 467,
-            "y": 1782,
+            "x": 548,
+            "y": 2980,
             "w": 91,
             "h": 146
           },
@@ -14523,8 +14523,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 1792,
+            "x": 1547,
+            "y": 2981,
             "w": 91,
             "h": 146
           },
@@ -14537,8 +14537,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1837,
-            "y": 1889,
+            "x": 1640,
+            "y": 2981,
             "w": 91,
             "h": 146
           },
@@ -14594,10 +14594,10 @@
           "status": "painted",
           "source": "generated/bat.black.body.svg",
           "sourceCell": null,
-          "sheet": "main@2x-1.png",
+          "sheet": "main@2x-2.png",
           "cell": {
-            "x": 978,
-            "y": 3263,
+            "x": 1849,
+            "y": 2,
             "w": 102,
             "h": 68
           },
@@ -14647,8 +14647,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 402,
-            "y": 2336,
+            "x": 1967,
+            "y": 3514,
             "w": 76,
             "h": 125
           },
@@ -14661,8 +14661,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 2346,
+            "x": 328,
+            "y": 3526,
             "w": 76,
             "h": 125
           },
@@ -14675,8 +14675,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1820,
-            "y": 2425,
+            "x": 406,
+            "y": 3526,
             "w": 76,
             "h": 125
           },
@@ -14689,8 +14689,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1898,
-            "y": 2425,
+            "x": 1370,
+            "y": 3527,
             "w": 76,
             "h": 125
           },
@@ -14703,8 +14703,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1669,
-            "y": 2435,
+            "x": 1448,
+            "y": 3527,
             "w": 76,
             "h": 125
           },
@@ -14717,8 +14717,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1318,
-            "y": 2436,
+            "x": 484,
+            "y": 3530,
             "w": 76,
             "h": 125
           },
@@ -14731,8 +14731,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1396,
-            "y": 2436,
+            "x": 562,
+            "y": 3530,
             "w": 76,
             "h": 125
           },
@@ -14745,8 +14745,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 808,
-            "y": 2439,
+            "x": 640,
+            "y": 3530,
             "w": 76,
             "h": 125
           },
@@ -14759,8 +14759,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 886,
-            "y": 2439,
+            "x": 162,
+            "y": 3531,
             "w": 76,
             "h": 125
           },
@@ -14773,8 +14773,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 964,
-            "y": 2439,
+            "x": 240,
+            "y": 3531,
             "w": 76,
             "h": 125
           },
@@ -14787,8 +14787,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1474,
-            "y": 2442,
+            "x": 718,
+            "y": 3531,
             "w": 76,
             "h": 125
           },
@@ -14801,8 +14801,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1552,
-            "y": 2442,
+            "x": 796,
+            "y": 3531,
             "w": 76,
             "h": 125
           },
@@ -14815,8 +14815,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1042,
-            "y": 2446,
+            "x": 874,
+            "y": 3531,
             "w": 76,
             "h": 125
           },
@@ -14829,8 +14829,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1120,
-            "y": 2446,
+            "x": 2,
+            "y": 3534,
             "w": 76,
             "h": 125
           },
@@ -14843,8 +14843,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1198,
-            "y": 2446,
+            "x": 952,
+            "y": 3535,
             "w": 76,
             "h": 125
           },
@@ -14857,8 +14857,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 480,
-            "y": 2456,
+            "x": 1030,
+            "y": 3535,
             "w": 76,
             "h": 125
           },
@@ -14871,8 +14871,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 558,
-            "y": 2456,
+            "x": 1108,
+            "y": 3535,
             "w": 76,
             "h": 125
           },
@@ -14885,8 +14885,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 636,
-            "y": 2460,
+            "x": 1186,
+            "y": 3535,
             "w": 76,
             "h": 125
           },
@@ -14899,8 +14899,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 714,
-            "y": 2460,
+            "x": 1264,
+            "y": 3535,
             "w": 76,
             "h": 125
           },
@@ -14913,8 +14913,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 402,
-            "y": 2463,
+            "x": 1967,
+            "y": 3641,
             "w": 76,
             "h": 125
           },
@@ -14927,8 +14927,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 80,
-            "y": 2466,
+            "x": 1651,
+            "y": 3644,
             "w": 76,
             "h": 125
           },
@@ -14941,8 +14941,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 158,
-            "y": 2466,
+            "x": 1729,
+            "y": 3644,
             "w": 76,
             "h": 125
           },
@@ -14955,8 +14955,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 236,
-            "y": 2466,
+            "x": 1807,
+            "y": 3644,
             "w": 76,
             "h": 125
           },
@@ -14969,8 +14969,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 314,
-            "y": 2466,
+            "x": 1885,
+            "y": 3644,
             "w": 76,
             "h": 125
           },
@@ -14983,8 +14983,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 2,
-            "y": 2473,
+            "x": 318,
+            "y": 3653,
             "w": 76,
             "h": 125
           },
@@ -14997,8 +14997,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1747,
-            "y": 2552,
+            "x": 396,
+            "y": 3653,
             "w": 76,
             "h": 125
           },
@@ -15011,8 +15011,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1825,
-            "y": 2552,
+            "x": 1342,
+            "y": 3654,
             "w": 76,
             "h": 125
           },
@@ -15025,8 +15025,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1903,
-            "y": 2552,
+            "x": 1420,
+            "y": 3654,
             "w": 76,
             "h": 125
           },
@@ -15039,8 +15039,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1630,
-            "y": 2562,
+            "x": 1498,
+            "y": 3655,
             "w": 76,
             "h": 125
           },
@@ -15053,8 +15053,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1276,
-            "y": 2563,
+            "x": 80,
+            "y": 3656,
             "w": 76,
             "h": 125
           },
@@ -15067,8 +15067,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1354,
-            "y": 2563,
+            "x": 474,
+            "y": 3657,
             "w": 76,
             "h": 125
           },
@@ -15081,8 +15081,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 792,
-            "y": 2566,
+            "x": 552,
+            "y": 3657,
             "w": 76,
             "h": 125
           },
@@ -15095,8 +15095,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 870,
-            "y": 2566,
+            "x": 630,
+            "y": 3657,
             "w": 76,
             "h": 125
           },
@@ -15109,8 +15109,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 948,
-            "y": 2566,
+            "x": 158,
+            "y": 3658,
             "w": 76,
             "h": 125
           },
@@ -15123,8 +15123,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1432,
-            "y": 2569,
+            "x": 236,
+            "y": 3658,
             "w": 76,
             "h": 125
           },
@@ -15137,8 +15137,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1510,
-            "y": 2569,
+            "x": 708,
+            "y": 3658,
             "w": 76,
             "h": 125
           },
@@ -15151,8 +15151,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1026,
-            "y": 2573,
+            "x": 786,
+            "y": 3658,
             "w": 76,
             "h": 125
           },
@@ -15165,8 +15165,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1104,
-            "y": 2573,
+            "x": 864,
+            "y": 3658,
             "w": 76,
             "h": 125
           },
@@ -15179,8 +15179,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 1182,
-            "y": 2573,
+            "x": 2,
+            "y": 3661,
             "w": 76,
             "h": 125
           },
@@ -15193,8 +15193,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 480,
-            "y": 2583,
+            "x": 942,
+            "y": 3662,
             "w": 76,
             "h": 125
           },
@@ -15207,8 +15207,8 @@
           "sourceCell": null,
           "sheet": "main@2x-1.png",
           "cell": {
-            "x": 558,
-            "y": 2583,
+            "x": 1020,
+            "y": 3662,
             "w": 76,
             "h": 125
           },

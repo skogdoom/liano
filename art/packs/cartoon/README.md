@@ -38,7 +38,8 @@ creatures, foliage/wood, the distant jungle, a level branch aligned with its
 collision guide, cleaned snake components without the original faint matte,
 a lighter plum spider body with clearer contour highlights, highlighted
 birds/bats with clean transparency, a separate large/small waterfall pair,
-refined climbing-snake coils with a short tapered tail, and a scalloped bat wing.
+refined climbing-snake coils with a short tapered tail, a scalloped bat wing,
+a feathered flight wing and a wingless flying-parrot body.
 They were generated for this pack
 in the approved style. `source-layout.json` names each component's crop in source
 pixels. `components/` contains deterministic, tightly trimmed PNG exports from
@@ -145,8 +146,27 @@ landmarks through the 41 original flap frames, retaining their finger bones and
 scalloped membranes. The membrane turns with its shoulder instead of being
 sheared against a fixed lower root; recoloring uses an explicit filter region
 to keep transformed edges inside the frame visible. `presentation.batWingOffset`
-places the wing over the near flank at the painted shoulder; classic keeps the
-wing behind its torso.
+retains the older near-flank placement for packs without paired flight wings.
+`presentation.flyingWings` places a smaller, shaded far wing behind each torso
+and a larger near wing over its flank. Both use the same frame and flap timing;
+the far wing opens at a different perspective angle during the stroke. Each
+image turns about the painted shoulder, with the face kept clear. The birds use
+separate painted feather fans and a body without a baked folded wing; the flying
+variants use separately painted palettes: azure with mint/indigo wing accents,
+and violet with coral/teal accents. Feather components export at 160 pixels
+wide, sufficient for the largest on-screen wing and less prone to noisy
+resampling than the detailed full master. All three retain the red bird's eye, mouth,
+beak and foot colours; feather recolouring does not tint those features.
+
+`paintedFlightWing` rotates a constant-length wing instead of shrinking it at
+mid-stroke. Boundary samples from the painted silhouette fit the entire cycle
+with one scale, leaving an atlas margin in every frame. A raster check covers all
+263 bird/bat wing frames for retained area and unclipped edges. The three bird
+wing cells use `presentation.rasterScale` at 2.5× their baseline density to support
+the larger presentation. The build cancels this density through each catalog
+zoom, preserving logical boxes and pivots; it validates multipliers and still
+enforces the existing 2×/4× texture budgets. Classic artwork and flight behaviour
+remain unchanged.
 
 Each generated SVG keeps the logical box and hidden guide layer. Gradient/filter
 names are local to a frame; vector gradients use fixed coordinates to avoid

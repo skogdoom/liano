@@ -3857,6 +3857,49 @@
       4
     ],
     "templeFireDaylight": 0.18,
+    "rasterScale": {
+      "bird.red.wing": 2.5,
+      "bird.blue.wing": 2.5,
+      "bird.purple.wing": 2.5
+    },
+    "flyingWings": {
+      "bird": {
+        "root": [
+          0,
+          -3
+        ],
+        "near": {
+          "x": 3,
+          "y": 0,
+          "scale": 3
+        },
+        "far": {
+          "x": 3,
+          "y": -2,
+          "scale": 2.55,
+          "flapRotation": 0.3,
+          "tint": 13818339
+        }
+      },
+      "bat": {
+        "root": [
+          -2,
+          -4
+        ],
+        "near": {
+          "x": 4,
+          "y": 0,
+          "scale": 1.2
+        },
+        "far": {
+          "x": 5,
+          "y": -2,
+          "scale": 1.08,
+          "flapRotation": 0.6,
+          "tint": 13818339
+        }
+      }
+    },
     "standingRockY": [
       2.618,
       0,

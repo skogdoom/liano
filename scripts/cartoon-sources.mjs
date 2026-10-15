@@ -47,7 +47,18 @@ for (const [key, { source, cell }] of Object.entries(layout.components)) {
   writeFileSync(new URL(`components/${key}.png`, root), cropped);
   const landmarks = layout.components[key].landmarks ?? {};
   if (Object.values(landmarks).some((point) => !Array.isArray(point) || point.length !== 2 || point.some((v) => !Number.isFinite(v) || v < 0 || v > 1))) throw new Error(`Invalid landmarks: ${key}`);
-  pictures.set(key, { uri: uri(cropped), w: exported.width, h: exported.height,
+  // Boundary samples let a whole wing cycle share one fit, so a single frame
+  // cannot silently clip its feathers or membrane against the atlas cell.
+  const outline = [];
+  const samples = key.endsWith('-wing') ? exported.pixels : null;
+  if (samples) for (let y = 0; y < exported.height; y++) {
+    let left = exported.width, right = -1;
+    for (let x = 0; x < exported.width; x++) if (samples[(y * exported.width + x) * 4 + 3] >= 24) {
+      left = Math.min(left, x); right = x;
+    }
+    if (right >= 0) outline.push([left, y], [right + 1, y + 1]);
+  }
+  pictures.set(key, { uri: uri(cropped), w: exported.width, h: exported.height, outline,
     landmarks: Object.fromEntries(Object.entries(landmarks).map(([name, point]) => [name, [point[0] * exported.width, point[1] * exported.height]])) });
 }
 
@@ -292,6 +303,39 @@ function temple(p, frame) {
   return body;
 }
 
+const flightWingCache = new Map();
+function paintedFlightWing(p, frame, key, radius, shoulder) {
+  if (!flightWingCache.has(p.key)) {
+    const source = pictures.get(key), { joint, tip } = source.landmarks;
+    const axis = registerLimb(joint, tip, radius);
+    const frames = p.frames.map((_, f) => {
+      const lift = -1 + 2 * f / (p.frames.length - 1);
+      const dy = -radius * .8 * lift, dx = -Math.sqrt(radius ** 2 - dy ** 2);
+      const angle = Math.atan2(-dx, dy), cos = Math.cos(angle), sin = Math.sin(angle);
+      const [a, b, c, d, x, y] = axis;
+      return [cos * a - sin * b, sin * a + cos * b, cos * c - sin * d, sin * c + cos * d,
+        cos * x - sin * y + shoulder[0], sin * x + cos * y + shoulder[1]];
+    });
+    let fit = 1;
+    for (const matrix of frames) for (const point of source.outline) {
+      const placed = registeredPoint(matrix, point);
+      for (let i = 0; i < 2; i++) {
+        const delta = placed[i] - shoulder[i];
+        const lo = (i ? p.box.y : p.box.x) + .5;
+        const hi = (i ? p.box.y + p.box.h : p.box.x + p.box.w) - .5;
+        if (delta > 0) fit = Math.min(fit, (hi - shoulder[i]) / delta);
+        if (delta < 0) fit = Math.min(fit, (shoulder[i] - lo) / -delta);
+      }
+    }
+    flightWingCache.set(p.key, frames.map(([a, b, c, d, x, y]) =>
+      [fit * a, fit * b, fit * c, fit * d,
+        shoulder[0] + fit * (x - shoulder[0]), shoulder[1] + fit * (y - shoulder[1])]));
+  }
+  const matrix = flightWingCache.get(p.key)[frame];
+  return `<use href="#picture-${key}" transform="matrix(${matrix.join(' ')})"/>`;
+}
+
+
 function creature(p, frame) {
   const [family, look, part] = p.key.split('.');
   const component = part ?? look;
@@ -307,17 +351,12 @@ function creature(p, frame) {
     }
   }
   if (family === 'bird' || family === 'perchedBird') {
-    if (component === 'body') return colorize(picture(family === 'bird' ? 'parrot-flying' : 'parrot-body', p.box), look);
+    if (component === 'body') return family === 'bird'
+      ? picture(look === 'red' ? 'parrot-flying' : `parrot-${look}-flying`, p.box)
+      : colorize(picture('parrot-body', p.box), look);
     if (component === 'head') return colorize(picture('parrot-head', p.box), look);
     if (component === 'tail') return defs(colors) + path('M0 0 Q-6 -5 -10 -3L-8 1 -11 3 Q-5 6 0 0Z');
-    if (component === 'wing') {
-      const lift = -1 + frame * 2 / (p.frames.length - 1);
-      const tipX = -2 - 5 * lift, tipY = -3 - 13 * lift;
-      body += path(`M-8 -3 Q-2 -7 4 -3 Q${n(tipX + 4)} ${n(tipY - 3 * lift)} ${n(tipX)} ${n(tipY)} Q${n(tipX - 3)} ${n(tipY + 3 * lift)} -8 -3Z`, 'url(#paint)', colors[2], .6);
-      body += line(`M-8 -3 Q-2 -7 4 -3 Q${n(tipX + 4)} ${n(tipY - 3 * lift)} ${n(tipX)} ${n(tipY)}`, colors[0], .7);
-      for (let i = 0; i < 3; i++) body += line(`M${-6 + i * 2.5} -3 L${n(tipX + i * 1.2)} ${n(tipY + i * lift * 2)}`, colors[0], .6);
-      return body;
-    }
+    if (component === 'wing') return paintedFlightWing(p, frame, look === 'red' ? 'parrot-wing' : `parrot-${look}-wing`, 18, [0, -3]);
   }
   if (family === 'bat' || family === 'hangingBat') {
     if (component === 'body') {
@@ -327,13 +366,10 @@ function creature(p, frame) {
     if (component === 'eyes') return eyePair(frame === 1, [-3, 3], 30);
     if (component === 'ear') return body + path(`M2 36 L${6 + frame * .2} ${30 - frame * .2} L9 37Z`, colors[1], colors[2]);
     if (component === 'wing') {
-      const lift = -1 + frame * 2 / (p.frames.length - 1), span = look === 'grey' ? 1.1 : look === 'black' ? .9 : 1;
-      const { landmarks } = pictures.get('bat-wing');
-      const dx = (-23 - 3 * Math.abs(lift)) * span + 2, dy = (-5 - 22 * lift) * span + 4;
-      const matrix = registerLimb(landmarks.joint, landmarks.tip, Math.hypot(dx, dy));
-      // Rotate the membrane with its arm; pinning its lower edge to the torso
-      // shears the scallops inside out during the downstroke.
-      const wing = `<g transform="translate(-2 -4) rotate(${Math.atan2(-dx, dy) * 180 / Math.PI}) scale(1.4 1)"><use href="#picture-bat-wing" transform="matrix(${matrix.join(' ')})"/></g>`;
+      const span = look === 'grey' ? 1.1 : look === 'black' ? .9 : 1;
+      // Rotate a full-size membrane about its shoulder. A constant arm length
+      // avoids the old wing shortening as it passed the middle of each flap.
+      const wing = paintedFlightWing(p, frame, 'bat-wing', 31 * span, [-2, -4]);
       return look === 'black' ? colorMatrix(wing, 'charcoal', '.15 .3 .15 0 .08 .15 .3 .15 0 .08 .17 .34 .17 0 .10 0 0 0 1 0', p.box) : colorize(wing, look, p.box);
     }
   }
@@ -538,6 +574,11 @@ manifest.presentation = {
   hangingMonkeyLegTint: hangingMonkeyTint,
   hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),
   batWingOffset: [6, 4], templeFireDaylight: .18,
+  rasterScale: Object.fromEntries(['red', 'blue', 'purple'].map(look => [`bird.${look}.wing`, 2.5])),
+  flyingWings: {
+    bird: { root: [0, -3], near: { x: 3, y: 0, scale: 3 }, far: { x: 3, y: -2, scale: 2.55, flapRotation: .3, tint: 0xd2d9e3 } },
+    bat: { root: [-2, -4], near: { x: 4, y: 0, scale: 1.2 }, far: { x: 5, y: -2, scale: 1.08, flapRotation: .6, tint: 0xd2d9e3 } },
+  },
   // The ledge's quadratic top is y = 29.5 + 4.5 * (x / 39)^2.
   // Seat only standing stones; outlines already touching the ledge stay put.
   standingRockY: baseline.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) =>

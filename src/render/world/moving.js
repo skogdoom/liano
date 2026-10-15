@@ -98,11 +98,39 @@ function snake(b, o) {
   };
 }
 
+// Both wings share the same flap frame. Perspective comes from their placement,
+// scale and angle; the torso covers the far shoulder and the near wing overlaps it.
+function flyingWings(b, family, key) {
+  const near = b.image(key), look = b.art.catalog.presentation?.flyingWings?.[family];
+  const far = look ? b.image(key) : null;
+  if (look) {
+    const at = b.art.at(key), box = b.art.piece(key).box, unit = b.art.unit(key);
+    for (const [image, spec] of [[near, look.near], [far, look.far]]) {
+      // Turn about the painted shoulder, not the frame's drawing origin.
+      image.setOrigin((look.root[0] - box.x) * at.zoom / at.size[0], (look.root[1] - box.y) * at.zoom / at.size[1]);
+      image.setPosition(spec.x, spec.y).setScale(unit * spec.scale).setRotation(spec.rotation ?? 0);
+      if (spec.tint !== undefined) image.setTint(spec.tint);
+    }
+  }
+  return {
+    near, far,
+    animate(lift, flipbook) {
+      const frame = flipbook.frameFor(lift);
+      b.art.setFrame(near, key, frame);
+      if (far) {
+        b.art.setFrame(far, key, frame);
+        far.rotation = (look.far.rotation ?? 0) + (look.far.flapRotation ?? 0) * lift;
+      }
+    },
+  };
+}
+
 function bird(b, o) {
   const look = BIRD_LOOKS[Object.keys(FLYING_BIRDS).indexOf(o.type)];
   const body = b.container();
-  const wing = b.image(`bird.${look}.wing`);
-  body.add([b.image(`bird.${look}.body`), wing]);
+  const wings = flyingWings(b, 'bird', `bird.${look}.wing`);
+  const torso = b.image(`bird.${look}.body`);
+  body.add(wings.far ? [wings.far, torso, wings.near] : [torso, wings.near]);
   return {
     parts: [body],
     body,
@@ -110,7 +138,7 @@ function bird(b, o) {
       const pose = flyingBirdPose(o, t);
       body.setScale(pose.facing * o.scale, o.scale);
       if (pose.rotation !== null) body.rotation = pose.rotation;
-      b.art.setFrame(wing, `bird.${look}.wing`, BIRD_WING.frameFor(pose.lift));
+      wings.animate(pose.lift, BIRD_WING);
     },
   };
 }
@@ -118,13 +146,13 @@ function bird(b, o) {
 function bat(b, o) {
   const name = BAT_LOOK_NAMES[BAT_LOOKS.indexOf(flyingBatLook(o.gap))];
   const body = b.container();
-  const wing = b.image(`bat.${name}.wing`);
+  const wings = flyingWings(b, 'bat', `bat.${name}.wing`);
   const torso = b.image(`bat.${name}.body`);
   const offset = b.art.catalog.presentation?.batWingOffset;
-  if (offset) wing.setPosition(...offset);
+  if (offset && !wings.far) wings.near.setPosition(...offset);
   // The painted torso shows the near flank: its wing belongs over that fur,
   // at the shoulder behind the head. Classic retains its original stacking.
-  body.add(offset ? [torso, wing] : [wing, torso]);
+  body.add(wings.far ? [wings.far, torso, wings.near] : offset ? [torso, wings.near] : [wings.near, torso]);
   return {
     parts: [body],
     body,
@@ -132,7 +160,7 @@ function bat(b, o) {
       const pose = flyingBatPose(o, t);
       body.setScale(pose.facing * o.scale, o.scale);
       if (pose.rotation !== null) body.rotation = pose.rotation;
-      b.art.setFrame(wing, `bat.${name}.wing`, BAT_WING.frameFor(pose.lift));
+      wings.animate(pose.lift, BAT_WING);
     },
   };
 }

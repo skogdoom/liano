@@ -103,7 +103,16 @@ function buildPack(id, root, manifest) {
   const sizes = {};
   const memory = Object.fromEntries(ATLAS_SCALES.map((s) => [s, 0])); // bytes per atlas scale, tiles included
   const frameCells = {};
-  const pieces = manifest.pieces;
+  // Presentation may enlarge a painted sprite beyond its baseline rig size.
+  // Rasterize that frame more densely; its logical box/pivot stay unchanged and
+  // the catalog's zoom cancels the extra pixels when Art creates an image.
+  const rasterScale = manifest.presentation?.rasterScale ?? {};
+  for (const [key, factor] of Object.entries(rasterScale)) {
+    const piece = manifest.pieces.find(piece => piece.key === key);
+    if (!piece || piece.kind === 'tile' || !Number.isFinite(factor) || factor < 1 || factor > 4) throw new Error(`Invalid raster scale: ${key}`);
+  }
+  const pieces = manifest.pieces.map(piece => rasterScale[piece.key]
+    ? { ...piece, scale: piece.scale * rasterScale[piece.key] } : piece);
   const sets = [...new Set(pieces.map((p) => p.set))];
 
   for (const scale of ATLAS_SCALES) {
