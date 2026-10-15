@@ -139,3 +139,10 @@ The day/night flying scenes use the same single-texture batching as gameplay.
 The gallery now sets this before renderer boot; multi-texture sampling could
 drop rectangular fragments of the gray bat at 1×. Both scenes are refreshed and
 inspected at 1×/2×; gameplay already uses single-texture batches.
+
+Branch-decoration/contrast follow-up on `18c2fd7`: coconuts, perched snakes and
+hanging bats are refreshed here. All six changed decoration fixtures and the
+new day/night inspection sheets are in `../final/media/` and the Decorations tab
+of `/art-review.html`. Nests have visible empty/egg/hatched states; panthers sit
+closer to the branch and bat feet meet its painted underside. Darker edges and
+highlights separate coconuts, flowers and branch snakes from foliage.

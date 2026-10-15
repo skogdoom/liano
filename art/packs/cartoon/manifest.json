@@ -3837,6 +3837,8 @@
     "title": "ui.wordmark",
     "coconutRootY": 1,
     "snakeLimbThickness": 10,
+    "pantherSeatY": 2,
+    "hangingBatRootY": 1,
     "climbingSnake": "articulated",
     "monkeyRootY": -3,
     "monkeyLimbsBehindBody": true,

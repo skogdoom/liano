@@ -386,15 +386,15 @@ function creature(p, frame) {
     // painted climbing-snake body here produces several overlapping snakes.
     if (component === 'band') {
       const strand = frame ? 'M-4 0 Q4 11 4 22' : 'M-14 0 Q0 5 14 6';
-      return line(strand, '#294323', 8) + line(strand, '#69a83b', 6.6)
-        + line(strand, '#aad75d', 2.2) + line(strand, '#e3df8d', .7);
+      return line(strand, '#30291c', 8) + line(strand, '#d5d17b', 6.6)
+        + line(strand, '#6fa83a', 4.4) + line(strand, '#c5dd65', 1.7);
     }
-    if (component === 'neck') return `<defs><linearGradient id="neck" gradientUnits="userSpaceOnUse" x1="0" y1="-3" x2="0" y2="3"><stop stop-color="#b5d76b"/><stop offset=".45" stop-color="#7fb745"/><stop offset="1" stop-color="#477a30"/></linearGradient></defs>`
-      + rect(0, -3, p.length, 6, 'url(#neck)', 'stroke="#294323" stroke-width=".6"');
-    if (component === 'neckEnd') return ellipse(0, 0, 3, 3, '#7fb745');
+    if (component === 'neck') return `<defs><linearGradient id="neck" gradientUnits="userSpaceOnUse" x1="0" y1="-3" x2="0" y2="3"><stop stop-color="#e3df8d"/><stop offset=".45" stop-color="#85b744"/><stop offset="1" stop-color="#577c2b"/></linearGradient></defs>`
+      + rect(0, -2.8, p.length, 5.6, 'url(#neck)', 'stroke="#30291c" stroke-width="1.3"');
+    if (component === 'neckEnd') return ellipse(0, 0, 3, 3, '#85b744');
     if (component === 'head') return picture('snake-head', p.box, 0);
     if (component === 'tail') return defs(['#b5d76b', '#7fb745', '#477a30'])
-      + path(frame ? 'M-1 -3 Q-9 -4 -16 4 Q-6 4 2 3Z' : 'M-3 -1 Q0 8 -6 18 Q4 13 3 0Z', 'url(#paint)', '#294323', .8);
+      + path(frame ? 'M-1 -3 Q-9 -4 -16 4 Q-6 4 2 3Z' : 'M-3 -1 Q0 8 -6 18 Q4 13 3 0Z', 'url(#paint)', '#30291c', 1.2);
   }
   if (family === 'perchedSnake' && component === 'tongue') return line('M8 0H16L19 -3M16 0L19 3', '#d16765', 1.1);
   if (family === 'perchedSnake' && component === 'mark') return body + path('M-2 0L0 -2 2 0 0 2Z', '#37572c', 'none');
@@ -486,27 +486,49 @@ function prop(p, frame) {
   }
   if (family === 'heart') return `<g transform="translate(${x + w / 2} ${y + h / 2}) scale(${w / 40} ${h / 32})">${defs(['#ffb2a0', '#df6570', '#a13e57'])}${path('M0 13C-7 8 -20 0 -17 -8C-13 -16 -4 -12 0 -6C4 -12 13 -16 17 -8C20 0 7 8 0 13Z', frame ? 'none' : 'url(#paint)', '#edc4a0', frame ? 2 : 1)}${frame ? '' : line('M-12 -7Q-8 -11 -3 -6', '#ffe6c9', 1.8)}</g>`;
   if (family === 'nest') {
-    if (['twig', 'lightTwig', 'rimTwig'].some((v) => part.startsWith(v))) return part.endsWith('End') ? body + ellipse(0, 0, 1.3, 1.3) : roundStrip(p, palettes.brown);
-    if (part === 'egg') return defs(['#fff7db', '#ddcfaa', '#b3ad88']) + path('M0 -8C-8 -2 -8 8 0 8C8 8 8 -2 0 -8Z', 'url(#paint)', '#a69c74', .5) + ellipse(-2, 1, 1, .6, '#b5a986');
-    if (part === 'shell' || part === 'cap') return defs(['#fff7db', '#ddcfaa', '#b3ad88']) + path(`M-6 ${part === 'cap' ? 1 : -2}L-3 -4 0 -1 3 -4 6 -2Q7 6 0 6Q-7 6 -6 -2Z`, 'url(#paint)', '#a69c74', .5);
-    if (part === 'chick') return defs(palettes.gold) + ellipse(0, -1, 6, 8) + ellipse(-2, -3, 1.1, 1.4, '#463b23') + ellipse(2, -3, 1.1, 1.4, '#463b23');
-    if (part === 'chickBeak') return body + path(`M5 -2L10 ${-1 - frame * .25}L11 1L10 ${2 + frame * .35}L5 2Z`, '#eab151', '#a46a39', .5);
-    if (part === 'leaf') return defs() + `<g transform="translate(-3 -9)">${leaf(10, 3)}</g>`;
-    if (['back', 'front', 'rim'].includes(part)) {
-      body += path(`M${x + 1} ${y + h / 3}Q0 ${y - h / 2} ${x + w - 1} ${y + h / 3}Q${w / 3} ${y + h} 0 ${y + h - 1}Q${-w / 3} ${y + h} ${x + 1} ${y + h / 3}Z`);
-      for (let i = 0; i < 8; i++) body += line(`M${x + 3 + i * 5} ${y + h * .35}l5 ${h * .4}`, i % 2 ? '#d6b278' : '#674734', .8);
+    const straw = ['#efd08b', '#b77b43', '#67402b'];
+    if (['twig', 'lightTwig', 'rimTwig'].some((v) => part.startsWith(v))) return part.endsWith('End') ? defs(straw) + ellipse(0, 0, .6, .6) : roundStrip(p, straw);
+    const shellColors = ['#fff9df', '#eee2be', '#c7b88f'];
+    if (part === 'egg') return defs(shellColors) + path('M0 -8C-3 -8 -6 -1 -6 2C-6 10 6 10 6 2C6 -1 3 -8 0 -8Z', 'url(#paint)', '#5b4530', .9)
+      + ellipse(-2, -2, 1.8, 3, '#fffdec', 'opacity=".7"')
+      + [[2, 1], [-2, 4], [1, -4]].map(([x, y]) => ellipse(x, y, .7, .5, '#a38b63')).join('');
+    if (part === 'shell') return defs(shellColors) + path('M-6 -2L-4 -4 -2 -1 0 -4 2 -1 4 -4 6 -2L6 3Q0 8 -6 3Z', 'url(#paint)', '#5b4530', .8);
+    if (part === 'cap') return defs(shellColors) + path('M-6 0L-4 -4 -2 -1 0 -5 2 -1 4 -4 6 0L5 3H-5Z', 'url(#paint)', '#5b4530', .8);
+    if (part === 'chick') return defs(['#fff2a0', '#f3c84e', '#c58b32'])
+      + path('M-6 1Q-7 -4 -3 -6L-2 -9 0 -7 2 -9 3 -6Q8 -3 6 3Q3 8 -2 6Q-6 5 -6 1Z', 'url(#paint)', '#634628', .8)
+      + ellipse(-3, 2, 2, 2.5, '#d6a640') + ellipse(2.4, -2, 1.2, 1.6, '#302923') + ellipse(2.7, -2.6, .4, .5, '#fff9de');
+    if (part === 'chickBeak') return path(`M5 -2L10 ${-1 - frame * .25}L11 1L10 ${2 + frame * .35}L5 2Z`, '#f5a945', '#634628', .7);
+    if (part === 'leaf') return defs(['#d7af69', '#ab763d', '#66452e']) + `<g transform="translate(-3 -9)">${leaf(10, 3)}</g>`;
+    // A hollow back, shallow front wall, and an open curved lip. The old
+    // filled rim was a third bowl covering the egg and chick's cracked shell.
+    if (part === 'back') return defs(straw)
+      + ellipse(0, -9, 19, 7, 'url(#paint)', 'stroke="#4b3022" stroke-width="1.2"')
+      + ellipse(0, -9, 15.8, 4.7, '#503426')
+      + line('M-15 -11Q0 -18 15 -11', '#f0ce83', 1.1);
+    if (part === 'front') {
+      body = defs(straw) + path('M-20 -9Q0 -1 20 -9Q20 3 0 4Q-20 3 -20 -9Z', 'url(#paint)', '#4b3022', 1.2);
+      for (let i = 0; i < 3; i++) body += line(`M${-18 + i * 2} ${-5 + i * 3}Q0 ${4 + i * 2} ${18 - i * 2} ${-5 + i * 3}`, i % 2 ? '#6e4329' : '#e5bd79', 1);
+      for (const x of [-14, -7, 0, 7, 14]) body += line(`M${x - 2} -3l4 5`, '#8b552f', .7);
       return body;
     }
+    if (part === 'rim') return line('M-20 -9Q0 0 20 -9', '#4b3022', 2.6) + line('M-20 -9Q0 0 20 -9', '#e8bb73', 1.2);
   }
   if (family === 'flower') {
-    if (part === 'stem') return defs() + line('M0 0Q4 -12 0 -20', '#518543', 2) + `<g transform="translate(0 -9) rotate(-45)">${leaf(7, 2)}</g>`;
+    if (part === 'stem') return defs() + line('M0 0Q4 -12 0 -20', '#283623', 3) + line('M0 0Q4 -12 0 -20', '#86b955', 1.6) + `<g transform="translate(0 -9) rotate(-45)">${leaf(7, 2)}</g>`;
     if (part === 'leaf') return defs() + `<g transform="scale(${frame ? -1 : 1} 1)">${leaf(7, 2)}</g>`;
-    return defs(part === 'heart' ? palettes.gold : ['#fff6d9', '#edcaad', '#cca785']) + ellipse(0, 0, 4, 4) + ellipse(-1, -1, 1.8, 1.8, '#fff5cf', 'opacity=".5"');
+    // Petal colors are still supplied by the rig; the dark rim survives tinting.
+    return defs(part === 'heart' ? ['#fff1a2', '#ffd260', '#d49436'] : ['#fff8e9', '#f6dfc9', '#e2bda2'])
+      + ellipse(0, 0, 4, 4, 'url(#paint)', 'stroke="#393026" stroke-width="1.15"')
+      + ellipse(-1, -1, 1.6, 1.6, '#fff9df', 'opacity=".7"');
   }
   if (family === 'coconut') {
     if (part === 'frond') return defs() + Array.from({ length: 5 }, (_, i) => `<g transform="rotate(${25 + i * 29})">${leaf(15, 3)}</g>`).join('');
-    if (part === 'nut') return body + ellipse(0, 7, 7, 7) + ellipse(-2, 4, 2, 3, '#d0a979', 'opacity=".5"') + line('M-3 8Q0 13 3 8', '#5c422f', .6);
-    if (part === 'hair') return line('M5 0L8 -2M5 1L9 2', '#a67946', .7);
+    if (part === 'nut') return defs(['#f3ca87', '#bd8247', '#744329'])
+      + ellipse(0, 7, 7, 7, 'url(#paint)', 'stroke="#392a20" stroke-width="1.25"')
+      + line('M-5 7Q-5 2 -1 1', '#ffe1a4', 1.2)
+      + line('M4 5Q6 9 2 12', '#80502e', .6)
+      + [[-2, 5], [1, 5], [0, 7]].map(([x, y]) => ellipse(x, y, .65, .8, '#513323')).join('');
+    if (part === 'hair') return line('M5 0L8 -2M5 1L9 2', '#784c2e', .8);
     if (part === 'stemEnd') return body + ellipse(0, 0, 1.4, 1.4);
     if (part === 'stem') return roundStrip(p, palettes.brown);
   }
@@ -570,6 +592,7 @@ manifest.pieces.push(wordmark);
 const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10,
+  pantherSeatY: 2, hangingBatRootY: 1,
   climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
   hangingMonkeyLegTint: hangingMonkeyTint,
   hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),

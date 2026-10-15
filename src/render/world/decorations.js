@@ -195,7 +195,7 @@ function nest(b, rand) {
 
 function panther(b, rand) {
   const { facing, cx, phase } = pantherPlacement(rand);
-  const part = b.container(cx, branchTop(cx)).setScale(facing, 1);
+  const part = b.container(cx, branchTop(cx) + (b.art.catalog.presentation?.pantherSeatY ?? 0)).setScale(facing, 1);
   const tail = b.image('panther.tail');
   const body = b.container();
   const ear = b.image('panther.ear').setPosition(35.5, -22);
@@ -219,7 +219,7 @@ function hangingBatRig(b, rand) {
   const { x, dir, phase, look } = hangingBat(rand);
   const name = BAT_LOOK_NAMES[BAT_LOOKS.indexOf(look)];
   const key = (p) => `hangingBat.${name}.${p}`;
-  const part = b.container(x, under()).setScale(dir, 1);
+  const part = b.container(x, b.art.catalog.presentation?.hangingBatRootY ?? under()).setScale(dir, 1);
   // Everything hangs from the feet at (0, 0).
   const swing = b.container();
   const ear = b.image(key('ear'));
