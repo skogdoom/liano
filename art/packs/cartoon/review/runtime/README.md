@@ -59,3 +59,10 @@ the monkey from behind the wood with fingers over its top, and roots the legs
 at the actual painted hip sockets. Temple lighting close-ups compare day, dusk
 and night: the light is applied once, with a faint daylight warmth and stronger
 night light. The phase and classic reference behavior remain unchanged.
+
+The joint-layer follow-up places both cartoon arms and legs behind the torso,
+with the face/eyes foremost. Fur replaces exposed cut joint caps on the torso,
+arms and legs for both players, the shadow and the hanging decoration. The native
+`monkey-joints.png` candidate covers 18 hanging/swinging/flying/catching/fallen
+poses across both player palettes and the ghost. Classic layering and physics
+are unchanged.

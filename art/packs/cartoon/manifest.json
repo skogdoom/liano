@@ -3839,7 +3839,7 @@
     "snakeLimbThickness": 10,
     "climbingSnake": "articulated",
     "monkeyRootY": -3,
-    "monkeyFaceInFront": true,
+    "monkeyLimbsBehindBody": true,
     "hangingMonkeyLegTint": 13671066,
     "hangingMonkeyHips": [
       [

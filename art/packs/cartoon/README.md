@@ -30,7 +30,8 @@ sampling differences in painted edges; keep the flags visible for art review.
 
 ## Sources and exports
 
-`masters/` contains eleven painted PNG component masters: monkey,
+`masters/` contains fourteen painted PNG component masters: the original monkey sheet,
+separate fur-covered torso/arm/leg masters,
 creatures, foliage/wood, the distant jungle, a level branch aligned with its
 collision guide, cleaned snake components without the original faint matte,
 a lighter plum spider body with clearer contour highlights, highlighted
@@ -52,9 +53,13 @@ them when replacing a master; fitting a limb's whole bounding box does not align
 its visible shoulder or gripping palm with its pivot.
 The hanging decoration reuses those landmarks to connect its painted shoulders
 to its raised arms and place both palms at the branch.
-`presentation.monkeyFaceInFront` draws the cartoon head and eyes ahead of the
-gripping arm, keeping the face readable during swings in both player palettes
-and the shadow. Classic retains its original layer order.
+`presentation.monkeyLimbsBehindBody` draws both arms and legs behind the torso,
+with the head and eyes foremost. The torso covers the turning limb roots in both
+player palettes and the shadow; fur replaces exposed skin-colored joint caps in
+the painted torso/arm/leg masters. The hanging decoration shares those repaired
+components and already draws its torso/face over the limb roots. Classic retains
+its original layer order. The replacement component exports retain their previous
+pixel widths; do not embed the full-resolution masters in production frames.
 
 `scripts/cartoon-sources.mjs` produces all **594 required frames** plus the new
 `ui.wordmark`: **176 pieces / 595 frames**. It combines painted components with
@@ -82,8 +87,8 @@ lingering halfway across the coils. `presentation.monkeyRootY` attaches the hang
 monkey's painted hands to the branch. `presentation.hangingMonkeyLegTint` selects
 painted articulated player-leg components for that decoration, with a russet tint
 matching its baked arms, torso and tail; its face renders ahead of its arms.
-`hangingMonkeyHips` is exported from the painted hip sockets using the same
-transform as the torso. Legs animate from those sockets, rather than the classic
+`hangingMonkeyHips` is exported from the painted hip landmarks using the same
+transform as the torso. Legs animate from those landmarks, rather than the classic
 hip coordinates. The decoration draws behind the branch, with its palms at the
 painted wood center and only the gripping fingertips visible over the top.
 Classic keeps its original poses/placement.

@@ -491,7 +491,7 @@ manifest.pieces.push(wordmark);
 const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10,
-  climbingSnake: 'articulated', monkeyRootY: -3, monkeyFaceInFront: true,
+  climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true,
   hangingMonkeyLegTint: hangingMonkeyTint,
   hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),
   batWingOffset: [6, 4], templeFireDaylight: .18,
