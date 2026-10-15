@@ -13,6 +13,9 @@ export class MonkeyRig {
     this.body = makeContainer(scene);
     this.legBack = limb('leg', LIMBS.legBack);
     this.legFront = limb('leg', LIMBS.legFront);
+    // The painted foot has an opposing big toe. Pair it with its mirror so
+    // both big toes face inward; reflection keeps the hip and foot endpoints.
+    if (art.catalog.presentation?.monkeyMirrorFrontLeg) this.legFront.scaleX *= -1;
     this.armBack = limb('arm', LIMBS.armBack);
     this.armFront = limb('arm', LIMBS.armFront);
     this.armFrontUnit = this.armFront.scaleY;

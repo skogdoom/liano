@@ -123,7 +123,12 @@ function monkey(b, rand) {
   const tail = b.image('hangingMonkey.tail');
   const legTint = b.art.catalog.presentation?.hangingMonkeyLegTint;
   const painted = legTint !== undefined;
-  const legs = [0, 1].map(() => painted ? b.image('monkey.p1.leg').setTint(legTint) : b.line('hangingMonkey.leg', [[0, 0], [0, 1]]));
+  const legs = [0, 1].map(i => {
+    if (!painted) return b.line('hangingMonkey.leg', [[0, 0], [0, 1]]);
+    const leg = b.image('monkey.p1.leg').setTint(legTint);
+    if (i === 1 && b.art.catalog.presentation.monkeyMirrorFrontLeg) leg.scaleX *= -1;
+    return leg;
+  });
   const eyes = b.image('hangingMonkey.eyes');
   const body = b.image('hangingMonkey.body'), arms = b.image('hangingMonkey.arms');
   swing.add([tail, ...legs.flat(), ...(painted ? [arms, body] : [body, arms]), eyes]);

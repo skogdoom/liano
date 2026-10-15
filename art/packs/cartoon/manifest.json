@@ -3840,6 +3840,7 @@
     "climbingSnake": "articulated",
     "monkeyRootY": -3,
     "monkeyLimbsBehindBody": true,
+    "monkeyMirrorFrontLeg": true,
     "hangingMonkeyLegTint": 16765128,
     "hangingMonkeyHips": [
       [

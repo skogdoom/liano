@@ -9,7 +9,7 @@
     "monkey-head": { "source": "masters/monkey.png", "cell": { "x": 419, "y": 132, "w": 371, "h": 347 }, "landmarks": { "eyeBack": [0.5535211267605634, 0.4807692307692308], "eyeFront": [0.7661971830985915, 0.5340236686390533] }, "eyeSockets": { "eyeBack": { "rx": 0.07464788732394366, "ry": 0.10798816568047337, "angle": 9 }, "eyeFront": { "rx": 0.03380281690140845, "ry": 0.08284023668639054, "angle": 18 } } },
     "monkey-arm": { "source": "masters/monkey-arm.png", "cell": { "x": 0, "y": 0, "w": 834, "h": 1885 }, "maxWidth": 207, "landmarks": { "joint": [0.31, 0.12], "tip": [0.52, 0.8] } },
     "monkey-leg": { "source": "masters/monkey-leg.png", "cell": { "x": 0, "y": 0, "w": 1024, "h": 1536 }, "maxWidth": 189, "landmarks": { "joint": [0.4, 0.12], "tip": [0.52, 0.84] } },
-    "monkey-tail": { "source": "masters/monkey.png", "cell": { "x": 15, "y": 550, "w": 399, "h": 430 }, "landmarks": { "root": [0.91, 0.91] } },
+    "monkey-tail": { "source": "masters/monkey-tail.png", "cell": { "x": 0, "y": 0, "w": 1193, "h": 1319 }, "maxWidth": 370, "landmarks": { "root": [0.935, 0.93] } },
     "monkey-eyes": { "source": "masters/monkey.png", "cell": { "x": 465, "y": 643, "w": 275, "h": 231 } },
     "panther": { "source": "masters/creatures.png", "cell": { "x": 15, "y": 40, "w": 505, "h": 283 } },
     "parrot-flying": { "source": "masters/birds-bats.png", "cell": { "x": 0, "y": 0, "w": 697, "h": 500 } },

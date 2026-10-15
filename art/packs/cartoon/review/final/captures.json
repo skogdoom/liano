@@ -528,6 +528,40 @@
       ],
       "renderer": "Chromium/SwiftShader; single-texture batches",
       "validation": "16 focused unit tests, source/inventory checks, production build and 11 browser checks pass; 18 player/ghost poses and open/blink hanging poses in both directions inspected; same eight source/atlas flags remain (1.19% aggregate); artwork acceptance pending"
+    },
+    {
+      "change": "Slimmer furry arms, wider thighs/calves and thinner curled tails; retained hand/foot sizes, registered limb lengths and concealed tail roots; paired left/right feet with both opposing big toes on the inside",
+      "baseCommit": "0ad1a03",
+      "refreshed": [
+        "runtime/monkey-joints.png",
+        "runtime/hanging-monkey-eyes.png",
+        "runtime/monkeys-hanging.png",
+        "runtime/monkeys.png",
+        "runtime/shadow.png",
+        "world.shadow",
+        "world.decoration.monkey",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "scene.flying.day",
+        "scene.flying.night",
+        "scene.temple.0.day",
+        "scene.temple.0.night",
+        "scene.temple.1.day",
+        "scene.temple.1.night",
+        "scene.temple.2.day",
+        "scene.temple.2.night",
+        "scene.temple.3.day",
+        "scene.temple.3.night",
+        "scene.temple.3.dusk",
+        "lighting-day",
+        "lighting-afternoon",
+        "lighting-dusk",
+        "lighting-night",
+        "lighting-dawn",
+        "media/rig-motion.mp4"
+      ],
+      "renderer": "Chromium/SwiftShader; single-texture batches",
+      "validation": "16 focused unit tests, source/inventory checks, production build and 10 browser checks pass; 18 player/ghost poses and both hanging-monkey facing directions inspected; same eight source/atlas flags remain (1.19% aggregate); artwork acceptance pending"
     }
   ]
 }

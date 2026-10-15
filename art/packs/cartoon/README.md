@@ -31,8 +31,9 @@ sampling differences in painted edges; keep the flags visible for art review.
 
 ## Sources and exports
 
-`masters/` contains fourteen painted PNG component masters: the original monkey sheet,
-separate fur-covered torso/arm/leg masters,
+`masters/` contains painted PNG component masters: the original monkey sheet,
+separate fur-covered torso/arm/leg masters, a slim curled tail and a dedicated
+smiling hanging-monkey head,
 creatures, foliage/wood, the distant jungle, a level branch aligned with its
 collision guide, cleaned snake components without the original faint matte,
 a lighter plum spider body with clearer contour highlights, highlighted
@@ -118,8 +119,13 @@ painted wood center and only the gripping fingertips visible over the top.
 Classic keeps its original poses/placement.
 
 The shared painted leg master has a broader sole and larger rounded toes for both
-players, the ghost and the hanging decoration. Its hip/foot landmarks retain the
-rig's original joint and endpoint distances. The decoration has its own brighter
+players, the ghost and the hanging decoration. The furry arm shafts are slightly
+slimmer and the thighs/calves wider; hand and foot sizes are retained. The tail
+uses a separate thinner painted master while retaining its curl size and buried
+root. `presentation.monkeyMirrorFrontLeg` pairs the painted legs as left/right
+feet, so both opposing big toes face inward for players, the ghost and the hanging
+decoration. Reflection keeps the hip and foot endpoints fixed; the landmarks
+retain the rig's original joint and endpoint distances. The decoration has its own brighter
 smiling head (`masters/hanging-monkey-head.png`), rather than a flattened player
 face. Both head components define normalized `eyeSockets` radii/angles alongside
 their eye-center landmarks in `source-layout.json`. Open pupils, closed lids and
