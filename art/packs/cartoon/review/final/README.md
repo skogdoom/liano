@@ -1,0 +1,15 @@
+# M8a final artwork review candidates
+
+These are captures of `phaser-sprites` at `3f72b69`, not approved baselines.
+Open `/art-review.html` through `npm run dev` (or `npm run dev:host` on a phone).
+The page also links to the live rigs and atlas comparison for subsequent edits.
+
+The HTML, stylesheet and script are in the repository root and `src/art/`;
+review-only media stays here and is excluded from the production game build.
+Images are lossless WebP exports of native Phaser captures. Existing concept and
+runtime reference PNGs are reused directly. Motion clips show the actual rigs.
+`captures.json` records the fixture inventory and eight flagged comparisons.
+
+Use the tabs, image zoom, video controls and per-section notes. Notes stay in the
+browser; use **Download review notes** to export them. No acceptance is recorded
+automatically. Safari device/performance acceptance remains a separate task.

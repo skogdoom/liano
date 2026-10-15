@@ -1,0 +1,413 @@
+{
+  "commit": "3f72b69",
+  "renderer": "Chromium/SwiftShader",
+  "fixtures": [
+    {
+      "id": "world.monkeys",
+      "title": "world.monkeys"
+    },
+    {
+      "id": "world.lianas",
+      "title": "world.lianas"
+    },
+    {
+      "id": "world.lianasBetween",
+      "title": "world.lianasBetween"
+    },
+    {
+      "id": "world.shadow",
+      "title": "world.shadow"
+    },
+    {
+      "id": "world.branches",
+      "title": "world.branches"
+    },
+    {
+      "id": "world.thornBushes",
+      "title": "world.thornBushes"
+    },
+    {
+      "id": "world.rocks",
+      "title": "world.rocks"
+    },
+    {
+      "id": "world.beehives",
+      "title": "world.beehives"
+    },
+    {
+      "id": "world.decoration.bird",
+      "title": "world.decoration.bird"
+    },
+    {
+      "id": "world.decoration.snake",
+      "title": "world.decoration.snake"
+    },
+    {
+      "id": "world.decoration.monkey",
+      "title": "world.decoration.monkey"
+    },
+    {
+      "id": "world.decoration.nest",
+      "title": "world.decoration.nest"
+    },
+    {
+      "id": "world.decoration.panther",
+      "title": "world.decoration.panther"
+    },
+    {
+      "id": "world.decoration.hangingBat",
+      "title": "world.decoration.hangingBat"
+    },
+    {
+      "id": "world.decoration.owl",
+      "title": "world.decoration.owl"
+    },
+    {
+      "id": "world.decoration.flowers",
+      "title": "world.decoration.flowers"
+    },
+    {
+      "id": "world.decoration.coconuts",
+      "title": "world.decoration.coconuts"
+    },
+    {
+      "id": "world.moving.spider",
+      "title": "world.moving.spider"
+    },
+    {
+      "id": "world.moving.spider.1",
+      "title": "world.moving.spider.1"
+    },
+    {
+      "id": "world.moving.snake",
+      "title": "world.moving.snake"
+    },
+    {
+      "id": "world.moving.snake.1",
+      "title": "world.moving.snake.1"
+    },
+    {
+      "id": "world.moving.bird",
+      "title": "world.moving.bird"
+    },
+    {
+      "id": "world.moving.bird.1",
+      "title": "world.moving.bird.1"
+    },
+    {
+      "id": "world.moving.bat",
+      "title": "world.moving.bat"
+    },
+    {
+      "id": "world.moving.bat.1",
+      "title": "world.moving.bat.1"
+    },
+    {
+      "id": "world.moving.blueBird",
+      "title": "world.moving.blueBird"
+    },
+    {
+      "id": "world.moving.blueBird.1",
+      "title": "world.moving.blueBird.1"
+    },
+    {
+      "id": "world.moving.purpleBird",
+      "title": "world.moving.purpleBird"
+    },
+    {
+      "id": "world.moving.purpleBird.1",
+      "title": "world.moving.purpleBird.1"
+    },
+    {
+      "id": "world.moving.circleBat",
+      "title": "world.moving.circleBat"
+    },
+    {
+      "id": "world.moving.circleBat.1",
+      "title": "world.moving.circleBat.1"
+    },
+    {
+      "id": "world.bananas",
+      "title": "world.bananas"
+    },
+    {
+      "id": "scene.day",
+      "title": "scene.day"
+    },
+    {
+      "id": "scene.ahead",
+      "title": "scene.ahead"
+    },
+    {
+      "id": "scene.dusk",
+      "title": "scene.dusk"
+    },
+    {
+      "id": "scene.night",
+      "title": "scene.night"
+    },
+    {
+      "id": "scene.obstacles.day",
+      "title": "scene.obstacles.day"
+    },
+    {
+      "id": "scene.obstacles.night",
+      "title": "scene.obstacles.night"
+    },
+    {
+      "id": "scene.flying.day",
+      "title": "scene.flying.day"
+    },
+    {
+      "id": "scene.flying.night",
+      "title": "scene.flying.night"
+    },
+    {
+      "id": "scene.temple.0.day",
+      "title": "scene.temple.0.day"
+    },
+    {
+      "id": "scene.temple.0.night",
+      "title": "scene.temple.0.night"
+    },
+    {
+      "id": "scene.temple.1.day",
+      "title": "scene.temple.1.day"
+    },
+    {
+      "id": "scene.temple.1.night",
+      "title": "scene.temple.1.night"
+    },
+    {
+      "id": "scene.temple.2.day",
+      "title": "scene.temple.2.day"
+    },
+    {
+      "id": "scene.temple.2.night",
+      "title": "scene.temple.2.night"
+    },
+    {
+      "id": "scene.temple.3.day",
+      "title": "scene.temple.3.day"
+    },
+    {
+      "id": "scene.temple.3.night",
+      "title": "scene.temple.3.night"
+    },
+    {
+      "id": "scene.temple.3.dusk",
+      "title": "scene.temple.3.dusk"
+    },
+    {
+      "id": "ui.hud.solo",
+      "title": "ui.hud.solo"
+    },
+    {
+      "id": "ui.hud.soloMany",
+      "title": "ui.hud.soloMany"
+    },
+    {
+      "id": "ui.hud.shared",
+      "title": "ui.hud.shared"
+    },
+    {
+      "id": "ui.hud.split",
+      "title": "ui.hud.split"
+    },
+    {
+      "id": "ui.title",
+      "title": "ui.title"
+    },
+    {
+      "id": "ui.title.on",
+      "title": "ui.title.on"
+    },
+    {
+      "id": "ui.title.shared",
+      "title": "ui.title.shared"
+    },
+    {
+      "id": "ui.title.touch",
+      "title": "ui.title.touch"
+    },
+    {
+      "id": "ui.title.portrait",
+      "title": "ui.title.portrait"
+    },
+    {
+      "id": "ui.results",
+      "title": "ui.results"
+    },
+    {
+      "id": "ui.results.fading",
+      "title": "ui.results.fading"
+    },
+    {
+      "id": "ui.results.2p",
+      "title": "ui.results.2p"
+    },
+    {
+      "id": "ui.paused",
+      "title": "ui.paused"
+    },
+    {
+      "id": "ui.paused.away",
+      "title": "ui.paused.away"
+    },
+    {
+      "id": "ui.banner",
+      "title": "ui.banner"
+    },
+    {
+      "id": "ui.banner.split",
+      "title": "ui.banner.split"
+    },
+    {
+      "id": "ui.arrow",
+      "title": "ui.arrow"
+    },
+    {
+      "id": "ui.buttons",
+      "title": "ui.buttons"
+    },
+    {
+      "id": "ui.buttons.on",
+      "title": "ui.buttons.on"
+    },
+    {
+      "id": "ui.buttons.portrait",
+      "title": "ui.buttons.portrait"
+    },
+    {
+      "id": "ui.hud.portrait",
+      "title": "ui.hud.portrait"
+    }
+  ],
+  "comparisons": [
+    {
+      "key": "backdrop.canopy",
+      "frame": 0,
+      "name": "backdrop.canopy",
+      "custom": false,
+      "share": 0.015375409807477678,
+      "differing": 14107,
+      "solid": 120,
+      "pixels": 917504,
+      "pass": false
+    },
+    {
+      "key": "perchedBird.red.head",
+      "frame": 0,
+      "name": "perchedBird.red.head",
+      "custom": false,
+      "share": 0.25612287256122873,
+      "differing": 1851,
+      "solid": 154,
+      "pixels": 7227,
+      "pass": false
+    },
+    {
+      "key": "perchedBird.purple.head",
+      "frame": 0,
+      "name": "perchedBird.purple.head",
+      "custom": false,
+      "share": 0.25612287256122873,
+      "differing": 1851,
+      "solid": 154,
+      "pixels": 7227,
+      "pass": false
+    },
+    {
+      "key": "snake.coil",
+      "frame": 0,
+      "name": "snake.coil",
+      "custom": false,
+      "share": 0.2212659135736059,
+      "differing": 4936,
+      "solid": 161,
+      "pixels": 22308,
+      "pass": false
+    },
+    {
+      "key": "snake.head",
+      "frame": 0,
+      "name": "snake.head",
+      "custom": false,
+      "share": 0.15550688360450562,
+      "differing": 1988,
+      "solid": 303,
+      "pixels": 12784,
+      "pass": false
+    },
+    {
+      "key": "bird.red.body",
+      "frame": 0,
+      "name": "bird.red.body",
+      "custom": false,
+      "share": 0.2718253968253968,
+      "differing": 2055,
+      "solid": 153,
+      "pixels": 7560,
+      "pass": false
+    },
+    {
+      "key": "bird.blue.body",
+      "frame": 0,
+      "name": "bird.blue.body",
+      "custom": false,
+      "share": 0.2509902022097144,
+      "differing": 2408,
+      "solid": 125,
+      "pixels": 9594,
+      "pass": false
+    },
+    {
+      "key": "bird.purple.body",
+      "frame": 0,
+      "name": "bird.purple.body",
+      "custom": false,
+      "share": 0.2791578947368421,
+      "differing": 2652,
+      "solid": 245,
+      "pixels": 9500,
+      "pass": false
+    }
+  ],
+  "share": 0.011788647614547856,
+  "menus": [
+    {
+      "id": "desktop",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "defaults": {
+        "art": "cartoon",
+        "shadow": false
+      }
+    },
+    {
+      "id": "portrait",
+      "viewport": {
+        "width": 375,
+        "height": 600
+      },
+      "defaults": {
+        "art": "cartoon",
+        "shadow": false
+      }
+    },
+    {
+      "id": "landscape",
+      "viewport": {
+        "width": 812,
+        "height": 250
+      },
+      "defaults": {
+        "art": "cartoon",
+        "shadow": false
+      }
+    }
+  ],
+  "errors": []
+}
