@@ -56,6 +56,8 @@ const picture = (key, box, margin = 1) => {
   if (!p) throw new Error(`Missing painted component ${key}`);
   return `<use href="#picture-${key}" transform="translate(${box.x + margin} ${box.y + margin}) scale(${(box.w - 2 * margin) / p.w} ${(box.h - 2 * margin) / p.h})"/>`;
 };
+// Filters are baked into the exported images, never applied during gameplay.
+const colorMatrix = (content, id, matrix) => `<defs><filter id="${id}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${matrix}"/></filter></defs><g filter="url(#${id})">${content}</g>`;
 const colorize = (content, look) => {
   if (!look || look === 'p1' || look === 'red' || look === 'purple') return content;
   const matrix = look === 'p2' ? '1.05 0 0 0 .1 0 1.15 0 0 .06 0 0 .9 0 .04 0 0 0 1 0'
@@ -64,10 +66,19 @@ const colorize = (content, look) => {
     : look === 'green' ? '.22 .2 0 0 0 .3 .44 0 0 .02 .2 .36 .15 0 .04 0 0 0 1 0'
     : look === 'black' ? '.13 .2 .1 0 0 .15 .22 .12 0 0 .15 .25 .2 0 0 0 0 0 1 0'
     : '.25 .5 .25 0 0 .25 .5 .25 0 0 .25 .5 .25 0 0 0 0 0 1 0';
-  return `<defs><filter id="palette" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${matrix}"/></filter></defs><g filter="url(#palette)">${content}</g>`;
+  return colorMatrix(content, 'palette', matrix);
 };
 const leaf = (length, halfWidth, fill = 'url(#paint)') => path(`M0 0 Q${length * .3} ${-halfWidth * 1.7} ${length} 0 Q${length * .4} ${halfWidth * 1.6} 0 0Z`, fill) + line(`M0 0 Q${length * .5} -1 ${length * .91} 0`, '#c6d66f', .45);
 const roundStrip = (p, colors) => defs(colors) + rect(0, -p.box.h * .36, p.length ?? 20, p.box.h * .72, 'url(#paint)', `rx="${p.box.h * .36}"`) + line(`M0 ${-p.box.h * .13} H${p.length ?? 20}`, colors[0], Math.min(.7, p.box.h * .15));
+const lianaGreen = ['#dce99a', '#a4c859', '#61883c'];
+const greenRope = (p) => {
+  const halfWidth = p.box.h * .36, length = p.length;
+  // Shade across the rope, rather than fading its lower end into the jungle.
+  // The rim stays within the original box and leaves the rig/contact unchanged.
+  return `<defs><linearGradient id="rope" gradientUnits="userSpaceOnUse" x1="0" y1="${-halfWidth}" x2="0" y2="${halfWidth}">${lianaGreen.map((c, i) => `<stop offset="${i / 2}" stop-color="${c}"/>`).join('')}</linearGradient></defs>`
+    + rect(0, -halfWidth, length, halfWidth * 2, 'url(#rope)', `rx="${halfWidth}" stroke="#293f28" stroke-width="1"`)
+    + line(`M2 ${-halfWidth * .45} H${length - 2}`, lianaGreen[0], 1);
+};
 const eyePair = (closed, xs = [-3.5, 3.5], y = -11) => xs.map((x) => closed
   ? line(`M${x - 2} ${y - .5} Q${x} ${y + 1.5} ${x + 2} ${y - .5}`, '#33251e', 1.3)
   : ellipse(x, y, 2.7, 3.5, '#fff4db') + ellipse(x + .7, y + .3, 1.45, 2.1, '#40271d') + ellipse(x + 1, y - .7, .55, .7, '#ffffff')).join('');
@@ -95,13 +106,30 @@ function scenery(p) {
     // Reflected halves make the exported tile mathematically continuous even
     // when a painted master has slightly different left/right edge colors.
     const landscape = picture('far-jungle', { x: 0, y: -60, w: 1024, h: 730 }, 0);
-    body += landscape + `<g transform="translate(2048 0) scale(-1 1)">${landscape}</g>`;
+    // Atmospheric color/contrast compression separates painted scenery from
+    // interactive vines, without changing the existing day/night runtime tints.
+    body += colorMatrix(landscape + `<g transform="translate(2048 0) scale(-1 1)">${landscape}</g>`, 'distance',
+      '.616 .213 .021 0 .071 .063 .766 .021 0 .084 .063 .213 .574 0 .088 0 0 0 1 0');
   } else if (part === 'mid') {
-    for (let i = 0; i < 7; i++) {
-      const tx = i * 300 + 50, ty = -560 + (i * 91 % 220);
-      const wood = picture('trunk', { x: tx - 48, y: ty, w: 132, h: 674 - ty }, 0);
-      const crown = picture('canopy', { x: tx - 173, y: ty - 140, w: 370, h: 270 }, 0);
-      body += colorize(wood + crown, 'green');
+    const tones = [
+      '.22 .20 0 0 .035 .27 .40 0 0 .045 .23 .34 .15 0 .065',
+      '.25 .23 0 0 .045 .28 .42 0 0 .050 .19 .29 .14 0 .055',
+      '.18 .20 0 0 .030 .26 .38 0 0 .045 .25 .37 .16 0 .070',
+    ];
+    // A fixed, irregular grove repeats at the same 2048-unit period. Lean is
+    // rooted at the floor; mirrored trunks vary the painted bark/branch shapes.
+    const trees = [
+      [45, -510, 112, -2, 0, false], [292, -300, 156, 3, 1, true],
+      [588, -470, 91, -4, 2, false], [850, -150, 138, 2, 0, true],
+      [1140, -390, 176, -3, 1, false], [1438, -540, 106, 4, 2, true],
+      [1718, -220, 148, -2, 1, true], [1932, -410, 84, 3, 0, false],
+    ];
+    for (const [i, [tx, ty, width, lean, tone, flip]] of trees.entries()) {
+      const wood = picture('trunk', { x: -width / 2, y: ty - 674, w: width, h: 674 - ty }, 0);
+      const crownWidth = width * 2.8, crownHeight = 210 + i % 3 * 35;
+      const crown = picture('canopy', { x: -crownWidth / 2, y: ty - 674 - crownHeight / 2, w: crownWidth, h: crownHeight }, 0);
+      const tree = `<g transform="translate(${tx} 674) rotate(${lean}) scale(${flip ? -1 : 1} 1)">${wood + crown}</g>`;
+      body += colorMatrix(tree, `tree-${i}`, `${tones[tone]} 0 0 0 1 0`);
     }
   } else {
     const top = part === 'nearTop' || part === 'canopy';
@@ -226,8 +254,8 @@ function prop(p, frame) {
   if (family === 'liana') {
     const [, look, component] = p.key.split('.');
     if (look === 'flash') return roundStrip(p, ['#fff7b5', '#f8d665', '#eba847']);
-    const palette = look === 'gold' ? palettes.gold : look === 'shadow' ? palettes.grey : palettes.green;
-    if (component === 'rope') return roundStrip(p, palette);
+    const palette = look === 'gold' ? palettes.gold : look === 'shadow' ? palettes.grey : lianaGreen;
+    if (component === 'rope') return look === 'green' ? greenRope(p) : roundStrip(p, palette);
     return defs(frame ? [palette[1], palette[2], palette[2]] : palette) + leaf(17, 5);
   }
   if (family === 'branch') {

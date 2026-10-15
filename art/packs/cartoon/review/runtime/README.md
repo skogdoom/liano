@@ -10,6 +10,11 @@ portrait/landscape. Scene/rig fixtures use fixed states and seeds; title and Con
 captures show the real game. `rigs.html?art=cartoon` can regenerate the fixed
 fixtures for inspection. The capture renderer is Chromium/SwiftShader, not Safari.
 
+Day/night/temple and menu captures include the readability follow-up: muted
+distant scenery, outlined green vines with a consistent highlight, and varied
+background tree shapes and colors. The rebuilt pack retains its texture sizes;
+source/contract checks, seven focused unit tests and nine pack browser checks pass.
+
 Approve the artwork before promoting selected fixed fixtures to automated cartoon
 references. Four raw source/atlas edge comparisons remain recorded in
 `PHASER_PLAN.md`; no comparison threshold has been changed to hide them.
