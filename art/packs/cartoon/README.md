@@ -92,7 +92,10 @@ places one large and one small fall outside the mirrored forest group per full
 2048-unit tile. Keep their soft edges inside the tile so the repeat stays seamless.
 
 `presentation.climbingSnake: articulated` selects the smaller upright face and
-connected neck. At a reversal it tucks inward and briefly fades out, changes
+connected neck. The coil is split into non-overlapping atlas-row sections: the
+upper arc and middle return pass behind the green stalk, while the two belly
+bands and tail cross in front. Both layers use the same interpolated position
+and obstacle scale. At a reversal the head tucks inward and briefly fades out, changes
 ends while fully concealed, then emerges with its face upright. Both neck and
 head fade together, avoiding a face sliding across the front of the coils. The
 retreat uses seconds rather than frame history (fully concealed within 30 ms of

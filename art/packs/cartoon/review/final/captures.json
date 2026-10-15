@@ -409,5 +409,18 @@
       }
     }
   ],
-  "errors": []
+  "errors": [],
+  "followUps": [
+    {
+      "change": "Climbing-snake coils pass behind and in front of the vine",
+      "baseCommit": "08343c6",
+      "refreshed": [
+        "world.moving.snake",
+        "world.moving.snake.1",
+        "media/rig-motion.mp4",
+        "media/snake-turn.mp4"
+      ],
+      "renderer": "Chromium/SwiftShader"
+    }
+  ]
 }

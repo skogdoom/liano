@@ -13,3 +13,6 @@ runtime reference PNGs are reused directly. Motion clips show the actual rigs.
 Use the tabs, image zoom, video controls and per-section notes. Notes stay in the
 browser; use **Download review notes** to export them. No acceptance is recorded
 automatically. Safari device/performance acceptance remains a separate task.
+
+The climbing-snake wrap follow-up refreshes both snake fixtures and both motion
+clips. Other captures remain from the original snapshot; none are approved.

@@ -51,16 +51,29 @@ function snake(b, o) {
   ];
   const body = b.container();
   if (b.art.catalog.presentation?.climbingSnake === 'articulated') {
+    const rear = b.container().setScale(o.scale);
+    const front = b.container();
+    const { box } = b.art.piece('snake.coil');
+    const { zoom, size } = b.art.at('snake.coil');
+    // The painted upper arc and the return between the two belly bands pass
+    // behind the stalk. Split at shared atlas-pixel rows so the same image is
+    // drawn once, without overlapping translucent edges or runtime masks.
+    const rows = [0, ...[-11, 5, 8].map(y => Math.round((y - box.y) * zoom)), size[1]];
+    for (let i = 0; i < rows.length - 1; i++) {
+      const strip = b.image('snake.coil').setCrop(0, rows[i], size[0], rows[i + 1] - rows[i]);
+      (i % 2 ? front : rear).add(strip);
+    }
     const neck = b.art.rope(b.scene, 'perchedSnake.neck');
     // The painted head is centred at (0, -18) in its unchanged source box.
     const face = b.image('snake.head').setY(18);
     const head = b.container();
     head.add(face);
-    body.add([neck, b.image('snake.coil'), head]);
+    body.add([neck, front, head]);
     const pose = paintedSnakePose(o, o.time);
     return {
-      parts: [...stalk, body], body,
-      animate(t) {
+      parts: [rear, ...stalk, body], body,
+      animate(t, position) {
+        rear.setPosition(position.x, position.y);
         paintedSnakePose(o, t, pose);
         b.art.bend(neck, 'perchedSnake.neck', pose.neck);
         neck.setAlpha(pose.head.alpha);

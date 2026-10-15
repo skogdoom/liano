@@ -107,3 +107,9 @@ artifact contains fresh fixed rigs, all five lighting stages, current menus,
 motion clips and the eight flagged built/source comparisons. These remain review
 candidates. The pause/floor follow-up passes 71 unit files / 760 tests and three
 browser checks, including unchanged classic references.
+
+The climbing-snake wrap follow-up refreshes both moving-snake fixtures. The
+upper arc and middle return now pass behind the green stalk, with both belly
+bands and tail in front. Crops share exact atlas-pixel boundaries, and the rear
+layer follows the same interpolated position and scale as the front. Both motion
+clips in `/art-review.html` also include the wrap. These remain review candidates.
