@@ -62,6 +62,33 @@ describe('painted joint registration', () => {
     }
   });
 
+  it('keeps open pupils and fallen crosses inside the painted eye whites', () => {
+    const root = new URL('../art/packs/cartoon/', import.meta.url);
+    const manifest = JSON.parse(readFileSync(new URL('manifest.json', root)));
+    const raster = key => {
+      const piece = manifest.pieces.find(p => p.frames.includes(`generated/${key}.svg`));
+      const png = new Resvg(readFileSync(new URL(`generated/${key}.svg`, root)), { fitTo: { mode: 'width', value: piece.box.w * 12 } }).render();
+      return { ...png, pixels: png.pixels, width: png.width, height: png.height, box: piece.box };
+    };
+    const head = raster('monkey.p1.head');
+    for (const key of ['monkey.eyes.0', 'monkey.eyes.1', 'monkey.shadow.eyes.0', 'monkey.shadow.eyes.1']) {
+      const eye = raster(key);
+      let count = 0;
+      for (let y = 0; y < eye.height; y++) for (let x = 0; x < eye.width; x++) {
+        if (eye.pixels[(y * eye.width + x) * 4 + 3] < 100) continue;
+        const hx = Math.floor(x + (eye.box.x - head.box.x) * 12);
+        const hy = Math.floor(y + (eye.box.y - head.box.y) * 12);
+        const index = (hy * head.width + hx) * 4;
+        // Read the underlying painted head, not an ellipse duplicated from the
+        // recipe. Skin/fur and dark socket outlines fail this cream-white check.
+        expect(hx >= 0 && hx < head.width && hy >= 0 && hy < head.height
+          && [...head.pixels.slice(index, index + 3)].every(v => v > 185), `${key}: pixel ${x},${y} falls outside its painted eye`).toBe(true);
+        count++;
+      }
+      expect(count).toBeGreaterThan(50);
+    }
+  });
+
   it('rejects unusable artist landmarks instead of exporting detached parts', () => {
     expect(() => registerLimb([1, 2], [1, 2], 21)).toThrow(/Invalid/);
     expect(() => registerTriangle([[0, 0], [1, 1], [2, 2]], [[0, 0], [1, 0], [0, 1]])).toThrow(/Degenerate/);

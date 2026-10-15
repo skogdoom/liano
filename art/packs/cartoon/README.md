@@ -117,6 +117,16 @@ hip coordinates. The decoration draws behind the branch, with its palms at the
 painted wood center and only the gripping fingertips visible over the top.
 Classic keeps its original poses/placement.
 
+The shared painted leg master has a broader sole and larger rounded toes for both
+players, the ghost and the hanging decoration. Its hip/foot landmarks retain the
+rig's original joint and endpoint distances. The decoration has its own brighter
+smiling head (`masters/hanging-monkey-head.png`), rather than a flattened player
+face. Both head components define normalized `eyeSockets` radii/angles alongside
+their eye-center landmarks in `source-layout.json`. Open pupils, closed lids and
+fallen crosses use the same transform as their head; the small far-eye cross is
+scaled to its socket. A raster check verifies player/ghost pupils and crosses
+against the painted eye whites.
+
 Temple braziers use the same `TEMPLE_BRAZIERS` centers as the flames; rims and
 flame bases share the first tier's offset. The glow source is opaque: the
 renderer supplies its falloff through the same translucent layers as classic,
