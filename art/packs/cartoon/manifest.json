@@ -3838,8 +3838,23 @@
     "coconutRootY": 1,
     "snakeLimbThickness": 10,
     "climbingSnake": "articulated",
-    "monkeyRootY": 1,
+    "monkeyRootY": -3,
     "monkeyFaceInFront": true,
-    "hangingMonkeyLegTint": 13671066
+    "hangingMonkeyLegTint": 13671066,
+    "hangingMonkeyHips": [
+      [
+        -6.126348228043143,
+        39.986132511556235
+      ],
+      [
+        7.852080123266564,
+        39.76425269645608
+      ]
+    ],
+    "batWingOffset": [
+      6,
+      4
+    ],
+    "templeFireDaylight": 0.18
   }
 }

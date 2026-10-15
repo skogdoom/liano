@@ -53,3 +53,9 @@ painted scalloped membrane rotating at the shoulder through down/up strokes;
 `bats-flap-cycle.png` shows nine samples for each palette through the native
 Phaser image renderer at 2.5×. The climbing snake turns its head more quickly
 at reversals, while keeping its pose continuous.
+
+The attachment/light follow-up places bat wings over the near shoulder, hangs
+the monkey from behind the wood with fingers over its top, and roots the legs
+at the actual painted hip sockets. Temple lighting close-ups compare day, dusk
+and night: the light is applied once, with a faint daylight warmth and stronger
+night light. The phase and classic reference behavior remain unchanged.

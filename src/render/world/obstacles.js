@@ -36,7 +36,8 @@ function branch(b, o, rand, hangs, view) {
   const parts = hangs
     ? [...vine(b, box.dx + 30, canopyY(o), box.dy + 2, 8), ...vine(b, box.dx + box.w - 45, canopyY(o), box.dy + 4, -8)]
     : [b.stretched('branch.trunk', BRANCH_TRUNK_X, 0, trunkBottom(o), TRUNK_REFERENCE)];
-  parts.push(b.image('branch.body'));
+  const wood = b.image('branch.body');
+  parts.push(wood);
   for (const { x0, y0, x1, y1 } of branchBarkLines(rand)) {
     const line = b.image('branch.barkLine').setPosition(x0, y0).setRotation(Math.atan2(y1 - y0, x1 - x0));
     line.scaleX = (b.art.unit('branch.barkLine') * Math.hypot(x1 - x0, y1 - y0)) / BARK_LINE_LENGTH;
@@ -44,8 +45,9 @@ function branch(b, o, rand, hangs, view) {
   }
   view.add(parts);
   if (!o.decoration) return null;
-  const { part, animate } = DECORATION_RIGS[o.decoration](b, mulberry32(mixSeed(0xa11a, o.gap)), { hangs });
-  view.add(part);
+  const { part, animate, behindBranch } = DECORATION_RIGS[o.decoration](b, mulberry32(mixSeed(0xa11a, o.gap)), { hangs });
+  if (behindBranch) view.addAt(part, parts.indexOf(wood));
+  else view.add(part);
   return animate;
 }
 

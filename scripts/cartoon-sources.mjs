@@ -51,6 +51,11 @@ for (const [key, { source, cell }] of Object.entries(layout.components)) {
 }
 
 const n = (v) => Math.round(v * 1000) / 1000;
+const hangingTorsoMatrix = () => {
+  const { landmarks } = pictures.get('monkey-torso');
+  return registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [[-7, 25], [7, 25], [0, 41]]);
+};
+const registeredPoint = ([a, b, c, d, e, f], [x, y]) => [a * x + c * y + e, b * x + d * y + f];
 const path = (d, fill = 'url(#paint)', stroke = '#243126', width = 0.8, extra = '') => `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`;
 const ellipse = (x, y, rx, ry, fill = 'url(#paint)', extra = '') => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${fill}" ${extra}/>`;
 const rect = (x, y, w, h, fill = 'url(#paint)', extra = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" ${extra}/>`;
@@ -199,7 +204,9 @@ function temple(p, frame) {
     if (look === 'moss') return defs(frame ? ['#a6c85d', '#6d9947', '#437146'] : ['#648a40', '#376434', '#254b35']) + path('M-22 0 Q-20 -7 -10 -3 Q-5 -8 3 -3 Q12 -8 22 0 Q18 5 7 3 Q0 8 -10 4Q-20 6 -22 0Z', 'url(#paint)', 'none');
     if (look === 'vine') return roundStrip(p, palettes.green);
     if (look === 'haze') return `<defs><radialGradient id="mist"><stop stop-color="#5b8470" stop-opacity=".18"/><stop offset="1" stop-color="#416452" stop-opacity="0"/></radialGradient></defs>${ellipse(0, 0, 330, 280, 'url(#mist)')}`;
-    if (look === 'glow') return `<defs><radialGradient id="fire"><stop stop-color="#ffb340" stop-opacity=".42"/><stop offset="1" stop-color="#ff8a2a" stop-opacity="0"/></radialGradient></defs>${ellipse(0, 0, 73, 73, 'url(#fire)')}`;
+    // The rig builds the soft falloff from translucent concentric layers, as
+    // classic does. Fading the source too would attenuate the light twice.
+    if (look === 'glow') return ellipse(0, 0, 73, 73, '#ff9234');
     if (look === 'flame') {
       const base = OBSTACLE_HITBOXES.temple[1].dy - 16;
       const sway = Math.floor(frame / 7) - 3, height = frame % 7 * 1.5, top = base - 19 - height;
@@ -321,8 +328,7 @@ function creature(p, frame) {
       }).join(''), 'russet');
     }
     if (component === 'body') {
-      const { landmarks } = pictures.get('monkey-torso');
-      const matrix = registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [[-7, 25], [7, 25], [0, 41]]);
+      const matrix = hangingTorsoMatrix();
       return colorize(`<use href="#picture-monkey-torso" transform="matrix(${matrix.join(' ')})"/>` + picture('monkey-head', { x: -12, y: 12, w: 24, h: 18 }), 'russet');
     }
     if (component === 'tail') return colorize(`<g transform="translate(3 32) rotate(${177 + frame * 6 / (p.frames.length - 1)})">${picture('monkey-tail', { x: -24, y: -20, w: 24, h: 20 }, 0)}</g>`, 'russet');
@@ -482,7 +488,14 @@ letters += ellipse(98, 1, 34, 33, 'url(#paint)', 'stroke="#6c5939" stroke-width=
 for (let i = 0; i < 10; i++) letters += `<g transform="translate(98 1) rotate(${i * 36})">${path('M-5 -36L-7 -40H7L5 -36Z', 'url(#paint)', '#846b3d', 1)}</g>`;
 writeFileSync(new URL(wordmark.frames[0], root), document(letters + guideLayer(wordmark), wordmark.box));
 manifest.pieces.push(wordmark);
-manifest.presentation = { title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, climbingSnake: 'articulated', monkeyRootY: 1, monkeyFaceInFront: true, hangingMonkeyLegTint: hangingMonkeyTint };
+const torsoLandmarks = pictures.get('monkey-torso').landmarks;
+manifest.presentation = {
+  title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10,
+  climbingSnake: 'articulated', monkeyRootY: -3, monkeyFaceInFront: true,
+  hangingMonkeyLegTint: hangingMonkeyTint,
+  hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),
+  batWingOffset: [6, 4], templeFireDaylight: .18,
+};
 writeFileSync(new URL('manifest.json', root), JSON.stringify(manifest, null, 2) + '\n');
 const previous = JSON.parse(readFileSync(new URL('inventory.json', root)));
 const inventory = cartoonInventory(baseline, previous);

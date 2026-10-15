@@ -82,16 +82,26 @@ lingering halfway across the coils. `presentation.monkeyRootY` attaches the hang
 monkey's painted hands to the branch. `presentation.hangingMonkeyLegTint` selects
 painted articulated player-leg components for that decoration, with a russet tint
 matching its baked arms, torso and tail; its face renders ahead of its arms.
+`hangingMonkeyHips` is exported from the painted hip sockets using the same
+transform as the torso. Legs animate from those sockets, rather than the classic
+hip coordinates. The decoration draws behind the branch, with its palms at the
+painted wood center and only the gripping fingertips visible over the top.
 Classic keeps its original poses/placement.
 
 Temple braziers use the same `TEMPLE_BRAZIERS` centers as the flames; rims and
-flame bases share the first tier's offset. Temple corner/roof/fringe leaves use
+flame bases share the first tier's offset. The glow source is opaque: the
+renderer supplies its falloff through the same translucent layers as classic,
+avoiding double attenuation. `presentation.templeFireDaylight` retains a faint
+warm light by day, with the stage darkness strengthening it at dusk/night.
+Temple corner/roof/fringe leaves use
 painted foliage rooted at the placement point, with the roof leaves kept inside
 the sprite box. Flying bat wings register the painted shoulder and tip
 landmarks through the 41 original flap frames, retaining their finger bones and
 scalloped membranes. The membrane turns with its shoulder instead of being
 sheared against a fixed lower root; recoloring uses an explicit filter region
-to keep transformed edges inside the frame visible.
+to keep transformed edges inside the frame visible. `presentation.batWingOffset`
+places the wing over the near flank at the painted shoulder; classic keeps the
+wing behind its torso.
 
 Each generated SVG keeps the logical box and hidden guide layer. Gradient/filter
 names are local to a frame; vector gradients use fixed coordinates to avoid

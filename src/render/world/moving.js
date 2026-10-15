@@ -101,7 +101,12 @@ function bat(b, o) {
   const name = BAT_LOOK_NAMES[BAT_LOOKS.indexOf(flyingBatLook(o.gap))];
   const body = b.container();
   const wing = b.image(`bat.${name}.wing`);
-  body.add([wing, b.image(`bat.${name}.body`)]);
+  const torso = b.image(`bat.${name}.body`);
+  const offset = b.art.catalog.presentation?.batWingOffset;
+  if (offset) wing.setPosition(...offset);
+  // The painted torso shows the near flank: its wing belongs over that fur,
+  // at the shoulder behind the head. Classic retains its original stacking.
+  body.add(offset ? [torso, wing] : [wing, torso]);
   return {
     parts: [body],
     body,
