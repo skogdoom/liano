@@ -62,11 +62,14 @@ function snake(b, o) {
       (i % 2 ? front : rear).add(strip);
     }
     const neck = b.art.rope(b.scene, 'perchedSnake.neck');
+    // Bury the connector behind both sides of the wrap. Drawing it above the
+    // rear arc left a small flat wedge beside the cheek at the crop boundary.
+    rear.addAt(neck, 0);
     // The painted head is centred at (0, -18) in its unchanged source box.
     const face = b.image('snake.head').setY(18);
     const head = b.container();
     head.add(face);
-    body.add([neck, front, head]);
+    body.add([front, head]);
     const pose = paintedSnakePose(o, o.time);
     return {
       // Only the stem threads through the wraps. Leaves stay behind the entire

@@ -1,5 +1,13 @@
 # M8a final artwork review candidates
 
+The temple-mist follow-up refreshes all nine temple scenes and the montage.
+Independent atlas borders remove the gray horizontal edge without hiding the
+mist or increasing texture memory. The neck-edge correction below is included.
+
+The minor neck-edge follow-up refreshes both climbing-snake fixtures and both
+motion clips: the connector is now concealed behind the rear arc as well as the
+front band, removing the flat wedge beside the cheek.
+
 The drawing-defect pass refreshes the player/ghost tail attachments, climbing
 snake leaf/neck overlap and sandstone doorway. Inspect the Characters, Motion,
 World and Temples tabs. Both motion clips and the affected runtime captures are

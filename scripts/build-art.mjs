@@ -15,6 +15,7 @@ import { validatePack } from '../src/art/packs.js';
 const artRoot = new URL('../art/', import.meta.url);
 const outputRoot = new URL('../public/art/', import.meta.url);
 const PADDING = 2;
+const EXTRUSION = 1; // One texel per side covers bilinear sampling without sharing margins.
 const MAX_PAGE = 4096;
 // Texture memory (RGBA, 4 bytes a pixel) the game may load at an atlas scale, every set
 // and tile together. The build fails over a limit: 120 MB at 2× is the budget for the
@@ -70,8 +71,9 @@ function buildPack(id, root, manifest) {
 
   const render = (svg) => new Resvg(svg, { shapeRendering: 2, imageRendering: 0, font: { loadSystemFonts: id === 'classic' } }).render().asPng();
 
-  // Two pixels of extrusion fit the existing packer's gutter. Rasterize each
-  // cartoon cell in isolation so repeated gradients never bleed into neighbors.
+  // Rasterize each cartoon cell in isolation, then extrude one pixel per side.
+  // The two-pixel gap reserves both margins. Extruding two per side into that
+  // shared gap leaked opaque neighbors into transparent sprite edges.
   function extrudedCell(cell) {
     const { x, y, w, h } = cell;
     const rendered = new Resvg(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${atlasCellSvg({ ...cell, x: 0, y: 0 })}</svg>`, { font: { loadSystemFonts: false } }).render();
@@ -84,10 +86,10 @@ function buildPack(id, root, manifest) {
     const id = `cell-${cell.name.replaceAll('.', '-')}`;
     const copy = (dx, dy, dw, dh, sx, sy, sw, sh) => `<svg x="${dx}" y="${dy}" width="${dw}" height="${dh}" viewBox="${sx} ${sy} ${sw} ${sh}" preserveAspectRatio="none" overflow="hidden"><use href="#${id}"/></svg>`;
     return `<defs><image id="${id}" width="${w}" height="${h}" href="${once}"/></defs>` + copy(x, y, w, h, 0, 0, w, h)
-      + copy(x - PADDING, y, PADDING, h, 0, 0, 1, h) + copy(x + w, y, PADDING, h, w - 1, 0, 1, h)
-      + copy(x, y - PADDING, w, PADDING, 0, 0, w, 1) + copy(x, y + h, w, PADDING, 0, h - 1, w, 1)
-      + [[-PADDING, -PADDING, 0, 0], [w, -PADDING, w - 1, 0], [-PADDING, h, 0, h - 1], [w, h, w - 1, h - 1]]
-        .map(([dx, dy, sx, sy]) => copy(x + dx, y + dy, PADDING, PADDING, sx, sy, 1, 1)).join('');
+      + copy(x - EXTRUSION, y, EXTRUSION, h, 0, 0, 1, h) + copy(x + w, y, EXTRUSION, h, w - 1, 0, 1, h)
+      + copy(x, y - EXTRUSION, w, EXTRUSION, 0, 0, w, 1) + copy(x, y + h, w, EXTRUSION, 0, h - 1, w, 1)
+      + [[-EXTRUSION, -EXTRUSION, 0, 0], [w, -EXTRUSION, w - 1, 0], [-EXTRUSION, h, 0, h - 1], [w, h, w - 1, h - 1]]
+        .map(([dx, dy, sx, sy]) => copy(x + dx, y + dy, EXTRUSION, EXTRUSION, sx, sy, 1, 1)).join('');
   }
 
   // The folder is updated in place (a running dev server keeps watching it); files from an

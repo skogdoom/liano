@@ -1,5 +1,17 @@
 # Runtime review candidates
 
+The temple-mist follow-up removes the faint horizontal seam by giving atlas
+sprites independent one-pixel extrusion margins. Previously the stone sprite
+above the mist painted into its transparent top gutter. All temple variants and
+the montage are refreshed; the mist effect remains visible. Atlas positions and
+texture memory are unchanged. Forty-one focused tests and 11 browser checks
+pass, including transparent mist gutters at every scale and classic references.
+
+The neck-edge follow-up puts the climbing snake's connector behind both coil
+layers, removing the small wedge beside the upper cheek. Both snake fixtures
+and both review motion clips are refreshed. Five snake-pose tests, the build
+and native wrap/position checks pass; turn timing and classic drawing are unchanged.
+
 The drawing-defect follow-up registers player/ghost tail sockets inside the rear
 hip, keeps climbing-vine leaves behind both coil layers, shortens the upper snake
 neck into the cheek, and removes the sandstone doorway motif. The 18-pose monkey

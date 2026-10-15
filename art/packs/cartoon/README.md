@@ -101,7 +101,8 @@ upper arc and middle return pass behind the green stalk, while the two belly
 bands and tail cross in front. Both layers use the same interpolated position
 and obstacle scale. Stalk leaves stay behind both coil layers. The short neck
 joins a root inside the band to the rotated/scaled cheek, avoiding an exposed
-sideways loop above the upper coil. At a reversal the head tucks inward and briefly fades out, changes
+sideways loop above the upper coil. The connector renders behind both coil
+layers, so its flat strip edge cannot show beside the cheek. At a reversal the head tucks inward and briefly fades out, changes
 ends while fully concealed, then emerges with its face upright. Both neck and
 head fade together, avoiding a face sliding across the front of the coils. The
 retreat uses seconds rather than frame history (fully concealed within 30 ms of
@@ -150,8 +151,10 @@ Commit masters, layout, components, generated SVGs, manifest and inventory toget
 The build writes both complete packs into `public/art/classic/` and
 `public/art/cartoon/`: catalog, boot/main sheets, standalone tiles, metadata and
 `metrics.json` with texture bytes and compressed downloads per scale. Outputs are
-ignored by Git. Each cartoon atlas cell has isolated rasterization and a two-pixel
-extruded gutter. The original tile edge rows and softening are retained. The build
+ignored by Git. Each cartoon atlas cell has isolated rasterization and one-pixel
+extrusion on each side, with two pixels between neighboring cells. Transparent
+margins remain clear instead of sharing opaque pixels from an adjacent sprite.
+The original tile edge rows and softening are retained. The build
 rejects missing/incompatible frames, empty sprite exports, incorrect shadow alpha
 and texture budgets above 120 MB at 2× or 300 MB at 4×.
 
