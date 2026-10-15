@@ -56,6 +56,11 @@ const hangingTorsoMatrix = () => {
   return registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [[-7, 25], [7, 25], [0, 41]]);
 };
 const registeredPoint = ([a, b, c, d, e, f], [x, y]) => [a * x + c * y + e, b * x + d * y + f];
+// Share the painted head's placement with its animated eye overlay.
+const hangingHeadMatrix = () => {
+  const head = pictures.get('monkey-head');
+  return [22 / head.w, 0, 0, 16 / head.h, -11, 13];
+};
 const path = (d, fill = 'url(#paint)', stroke = '#243126', width = 0.8, extra = '') => `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`;
 const ellipse = (x, y, rx, ry, fill = 'url(#paint)', extra = '') => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${fill}" ${extra}/>`;
 const rect = (x, y, w, h, fill = 'url(#paint)', extra = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" ${extra}/>`;
@@ -329,12 +334,22 @@ function creature(p, frame) {
     }
     if (component === 'body') {
       const matrix = hangingTorsoMatrix();
-      return colorize(`<use href="#picture-monkey-torso" transform="matrix(${matrix.join(' ')})"/>` + picture('monkey-head', { x: -12, y: 12, w: 24, h: 18 }), 'russet');
+      return colorize(`<use href="#picture-monkey-torso" transform="matrix(${matrix.join(' ')})"/><use href="#picture-monkey-head" transform="matrix(${hangingHeadMatrix().join(' ')})"/>`, 'russet');
     }
     if (component === 'tail') return colorize(`<g transform="translate(3 32) rotate(${177 + frame * 6 / (p.frames.length - 1)})">${picture('monkey-tail', { x: -24, y: -20, w: 24, h: 20 }, 0)}</g>`, 'russet');
-    if (component === 'eyes') return [[2, 19.8, 1.7, 1.7], [6.8, 22, .85, .8]].map(([ex, ey, rx, ry]) => frame
-      ? line(`M${ex - rx} ${ey} Q${ex} ${ey + 1} ${ex + rx} ${ey}`, '#3c3b34', .6)
-      : ellipse(ex, ey, rx, ry, '#f4eee0') + ellipse(ex + .35, ey + .1, rx * .55, ry * .7, '#36392d') + ellipse(ex + .5, ey - .3, .3, .3, '#fff8e5')).join('');
+    if (component === 'eyes') {
+      const { landmarks } = pictures.get('monkey-head');
+      const eyes = [['eyeBack', 26.5, 36.5, 9], ['eyeFront', 12, 28, 18]].map(([name, rx, ry, angle]) => {
+        const [x, y] = landmarks[name];
+        // Keep the painted whites and their outlines. Only the pupils move into
+        // them; the shut frame covers those whites with matching eyelid skin.
+        const drawing = frame
+          ? colorize(ellipse(0, 0, rx, ry, '#f2b178') + line(`M${-rx + 2} 0 Q0 ${ry * .4} ${rx - 2} 0`, '#532b1c', 5), 'russet')
+          : ellipse(2, 1, rx * .5, ry * .63, '#4e2c1e') + ellipse(3, 2, rx * .3, ry * .47, '#241c15') + ellipse(6, -8, rx * .18, ry * .18, '#fff8e5');
+        return `<g transform="translate(${x} ${y}) rotate(${angle})">${drawing}</g>`;
+      }).join('');
+      return `<g transform="matrix(${hangingHeadMatrix().join(' ')})">${eyes}</g>`;
+    }
     if (component === 'leg') return roundStrip(p, ['#b9b7ac', '#77756e', '#45463f']);
     if (component === 'legEnd') return ellipse(.5, 1, 3, 2, '#b9b4a4', 'stroke="#4b4a42" stroke-width=".6"')
       + line('M1 1.5V2.5M2.3 1.1V2.1', '#777266', .4);

@@ -66,3 +66,11 @@ arms and legs for both players, the shadow and the hanging decoration. The nativ
 `monkey-joints.png` candidate covers 18 hanging/swinging/flying/catching/fallen
 poses across both player palettes and the ghost. Classic layering and physics
 are unchanged.
+
+`hanging-monkey-eyes.png` shows open/shut eyes in both facing directions through
+the native Phaser rig using 4× atlas art. The eye overlay shares the head
+transform and its painted eye landmarks; pupils sit in the original whites,
+and the blink covers those whites. The 2× hanging branch fixture is refreshed.
+This correction passes 18 focused unit checks and three browser checks (pack
+gallery, monkey poses, unchanged classic references). The existing eight gallery
+flags remain unchanged.

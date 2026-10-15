@@ -52,7 +52,10 @@ the unchanged rig anchors and limb lengths (`src/art/registration.js`). Recheck
 them when replacing a master; fitting a limb's whole bounding box does not align
 its visible shoulder or gripping palm with its pivot.
 The hanging decoration reuses those landmarks to connect its painted shoulders
-to its raised arms and place both palms at the branch.
+to its raised arms and place both palms at the branch. The head's `eyeBack`/`eyeFront`
+landmarks locate the hanging monkey's pupils in the existing painted whites.
+The head and open/shut eye frames share one transform; the blink covers the
+painted whites with eyelids rather than leaving white eyes under a loose line.
 `presentation.monkeyLimbsBehindBody` draws both arms and legs behind the torso,
 with the head and eyes foremost. The torso covers the turning limb roots in both
 player palettes and the shadow; fur replaces exposed skin-colored joint caps in
