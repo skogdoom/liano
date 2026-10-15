@@ -8,6 +8,8 @@ import { cartoonInventory } from '../src/art/cartoonInventory.js';
 import { OBSTACLE_HITBOXES } from '../src/config.js';
 import { imageSize } from '../src/art/custom.js';
 import { packAlpha } from '../src/art/packs.js';
+import { registerLimb, registerTriangle } from '../src/art/registration.js';
+import { ARM, LEG } from '../src/views/monkey.js';
 
 const root = new URL('../art/packs/cartoon/', import.meta.url);
 const baseline = JSON.parse(readFileSync(new URL('../art/manifest.json', import.meta.url)));
@@ -34,7 +36,10 @@ for (const [key, { source, cell }] of Object.entries(layout.components)) {
   const box = { x: cell.x + x0, y: cell.y + y0, w: x1 - x0, h: y1 - y0 };
   const cropped = new Resvg(document(picture, box)).render().asPng();
   writeFileSync(new URL(`components/${key}.png`, root), cropped);
-  pictures.set(key, { uri: uri(cropped), w: box.w, h: box.h });
+  const landmarks = layout.components[key].landmarks ?? {};
+  if (Object.values(landmarks).some((point) => !Array.isArray(point) || point.length !== 2 || point.some((v) => !Number.isFinite(v) || v < 0 || v > 1))) throw new Error(`Invalid landmarks: ${key}`);
+  pictures.set(key, { uri: uri(cropped), w: box.w, h: box.h,
+    landmarks: Object.fromEntries(Object.entries(landmarks).map(([name, point]) => [name, [point[0] * box.w, point[1] * box.h]])) });
 }
 
 const n = (v) => Math.round(v * 1000) / 1000;
@@ -99,6 +104,17 @@ function monkey(p, frame) {
     : part === 'arm' ? { x: -6, y: -9, w: 12, h: 39 }
     : part === 'leg' ? { x: -6.5, y: -9, w: 13, h: 27 } : { ...p.box };
   if (part === 'head') box.w = 30;
+  if (part === 'arm' || part === 'leg') {
+    const { landmarks } = pictures.get(`monkey-${part}`);
+    const matrix = registerLimb(landmarks.joint, landmarks.tip, part === 'arm' ? ARM.length : LEG.length);
+    return colorize(`<use href="#picture-monkey-${part}" transform="matrix(${matrix.join(' ')})"/>`, who);
+  }
+  if (part === 'torso') {
+    const { landmarks } = pictures.get('monkey-torso');
+    const hip = p.attach.legBack.map((v, i) => (v + p.attach.legFront[i]) / 2);
+    const matrix = registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [p.attach.armBack, p.attach.armFront, hip]);
+    return colorize(`<use href="#picture-monkey-torso" transform="matrix(${matrix.join(' ')})"/>`, who);
+  }
   return colorize(picture(`monkey-${part}`, box), who);
 }
 
@@ -250,7 +266,7 @@ function creature(p, frame) {
     if (component === 'thread') return roundStrip(p, ['#e5e2cb', '#bcc9be', '#859f9a']);
   }
   if (family === 'snake' && component === 'coil') return picture('snake-coil', p.box);
-  if (family === 'snake' && component === 'head') return picture('snake-head', p.box);
+  if (family === 'snake' && component === 'head') return picture('snake-head', { x: -16, y: -29, w: 32, h: 22 }, 0);
   if (family === 'perchedSnake') {
     // A band is one strand crossing the wood, repeated by the rig. An entire
     // painted climbing-snake body here produces several overlapping snakes.
@@ -270,10 +286,26 @@ function creature(p, frame) {
   if (family === 'perchedSnake' && component === 'mark') return body + path('M-2 0L0 -2 2 0 0 2Z', '#37572c', 'none');
   if ((family === 'snake' && component === 'stalkLeaf')) return `<g transform="scale(${frame ? -1 : 1} 1) translate(0 -3)">${defs()}${leaf(15, 4)}</g>`;
   if (family === 'hangingMonkey') {
-    if (component === 'arms') return defs(palettes.brown) + path('M-11 1 Q-15 19 -5 24 M11 1 Q15 19 5 24', 'none', '#906348', 6) + ellipse(-11, 0, 4, 5, '#cdb089') + ellipse(11, 0, 4, 5, '#cdb089');
-    if (component === 'body') return colorize(picture('monkey-torso', { x: -11, y: 20, w: 22, h: 28 }) + picture('monkey-head', { x: -12, y: 12, w: 24, h: 19 }), 'grey');
-    if (component === 'tail') return defs(palettes.grey) + path(`M3 34 Q${15 + frame * .35} 23 24 36 Q34 52 17 50`, 'none', '#6c7679', 4.5);
-    if (component === 'eyes') return eyePair(frame === 1, [0, 5], 21);
+    if (component === 'arms') {
+      const { landmarks } = pictures.get('monkey-arm');
+      const matrix = registerLimb(landmarks.joint, landmarks.tip, Math.hypot(2.5, 25));
+      return colorize([-1, 1].map((side) => {
+        const angle = Math.atan2(-side * 2.5, -25) * 180 / Math.PI;
+        return `<g transform="translate(${side * 7} 25) rotate(${angle}) scale(${side * .55} 1)"><use href="#picture-monkey-arm" transform="matrix(${matrix.join(' ')})"/></g>`;
+      }).join(''), 'grey');
+    }
+    if (component === 'body') {
+      const { landmarks } = pictures.get('monkey-torso');
+      const matrix = registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [[-7, 25], [7, 25], [0, 41]]);
+      return colorize(`<use href="#picture-monkey-torso" transform="matrix(${matrix.join(' ')})"/>` + picture('monkey-head', { x: -12, y: 12, w: 24, h: 18 }), 'grey');
+    }
+    if (component === 'tail') return colorize(`<g transform="translate(3 32) rotate(${177 + frame * 6 / (p.frames.length - 1)})">${picture('monkey-tail', { x: -24, y: -20, w: 24, h: 20 }, 0)}</g>`, 'grey');
+    if (component === 'eyes') return [[2, 19.8, 1.7, 1.7], [6.8, 22, .85, .8]].map(([ex, ey, rx, ry]) => frame
+      ? line(`M${ex - rx} ${ey} Q${ex} ${ey + 1} ${ex + rx} ${ey}`, '#3c3b34', .6)
+      : ellipse(ex, ey, rx, ry, '#f4eee0') + ellipse(ex + .35, ey + .1, rx * .55, ry * .7, '#36392d') + ellipse(ex + .5, ey - .3, .3, .3, '#fff8e5')).join('');
+    if (component === 'leg') return roundStrip(p, ['#b9b7ac', '#77756e', '#45463f']);
+    if (component === 'legEnd') return ellipse(.5, 1, 3, 2, '#b9b4a4', 'stroke="#4b4a42" stroke-width=".6"')
+      + line('M1 1.5V2.5M2.3 1.1V2.1', '#777266', .4);
   }
   // Precisely pivoted line/joint parts are continuous shaded strips, not pictures
   // of entire creatures. Width/length come from the original rig contract.
@@ -424,7 +456,7 @@ letters += ellipse(98, 1, 34, 33, 'url(#paint)', 'stroke="#6c5939" stroke-width=
 for (let i = 0; i < 10; i++) letters += `<g transform="translate(98 1) rotate(${i * 36})">${path('M-5 -36L-7 -40H7L5 -36Z', 'url(#paint)', '#846b3d', 1)}</g>`;
 writeFileSync(new URL(wordmark.frames[0], root), document(letters + guideLayer(wordmark), wordmark.box));
 manifest.pieces.push(wordmark);
-manifest.presentation = { title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10 };
+manifest.presentation = { title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, climbingSnake: 'articulated', monkeyRootY: 1 };
 writeFileSync(new URL('manifest.json', root), JSON.stringify(manifest, null, 2) + '\n');
 const previous = JSON.parse(readFileSync(new URL('inventory.json', root)));
 const inventory = cartoonInventory(baseline, previous);

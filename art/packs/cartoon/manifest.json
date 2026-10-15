@@ -3836,6 +3836,8 @@
   "presentation": {
     "title": "ui.wordmark",
     "coconutRootY": 1,
-    "snakeLimbThickness": 10
+    "snakeLimbThickness": 10,
+    "climbingSnake": "articulated",
+    "monkeyRootY": 1
   }
 }

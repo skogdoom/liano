@@ -116,7 +116,7 @@ function snake(b, rand, { hangs = false } = {}) {
 
 function monkey(b, rand) {
   const { x, dir, phase } = hangingMonkey(rand);
-  const part = b.container(x, under()).setScale(dir, 1);
+  const part = b.container(x, b.art.catalog.presentation?.monkeyRootY ?? under()).setScale(dir, 1);
   // Everything hangs from the hands at (0, 0): the pendulum swings about that point.
   const swing = b.container();
   const tail = b.image('hangingMonkey.tail');

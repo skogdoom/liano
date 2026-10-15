@@ -33,3 +33,12 @@ and blue birds show the outline/color/support corrections. Whole scenes now
 include the sparser waterfall pair and higher-contrast hanging support vines.
 Validation for this pass: 14 focused unit checks and ten browser checks including
 the unchanged classic reference fixtures.
+
+The latest monkey poses register the painted shoulders, palms and hips directly
+to the player's rig. The hanging monkey now uses joined grey painted arms,
+torso and curled tail, with its hands at the branch and small feet. The two
+climbing-snake fixtures show rounded coils, a tapered tail and an upright head
+that leads continuously through changes of climbing direction. These are still
+review candidates; 21 focused unit checks cover the registration, snake pose and
+existing pack/decoration contracts. Ten browser checks pass, including the
+unchanged classic reference fixtures; the production build and source checks pass.

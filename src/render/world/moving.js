@@ -13,6 +13,7 @@ import {
 } from '../../views/obstacles.js';
 import { FLOOR_Y } from '../../views/backdrop.js';
 import { Builder, cubicPoints } from './build.js';
+import { paintedSnakePose } from './snakePose.js';
 
 // The moving obstacles in the Phaser version (PHASER_PLAN.md, M5c), as the Pixi
 // ObstacleViews draw them: a body that follows the obstacle (scaled with the hitbox),
@@ -49,6 +50,23 @@ function snake(b, o) {
     ...snakeStalkLeaves(top, bottom).map((leaf) => b.image('snake.stalkLeaf', leaf.side > 0 ? 0 : 1).setPosition(x, leaf.y)),
   ];
   const body = b.container();
+  if (b.art.catalog.presentation?.climbingSnake === 'articulated') {
+    const neck = b.art.rope(b.scene, 'perchedSnake.neck');
+    // The painted head is centred at (0, -18) in its unchanged source box.
+    const face = b.image('snake.head').setY(18);
+    const head = b.container();
+    head.add(face);
+    body.add([neck, b.image('snake.coil'), head]);
+    const pose = paintedSnakePose(o, o.time);
+    return {
+      parts: [...stalk, body], body,
+      animate(t) {
+        paintedSnakePose(o, t, pose);
+        b.art.bend(neck, 'perchedSnake.neck', pose.neck);
+        head.setPosition(pose.head.x, pose.head.y).setRotation(pose.head.rotation);
+      },
+    };
+  }
   const head = b.image('snake.head');
   body.add([b.image('snake.coil'), head]);
   const unit = b.art.unit('snake.head');
