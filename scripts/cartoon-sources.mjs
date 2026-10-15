@@ -7,6 +7,7 @@ import { frameName } from '../src/art/piece.js';
 import { cartoonInventory } from '../src/art/cartoonInventory.js';
 import { OBSTACLE_HITBOXES } from '../src/config.js';
 import { imageSize } from '../src/art/custom.js';
+import { packAlpha } from '../src/art/packs.js';
 
 const root = new URL('../art/packs/cartoon/', import.meta.url);
 const baseline = JSON.parse(readFileSync(new URL('../art/manifest.json', import.meta.url)));
@@ -340,7 +341,7 @@ function prop(p, frame) {
     if (part === 'panel') return defs(['#72846a', '#385345', '#19362d']) + path('M18 0H46Q64 0 64 18V46Q64 64 46 64H18Q0 64 0 46V18Q0 0 18 0Z', '#17342be8', '#a7a46b', 1.2) + line('M5 20Q5 5 20 5M44 5Q59 5 59 20M59 44Q59 59 44 59M20 59Q5 59 5 44', '#798b63', 1);
     if (part === 'arrow') return defs(palettes.gold) + path('M0 0L11 11H5V25H-5V11H-11Z', 'url(#paint)', '#6c603a', 1);
     if (part === 'speaker') return defs(palettes.gold) + path('M1 13H8L21 2V38L8 27H1Z', 'url(#paint)', '#64734f', 1.5) + line('M16 8V32', '#ffecc0', 1);
-    if (part === 'speakerWaves') return line('M9 10Q20 20 9 30M18 4Q37 20 18 36', '#f1dd9b', 2.5);
+    if (part === 'speakerWaves') return line('M28 12Q38 20 28 28M34 6Q51 20 34 34', '#f1dd9b', 2.5);
     if (part === 'speakerCross') return line('M25 9L44 29M44 9L25 29', '#e9cb86', 3);
     if (part === 'fullscreen') return line(frame ? 'M0 12H12V0M26 0V12H38M38 26H26V38M12 38V26H0' : 'M0 12V0H12M26 0H38V12M38 26V38H26M12 38H0V26', '#e7d69a', 3);
   }
@@ -350,6 +351,7 @@ function prop(p, frame) {
 const manifest = structuredClone(baseline);
 const changedFrames = new Set();
 for (const p of manifest.pieces) {
+  if (p.alpha !== undefined) p.alpha = packAlpha('cartoon', p);
   p.frames = p.frames.map((_, i) => {
     paintBox = p.box;
     const family = p.key.split('.')[0];

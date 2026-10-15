@@ -16,5 +16,9 @@ background tree shapes and colors. The rebuilt pack retains its texture sizes;
 source/contract checks, seven focused unit tests and nine pack browser checks pass.
 
 Approve the artwork before promoting selected fixed fixtures to automated cartoon
-references. Four raw source/atlas edge comparisons remain recorded in
+references. Five raw source/atlas edge comparisons remain recorded in
 `PHASER_PLAN.md`; no comparison threshold has been changed to hide them.
+
+The snake, shadow and button fixtures show the transparency/legibility repairs at
+native 2×: clean snake silhouettes, the more visible ghost monkey, and separate
+speaker/waves in both sound states.

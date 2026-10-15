@@ -357,7 +357,7 @@
       },
       "scale": 2,
       "tint": false,
-      "alpha": 0.36,
+      "alpha": 0.56,
       "frames": [
         "generated/monkey.shadow.tail.svg"
       ]
@@ -375,7 +375,7 @@
       },
       "scale": 2,
       "tint": false,
-      "alpha": 0.36,
+      "alpha": 0.56,
       "frames": [
         "generated/monkey.shadow.leg.svg"
       ]
@@ -393,7 +393,7 @@
       },
       "scale": 2,
       "tint": false,
-      "alpha": 0.36,
+      "alpha": 0.56,
       "frames": [
         "generated/monkey.shadow.arm.svg"
       ]
@@ -411,7 +411,7 @@
       },
       "scale": 2,
       "tint": false,
-      "alpha": 0.36,
+      "alpha": 0.56,
       "attach": {
         "armBack": [
           -7,
@@ -447,7 +447,7 @@
       },
       "scale": 2,
       "tint": false,
-      "alpha": 0.36,
+      "alpha": 0.56,
       "frames": [
         "generated/monkey.shadow.head.svg"
       ]
@@ -483,7 +483,7 @@
       },
       "scale": 2,
       "tint": false,
-      "alpha": 0.36,
+      "alpha": 0.56,
       "frames": [
         "generated/monkey.shadow.eyes.0.svg",
         "generated/monkey.shadow.eyes.1.svg"

@@ -14,6 +14,7 @@ describe('cartoon authoring inventory', () => {
     const torso = inventory.pieces.find((p) => p.key === original.key);
     expect(torso).toMatchObject({ box: original.box, attach: original.attach, pivot: [0, 0] });
     expect(inventory.pieces.find((p) => p.key === 'liana.green.rope').length).toBe(420);
+    expect(inventory.pieces.find((p) => p.key === 'monkey.shadow.torso').alpha).toBe(0.56);
     expect(inventorySummary(inventory).totals).toEqual({ pending: 594, painted: 0, reviewed: 0 });
   });
 

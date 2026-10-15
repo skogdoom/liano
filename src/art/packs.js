@@ -4,6 +4,10 @@ const canonical = (value) => Array.isArray(value) ? value.map(canonical)
   : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])])) : value;
 const same = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 
+// The painted ghost needs more opacity against detailed scenery. Keep its vines
+// and the classic pack at their original alpha; geometry/animation stay shared.
+export const packAlpha = (id, piece) => id === 'cartoon' && piece.key.startsWith('monkey.shadow.') ? 0.56 : piece.alpha;
+
 // Coverage is strict: a partial cartoon pack must never be shipped with an
 // implicit classic fallback. The baseline also fixes all rig/animation contracts.
 export function validatePack(baseline, manifest, id, sidecars = {}) {
@@ -19,7 +23,7 @@ export function validatePack(baseline, manifest, id, sidecars = {}) {
       else if (piece.kind !== 'sprite' || piece.set !== 'boot' || piece.frames.length !== 1 || piece.scale !== 1 || piece.tint !== false || !same(piece.box, { x: -160, y: -40, w: 320, h: 80 })) errors.push('ui.wordmark: incompatible presentation contract');
     } else {
       for (const key of ['kind', 'set', 'box', 'scale', 'tint', 'alpha', 'density', 'soften', 'attach', 'slices', 'length', 'fps', 'hitbox']) {
-        if (!same(piece[key], expected[key])) errors.push(`${piece.key}: incompatible ${key}`);
+        if (!same(piece[key], key === 'alpha' ? packAlpha(id, expected) : expected[key])) errors.push(`${piece.key}: incompatible ${key}`);
       }
       if (piece.frames.length !== expected.frames.length) errors.push(`${piece.key}: wrong frame count`);
     }

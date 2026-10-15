@@ -1,10 +1,11 @@
 import { ATLAS_SCALES, cellOf } from './catalog.js';
 import { frameName } from './piece.js';
+import { packAlpha } from './packs.js';
 
 export const FRAME_STATUSES = ['pending', 'painted', 'reviewed'];
 
 // Authoring inventory, independent of the game loader. Progress survives regeneration;
-// rendering contracts always come from the current classic manifest.
+// rendering contracts come from the classic manifest plus explicit pack policy.
 export function cartoonInventory(manifest, previous = null) {
   const progress = new Map();
   for (const piece of previous?.pieces ?? []) {
@@ -31,7 +32,8 @@ export function cartoonInventory(manifest, previous = null) {
         notes: old?.notes ?? '',
       };
     });
-    const { key, purpose, kind, set, box, scale, tint, attach, slices, length, fps, alpha, density, soften } = piece;
+    const { key, purpose, kind, set, box, scale, tint, attach, slices, length, fps, density, soften } = piece;
+    const alpha = packAlpha('cartoon', piece);
     return {
       key, purpose, kind, set, box: { ...box }, scale, tint,
       pivot: [0, 0],

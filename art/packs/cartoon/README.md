@@ -30,9 +30,10 @@ sampling differences in painted edges; keep the flags visible for art review.
 
 ## Sources and exports
 
-`masters/` contains five transparent painted PNG component masters: monkey,
-creatures, foliage/wood, the distant jungle and a level branch aligned with its
-collision guide. They were generated for this pack
+`masters/` contains six painted PNG component masters: monkey,
+creatures, foliage/wood, the distant jungle, a level branch aligned with its
+collision guide, and cleaned snake components without the original faint matte.
+They were generated for this pack
 in the approved style. `source-layout.json` names each component's crop in source
 pixels. `components/` contains deterministic, tightly trimmed PNG exports from
 those crops, preserving their alpha. No manual changes to generated exports are
@@ -43,7 +44,10 @@ needed. Keep source cell bounds inside the 1536×1024 masters.
 editable vector recipes for bent strips, repeatable stone courses, feather/membrane
 animation, small props and UI. Variants share the same pivots and scale; bird/bat
 wings and fire use the original frame ordering. Player 2 has a distinct ginger
-palette; the shadow is grey at the contracted alpha. No classic drawing is read or
+palette; the shadow monkey is grey at 56% opacity for readability, while its vines
+retain 36%. This explicit cartoon-only alpha policy is shared by source exports,
+inventory and validation (`src/art/packs.js`); classic remains at 36%.
+No classic drawing is read or
 used as a fallback. The classic manifest supplies only rendering/hitbox contracts.
 
 Each generated SVG keeps the logical box and hidden guide layer. Gradient/filter
