@@ -14,7 +14,7 @@ import { TEMPLE_BRAZIERS } from '../src/views/obstacles.js';
 
 // The hanging decoration shares the painted player limbs, with its own fur.
 // Match this baked multiplier with the runtime tint on those reused leg images.
-const hangingMonkeyTint = 0xd09a9a;
+const hangingMonkeyTint = 0xffb8b8;
 
 const root = new URL('../art/packs/cartoon/', import.meta.url);
 const baseline = JSON.parse(readFileSync(new URL('../art/manifest.json', import.meta.url)));
@@ -51,6 +51,10 @@ for (const [key, { source, cell }] of Object.entries(layout.components)) {
 }
 
 const n = (v) => Math.round(v * 1000) / 1000;
+const rockOutline = (frame) => Array.from({ length: 9 }, (_, i) => {
+  const a = i * 2 * Math.PI / 9, r = 29 + 3 * Math.sin(i * 2.7 + frame * 1.9);
+  return [n(Math.cos(a) * r), n(Math.sin(a) * r)];
+});
 const hangingTorsoMatrix = () => {
   const { landmarks } = pictures.get('monkey-torso');
   return registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [[-7, 25], [7, 25], [0, 41]]);
@@ -85,7 +89,7 @@ const colorMatrix = (content, id, matrix, box) => `<defs><filter id="${id}"${box
 const colorize = (content, look, box) => {
   if (!look || look === 'p1' || look === 'red' || look === 'purple') return content;
   const matrix = look === 'p2' ? '1.05 0 0 0 .1 0 1.15 0 0 .06 0 0 .9 0 .04 0 0 0 1 0'
-    : look === 'russet' ? '.815686 0 0 0 0 0 .603922 0 0 0 0 0 .603922 0 0 0 0 0 1 0'
+    : look === 'russet' ? '1 0 0 0 0 0 .721569 0 0 0 0 0 .721569 0 0 0 0 0 1 0'
     : look === 'blue' ? '.15 .1 .3 0 0 .55 .55 .3 0 0 .95 .3 .65 0 0 0 0 0 1 0'
     : look === 'brown' ? '.65 .3 0 0 .05 .12 .58 0 0 .03 .1 .1 .3 0 .02 0 0 0 1 0'
     : look === 'green' ? '.22 .2 0 0 0 .3 .44 0 0 .02 .2 .36 .15 0 .04 0 0 0 1 0'
@@ -389,7 +393,7 @@ function prop(p, frame) {
   }
   if (family === 'rock') {
     if (part === 'body') {
-      const pts = Array.from({ length: 9 }, (_, i) => { const a = i * 2 * Math.PI / 9; const r = 29 + 3 * Math.sin(i * 2.7 + frame * 1.9); return [n(Math.cos(a) * r), n(Math.sin(a) * r)]; });
+      const pts = rockOutline(frame);
       body = defs(['#eee1c6', '#b8aa96', '#78717a']) + path(`M${pts.map((v) => v.join(' ')).join('L')}Z`, 'url(#paint)', '#443c48', 1.4);
       body += path(`M${pts[0].join(' ')}L-6 -15L${pts[5].join(' ')}L-16 6Z`, '#f0e5ce', 'none', 0, 'opacity=".82"') + line('M-16 -7L-4 -10L3 -3', '#fff0d5', 1.2);
       body += line(`M${pts.slice(5).map(([px, py]) => `${n(px * .94)} ${n(py * .94)}`).join('L')}`, '#f5e8d1', 1.1);
@@ -510,6 +514,19 @@ manifest.presentation = {
   hangingMonkeyLegTint: hangingMonkeyTint,
   hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),
   batWingOffset: [6, 4], templeFireDaylight: .18,
+  // The ledge's quadratic top is y = 29.5 + 4.5 * (x / 39)^2.
+  // Seat only standing stones; outlines already touching the ledge stay put.
+  standingRockY: baseline.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) =>
+    n(Math.max(0, Math.min(...rockOutline(frame).map(([x, y]) => 29.5 + 4.5 * (x / 39) ** 2 - y))))),
+  hangingRockVineY: baseline.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) => {
+    const points = rockOutline(frame);
+    const crossings = points.flatMap(([x, y], i) => {
+      const [nextX, nextY] = points[(i + 1) % points.length];
+      return x * nextX > 0 ? [] : [y + (nextY - y) * -x / (nextX - x)];
+    });
+    // Extend into the painted top edge; the opaque stone covers the rope tip.
+    return n(Math.min(...crossings) + 1.5);
+  }),
 };
 writeFileSync(new URL('manifest.json', root), JSON.stringify(manifest, null, 2) + '\n');
 const previous = JSON.parse(readFileSync(new URL('inventory.json', root)));

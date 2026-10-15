@@ -10,25 +10,52 @@ describe('painted climbing snake pose', () => {
     expect(down.y).toBeGreaterThan(15);
     expect(up.rotation).toBeLessThan(0);
     expect(down.rotation).toBeGreaterThan(0);
-    for (const head of [up, down]) expect(Math.abs(head.rotation)).toBeLessThan(Math.PI / 4);
-  });
-
-  it('turns continuously at both vertical reversals instead of flipping a face', () => {
-    for (const time of [0, 2, 4]) {
-      const before = paintedSnakePose(snake, time - .00001).head;
-      const after = paintedSnakePose(snake, time + .00001).head;
-      expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeLessThan(.01);
-      expect(Math.abs(after.rotation - before.rotation)).toBeLessThan(.001);
+    for (const head of [up, down]) {
+      expect(Math.abs(head.rotation)).toBeLessThan(Math.PI / 4);
+      expect(head.alpha).toBe(1);
+      expect(head.scale).toBe(1);
     }
   });
 
-  it('completes most of the head turn within 80 ms of each reversal', () => {
+  it('switches ends only while the head is fully concealed at either reversal', () => {
     for (const time of [0, 2, 4]) {
-      const before = paintedSnakePose(snake, time - .08).head;
-      const after = paintedSnakePose(snake, time + .08).head;
-      expect(Math.abs(before.y)).toBeGreaterThan(17);
-      expect(Math.abs(after.y)).toBeGreaterThan(17);
-      expect(Math.sign(before.y)).toBe(-Math.sign(after.y));
+      const before = paintedSnakePose(snake, time - .00001).head;
+      const after = paintedSnakePose(snake, time + .00001).head;
+      expect(before.y).toBe(-after.y);
+      expect(before.alpha).toBe(0);
+      expect(after.alpha).toBe(0);
+    }
+    let previous = paintedSnakePose(snake, -.2).head;
+    for (let time = -.19; time <= 4.2; time += .01) {
+      const current = paintedSnakePose(snake, time).head;
+      if (current.y !== previous.y) {
+        expect(previous.alpha).toBe(0);
+        expect(current.alpha).toBe(0);
+      }
+      previous = current;
+    }
+  });
+
+  it('retracts and emerges briefly, with the same timing for different climbing periods', () => {
+    for (const period of [3, 4, 6]) {
+      const obstacle = { motion: { period, phase: .7 } };
+      for (const turn of [0, 1, 2]) {
+        const reversal = (turn * Math.PI - .7) * period / (2 * Math.PI);
+        for (const side of [-1, 1]) {
+          const out = paintedSnakePose(obstacle, reversal + side * .121).head;
+          const retreat = paintedSnakePose(obstacle, reversal + side * .075).head;
+          const hidden = paintedSnakePose(obstacle, reversal + side * .029).head;
+          expect(out.alpha).toBe(1);
+          expect(hidden.alpha).toBe(0);
+          expect(retreat.alpha).toBeCloseTo(.5, 10);
+          expect(hidden.x).toBeLessThan(retreat.x);
+          expect(retreat.x).toBeLessThan(out.x);
+          expect(hidden.scale).toBeLessThan(retreat.scale);
+          expect(retreat.scale).toBeLessThan(out.scale);
+          // The head stays at an end of the coil while it is visible.
+          expect(Math.abs(retreat.y)).toBe(20);
+        }
+      }
     }
   });
 

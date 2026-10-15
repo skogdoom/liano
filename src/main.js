@@ -118,13 +118,13 @@ function createObstacleWorker() {
   }
 }
 const prefetch = new ObstaclePrefetch(createObstacleWorker());
-// The title starts without slipping and with shadow enabled. Preserve current
+// The title starts without slipping or shadow. Preserve current
 // settings when the graphics submenu reloads assets.
 const titleSettings = new URLSearchParams(location.search);
 const theGame = new Game({
   slip: titleSettings.get('slip') === 'on',
   lives: titleSettings.get('lives') === 'on',
-  shadow: titleSettings.get('shadow') !== 'off',
+  shadow: titleSettings.get('shadow') === 'on',
   createSharedView: (world) => new SharedView(world, undefined, { smoothCamera: true }),
   // Split screen's worlds share the match seed, and so the prefetched gaps.
   createWorld: (options) => {

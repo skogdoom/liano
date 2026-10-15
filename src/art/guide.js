@@ -44,7 +44,7 @@ loads. There are ${pieces.length} pieces, ${frames} pictures in all.
 
 These are the **classic** sources. The separate [cartoon authoring guide](packs/cartoon/README.md)
 describes the painted masters, vector recipes and complete alternative pack. Classic
-graphics default to On; change the title Config row (X on desktop) to reload with the
+graphics default to Off (cartoon); change the title Config row (X on desktop) to reload with the
 other pack. Explicit test URLs use \`?art=classic\` or \`?art=cartoon\`.
 \`npm run art:build\` builds both into \`public/art/classic/\` and
 \`public/art/cartoon/\`, but the game downloads only its selected pack. The gallery

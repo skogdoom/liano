@@ -61,10 +61,14 @@ function thornBush(b, o, rand, hangs, view) {
 
 function rock(b, o, rand, hangs, view) {
   const [{ r }] = OBSTACLE_HITBOXES.rock;
+  const variant = rockVariant(o.gap);
+  const vineEnd = b.art.catalog.presentation?.hangingRockVineY?.[variant] ?? -r + 4;
   const parts = hangs
-    ? [...vine(b, 0, canopyY(o), -r + 4, 9), b.image('rock.sling')]
+    ? [...vine(b, 0, canopyY(o), vineEnd, 9), b.image('rock.sling')]
     : [b.stretched('support.stem', 0, r - 4, trunkBottom(o), STEM_REFERENCE), b.image('rock.ledge')];
-  parts.push(b.image('rock.body', rockVariant(o.gap)));
+  const stone = b.image('rock.body', variant);
+  if (!hangs) stone.setY(b.art.catalog.presentation?.standingRockY?.[variant] ?? 0);
+  parts.push(stone);
   view.add(parts);
   return null;
 }

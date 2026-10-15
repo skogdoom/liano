@@ -7,8 +7,7 @@ export function reloadSettings(href, { mode, settings, muted } = {}) {
   for (const key of ['slip', 'lives', 'shadow']) {
     if (typeof settings?.[key] !== 'boolean') continue;
     if (key === 'shadow') {
-      if (settings.shadow) next.searchParams.delete('shadow');
-      else next.searchParams.set('shadow', 'off');
+      next.searchParams.set('shadow', settings.shadow ? 'on' : 'off');
     } else if (settings[key]) next.searchParams.set(key, 'on');
     else next.searchParams.delete(key);
   }

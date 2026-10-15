@@ -63,7 +63,9 @@ function snake(b, o) {
       animate(t) {
         paintedSnakePose(o, t, pose);
         b.art.bend(neck, 'perchedSnake.neck', pose.neck);
-        head.setPosition(pose.head.x, pose.head.y).setRotation(pose.head.rotation);
+        neck.setAlpha(pose.head.alpha);
+        head.setPosition(pose.head.x, pose.head.y).setRotation(pose.head.rotation)
+          .setScale(pose.head.scale).setAlpha(pose.head.alpha);
       },
     };
   }

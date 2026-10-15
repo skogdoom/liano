@@ -8,11 +8,11 @@ cohesive painted cartoon jungle, based on `docs/cover_day.png` and
 
 Run `npm run dev` and open `/?art=cartoon`, or use **Classic graphics: Off** in
 the title Config menu. On desktop, C opens Config and X switches art. Click/tap
-works too. On means classic; Off means cartoon. Classic is the default when there
+works too. On means classic; Off means cartoon. Cartoon is the default when there
 is no valid saved choice. Art changes reload to the title and preserve mode,
 lives, slipping, shadow, mute, quality, other URL options and the hash. Mobile
 remains 1P only. Explicit `?art=classic|cartoon` overrides storage without rewriting
-it; invalid explicit/saved values resolve to classic. Blocked storage uses the URL.
+it; invalid explicit/saved values resolve to cartoon. Blocked storage uses the URL.
 
 - `/cartoon.html`: original style samples, anatomy close-ups and coverage.
 - `/art.html?art=cartoon`: production frames, source/atlas differences, origin,
@@ -79,16 +79,25 @@ Branch snakes use single-strand band recipes with separate animated neck/head an
 tail; the climbing snake's full coil image is not a repeatable branch band. The
 pack's `presentation.snakeLimbThickness` fits wraps to the painted wood, and
 `presentation.coconutRootY` sets where coconuts meet it. Packs without those values
-retain classic placement. The far-jungle master has no waterfalls: the generator
+retain classic placement. `presentation.standingRockY` seats each standing stone
+against the painted ledge, using offsets derived from the same outline vertices
+and ledge curve. Shapes already touching the platform stay put; hanging stones,
+classic placement and collision geometry are unchanged.
+`presentation.hangingRockVineY` extends each upper vine into the actual painted
+top edge of its rock, where the stone covers the rope tip, avoiding a gap at
+the collision outline. The far-jungle master has no waterfalls: the generator
 places one large and one small fall outside the mirrored forest group per full
 2048-unit tile. Keep their soft edges inside the tile so the repeat stays seamless.
 
 `presentation.climbingSnake: articulated` selects the smaller upright face and
-connected neck; its pose follows the obstacle's drawing phase continuously rather
-than flipping the face on descent. The short reversal keeps its head from
-lingering halfway across the coils. `presentation.monkeyRootY` attaches the hanging
+connected neck. At a reversal it tucks inward and briefly fades out, changes
+ends while fully concealed, then emerges with its face upright. Both neck and
+head fade together, avoiding a face sliding across the front of the coils. The
+retreat uses seconds rather than frame history (fully concealed within 30 ms of
+the turn, fully emerged by 120 ms), so timing is consistent across snake periods
+and interpolated drawing frames. `presentation.monkeyRootY` attaches the hanging
 monkey's painted hands to the branch. `presentation.hangingMonkeyLegTint` selects
-painted articulated player-leg components for that decoration, with a russet tint
+painted articulated player-leg components for that decoration, with a brighter copper-red tint
 matching its baked arms, torso and tail; its face renders ahead of its arms.
 `hangingMonkeyHips` is exported from the painted hip landmarks using the same
 transform as the torso. Legs animate from those landmarks, rather than the classic

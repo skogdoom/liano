@@ -9,23 +9,24 @@ function windowFor(href = 'https://example.test/liano/?frames=1&resolution=1.5#g
 }
 
 describe('art pack preferences and navigation', () => {
-  it('defaults to classic and gives explicit URLs precedence without saving them', () => {
+  it('defaults to cartoon and gives explicit URLs precedence without saving them', () => {
     const win = windowFor();
-    expect(artChoice('', win)).toBe('classic');
-    win.values.set(ART_STORAGE_KEY, 'cartoon');
     expect(artChoice('', win)).toBe('cartoon');
-    expect(artChoice('?art=classic', win)).toBe('classic');
-    expect(artChoice('?art=typo', win)).toBe('classic');
-    expect(artChoice('?art=', win)).toBe('classic');
-    expect(win.values.get(ART_STORAGE_KEY)).toBe('cartoon');
-    win.values.set(ART_STORAGE_KEY, 'typo');
+    win.values.set(ART_STORAGE_KEY, 'classic');
     expect(artChoice('', win)).toBe('classic');
+    expect(artChoice('?art=cartoon', win)).toBe('cartoon');
+    expect(artChoice('?art=classic', win)).toBe('classic');
+    expect(artChoice('?art=typo', win)).toBe('cartoon');
+    expect(artChoice('?art=', win)).toBe('cartoon');
+    expect(win.values.get(ART_STORAGE_KEY)).toBe('classic');
+    win.values.set(ART_STORAGE_KEY, 'typo');
+    expect(artChoice('', win)).toBe('cartoon');
   });
 
   it('survives unavailable storage while the explicit URL still selects the pack', () => {
     const win = windowFor();
     win.localStorage = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
-    expect(artChoice('', win)).toBe('classic');
+    expect(artChoice('', win)).toBe('cartoon');
     expect(artChoice('?art=cartoon', win)).toBe('cartoon');
     rememberArtChoice('cartoon', win);
     applyArtChoice('cartoon', win);
@@ -41,7 +42,7 @@ describe('art pack preferences and navigation', () => {
     expect(win.values.get(ART_STORAGE_KEY)).toBe('cartoon');
     win.location.href = next.href;
     applyResolutionChoice('1', win, { mode: 'solo', muted: false, settings: { lives: false, slip: false, shadow: true } });
-    expect(Object.fromEntries(new URL(win.assigned[1]).searchParams)).toEqual({ frames: '1', resolution: '1', art: 'cartoon' });
+    expect(Object.fromEntries(new URL(win.assigned[1]).searchParams)).toEqual({ frames: '1', resolution: '1', art: 'cartoon', shadow: 'on' });
   });
 
   it('ignores invalid choices rather than navigating or saving them', () => {

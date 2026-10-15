@@ -51,8 +51,9 @@ The temple day/dusk/night and variant captures show holders aligned to their
 flames and painted foliage with complete roof silhouettes. Bat poses show the
 painted scalloped membrane rotating at the shoulder through down/up strokes;
 `bats-flap-cycle.png` shows nine samples for each palette through the native
-Phaser image renderer at 2.5×. The climbing snake turns its head more quickly
-at reversals, while keeping its pose continuous.
+Phaser image renderer at 2.5×. The climbing snake now retracts and briefly conceals its head/neck at reversals,
+then emerges at the opposite end with its face upright. It no longer draws the
+face moving across the front of the coils.
 
 The attachment/light follow-up places bat wings over the near shoulder, hangs
 the monkey from behind the wood with fingers over its top, and roots the legs
@@ -74,3 +75,28 @@ and the blink covers those whites. The 2× hanging branch fixture is refreshed.
 This correction passes 18 focused unit checks and three browser checks (pack
 gallery, monkey poses, unchanged classic references). The existing eight gallery
 flags remain unchanged.
+
+The concealed snake-turn follow-up uses the interpolated drawing phase, with
+the same 240 ms retreat/return across climbing periods. The level switch occurs
+inside a fully hidden 60 ms interval. Focused unit checks cover hidden
+repositioning, period/phase-independent timing, neck attachment and existing
+contracts; two browser checks pass, including unchanged classic references.
+
+`rocks-platforms.png` inspects all 24 standing rock outlines seated on their
+platforms through the native rig. Their small vertical offsets come from the
+painted outlines and ledge curve; already-seated and hanging stones stay put. Upper vines now reach into the
+painted top edge of every suspended rock instead of stopping at the collision
+outline. All 24 endpoints are checked through the native rig.
+The standard high/low rock fixture is refreshed. Classic references and
+collision shapes are unchanged.
+
+The hanging monkey uses a brighter copper-red palette across its arms, torso,
+tail, legs and blink skin. Player palettes are unchanged; the brighter color
+keeps the decoration distinct while making it easier to see.
+
+The current menu defaults are Shadow Off and Classic graphics Off (cartoon),
+as requested by the owner. Saved graphics choices and explicit URL overrides
+still apply. Twenty-seven focused unit checks pass; all 17 art/menu/reference
+browser checks pass across the full run and the mobile title-art assertion
+update. Three gallery/pose/classic-reference checks also pass after brightening
+the hanging monkey. No comparison threshold was relaxed.

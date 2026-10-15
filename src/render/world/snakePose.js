@@ -1,16 +1,21 @@
-// Cartoon climbing snakes lead with their head without turning the face upside
-// down. The phase follows the obstacle's drawing time, so reversals stay smooth
-// even on display frames between simulation steps. Reuse `pose` in the rig.
+// Cartoon climbing snakes tuck their head into the coils at a reversal, then
+// emerge at the leading end. Reposition only while concealed: never slide the
+// face across the front of the body. Sample drawing time, without frame history.
 export function paintedSnakePose(obstacle, time, pose = {
   head: {}, neck: Array.from({ length: 25 }, () => ({ x: 0, y: 0 })),
 }) {
   const phase = 2 * Math.PI * time / obstacle.motion.period + obstacle.motion.phase;
   const velocity = Math.sin(phase);
-  // Keep the turn continuous, but pass across the coils quickly at a reversal
-  // instead of lingering with the face halfway through the body.
-  const direction = velocity / Math.hypot(velocity, .07);
+  const direction = velocity >= 0 ? 1 : -1;
+  // Seconds to the nearest reversal. Keep the brief retreat the same duration
+  // for slow and fast snakes: concealed within 30 ms, fully out by 120 ms.
+  const seconds = Math.asin(Math.min(1, Math.abs(velocity))) * obstacle.motion.period / (2 * Math.PI);
+  const reveal = Math.max(0, Math.min(1, (seconds - .03) / .09));
+  const alpha = reveal * reveal * (3 - 2 * reveal);
   const head = pose.head;
-  head.x = 6 + 10 * (1 - direction * direction);
+  head.alpha = alpha;
+  head.scale = .65 + .35 * alpha;
+  head.x = -10 + 16 * alpha;
   head.y = -20 * direction;
   head.rotation = -.28 * direction;
   const fromY = 2 - 12 * direction, toX = head.x - 10, toY = head.y + 3 * direction;

@@ -40,7 +40,8 @@ async function checkPanel(page, name) {
     const hits = name === 'title' ? [...geometry.modes, ...geometry.settings].map((item) => item.hit)
       .concat([geometry.startHit, geometry.configHit]) : name === 'gameOver' ? [geometry.replayHit, geometry.menuHit]
       : geometry.items.map((item) => item.hit).concat([geometry.backHit]);
-    const labels = name === 'title' ? [o.titleName, o.tagline, o.titleControl, o.titlePrompt, o.configEntry, o.titleVersion,
+    const titleLogo = { text: o.titleWordmark ?? o.titleName.text };
+    const labels = name === 'title' ? [titleLogo, o.tagline, o.titleControl, o.titlePrompt, o.configEntry, o.titleVersion,
       ...(platform.mobile ? [] : o.modes.map((item) => item.label)), o.livesLine, o.slipLine, o.shadowLine]
       : name === 'gameOver' ? [o.gameOverTitle, o.scoreText, o.bestText, o.bananasText, o.gameOverPrompt, o.gameOverMenu]
       : [o.configHeading, o.configSubtitle, o.configBack, ...o.graphicsItems.map((item) => item.label)];
@@ -50,7 +51,7 @@ async function checkPanel(page, name) {
       hits: hits.map((hit) => ({ width: hit.w * cssScale, height: hit.h * cssScale })),
       labels: labels.map((label) => {
         const b = label.text.getBounds();
-        return { text: label.text.text, visible: label.text.visible,
+        return { text: label.text.text ?? label.text.artKey, visible: label.text.visible,
           left: layout.x + b.left * layout.scale, right: layout.x + b.right * layout.scale,
           top: layout.y + b.top * layout.scale, bottom: layout.y + b.bottom * layout.scale };
       }) };
@@ -80,10 +81,11 @@ for (const [orientation, viewport, visibleHeight] of [
 ]) test(`small-screen ${orientation} menus fit Safari's visible area and support touch settings`, async ({ browser }) => {
   const { page, errors } = await phone(browser, viewport, visibleHeight);
   await checkPanel(page, 'title');
-  expect(await page.evaluate(() => window.__liano.game.shadowOn)).toBe(true);
-  expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.shadowLine.text.text)).toBe('Shadow\nOn');
+  expect(await page.evaluate(() => window.__liano.platform.artPack)).toBe('cartoon');
+  expect(await page.evaluate(() => window.__liano.game.shadowOn)).toBe(false);
+  expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.shadowLine.text.text)).toBe('Shadow\nOff');
   expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.titleVersion.text.visible)).toBe(true);
-  for (const [index, setting, initial] of [[0, 'lives', false], [1, 'slip', false], [2, 'shadow', true]]) {
+  for (const [index, setting, initial] of [[0, 'lives', false], [1, 'slip', false], [2, 'shadow', false]]) {
     await tapMenu(page, 'settings', index);
     await expect.poll(() => page.evaluate((setting) => window.__liano.game[setting], setting)).toBe(!initial);
     expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
@@ -114,7 +116,7 @@ for (const [orientation, viewport, visibleHeight] of [
 test('mobile stays single-player and preserves settings through graphics reloads', async ({ browser }) => {
   const { page, errors } = await phone(browser, { width: 375, height: 812 }, 600, '&mode=split');
   expect(await page.evaluate(() => window.__liano.game.mode)).toBe('solo');
-  expect(await page.evaluate(() => window.__liano.game.shadowOn)).toBe(true);
+  expect(await page.evaluate(() => window.__liano.game.shadowOn)).toBe(false);
   expect(await page.evaluate(() => window.__liano.app.scene.getScene('ui').overlays.modePicker.visible)).toBe(false);
   for (const key of ['Digit2', 'Digit3']) await page.keyboard.press(key);
   expect(await page.evaluate(() => window.__liano.game.mode)).toBe('solo');
@@ -130,7 +132,7 @@ test('mobile stays single-player and preserves settings through graphics reloads
   await page.waitForURL((url) => url.searchParams.get('resolution') === '2');
   await page.waitForFunction(() => window.__liano?.platform.world);
   expect(await page.evaluate(() => ({ lives: window.__liano.game.lives, slip: window.__liano.game.slip,
-    shadow: window.__liano.game.shadow }))).toEqual({ lives: true, slip: true, shadow: false });
+    shadow: window.__liano.game.shadow }))).toEqual({ lives: true, slip: true, shadow: true });
   expect(await page.evaluate(() => window.__liano.game.mode)).toBe('solo');
   const start = await menuLabelPoint(page, 'title', 'titlePrompt');
   await page.touchscreen.tap(start.x, start.y);
@@ -144,6 +146,8 @@ test('desktop player-mode choices and settings respond to clicks without startin
   const errors = collectErrors(page);
   await page.goto(`${DEV}`);
   await page.waitForFunction(() => window.__liano?.platform.world);
+  expect(await page.evaluate(() => window.__liano.platform.artPack)).toBe('cartoon');
+  expect(await page.evaluate(() => window.__liano.game.shadow)).toBe(false);
   for (const [index, mode] of [[1, 'shared'], [2, 'split'], [0, 'solo']]) {
     const at = await page.evaluate((index) => window.__liano.app.scene.getScene('ui').overlays.titleGeometry.modes[index], index);
     const point = await panelPoint(page, 'title', at.x, at.y);
@@ -151,7 +155,7 @@ test('desktop player-mode choices and settings respond to clicks without startin
     await expect.poll(() => page.evaluate(() => window.__liano.game.mode)).toBe(mode);
     expect(await page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
   }
-  for (const [index, setting, expected] of [[0, 'lives', true], [1, 'slip', true], [2, 'shadow', false]]) {
+  for (const [index, setting, expected] of [[0, 'lives', true], [1, 'slip', true], [2, 'shadow', true]]) {
     const at = await page.evaluate((index) => window.__liano.app.scene.getScene('ui').overlays.titleGeometry.settings[index], index);
     const point = await panelPoint(page, 'title', at.x, at.y);
     await page.mouse.click(point.x, point.y);
@@ -183,7 +187,7 @@ for (const [orientation, viewport, visibleHeight] of [
   const menu = await menuLabelPoint(page, 'gameOver', 'gameOverMenu');
   await page.touchscreen.tap(menu.x, menu.y);
   await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('TITLE');
-  expect(await page.evaluate(() => window.__liano.game.shadowOn)).toBe(true);
+  expect(await page.evaluate(() => window.__liano.game.shadowOn)).toBe(false);
   await checkPanel(page, 'title');
   await finishRun();
   const replay = await menuLabelPoint(page, 'gameOver', 'gameOverPrompt');

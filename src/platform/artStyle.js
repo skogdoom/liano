@@ -2,15 +2,16 @@ import { reloadSettings } from './reloadSettings.js';
 
 export const ART_STORAGE_KEY = 'liano.art';
 export const ART_PACKS = ['classic', 'cartoon'];
+export const DEFAULT_ART_PACK = 'cartoon';
 export const validArtChoice = (choice) => ART_PACKS.includes(choice);
 
 export function artChoice(search, win = {}) {
   const query = new URLSearchParams(search);
-  if (query.has('art')) return validArtChoice(query.get('art')) ? query.get('art') : 'classic';
+  if (query.has('art')) return validArtChoice(query.get('art')) ? query.get('art') : DEFAULT_ART_PACK;
   try {
     const saved = win.localStorage?.getItem(ART_STORAGE_KEY);
-    return validArtChoice(saved) ? saved : 'classic';
-  } catch { return 'classic'; }
+    return validArtChoice(saved) ? saved : DEFAULT_ART_PACK;
+  } catch { return DEFAULT_ART_PACK; }
 }
 
 export function rememberArtChoice(choice, win = window) {
