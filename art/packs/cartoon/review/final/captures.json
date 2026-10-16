@@ -3368,5 +3368,33 @@
         "Resulting changes and their validation"
       ]
     }
+  },
+  "integration": {
+    "status": "integrated",
+    "date": "2026-10-16",
+    "sourceBranch": "phaser-sprites",
+    "sourceCommit": "bbc9f77a7135379af56df7baa4b50bc94b1a34d2",
+    "targetBranch": "phaser",
+    "previousTargetCommit": "72a208aa84c4d9a9f741f4492004c18f0a48225e",
+    "mergeCommit": "a49b1f2ca289dc608c67d3c345aa72e341ff8e3e",
+    "pullRequest": "https://github.com/skogdoom/liano/pull/41",
+    "ci": {
+      "runId": 38961566024,
+      "Test and build": "success",
+      "Browser tests": "success",
+      "retriesPerTest": 1,
+      "browserCases": 90,
+      "passedFirstAttempt": 88,
+      "passedOnIndividualRetry": 2,
+      "retriedCases": [
+        "obstacle-motion.spec.js: obstacle exposure",
+        "pause-controls.spec.js: desktop pause controls"
+      ],
+      "fullSuiteRerunAfterContextFailures": false,
+      "previousRunId": 38957854404,
+      "previousBrowserAttempts": 2,
+      "initialBrowserResult": "Chromium context-creation timeouts before test bodies ran; affected tests pass locally. A bounded CI retry restarts the browser worker without changing assertions or timeouts."
+    },
+    "deviceValidation": "pending on phaser; document findings after testing has finished"
   }
 }

@@ -616,8 +616,8 @@ The Phaser 4 migration plan, its pre-rendered art pipeline, device budgets,
 risks, milestones M0–M10 (including M8a), and verification strategy are in
 [PHASER_PLAN.md](PHASER_PLAN.md). Development uses the long-lived `phaser`
 branch and versions `3.0.0-dev.N`. M0–M8 are complete; the M8a cartoon artwork,
-automated checks and regression references are complete, awaiting integration
-into `phaser`. Deferred real-device checks follow that integration, with findings
+automated checks and regression references are complete and integrated into
+`phaser` through [PR #41](https://github.com/skogdoom/liano/pull/41) (merge `a49b1f2`). Real-device checks now follow on `phaser`, with findings
 and resulting changes documented on `phaser` after testing finishes.
 
 M9 completes cleanup and verification, then merges the verified `phaser` branch
