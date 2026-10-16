@@ -1,8 +1,8 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fifth draft: adds the planned cartoon sprite pack, M8a). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a’s first complete cartoon pack and Config reload selector are implemented on `phaser-sprites`, between M8 and M9; the owner has accepted the cartoon artwork. Final automated verification, approved regression references and the report are complete; integration into `phaser` is next; real-device checks are deferred until after integration and remain required before release. M9 follows M8a.**
+Status: **agreed plan (M8a cartoon pack, M9 cleanup and merge, M10 release). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a’s first complete cartoon pack and Config reload selector are implemented on `phaser-sprites`, between M8 and M9; the owner has accepted the cartoon artwork. Final automated verification, approved regression references and the report are complete; integration into `phaser` is next; real-device checks are deferred until after integration and remain required before release. M9 cleanup and merge follows M8a; M10 releases from master after testing and verification are complete.**
 
-**Nothing is merged into master until every milestone (M0 to M9, including M8a) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
+**The final migration merge into master requires M0–M8a to be complete, M9 cleanup and verification to be complete, and the owner to explicitly say to merge.** Implementation milestone PRs target `phaser`; M9 ends with the final `phaser` → `master` merge. M10 is the separate release milestone, performed on `master` afterward once everything is tested and verified.
 
 The goal is to replace PixiJS 8 with Phaser, and to keep every bit of the game as it is: the gameplay, all three modes, every feature and setting, the graphics, and the sounds. The classic appearance remains the migration reference. M8a adds an optional cartoon art pack based on the two concepts in `docs/`; cartoon graphics are now the default. Gameplay and sounds stay the same with either pack.
 
@@ -20,7 +20,7 @@ Made with the owner (answers to the planning questions):
 | Cartoon graphics? | **Planned in M8a, before M9.** Replace all visual asset families using `docs/cover_day.png` and `docs/cover_night.png` as the art-direction references. |
 | Classic graphics toggle? | Config shows **Classic graphics: On/Off**. On loads classic, Off loads cartoon. Fresh installs default to Off; deliberate selections persist. Changing the value reloads the game. |
 | How to test the views? | **Pure view-models tested in Node, plus a few browser smoke tests** in CI. |
-| Branching? | **Long-lived `phaser` branch**: each milestone is a PR into `phaser`, master is merged into `phaser` regularly, and `phaser` is merged into master once, as 3.0.0, only after all milestones are finished and the owner explicitly says so. |
+| Branching? | **Long-lived `phaser` branch**: implementation milestone PRs target `phaser`, and master is merged into `phaser` regularly. M9 finishes cleanup and verification, then merges `phaser` into master once with the owner’s explicit approval. M10 prepares and publishes the release on `master` after testing and verification are complete. |
 | Which Phaser? | **Phaser 4.2.1** (the current `latest`), not 3.90. |
 | Sounds? | **Keep the synthesized recipes**: they play through Phaser's audio context and master nodes, so Phaser handles unlock, mute and pause, and every sound stays the same. |
 | Both versions? | **Both stay playable side by side** until the Pixi removal milestone (M8), which comes after parity and performance (M7), so they can be compared at any point. |
@@ -31,7 +31,7 @@ Made with the owner (answers to the planning questions):
 | Download size? | The roughly +150–170 KB gzipped for Phaser is accepted; a custom build is tried in M0 and M7 but not required. |
 | Screen shake? | Our own shake maths drives Phaser's camera, so the death shake stays as it is. |
 | Master meanwhile? | Bug fixes only; new visual features wait until 3.0.0 (a fix that changes `src/render/*` gets a matching change in `src/phaser/`). |
-| Version numbers? | `3.0.0-dev.N`, bumped at each milestone merged into `phaser`; `3.0.0` at the end. |
+| Version numbers? | `3.0.0-dev.N` during development and M9 integration; set `3.0.0` on `master` in M10, then verify the final release commit before tagging. |
 | Browser tests in CI? | **Chromium only.** WebKit behaviour is checked on the iPhone itself. |
 
 Also agreed:
@@ -725,7 +725,7 @@ Only once M7 is accepted: until then the Pixi version is the reference.
 
 ### M8a. Cartoon sprite sheets and the classic graphics toggle (L)
 
-**Status: artwork accepted and automated verification complete on `phaser-sprites`; ready for integration preparation into `phaser`.** This milestone is between M8 (Pixi removal) and M9 (cleanup/release). The owner approved continuing from the corrected style sample. The complete production pack and reload selector are implemented; cartoon is now the default, and the owner has accepted its appearance through `7abe519`. Final automated verification, approved regression references and the report are complete; the milestone is ready for integration preparation into `phaser`. By owner decision, real-device checks take place after that integration, before release.
+**Status: artwork accepted and automated verification complete on `phaser-sprites`; ready for integration preparation into `phaser`.** This milestone is between M8 (Pixi removal) and M9 (cleanup and merge). The owner approved continuing from the corrected style sample. The complete production pack and reload selector are implemented; cartoon is now the default, and the owner has accepted its appearance through `7abe519`. Final automated verification, approved regression references and the report are complete; the milestone is ready for integration preparation into `phaser`. By owner decision, real-device checks take place after that integration, before release.
 
 **Outcome.** Prepare and integrate a complete cartoon sprite pack that can replace all current graphics, alongside a complete classic pack. The Config menu selects between them through **Classic graphics: On/Off** and reloads the game when the value changes. Cartoon is now the default. Both packs use the same rules, physics, generated levels, obstacles, animation timing, camera motion, modes and sounds.
 
@@ -932,11 +932,26 @@ artwork, references, measurements or acceptance decisions. Document resulting
 changes and their validation in that follow-up; do not treat deferred checks as
 already passed or leave this report awaiting their results.
 
-### M9. Cleanup and release (S)
+### M9. Cleanup and merge (S)
 
-- Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables, the art pipeline), the README's technology section and a short "Custom art" section pointing to `art/README.md`, and the `package.json` description; set the version to 3.0.0.
-- Complete the deferred M8a real-device pass on the integrated `phaser` branch: Safari on the MacBook Air M1 and iPhone 13 mini, including gameplay, startup/frame budgets, rotation, menus and graphics switching. After real-device testing has finished on `phaser`, add the dated device-test follow-up described in the finalized M8a report, documenting results, any findings that change the implementation or conclusions, and resulting changes and validation. Resolve or explicitly accept concrete exceptions before release.
-- Merge master into `phaser` one last time, run CI and open the PR into master. It is merged only when the owner explicitly says so, after every milestone, including M8a, is finished. The owner tags `v3.0.0` and writes the release notes.
+Work takes place on `phaser` after M8a integration. This milestone completes the
+migration cleanup, remaining verification and final merge into `master`.
+
+- Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables, the art pipeline), the README's technology section and a short "Custom art" section pointing to `art/README.md`, and the `package.json` description. Keep the version in the `3.0.0-dev.N` series through this milestone.
+- Complete the remaining manual and real-device verification required by the migration plan, including the deferred M8a pass on the integrated `phaser` branch: Safari on the MacBook Air M1 and iPhone 13 mini, gameplay, startup/frame budgets, rotation, menus and graphics switching. After testing has finished on `phaser`, add the dated follow-up described in the finalized M8a report, documenting results, findings that change the implementation or conclusions, and resulting changes and validation. Resolve or explicitly accept concrete exceptions before the final migration merge.
+- Merge master into `phaser` one last time, resolve conflicts, and run the full automated checks and CI against the combined result. Repeat any affected manual/device checks if those changes invalidate earlier results, and record the final verified commit.
+- Open the final `phaser` → `master` PR. Merge only when cleanup and verification are complete and the owner explicitly says to merge. This merge completes M9; release preparation follows in M10 on `master`.
+- **Done when:** cleanup is complete, required testing and verification are recorded and accepted, CI passes, and the verified migration has been merged into `master` with the owner's explicit approval.
+
+### M10. Release (S)
+
+Work takes place on `master` at the end, after M9 and all required testing and
+verification are complete. This is the separate release milestone.
+
+- Set the version to `3.0.0` on `master` and finalize release-specific documentation and metadata using the completed milestone and device-test reports.
+- Build and run the automated checks on the final release commit, then verify the built game and deployment at `/liano/`. Confirm that the release artifacts correspond to that verified commit; address any findings before publishing.
+- The owner tags the verified `master` commit as `v3.0.0`, writes the release notes and publishes the release.
+- **Done when:** the final `3.0.0` commit on `master` and its artifacts are verified, `v3.0.0` identifies that commit, and the release notes and release are published.
 
 ## 9. Tests
 
