@@ -1,5 +1,11 @@
 # M8a final artwork review candidates
 
+Current status (2026-10-16): the owner accepts the cartoon appearance through
+`7abe519`. Selected captures still need promotion to automated regression
+references. Real-device checks are deferred until after integration into
+`phaser`, and remain required before release. Historical candidate/acceptance
+notes below describe earlier review stages.
+
 The temple-mist follow-up refreshes all nine temple scenes and the montage.
 Independent atlas borders remove the gray horizontal edge without hiding the
 mist or increasing texture memory. The neck-edge correction below is included.

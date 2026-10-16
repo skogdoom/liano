@@ -1,5 +1,11 @@
 # Runtime review candidates
 
+Current status (2026-10-16): the owner accepts the cartoon appearance through
+`7abe519`. Selected captures still need promotion to automated regression
+references. Real-device checks are deferred until after integration into
+`phaser`, and remain required before release. Historical candidate/acceptance
+notes below describe earlier review stages.
+
 The temple-mist follow-up removes the faint horizontal seam by giving atlas
 sprites independent one-pixel extrusion margins. Previously the stone sprite
 above the mist painted into its transparent top gutter. All temple variants and

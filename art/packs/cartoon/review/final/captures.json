@@ -3267,5 +3267,17 @@
       },
       "approval": "Owner accepted the centered hatchling after reviewing proportions, shell seating, contrast and nest height."
     }
-  ]
+  ],
+  "artworkAcceptance": {
+    "commit": "7abe519",
+    "date": "2026-10-16",
+    "decision": "Owner accepts the current cartoon appearance. Selected captures still need promotion to automated regression references."
+  },
+  "deviceValidation": {
+    "status": "pending",
+    "timing": "After M8a integration into phaser, before release",
+    "integrationGate": false,
+    "releaseGate": true,
+    "decision": "Owner requested postponing real-device checks until after integration into phaser."
+  }
 }
