@@ -63,3 +63,9 @@ and standing/hanging stone sheets are refreshed. Source/inventory checks,
 production build, 47 focused tests and four browser checks pass. The current
 gallery has 36 flags (1.43% aggregate), including two shelf sampling
 comparisons; these remain review candidates with unchanged thresholds.
+
+Branch-join/hive-tie follow-up on `c4d8c33`: low cartoon branches emerge
+from behind the pole without a sawn end; hanging and classic branches retain
+their existing ends. Hive ties now emerge below their crossbars. The affected
+branch, decoration and hive fixtures use refreshed 2× captures; final review
+world views are refreshed too. These remain review candidates.

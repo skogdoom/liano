@@ -33,16 +33,25 @@ function vine(b, x, fromY, toY, sway) {
 
 function branch(b, o, rand, hangs, view) {
   const [box] = OBSTACLE_HITBOXES.branch;
+  const join = !hangs && b.art.catalog.presentation?.standingBranchJoin;
+  const trunk = hangs ? null : b.stretched('branch.trunk', BRANCH_TRUNK_X, join?.top ?? 0, trunkBottom(o), TRUNK_REFERENCE);
   const parts = hangs
     ? [...vine(b, box.dx + 30, canopyY(o), box.dy + 2, 8), ...vine(b, box.dx + box.w - 45, canopyY(o), box.dy + 4, -8)]
-    : [b.stretched('branch.trunk', BRANCH_TRUNK_X, 0, trunkBottom(o), TRUNK_REFERENCE)];
+    : join ? [] : [trunk];
   const wood = b.image('branch.body');
+  if (join) {
+    // Hide the sawn end under the foreground pole; keep the same branch pivot.
+    const at = b.art.at('branch.body');
+    const left = (BRANCH_TRUNK_X - b.art.piece('branch.body').box.x) * at.zoom;
+    wood.setCrop(left, 0, at.size[0] - left, at.size[1]);
+  }
   parts.push(wood);
   for (const { x0, y0, x1, y1 } of branchBarkLines(rand)) {
     const line = b.image('branch.barkLine').setPosition(x0, y0).setRotation(Math.atan2(y1 - y0, x1 - x0));
     line.scaleX = (b.art.unit('branch.barkLine') * Math.hypot(x1 - x0, y1 - y0)) / BARK_LINE_LENGTH;
     parts.push(line);
   }
+  if (join) parts.push(trunk);
   view.add(parts);
   if (!o.decoration) return null;
   const { part, animate, behindBranch } = DECORATION_RIGS[o.decoration](b, mulberry32(mixSeed(0xa11a, o.gap)), { hangs });

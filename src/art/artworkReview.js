@@ -52,7 +52,7 @@ for (const field of fields) {
 }
 document.querySelector('#export').onclick = () => {
   const notes = {
-    build: '3f72b69 + painted supports and sharper branches on 21f94a1',
+    build: '3f72b69 + low-branch joins and hive tie follow-up on c4d8c33',
     notes: Object.fromEntries(fields.map(field => [field.dataset.notes, field.value])),
   };
   const link = document.createElement('a');

@@ -487,8 +487,8 @@ function prop(p, frame) {
       for (const y of [-21, -8, 6, 20, 32]) body += line(`M-17 ${y} Q0 ${y + 5} 17 ${y}`, '#936335', 1.3);
       return body + ellipse(3, 26, 6, 6, '#392d24') + line('M-3 20Q3 18 9 20', '#ffe8a0', .8);
     }
-    return picture('wood-platform', { x: -8, y: -56, w: 52, h: 11 }, 0)
-      + line('M0 -49 V-32', '#344d29', 3.2) + line('M-.5 -48 V-33', '#a5b957', 1.3);
+    return line('M0 -49 V-32', '#344d29', 3.2) + line('M-.5 -48 V-33', '#a5b957', 1.3)
+      + picture('wood-platform', { x: -8, y: -56, w: 52, h: 11 }, 0);
   }
   if (family === 'bee') {
     if (part === 'wing') return ellipse(0, 0, 3, 3.4, '#e0f5ec', 'opacity=".76" stroke="#95c7c9" stroke-width=".5"');
@@ -615,6 +615,7 @@ manifest.pieces.push(wordmark);
 const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10,
+  standingBranchJoin: { top: -12 },
   pantherSeatY: 2, hangingBatRootY: 1,
   climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
   hangingMonkeyLegTint: hangingMonkeyTint,

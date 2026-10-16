@@ -3819,6 +3819,9 @@
     "title": "ui.wordmark",
     "coconutRootY": 1,
     "snakeLimbThickness": 10,
+    "standingBranchJoin": {
+      "top": -12
+    },
     "pantherSeatY": 2,
     "hangingBatRootY": 1,
     "climbingSnake": "articulated",
