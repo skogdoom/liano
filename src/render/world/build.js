@@ -29,6 +29,15 @@ export function quadraticPoints([p0, p1, p2], steps = CURVE_STEPS) {
   });
 }
 
+// Phaser's strip renderer passes page zero for a multi-atlas frame. Bind the
+// frame's live source so strips also survive texture/context recreation.
+export const atlasStripBatch = {
+  name: 'liano.atlasStrip',
+  batchStrip(context, object, matrix, _texture, ...args) {
+    object.defaultRenderNodes.BatchHandler.batchStrip(context, object, matrix, object.frame.source.glTexture, ...args);
+  },
+};
+
 export class Builder {
   constructor(scene, art) {
     this.scene = scene;

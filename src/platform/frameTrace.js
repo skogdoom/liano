@@ -60,6 +60,7 @@ export function installFrameTrace(app, platform, win = window, doc = document) {
     devicePixelRatio: win.devicePixelRatio,
     resolutionLimit: platform.resolutionLimit,
     resolutionMode: platform.resolutionMode,
+    artPack: platform.artPack,
     context: app.renderer.gl.getContextAttributes(),
     frameClock: 'phaser-callback-phase-v2',
     monkeyMotion: 'phaser-catch-transition-v1',

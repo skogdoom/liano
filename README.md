@@ -53,6 +53,8 @@ npm run preview    # serve that build at /liano/, as on GitHub Pages
 
 Every pull request is tested and built by GitHub Actions, and every push to `master` is published to GitHub Pages.
 
+For the M8a artwork review, run `npm run dev` and open `/art-review.html` at the printed local address (for example, `http://localhost:5173/art-review.html`). Use `npm run dev:host` to review on a phone over your network. This development page includes image zoom, motion clips and downloadable review notes; it is not included in the production build.
+
 After changing a tunable in `src/config.js`, run `npm run windows` to rebuild the table of release windows (the build does this too).
 
 ## Disclaimer

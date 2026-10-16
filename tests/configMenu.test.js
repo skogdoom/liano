@@ -79,4 +79,30 @@ describe('Phaser title config input', () => {
     expect(menu.interceptKey(event, title(), true)).toBe(true);
     expect(event.defaultPrevented).toBe(false);
   });
+
+  it('scopes X to the submenu and consumes a single art navigation', () => {
+    const selected = [], game = title();
+    let cleared = 0;
+    const menu = new ConfigMenu('1.5', { art: 'classic', applyArt: (choice) => selected.push(choice), clear: () => cleared++ });
+    expect(menu.interceptKey(key('KeyX'), game, true)).toBe(false);
+    menu.show(game);
+    menu.interceptKey(key('KeyX', { repeat: true }), game, true);
+    expect(selected).toEqual([]);
+    const event = key('KeyX');
+    expect(menu.interceptKey(event, game, true)).toBe(true);
+    expect(event.defaultPrevented).toBe(true);
+    menu.interceptKey(key('KeyX'), game, true);
+    menu.choose('1');
+    expect(selected).toEqual(['cartoon']);
+    expect(cleared).toBe(2);
+  });
+
+  it('does not reload an already selected art pack', () => {
+    const selected = [], remembered = [];
+    const menu = new ConfigMenu('auto', { art: 'cartoon', applyArt: (choice) => selected.push(choice), rememberArt: (choice) => remembered.push(choice) });
+    menu.show(title()); menu.chooseArt('cartoon');
+    expect(selected).toEqual([]);
+    expect(remembered).toEqual(['cartoon']);
+    expect(menu.open).toBe(false);
+  });
 });

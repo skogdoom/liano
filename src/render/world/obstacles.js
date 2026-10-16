@@ -19,6 +19,7 @@ import {
 } from '../../views/obstacles.js';
 import { Builder, cubicPoints } from './build.js';
 import { DECORATION_RIGS } from './decorations.js';
+import { branchPoleDetails } from './branchPole.js';
 
 // The static obstacles in the Phaser version (PHASER_PLAN.md, M5b), as the Pixi
 // ObstacleViews draw them: built once per obstacle from its pieces, in the local frame the
@@ -33,19 +34,35 @@ function vine(b, x, fromY, toY, sway) {
 
 function branch(b, o, rand, hangs, view) {
   const [box] = OBSTACLE_HITBOXES.branch;
+  const decoration = o.decoration ? DECORATION_RIGS[o.decoration](b, mulberry32(mixSeed(0xa11a, o.gap)), { hangs, gap: o.gap }) : null;
+  const join = !hangs && b.art.catalog.presentation?.standingBranchJoin;
+  const trunk = hangs ? null : b.stretched('branch.trunk', BRANCH_TRUNK_X, join?.top ?? 0, trunkBottom(o), TRUNK_REFERENCE);
   const parts = hangs
     ? [...vine(b, box.dx + 30, canopyY(o), box.dy + 2, 8), ...vine(b, box.dx + box.w - 45, canopyY(o), box.dy + 4, -8)]
-    : [b.stretched('branch.trunk', BRANCH_TRUNK_X, 0, trunkBottom(o), TRUNK_REFERENCE)];
-  parts.push(b.image('branch.body'));
+    : join ? [] : [trunk];
+  const wood = b.image('branch.body');
+  if (join) {
+    // Hide the sawn end under the foreground pole; keep the same branch pivot.
+    const at = b.art.at('branch.body');
+    const left = (BRANCH_TRUNK_X - b.art.piece('branch.body').box.x) * at.zoom;
+    wood.setCrop(left, 0, at.size[0] - left, at.size[1]);
+  }
+  parts.push(wood);
   for (const { x0, y0, x1, y1 } of branchBarkLines(rand)) {
     const line = b.image('branch.barkLine').setPosition(x0, y0).setRotation(Math.atan2(y1 - y0, x1 - x0));
     line.scaleX = (b.art.unit('branch.barkLine') * Math.hypot(x1 - x0, y1 - y0)) / BARK_LINE_LENGTH;
     parts.push(line);
   }
+  if (join) {
+    const details = join.details ? branchPoleDetails(b, o, decoration?.poleClearance) : { behind: [], front: [] };
+    parts.push(...details.behind, trunk, ...details.front);
+  }
+  if (decoration?.rearPart) parts.unshift(decoration.rearPart);
   view.add(parts);
-  if (!o.decoration) return null;
-  const { part, animate } = DECORATION_RIGS[o.decoration](b, mulberry32(mixSeed(0xa11a, o.gap)), { hangs });
-  view.add(part);
+  if (!decoration) return null;
+  const { part, animate, behindBranch } = decoration;
+  if (behindBranch) view.addAt(part, parts.indexOf(wood));
+  else view.add(part);
   return animate;
 }
 
@@ -59,10 +76,15 @@ function thornBush(b, o, rand, hangs, view) {
 
 function rock(b, o, rand, hangs, view) {
   const [{ r }] = OBSTACLE_HITBOXES.rock;
+  const variant = rockVariant(o.gap, b.art.at('rock.body').frames.length);
+  const vineEnd = b.art.catalog.presentation?.hangingRockVineY?.[variant] ?? -r + 4;
   const parts = hangs
-    ? [...vine(b, 0, canopyY(o), -r + 4, 9), b.image('rock.sling')]
+    ? vine(b, 0, canopyY(o), vineEnd, 9)
     : [b.stretched('support.stem', 0, r - 4, trunkBottom(o), STEM_REFERENCE), b.image('rock.ledge')];
-  parts.push(b.image('rock.body', rockVariant(o.gap)));
+  if (hangs && b.art.catalog.presentation?.hangingRockSling !== false) parts.push(b.image('rock.sling'));
+  const stone = b.image('rock.body', variant);
+  if (!hangs) stone.setY(b.art.catalog.presentation?.standingRockY?.[variant] ?? 0);
+  parts.push(stone);
   view.add(parts);
   return null;
 }

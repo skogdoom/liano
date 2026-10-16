@@ -149,6 +149,14 @@ export class Overlays {
     const title = PANELS.title.texts;
     this.title = panel(scene, art, configMenu ? { width: 520, height: 540, shiftY: 0 } : PANELS.title);
     this.titleName = label(this.title, title.name, undefined, menuScale);
+    if (art.catalog.presentation?.title) {
+      this.titleWordmark = art.image(scene, art.catalog.presentation.title);
+      this.wordmarkUnit = art.unit(art.catalog.presentation.title);
+      this.titleWordmark.setPosition(title.name.x ?? 0, title.name.y)
+        .setScale(this.wordmarkUnit * title.name.size / 80);
+      this.title.add(this.titleWordmark);
+      this.titleName.text.setVisible(false);
+    }
     this.tagline = label(this.title, title.tagline, undefined, menuScale);
     this.titleControl = label(this.title, title.control, undefined, menuScale);
     this.titlePrompt = label(this.title, title.prompt, undefined, menuScale);
@@ -171,6 +179,7 @@ export class Overlays {
         label: label(this.config, { y: item.y, size: item.choice === 'auto' ? 20 : 26, bold: true }, item.text, configScale),
       }));
       this.configHint = label(this.config, { y: 172, size: 14, alpha: 0.7 }, 'Changes reload the game', configScale);
+      this.artItem = label(this.config, { y: 157, size: 22, bold: true, color: GOLD }, '', configScale);
       this.configBack = label(this.config, { y: CONFIG_BACK_Y, size: 20 }, 'C / Esc · Back', configScale);
       this.view.add(this.config);
     }
@@ -243,6 +252,7 @@ export class Overlays {
       this.configEntry.set(kind === 'touch' ? 'Config' : 'C · Config');
       if (!this.titleGeometry) this.configEntry.text.y = kind === 'touch' ? 180 : 190;
       this.configBack.set(kind === 'touch' ? 'Back' : 'C / Esc · Back');
+      this.artItem.set(`${kind === 'touch' ? '' : 'X · '}Classic graphics: ${this.configMenu.art === 'classic' ? 'On' : 'Off'}`);
       for (const item of this.graphicsItems) {
         const selected = item.choice === this.configMenu.choice;
         item.label.setColor(selected ? GOLD : CREAM);
@@ -295,6 +305,9 @@ export class Overlays {
     if (this.configMenu.open) {
       const p = point(this.config);
       if (inside(this.configGeometry?.backHit ?? { x: -200, y: CONFIG_BACK_Y - 32, w: 400, h: 64 }, p)) this.configMenu.close();
+      else if (inside(this.configGeometry?.artHit ?? { x: -200, y: 123, w: 400, h: 68 }, p)) {
+        this.configMenu.chooseArt(this.configMenu.art === 'classic' ? 'cartoon' : 'classic');
+      }
       else {
         const item = this.graphicsItems.find((item, i) => inside(this.configGeometry?.items[i].hit ?? { x: -200,
           y: item.y - (item.choice === 'auto' ? 25 : 37), w: 400,
@@ -334,6 +347,8 @@ export class Overlays {
     placePanel(this.title, title);
     placePanel(this.config, config);
     this.titleName.place(title.name);
+    if (this.titleWordmark) this.titleWordmark.setPosition(title.name.x, title.name.y)
+      .setScale(this.wordmarkUnit * Math.min(title.name.size / 80, (title.width - 32) / 320));
     this.tagline.place(title.tagline);
     this.titleControl.place(title.control);
     this.titlePrompt.place(title.prompt);
@@ -349,6 +364,7 @@ export class Overlays {
     this.configHint.place(config.hint).set(config.compact ? 'Changes reload\nthe game' : 'Changes reload the game');
     this.configHint.text.setVisible(!config.condensed);
     this.configBack.place({ ...config.back, size: 22 });
+    this.artItem.place({ ...config.art, size: 22 });
     this.graphicsItems.forEach((item, i) => item.label.place({ ...config.items[i], size: config.compact ? 24 : item.choice === 'auto' ? 20 : 26 }));
     const results = this.gameOverGeometry;
     placePanel(this.gameOver, results);

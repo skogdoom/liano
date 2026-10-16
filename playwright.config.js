@@ -17,6 +17,10 @@ export default defineConfig({
   // One test at a time in CI: the pages draw in software WebGL, and two at once starve
   // each other on the runner (the Pixi title scene alone takes a few hundred ms a frame).
   workers: process.env.CI ? 1 : undefined,
+  // Chromium can lose a context during setup on the shared CI runner, before
+  // the test body starts. One retry starts a fresh worker; assertions and
+  // timeouts stay unchanged, and persistent failures still fail the job.
+  retries: process.env.CI ? 1 : 0,
   // On GitHub the failures also become annotations on the check run.
   reporter: process.env.CI ? [['github'], ['list']] : 'line',
   use: {

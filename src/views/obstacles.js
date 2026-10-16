@@ -777,7 +777,7 @@ export function drawThornBushBody(g) {
 // Rocks come in ROCK_VARIANTS outlines, one picked per gap (PHASER_PLAN.md, M4: a random
 // outline per gap could not be pre-rendered).
 export const ROCK_VARIANTS = 24;
-export const rockVariant = (gap) => Math.floor(mulberry32(mixSeed(0x70c4, gap))() * ROCK_VARIANTS);
+export const rockVariant = (gap, count = ROCK_VARIANTS) => Math.floor(mulberry32(mixSeed(0x70c4, gap))() * count);
 
 // Hitbox: one circle. An angular grey polygon close to the circle, on a vine or a ledge.
 export function drawRock(g, o, rand, hangs) {

@@ -1,8 +1,9 @@
 import { TILE_EDGE, atlasScaleFor } from '../art/catalog.js';
+import { validArtChoice } from '../platform/artStyle.js';
 
 // The pre-rendered art in the Phaser version (PHASER_PLAN.md, section 5): loading the
 // atlases built into public/art/ (scripts/build-art.mjs) and making pieces from them.
-// public/art/pieces.json, the catalog, says per piece where its frames are, its anchor
+// public/art/<pack>/pieces.json says where its frames are, its anchor
 // and its zoom at each atlas scale.
 
 const BASE = `${import.meta.env.BASE_URL}art/`;
@@ -12,24 +13,27 @@ const tileKey = (key) => `tile.${key}`;
 const BLEND_ADD = 1; // Phaser.BlendModes.ADD
 
 // Queues the catalog on a scene's loader.
-export function queueCatalog(load) {
-  load.json(CATALOG, `${BASE}pieces.json`);
+export function queueCatalog(load, pack = 'classic') {
+  if (!validArtChoice(pack)) throw new Error(`Unknown art pack: ${pack}`);
+  load.json(CATALOG, `${BASE}${pack}/pieces.json`);
 }
 
 // Queues the catalog and then, once it is in, the sets of atlases at `scale` (for pages
 // that load everything at once: the visual-reference page).
-export function queueArt(load, scale, sets = ['boot', 'main']) {
+export function queueArt(load, scale, sets = ['boot', 'main'], pack = 'classic') {
   load.once(`filecomplete-json-${CATALOG}`, (key, type, catalog) => {
     for (const set of sets) queueSet(load, catalog, set, scale);
   });
-  queueCatalog(load);
+  queueCatalog(load, pack);
 }
 
 // Queues a set of atlases ('boot' or 'main') at `scale`, and its tiles.
 export function queueSet(load, catalog, set, scale) {
-  load.multiatlas(atlasKey(set), `${BASE}${set}@${scale}x.json`, BASE);
+  if (!validArtChoice(catalog.pack)) throw new Error(`Unknown catalog pack: ${catalog.pack}`);
+  const base = `${BASE}${catalog.pack}/`;
+  load.multiatlas(atlasKey(set), `${base}${set}@${scale}x.json`, base);
   for (const [key, piece] of Object.entries(catalog.pieces)) {
-    if (piece.set === set && piece.kind === 'tile') load.image(tileKey(key), `${BASE}${piece.at[scale].image}`);
+    if (piece.set === set && piece.kind === 'tile') load.image(tileKey(key), `${base}${piece.at[scale].image}`);
   }
 }
 

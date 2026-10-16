@@ -5,18 +5,19 @@ import { collectErrors, started } from './helpers.js';
 // A Safari comparison should keep the picture, parallax, tint and wrapping intact.
 // Compare actual WebGL pixels through both paths, including fractional shifts and
 // wrap boundaries, in landscape, a wide view and an iPhone-sized portrait view.
-for (const [width, height, ratio] of [[1280, 720, 1], [1920, 800, 2], [375, 812, 2]]) {
-  test(`the image backdrop matches the tiles at ${width} × ${height}, ${ratio}×`, async ({ browser }) => {
+for (const art of ['classic', 'cartoon']) for (const [width, height, ratio] of [[1280, 720, 1], [1920, 800, 2], [375, 812, 2]]) {
+  test(`the ${art} image backdrop matches the tiles at ${width} × ${height}, ${ratio}×`, async ({ browser }) => {
     const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: ratio });
     const errors = collectErrors(page);
-    await page.goto(`${DEV}`);
+    await page.goto(`${DEV}?art=${art}`);
     await started(page, errors);
     await page.waitForFunction(() => window.__liano?.platform.world);
     const results = await page.evaluate(async () => {
       const { BackdropRig } = await import('/src/render/world/backdrop.js');
+      const { compareImages, solidPixels, passes } = await import('/src/visualDiff.js');
       const { app, platform } = window.__liano;
       app.loop.sleep();
-      app.scene.getScene('ui').cameras.main.setVisible(false);
+      app.scene.getScene('ui').sys.setVisible(false);
       const pane = platform.world.panes[0];
       pane.worldLayer.setVisible(false);
       pane.overlay.setVisible(false);
@@ -48,13 +49,22 @@ for (const [width, height, ratio] of [[1280, 720, 1], [1920, 800, 2], [375, 812,
             if (delta > 3) different++;
             largest = Math.max(largest, delta);
           }
-          results.push({ cameraX, tint, different: different / (a.length / 4), largest });
+          const comparison = compareImages(a, b);
+          const solid = solidPixels(comparison, app.canvas.width);
+          results.push({ cameraX, tint, different: different / (a.length / 4), largest,
+            share: comparison.share, solid, parityPass: passes({ ...comparison, solid }) });
         }
       }
       return results;
     });
     console.log('image/tiles pixel differences:', JSON.stringify(results));
-    for (const result of results) expect(result.different, JSON.stringify(result)).toBeLessThan(0.002);
+    for (const result of results) {
+      // Preserve M7's tighter check for the original artwork. Painted textures
+      // exercise different bilinear sampling in the two paths; check them with
+      // the established scene parity budget, including solid-patch detection.
+      if (art === 'classic') expect(result.different, JSON.stringify(result)).toBeLessThan(0.002);
+      expect(result.parityPass, JSON.stringify(result)).toBe(true);
+    }
     expect(errors).toEqual([]);
     await page.close();
   });

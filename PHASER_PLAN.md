@@ -1,10 +1,10 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fourth draft: adds pre-rendered, replaceable art, section 5). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is implemented and verified on `phaser-m8` (its report), started at the owner’s request after M7 was merged into `phaser` in PR #39. M9 follows.**
+Status: **agreed plan (M8a cartoon pack, M9 cleanup and merge, M10 release). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a’s first complete cartoon pack and Config reload selector are implemented on `phaser-sprites`, between M8 and M9; the owner has accepted the cartoon artwork. Final automated verification, approved regression references and the report are complete; integration into `phaser` is next; real-device checks are deferred until after integration and remain required before release. M9 cleanup and merge follows M8a; M10 releases from master after testing and verification are complete.**
 
-**Nothing is merged into master until every milestone (M0 to M9) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
+**The final migration merge into master requires M0–M8a to be complete, M9 cleanup and verification to be complete, and the owner to explicitly say to merge.** Implementation milestone PRs target `phaser`; M9 ends with the final `phaser` → `master` merge. M10 is the separate release milestone, performed on `master` afterward once everything is tested and verified.
 
-The goal is to replace PixiJS 8 with Phaser, and to keep every bit of the game as it is: the gameplay, all three modes, every feature and setting, the graphics, and the sounds. The player should not be able to tell the versions apart, except that the title screen says v3.
+The goal is to replace PixiJS 8 with Phaser, and to keep every bit of the game as it is: the gameplay, all three modes, every feature and setting, the graphics, and the sounds. The classic appearance remains the migration reference. M8a adds an optional cartoon art pack based on the two concepts in `docs/`; cartoon graphics are now the default. Gameplay and sounds stay the same with either pack.
 
 ## 1. Decisions
 
@@ -16,9 +16,11 @@ Made with the owner (answers to the planning questions):
 | How to port the graphics? | **Pre-rendered, replaceable art** (section 5): at build time today's drawing code generates an SVG for every piece of art; in the game each object is a rig of named pieces from texture atlases. Today's look stays pixel-identical. |
 | Custom art later? | Any piece can be replaced by a **custom PNG or SVG** with the same name. |
 | Variety per object? | **Kept exactly**: the code still picks colours, counts, flips, positions, lengths and patterns per object; only the pictures are files. |
-| When is art swapped? | **At build time**: drop the file in `art/custom/` and rebuild. |
+| When is art swapped? | Custom source files are compiled **at build time**. M8a builds complete classic and cartoon packs; the player selects a pack in Config and the game reloads to load it. |
+| Cartoon graphics? | **Planned in M8a, before M9.** Replace all visual asset families using `docs/cover_day.png` and `docs/cover_night.png` as the art-direction references. |
+| Classic graphics toggle? | Config shows **Classic graphics: On/Off**. On loads classic, Off loads cartoon. Fresh installs default to Off; deliberate selections persist. Changing the value reloads the game. |
 | How to test the views? | **Pure view-models tested in Node, plus a few browser smoke tests** in CI. |
-| Branching? | **Long-lived `phaser` branch**: each milestone is a PR into `phaser`, master is merged into `phaser` regularly, and `phaser` is merged into master once, as 3.0.0, only after all milestones are finished and the owner explicitly says so. |
+| Branching? | **Long-lived `phaser` branch**: implementation milestone PRs target `phaser`, and master is merged into `phaser` regularly. M9 finishes cleanup and verification, then merges `phaser` into master once with the owner’s explicit approval. M10 prepares and publishes the release on `master` after testing and verification are complete. |
 | Which Phaser? | **Phaser 4.2.1** (the current `latest`), not 3.90. |
 | Sounds? | **Keep the synthesized recipes**: they play through Phaser's audio context and master nodes, so Phaser handles unlock, mute and pause, and every sound stays the same. |
 | Both versions? | **Both stay playable side by side** until the Pixi removal milestone (M8), which comes after parity and performance (M7), so they can be compared at any point. |
@@ -29,7 +31,7 @@ Made with the owner (answers to the planning questions):
 | Download size? | The roughly +150–170 KB gzipped for Phaser is accepted; a custom build is tried in M0 and M7 but not required. |
 | Screen shake? | Our own shake maths drives Phaser's camera, so the death shake stays as it is. |
 | Master meanwhile? | Bug fixes only; new visual features wait until 3.0.0 (a fix that changes `src/render/*` gets a matching change in `src/phaser/`). |
-| Version numbers? | `3.0.0-dev.N`, bumped at each milestone merged into `phaser`; `3.0.0` at the end. |
+| Version numbers? | `3.0.0-dev.N` during development and M9 integration; set `3.0.0` on `master` in M10, then verify the final release commit before tagging. |
 | Browser tests in CI? | **Chromium only.** WebKit behaviour is checked on the iPhone itself. |
 
 Also agreed:
@@ -124,7 +126,7 @@ M4 lists every object kind with its pieces and how each kind of variety maps. Wh
 
 **Still drawn live:** text (Phaser Text, the same fonts) and the debug view (Phaser Graphics, dev only).
 
-**Not part of v3.0.0:** drawing the custom art itself, switching art packs at runtime, and changing hitboxes to fit new art.
+**Scope update for M8a:** producing the built-in cartoon artwork and selecting classic/cartoon through a Config-triggered reload are now planned before the v3.0.0 release. Arbitrary third-party pack selection, swapping loaded textures during play, and changing hitboxes to fit art remain outside this milestone.
 
 ## 6. Target device and budgets
 
@@ -159,6 +161,8 @@ Measuring on the phone: `?frames=1` shows a frame-time readout in either version
 | R16 | **Rig fidelity**: rebuilding each object from pieces must match today's drawing. | The parity tool on every kind and variant; the M4 inventory lists any case that can't match exactly, with its diff, for approval. | M4–M5, M7 |
 | R17 | **Rasterizers differ**: the same SVG renders slightly differently in different tools. | The spike compares a browser rasterizer (Chromium through Playwright, already in CI) with a pure-npm one (resvg) against Pixi's output, and the closest is used for every piece. | M1 |
 | R18 | **Custom art breaks things later** (wrong size, frames or pivot). | The contracts, the validator in CI and the gallery; a replacement drill in M7 proves the path. | M4, M7 |
+| R19 | **Detailed cartoon art obscures hazards or reintroduces visible stutter.** | Approve art at actual game sizes; keep readable silhouettes, established motion/softening and texture budgets; check fast pans and catches in Safari with both packs. | M8a |
+| R20 | **Pack selection mixes assets, downloads both packs, or loses settings on reload.** | Separate complete catalogs; resolve selection before loading; fetch only the selected pack; reuse and test the Config reload/settings behavior. | M8a |
 
 ## 8. Milestones
 
@@ -719,10 +723,235 @@ Only once M7 is accepted: until then the Pixi version is the reference.
   379,797 bytes with gzip level 9. Reference screenshots and dev pages are excluded
   from the production build.
 
-### M9. Cleanup and release (S)
+### M8a. Cartoon sprite sheets and the classic graphics toggle (L)
 
-- Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables, the art pipeline), the README's technology section and a short "Custom art" section pointing to `art/README.md`, and the `package.json` description; set the version to 3.0.0.
-- Merge master into `phaser` one last time, run CI and open the PR into master. It is merged only when the owner explicitly says so, after every milestone is finished. The owner tags `v3.0.0` and writes the release notes.
+**Status: artwork accepted and automated verification complete on `phaser-sprites`; ready for integration preparation into `phaser`.** This milestone is between M8 (Pixi removal) and M9 (cleanup and merge). The owner approved continuing from the corrected style sample. The complete production pack and reload selector are implemented; cartoon is now the default, and the owner has accepted its appearance through `7abe519`. Final automated verification, approved regression references and the report are complete; the milestone is ready for integration preparation into `phaser`. By owner decision, real-device checks take place after that integration, before release.
+
+**Outcome.** Prepare and integrate a complete cartoon sprite pack that can replace all current graphics, alongside a complete classic pack. The Config menu selects between them through **Classic graphics: On/Off** and reloads the game when the value changes. Cartoon is now the default. Both packs use the same rules, physics, generated levels, obstacles, animation timing, camera motion, modes and sounds.
+
+#### Art direction and source references
+
+The visual references are [the day concept](docs/cover_day.png) and [the night concept](docs/cover_night.png). They guide new artwork; they are not stretched over the game as full-screen backgrounds or mechanically cropped into finished sprites.
+
+- **Monkey:** the expressive brown monkey with a light muzzle/belly, large readable eyes, rounded ears, curled tail and long reaching limbs. Keep a distinct player-2 palette and the translucent grey shadow, with matching green/gold/shadow lianas.
+- **Jungle:** layered foliage framing the action, broad leaves and ferns, hanging vines, humid blue-green distance and mist, with warm daylight and cool moonlit night. Adapt the concepts' perspective to the game's side-view layers and seamless horizontal repeats.
+- **Temples:** stepped, weathered stone, carved geometric motifs, climbing greenery and warm firelight against cool night colours. Keep all four existing temple looks and their established fire behavior.
+- **Creatures and small props:** adapt the concepts' panther, snake, parrots, bats, spider and nest; extend the same shape language, materials and palette to every existing animal, plant, rock, hive, pickup and icon that is not pictured explicitly.
+- **Menus:** carry the stone lettering, vines and carved sun/spiral motif into the cartoon title treatment, panels and icons. Keep instructions, scores, settings and the version as crisp live text, rather than baking variable text into sheets.
+- **Art direction confirmed by the owner:** a cohesive painted cartoon style for both characters and scenery. Retain the concepts' atmosphere while simplifying fine detail for small screens; the backgrounds belong to the same cartoon world as the monkey.
+
+Approve a small style sample at actual game size before producing the full pack: a hanging/flying monkey, a liana, a branch with a creature, a temple, a day/night background strip and a menu sample. Check outline weight, palette, shading, joint overlaps and hazard readability together. The owner approved continuing from the corrected sample; the production pack now uses component masters and the existing articulated rigs.
+
+#### M8a.1. Inventory and sprite contracts
+
+Use `art/manifest.json` and the M4 inventory as the authoritative starting point: **175 pieces and 594 frames** at the M8 baseline. Prepare a coverage checklist mapping every stable piece/frame key to its cartoon source, sheet, cell, pivot, attachments, animation and completion/review state.
+
+| Asset family | Cartoon coverage and behavior to preserve |
+|---|---|
+| Players and shadow | Both monkey palettes; tail, torso, head, arms, legs, open/dead eyes; hanging, flight, facing, blinking and death poses; matching shadow assets and opacity. |
+| Lianas and supports | Green, gold and shadow ropes/leaves; slipping-tip flash; swinging, settling and shared pairs; branch trunks, canopy vines, stems, ledges, hive support and slings. |
+| Static obstacles | Branches, thorn bushes, six distinct cartoon stone variants (classic retains 24), beehives and their bees; high/low placements and existing obstacle scales. |
+| Branch decorations | Panther, perched bird, perched snake, hanging monkey, nest in all three states, hanging bat in all looks, owl, flowers and coconuts; every current variant and animation. |
+| Moving obstacles | Spider/thread, moving snake, red/blue/purple birds, flying and circling bats; all wing, leg, eye, coil and stalk frames/joints. |
+| Temples | All four looks; top, repeated base/stairs, details, moss/vines/leaves, haze, flame frames and additive glow. |
+| Scenery | Sky, far/mid/near layers, near canopy strip, ceiling canopy, floor shrubs and floor fill; day, afternoon, dusk, night and dawn presentation. |
+| Pickups and UI | Bananas/glints, field/HUD hearts, banana tally icons, mute/fullscreen icons, panels, off-screen indicator and cartoon title artwork; title, Config, pause, results and stage banners use a coherent theme. |
+
+Keep existing keys, frame ordering, logical dimensions, pivots, attachment points, strip lengths, 9-slice regions and tint/alpha contracts. Start with the existing joints and flipbook frame counts; the sheets must support continuously varying swing angles and poses through the rigs. A single painted swing pose is not a substitute for the monkey's complete rig.
+
+Allow presentation-only catalog additions where the concepts need them (for example the cartoon wordmark or a moon/cloud decoration). Specify their placement and stage visibility, include them in coverage and memory budgets, and leave classic unchanged. Pack-specific presentation metadata may extend the renderer; collision geometry, simulation state and motion behavior remain shared. Inspect every hazard silhouette against its existing hitbox guides so the new art communicates the same safe gaps and contacts.
+
+#### M8a.2. Produce the artwork and master sheets
+
+Produce clean transparent PNG sprites, with editable layered/vector masters where practical. Proposed source location: `art/packs/cartoon/`, with a source inventory and sheet-layout metadata kept under version control. Preserve `art/generated/` as the classic source; cartoon files must not globally overwrite it or the classic `art/custom/` overrides.
+
+- Work by coherent families: monkey/lianas first, obstacles/decorations/moving creatures next, then temples/scenery and UI. Review a family in the game before expanding to the next.
+- Keep component lighting, scale, palette and stroke weight consistent across sheets. Place joints with sufficient overlap, and check mirrored poses for seams. Align flipbook frames to a common pivot and scale, without frame-to-frame position drift.
+- Provide transparent padding and extruded atlas edges to prevent colour bleed and dark halos. Keep ropes/stalks straight for bending, panels sliced, and trunks/temple bases/stairs suitable for stretching or repetition.
+- Make horizontal scenery tiles seamless, including through stage transitions. Preserve the established build-time horizontal softening and layer speeds; adapt detail density rather than increasing runtime blur or changing movement to disguise artifacts.
+- Use the day and night references to define a readable palette through the complete time-of-day cycle. Prefer shared day-colour assets with the existing tint/emissive rules. Where tinting cannot express a needed night feature, use explicit decorative variants and a bounded presentation transition; account for both variants' memory if they overlap.
+- Ensure raster sources have sufficient resolution for their maximum logical scale and 1×/2×/4× outputs. Export sprite-sheet PNGs and machine-readable frame/cell metadata, together with previews and the source-to-runtime-key mapping. Keep deterministic atlas packing in the existing build pipeline.
+
+#### M8a.3. Build and load two complete packs
+
+Add pack-aware validation/build/catalog loading to the existing art pipeline. Proposed output layout: `public/art/classic/` and `public/art/cartoon/`, each with its own catalog, boot/main sheets, frames and repeating tiles at the existing supported scales. Keep the distinction between sprite sheets for packed pieces and separate repeating textures where the renderer needs tiles.
+
+- Classic wraps the current generated/override pipeline and preserves its appearance. Cartoon must cover every required frame; fail validation/build on missing, duplicate or incompatible entries instead of silently mixing classic pieces into it.
+- Validate sheet bounds, dimensions, frame ordering, alpha, padding, pivots, attachments, tint rules and animation metadata. Keep the existing validator's art-versus-hitbox checks and add pack coverage checks.
+- Resolve the pack choice before the first catalog/atlas request. Download, decode, prepare and warm only the selected pack. Ship both packs, but avoid fetching or holding both in memory for a normal session; a full reload disposes the previous game's resources.
+- Apply the existing quality/resolution choice independently of art style. Each loaded pack must satisfy the **120 MB at 2×** and **300 MB at 4×** texture limits. Report compressed download size, decode time and startup time for each; validate the section 6 startup and frame budgets on the iPhone 13 mini and Safari on the MacBook Air M1 after integration into `phaser`, before release.
+- Keep the M7 improvements: prepared glyphs/sounds, warm rig paths, one texture per batch, movement interpolation and camera behavior. Cartoon selection does not enable motion-blur experiments.
+- Extend the dev gallery to select a pack and inspect sources, sheets, frame animations, pivots, hitboxes, repeating seams and representative assembled rigs. A failed pack load must show a clear error with an action to reload classic, without a reload loop or a partly mixed scene.
+
+#### M8a.4. Config selection and reload behavior
+
+Add a clearly labelled **Classic graphics: On/Off** row inside the existing title Config submenu, available by click/tap and a labelled keyboard shortcut confined to that submenu. It is a separate setting from Performance/Balanced/Sharp/Auto. Fit the added row and its touch target on the iPhone 13 mini in both orientations, including Safari's reduced visible area.
+
+- **On = classic; Off = cartoon.** With no valid saved choice, default to cartoon. Save deliberate choices in local storage so they survive browser reloads; blocked storage must still permit switching for the current URL.
+- Provide an explicit `?art=classic|cartoon` override for testing and blocked-storage fallback. If the URL contains `art`, use its value (an invalid value resolves to cartoon); otherwise use a valid saved preference, then cartoon. Invalid saved values also resolve to cartoon. Test URL overrides do not silently rewrite saved preferences.
+- Changing the value saves the choice, consumes the menu input and performs a full navigation/reload. Selecting the current value does not reload. Restart at the title; preserve the chosen player mode, lives, slipping, shadow, mute preference and quality setting, and retain unrelated query parameters/hash. Mobile continues to support 1P only.
+- Ensure quality changes preserve art selection and art changes preserve quality selection. Prevent double navigation and accidental game starts from the selecting key/tap. Identify the loaded pack in the existing frame trace to make device comparisons reproducible.
+
+#### M8a.5. Verification and completion
+
+- Unit tests cover complete pack contracts, coverage/validation, selection precedence, cartoon default, preference persistence/blocked storage and reload URL preservation. Simulation tests remain unchanged.
+- Browser checks exercise both packs: startup, every asset family/variant and animation, all supported modes, settings, HUD/results, resize/rotation, context loss/restore, and the Config toggle by keyboard, mouse and touch. Verify a single reload on change, no reload on the current choice, and that only the selected pack's requests are made.
+- Keep the M8 classic reference PNGs unchanged and passing. Add a small approved cartoon reference set for later regressions, including day/night scenes and small-screen menus; assess cartoon fidelity against the concepts and gameplay readability.
+- Inspect fast swings, catches, large temples, moving obstacles, lianas and foreground shrubs on Safari on the MacBook Air M1 and iPhone 13 mini at the current default quality. Run this real-device pass after M8a is integrated into `phaser`, as requested by the owner. Record startup/texture/frame results against the existing budgets and any concrete exceptions for the owner to review before the release merge into master. This pass does not block integration into `phaser`.
+- Document the sheet formats, sources, key mapping, editing/export process, pack selection and build/gallery workflow in the art guide, and add the milestone report and measured sizes here.
+
+**Done when:** the owner approves the cohesive concept-derived artwork; cartoon assets replace every required current visual family without hidden classic fallbacks; both complete packs build and fit the existing budgets (or explicitly accepted exceptions); classic defaults to Off; Config switches correctly by reload on desktop/mobile; tests and classic/cartoon visual checks pass; the milestone report and asset-editing guide are complete. These requirements gate integration into `phaser`; mobile layout and reload behavior can be verified in automated browser checks beforehand. Real-device gameplay, startup and frame checks remain pending until after integration, and must be completed before release. M9 starts afterward. The owner explicitly changed the defaults to Classic graphics Off and Shadow Off.
+
+**Historical M8a implementation report (initial review build, version 3.0.0-dev.9).** The finalized report below supersedes these initial counts, sizes and acceptance notes.
+
+- Produced an independent cartoon source set covering all **175 baseline pieces** plus the explicit stone/sun wordmark. The current set has **576 required frames / 577 including the wordmark** after reducing the static cartoon stones from 24 to six; all animated flipbooks retain their original counts. Painted PNG masters supply monkey components, including separate fur-covered torso/arm/leg masters, creatures, foliage/wood, distant scenery, a level branch aligned with its collision guide, cleaned snake components, a lighter spider body, highlighted birds/bats, separate waterfalls refined climbing-snake coils and a scalloped bat wing. Editable vector recipes supply strips, repeatable stone, animated wings/fire, small props and UI. No classic drawing is reused as a fallback. Production frames are marked painted; complete owner review is not claimed.
+- Kept the classic generated/override pipeline intact. Builds emit separate `public/art/classic/` and `public/art/cartoon/` catalogs, boot/main sheets and tiles at 1×/2×/4×. Coverage, frame order, box/scale/pivot/attachment/tint/alpha/animation contracts are validated. Missing/incompatible sources, empty sprites, incorrect shadow alpha and texture-budget overruns fail the build. Cartoon cells have isolated rasterization and independent one-pixel extrusion margins inside the two-pixel gap; tiles retain wrapped softening and edge rows.
+- Config now has **X · Classic graphics: On/Off**, clickable/tappable on desktop and mobile. On means classic; Off means cartoon. Shadow defaults to Off on desktop/mobile; explicit On is preserved across graphics/quality reloads. Choices persist, explicit `?art=classic|cartoon` overrides do not rewrite storage, and invalid/blocked storage defaults safely to cartoon. Changes navigate once to the title, preserving mode, lives, slipping, shadow, mute, resolution, unrelated parameters and the hash; selecting the current value does not reload. The added row fits the existing small-screen layouts with 44-pixel minimum targets. Mobile remains 1P only.
+- Resolve selection before loading and prepare only the selected pack. The frame trace and startup metadata identify `artPack`. Failed cartoon loading displays a clear error and an explicit action to reload classic. Physics, world generation, camera/interpolation, layer speeds, animation timing and sound recipes remain unchanged; M7 preparation and softening stay in place.
+- Readability follow-up: muted the distant jungle's saturation/contrast and added a dark rim and a crosswise highlight to green lianas, so their lower ends stay as readable as their upper ends. Background trees now form an irregular, repeatable grove with varied widths, heights, lean, mirrored bark and three green tones. The foreground frond roots fade into a matching dark floor color, so extended portrait views do not expose a hard teal boundary. These changes are baked into the cartoon exports, with the same tile period, texture dimensions, attachment contracts and layer speeds; they add no runtime filter passes.
+- Removed the faint matte around both snake components (shared by climbing/perched snakes) and moved sound waves clear of the speaker. Increased only the cartoon ghost monkey's baked opacity from 36% to 56%; its vines and classic graphics retain 36%. This deliberate pack alpha policy is enforced by source generation, inventory and contract validation; other alpha/geometry changes still fail validation.
+- Obstacle readability: the spider has a medium plum body with pale contour highlights, matching brighter legs/joints and lighter silk. Rocks use warm granite faces, a darker outline and a lit upper rim. Standing stones have per-outline seating offsets derived from the painted ledge curve, closing small gaps without moving hanging rocks or changing collision geometry. Upper vines overlap each painted rock's actual top edge so no gap remains above suspended stones. Birds have stronger gold feather/wing highlights; bat bodies and animated wings have lighter fur/membranes and pale leading edges, including the charcoal variant. Sizes, hitboxes and motion are unchanged. Added fixed day/night jungle review scenes at `/rigs.html?art=cartoon&only=scene.obstacles.day` (or `scene.obstacles.night`), plus `scene.flying.day`/`scene.flying.night`, to inspect their contrast through the actual game rigs.
+- Corrected the branch snake's assembly: each band is a single strand crossing the wood, rather than a complete climbing-snake body repeated for every wrap. Neck, end caps, tail and head now fit those strands. Bananas have a stronger dark outline and brighter yellow fill at game/HUD/results sizes. Cartoon coconuts attach at the painted branch's underside (`presentation.coconutRootY`), 10 logical pixels above the collision-box-based classic anchor; classic placement and obstacle hitboxes are unchanged.
+- Fit branch-snake wraps to the painted limb's thickness (`presentation.snakeLimbThickness`). Blue bird bodies/wings now use lighter cyan and pale highlights; the hive's support is a shaded wooden twig with a short attaching stalk, rather than a gold ribbon. Waterfalls are removed from the mirrored forest master and placed separately: one large and one small per complete 2048-unit panorama, with the same far-layer speed and texture dimensions.
+- Hanging obstacles' support vines now have a pale green center, dark rim and crosswise shading, with matching end caps. These baked textures keep the original support-vine box/width and curve placement, and retain their highlight along the whole hanging length.
+- Climbing snakes now have rounded overlapping coils, a short tapered tail and a smaller head with a connected neck. The cartoon head leads up/down with its face upright. At each reversal the head and neck retract/fade into the coils, change ends only while fully concealed, and emerge at the new leading end. The 240 ms retreat/return replaces the visible slide across the coil front; timing comes from drawing time and remains the same for different climbing periods. The hanging monkey uses brighter copper-red arms/body/tail and matching painted articulated legs/feet, with its hands attached to the painted branch and its face ahead of its raised arms. Player limbs are registered by painted shoulder/palm/hip landmarks, so the visible arm joint coincides with its pivot and the palm with the existing grip distance; the torso's shoulders share those anchors. Cartoon arms and legs render behind the torso, with heads/eyes foremost (`presentation.monkeyLimbsBehindBody`), for both players and the shadow. Fur replaces the exposed skin-colored joint caps on the torso and moving limbs, including the shared hanging-monkey components; the torso covers their turning roots. Classic art/poses, simulation and grip physics remain unchanged.
+- Temple holders and flames now share brazier centers and a common base height; roof/corner/fringe foliage uses painted leaves registered at their stems, with roof leaves kept inside the source bounds. Flying bats use a separate painted scalloped wing, registered by shoulder/tip landmarks across the original 41-frame flap cycle for all four palettes. The wing now draws over the near flank at its painted shoulder. Torchlight uses an opaque source with the classic layered falloff, plus a subtle cartoon daytime light. Hanging legs use exported hip landmarks; palms sit behind the branch with fingertips over the top. Hanging eye frames share the head transform and painted eye landmarks: open pupils stay inside the original whites, and the shut frame covers them with aligned eyelids.
+- Extended `/art.html` with pack selection, source/atlas comparison, frame sliders/animation and repeat seams. `/rigs.html` uses the actual game rigs for fixed poses, every obstacle family, day/night/temple scenes and UI, with optional 2× rendering. `/cartoon.html` retains the approved style sample and points to the playable pack. The authoring guide documents masters, crops, recipes, coverage, exported placements and editing/build commands.
+- **Texture/download sizes:** decimal MB; downloads include the selected catalog, atlas JSON/PNG and unique tiles, before any HTTP transfer compression. Texture sizes include both sets and tiles; PNG sources/review pages are excluded from the production build.
+
+| Pack | Texture 1× | Texture 2× | Texture 4× | Download 1× | Download 2× | Download 4× |
+|---|---:|---:|---:|---:|---:|---:|
+| Classic | 46.6 MB | 105.6 MB | 254.2 MB | 1.17 MB | 2.20 MB | 4.09 MB |
+| Cartoon | 47.8 MB | 110.8 MB | 282.0 MB | 7.39 MB | 11.12 MB | 22.03 MB |
+
+- Both packs satisfy 120 MB at 2× and 300 MB at 4×. The painted pack has a larger compressed download; the loader still fetches only that pack and scale. Startup/decode timing and the cached 1.5-second/60 Hz budgets must be checked on Safari M1 and iPhone 13 mini after integration into `phaser`, before release; Chromium software rendering is not a substitute for those device results.
+- Validation: production build and source/inventory checks pass; the latest full unit run passed **71 files / 767 tests**, with focused checks after later changes. Classic references and the classic gallery remain passing (0.17% differing pixels). The cartoon gallery's aggregate comparison is about **1.43%**, above the gallery's 1% aggregate guide; **36 frames** remain flagged at 2×. The current built/source/difference images are visible in the artwork review, with no relaxed thresholds or hidden flags. All **82 Chromium browser checks** pass across the full run and focused retries: 81 passed in the full run; the newly added mode test queued a redundant mode key with Start, then passed after waiting for mode selection appropriately. The anatomy follow-up passed 22 focused unit checks. The lighting/attachment follow-up passes 20 focused unit checks and ten browser checks, including the unchanged classic references; native pixel comparisons confirm warm light on the stone by day/dusk/night and unchanged classic daylight behavior. The joint-layer follow-up passes 20 focused unit checks and ten browser checks; 18 native poses cover both players and the ghost through hangs, swings, flights, catch corrections and falls, alongside the animated hanging decoration. The hanging-eye correction passes 18 focused unit checks and three browser checks, with native open/blink inspection in both facing directions using 4× atlas art. The concealed snake-turn/rock-seating follow-up passes 27 focused unit checks, including art defaults/reload persistence and painted registration, plus 17 browser checks for art selection, mobile/desktop menus and unchanged classic references; a native 60 fps preview includes normal-speed climbing and a quarter-speed reversal, while all 24 standing stone variants and hanging-vine endpoints are inspected through the native rigs. The brighter copper-red hanging palette also passes the focused gallery/pose/classic-reference checks. The pause/floor follow-up passes the full 71-file / 760-test unit suite and three browser checks: Escape exits manual pause to the title; Space/Enter/click/tap resume without releasing the monkey; focus/context-loss guards remain active. The floor blend is baked into the foreground tile and matching fill. No visual or timing thresholds were relaxed.
+- **Current acceptance and integration gates (owner decision, 2026-10-16):** the owner accepts the cartoon graphics through `7abe519`. Final automated verification is complete, thirteen approved captures are promoted to regression references, and the final report below records current sizes and the 38 source/atlas comparison flags (1.57% aggregate). Integration into `phaser` is next. Real-device gameplay/startup/frame and mobile usability checks are deferred until after integration into `phaser`; they remain required before release and are not recorded as passed. M8a is ready for integration preparation; it has not yet been integrated and M9 has not started.
+- Climbing-snake wrap follow-up: the painted coils alternate behind and in front of their green stalk, using non-overlapping crops of the existing atlas frame. Rear and front sections share drawing time and scale; head-reversal behavior and collision geometry are unchanged.
+- First artwork-note pass (drawing defects): player/ghost tail roots now register inside the painted rear hip; climbing-vine leaves render behind both coil layers; a short neck connects the coil to the rotated/scaled cheek behind both coil layers, concealing its flat edge; the sandstone doorway's stray spiral is removed. Refreshed monkey poses, snake fixtures/clips, world lighting and temple review captures remain candidates. Source/inventory checks, 16 focused tests, the cartoon gallery/rig browser checks and unchanged classic references pass. The same eight source-comparison flags remain. Nests, decoration placement and contrast were addressed in the later branch-decoration pass below.
+
+- Monkey-appearance pass: all painted monkeys share a new larger-foot leg master registered to the existing hip and foot endpoints. The hanging decoration has a dedicated brighter smiling face, fuller pupils, less flattened proportions and matching lighter reddish limbs. Player/ghost pupils and fallen crosses now follow the painted head transform and each socket's center, size and angle; crosses stay inside the eye whites. Candidate poses, blink samples, world lighting and review motion are refreshed. Sixteen focused unit checks, source/inventory checks, the production build and eleven browser checks pass; the same eight source/atlas flags remain (1.19% aggregate). Artwork acceptance remains pending.
+
+- Monkey-proportion follow-up: slimmed the painted furry arm shafts and widened the thighs/calves while retaining hand/foot sizes and registered limb lengths. Both players, the ghost and the hanging decoration use a thinner curled tail master, with its root registered inside the hip. Cartoon rigs mirror the front leg to form a left/right pair with both big toes on the inside, while retaining hip/foot endpoints; classic legs keep their original orientation. The revised sources pass sixteen focused unit checks, source/inventory validation, the production build and ten browser checks, including unchanged classic references. The same eight source/atlas comparison flags remain (1.19% aggregate); artwork acceptance is still pending.
+
+- Flying-creature pass: all three birds and all four flying/circling bat looks now have a larger near wing and a shaded far wing, turning about their painted shoulders. Constant-length painted wing profiles retain their area through the flap; one silhouette-based fit protects every frame from atlas clipping. Birds use a wingless body and separate feather fans; blue has mint/indigo wing accents, purple has coral/teal, and eyes/mouth/beaks/feet retain the red bird's colours. Bird-wing cells rasterize at 2.5× baseline density to support the larger presentation. Frame counts, flap timing, flight paths, collision shapes and classic rendering are retained. All 47 focused art tests, source/inventory validation, production build and 11 browser checks pass. Native review covers 126 flight poses in both directions, day/night jungle fixtures and normal/quarter-speed animation. The gallery records 33 current flags (1.36% aggregate); artwork/device acceptance remains pending.
+
+- Branch-decoration/contrast pass: nests now have a dark open interior, woven shallow front wall and open lip, so empty, egg and hatched chick/shell states are distinct. The cartoon panther sits two units lower and hanging bats anchor at the painted branch underside. Coconuts and flowers have darker outlines with brighter highlights; perched-snake bands, neck and tail have warmer dark edges and lighter rims to separate them from green leaves. Source contracts, animation, collision shapes and classic graphics are retained. The review includes refreshed decoration fixtures and enlarged day/night contact/contrast sheets. Source/inventory validation, 21 focused tests, the production build, nine browser checks and the review-page smoke check pass. The same 33 comparison flags remain (1.36% aggregate); artwork/device acceptance is pending.
+
+- Stone/leaf-contrast follow-up: the cartoon pack now has six painted stones—sandstone, slate, ochre, granite, mossy grey and banded limestone—with distinct silhouettes and surface features. It contains 576 required frames / 577 including the wordmark; classic retains 24 stone variants. The seeded selector uses the loaded pack's static frame count. Platform seating and hanging-vine endpoints follow the actual painted contours; collision and animation contracts are retained. The perched snake has its own copper/orange painted head and matching copper/gold body so it separates from green branch leaves. The review includes six standing/hanging designs, jungle rock fixtures and refreshed day/night snake-over-leaf sheets. The full 71-file / 767-test suite, 47 focused checks after the palette change, production/source/inventory checks and 11 browser checks pass. The recovery test waits for its bootstrap hook before changing options after an early load failure. The gallery has 34 flags (1.40% aggregate), including a source/atlas sampling difference on the new perched head; all current comparisons remain visible without relaxed thresholds. Owner artwork/device acceptance remains pending.
+
+- Hanging-stone follow-up: cartoon hanging rocks omit the green side sling; the top vine retains its registered endpoint. Classic keeps its existing sling. The six standing/hanging variants and day/night jungle rock previews are refreshed. Source/inventory checks, 17 focused tests, the production build and three browser checks pass.
+
+- Painted-support pass: stone shelves, thorn-bush shelves and beehive crossbars share a painted wood master with bark ridges, end grain and edge highlights. The three vertical support pieces use a dedicated straight shaft, eliminating the stretched side-branch stub and root flare. Stone seating follows the actual painted shelf edge, verified against rasterized pixels for all six designs; hanging stones retain their top vines and omit side slings. Horizontal branch artwork rasterizes at twice its baseline density, preserving logical geometry. All 13 affected obstacle/branch fixtures now have 2× review captures; the two whole-world views with standing branches and the six-stone sheets are refreshed. Source/inventory validation, production build, 47 focused tests and four browser checks (including classic references and atlas borders) pass. The gallery has 36 visible flags (1.43% aggregate), with the two painted shelf sampling differences added; no comparison thresholds were changed. Owner artwork/device acceptance remains pending.
+
+- Branch-join/hive-tie follow-up: low cartoon branches hide their sawn end beneath a foreground pole, while hanging branches and classic retain their existing ends and order. The hive tie now draws behind the crossbar and emerges from its underside. Native high/low rigs at both obstacle scales, 22 fixture captures, 19 focused tests, source/inventory checks, the production build and three browser checks pass. Review fixtures and world views are refreshed; 36 source/atlas flags remain visible (1.43% aggregate). Owner artwork/device acceptance remains pending.
+
+- Perched-snake anatomy follow-up: a slender curved painted tail replaces the leaf-like triangle; foliage remains green. Coils and neck share the head/tail’s orange-and-cream palette. The animated neck registers inside the rear of the head, with its root behind the coil and no exposed circular caps. Classic retains its placement and layers. Six native limb/pole poses, refreshed day/night context, 19 focused tests, source/inventory checks, the production build and three browser checks pass. The same 36 comparison frames remain visible (1.44% aggregate); owner artwork/device acceptance remains pending.
+
+- Branch-pole detail follow-up: cartoon branch-bearing poles get two or three small, static, seeded leaf sprigs, trailing vines or cut branch ends. Existing painted pieces are reused with roots behind the pole and vines in front; there are no new atlas frames. The detail seed is independent of bark, animals and gameplay. Platform/hive supports, hanging branches and classic stay unchanged. Source/inventory validation, the production build, 13 focused tests, three browser checks and 80 native rig comparisons pass. Review fixtures, world views and an eight-pole sheet are refreshed. Owner artwork/device acceptance remains pending.
+
+- Natural-pole/snake consistency follow-up: cut stubs are longer and tilted roughly 45° up/down; fine creepers follow the pole edge with leaves attached to their stems and roots behind the shaft. Perched coils and neck share a painted skin, with no legacy stripe/diamond overlays; the tail is shortened and tucked beneath the last coil. A painted mouth landmark anchors the tongue to the mouth through head rotation and mirroring. Snake rigs reserve their full occupied height plus the pole details’ upward reach, preventing overlap. Source/inventory checks, production build, 19 focused tests and three browser checks pass; native previews cover six snake poses, 16 pole variations, 80 support-scope/repeatability checks and 768 snake-clearance checks. The same 36 source-comparison flags remain visible (1.45% aggregate). Owner artwork/device acceptance remains pending.
+
+- Snake-continuity/attachment follow-up: painted heads face back over the coils and cubic necks follow the same belly orientation and join tangent as the body. A fuller hook tail has a continuous inner belly, uniform scale, a body-width registered root and tangent-aligned attachment; pole clearance includes the larger curl. Sawn stubs taper toward the cut end and left stubs tuck 2.5 world pixels farther behind the shaft. Static stub strips bind their actual atlas page. All six standing rocks sit two world pixels deeper into their shelves, with a strict raster contact-depth check; hanging rocks/classic/collision shapes retain their placement. Source/inventory validation, the production build, 19 focused tests and four browser checks pass, including context recovery; native checks cover 160 support rigs at two atlas densities, 768 snake-clearance poses, mirrored snake/stone sheets and refreshed fixtures/context views. The same 36 source-comparison flags remain visible (1.46% aggregate). Owner artwork/device acceptance remains pending.
+
+- Tapered-wrap/neck-emergence follow-up: The final coil tapers from body width into a short painted tail that stays visible and follows the wood closely. Pole wraps fit the painted shaft. The neck crosses behind the wood and emerges just beyond the headward coil (slightly higher on poles). The pole neck/head sit lower for a compact rise; horizontal heads have a gentler angle, and tongues follow the mouth. Source/inventory validation, the production build, 19 focused tests and four browser checks pass. Native review includes six mirrored poses, 768 clearance poses, fixtures and day/night world views. The same 36 comparison flags remain visible (1.45% aggregate). Owner artwork/device acceptance remains pending.
+
+- Branch-fit/green-palette follow-up: Branch neck roots extend into the painted bark, front branch wraps sit two world units lower, and pole heads sit 1.5 units lower over the neck end. Tail tips have a slightly longer, more open curve. A green palette shares all copper geometry and animation, preserving pale details, gold eyes, tongue color and alpha; colors alternate by branch gap independently of pose/gameplay randomness. Source/inventory checks, production build, 19 focused tests and four browser checks pass, including unchanged classic references and context restoration. Native previews cover both colors on branches/poles and 768 clearance poses. Cartoon coverage is 181 pieces/584 frames including the title; the gallery has 37 flags (1.46% aggregate). Copper placement and the green palette were accepted by the owner; overall M8a acceptance remains pending.
+
+- Accepted eye/pole-stub follow-up: Hanging-bat eyes are smaller in all four palettes. Panther eyes follow the painted sockets with perspective sizing, and the legacy ear overlay is hidden to remove the gray forehead oval. Cut branch stubs point 45° upward on both sides; later seeded pole decoration choices retain their positions. Source/inventory checks and the production build pass, along with unchanged classic references, 80 native support/angle checks and 768 snake-clearance poses. The updated review page and affected fixture/context/world images cover the accepted changes. The same 37 gallery flags remain (1.46% aggregate), with unchanged thresholds. Owner accepted these changes; overall M8a artwork/device acceptance remains pending.
+
+- Accepted panther-tail/bat-ear follow-up: The panther has a painted fur-and-spots tail matched to its body, attached behind the rear haunch with a fixed root and shared breathing transform. Its sixteen-frame sway retains a covered join and clear atlas edges. The legacy hanging-bat ear overlay is hidden in all four palettes, removing the triangular artifact. Source/inventory checks and the production build pass, plus unchanged classic references. All 16 tail frames retain an opaque attachment point inside the haunch and clear frame edges; native previews cover both panther directions and all four bat palettes. The review gallery has 37 flags (1.52% aggregate), with unchanged thresholds. Owner accepted both changes. Overall M8a artwork/device acceptance remains pending.
+
+- Accepted spider follow-up: The spider has brighter lavender fur and two larger, separated yellow eyes with small pupils. Its eight legs use 24 complete antialiased poses, replacing separately rotated narrow strips that appeared jagged at game size. Classic rendering, movement and collision shapes are unchanged. Source/inventory checks, production build, 16 focused tests and unchanged classic browser references pass. All 24 poses retain eight distinct, unclipped legs. Native review covers both spider fixtures at 1×/2×, day/night gameplay scenes and an animated game-size/close-up board. Cartoon coverage is 182 pieces/608 frames including the title; texture memory is 115 MB at 2× and 293 MB at 4×, within unchanged limits. The gallery retains 37 flags (1.53% aggregate), with unchanged thresholds. Owner accepted the final animated day/night preview. Overall M8a artwork/device acceptance remains pending.
+
+- Accepted painted-owl/bat-eye follow-up: The owl now matches the painted animals with textured feathers, layered wings, a cream facial disc and a rounded amber beak with a short hooked tip. Its head turns, pupils, blink and breathing remain articulated, with the face kept inside the head and toes meeting the branch. Hanging-bat eyes register to the painted sockets per palette, accounting for the taller brown body frame and removing dark crescents beneath the whites. Classic artwork, movement and collision shapes are unchanged. Source/inventory checks, production build, 16 focused tests and unchanged classic browser references pass. All four bat eye pairs and the owl beak have clear top/bottom atlas margins at 4×. Native review covers both fixtures at 1×/2×, all four bat palettes, owl turns/blink and day/night game-size and enlarged previews. The gallery retains 37 flags (1.53% aggregate), with unchanged thresholds; texture memory remains 115 MB at 2× and 293 MB at 4×. Owner accepted the final beak preview after reviewing the owl and bat-eye corrections. Overall M8a artwork/device acceptance remains pending.
+
+- Accepted painted-nest follow-up: The three nest states share a shallow painted chestnut bowl and a pale ivory speckled egg. The hatched state omits the loose shell cap and places a slim, golden-yellow chick lower and centered within the lower shell. Its head and animated beak clear the rim; mirrored poses preserve the same seating. Classic artwork and behavior are unchanged. Owner accepted the centered hatchling preview. Source/inventory checks, atlas and production builds, 16 focused tests and the unchanged classic browser reference pass. Native 1×/4× previews cover empty, intact, hatched, mirrored and open-beak poses by day and night; an eight-second pose sweep confirms the beak clears the rim. The real nest fixture was refreshed at 1×/2× along with decoration contexts and affected world scenes. Gallery comparison now reports 38 flags (1.57% aggregate), including nest.back source/atlas resampling differences; thresholds are unchanged. Texture memory remains 115 MB at 2× and 293 MB at 4×. Overall M8a artwork/device acceptance remains pending.
+
+**M8a final report (2026-10-16, finalized for integration).**
+
+The owner accepts the cartoon appearance through artwork commit `7abe519`.
+Implementation, artwork review, automated verification and regression references
+are complete on `phaser-sprites`. This report closes the work before integration;
+real-device testing will take place on `phaser` afterward and is not an
+integration prerequisite. The milestone has not yet been integrated.
+
+The production pack has **182 pieces / 608 frames** including the wordmark
+(181 required pieces / 607 frames in the inventory), with independent classic
+and cartoon catalogs and no hidden classic artwork fallback. Cartoon graphics
+and Shadow Off are the fresh-install defaults. Deliberate art-pack choices
+persist; switching packs preserves the current match settings and quality.
+The art guide covers sources, sheet contracts, exports, pack selection and the
+capture/replacement workflow. These final counts and measurements supersede the
+initial implementation report above.
+
+| Automated verification | Final result |
+|---|---|
+| Unit suite | 71 files / 769 tests pass |
+| Browser suite | 90 checks pass across the full run and focused reruns |
+| Artwork sources and coverage | Deterministic regeneration; validation passes |
+| Production build and window table | Build passes; generated table unchanged |
+| Classic regression references | All 12 original PNGs unchanged; comparison passes |
+| Cartoon regression references | 13 accepted captures (4.50 MB); all comparisons pass |
+| Reference negative control | Deliberately incorrect day image rejected |
+
+The browser pass corrected stale gallery/coverage expectations to use the current
+manifests and explicitly selects classic for its strict source comparison.
+Image/TileSprite comparisons exercise both packs: classic retains its original
+tighter limit; cartoon uses the existing scene-parity limits with solid-patch
+detection. All six size/pack combinations pass with no solid differences.
+The offline audio test stops the live game loop before resetting global
+randomness, avoiding duplicate Phaser texture keys. These are test corrections;
+production artwork and gameplay are unchanged.
+
+The cartoon references cover player/shadow/snake/nest poses, day/night gameplay,
+dusk temple lighting, shared HUD/results and title/Config menus at 375×600 and
+812×250. They compare runtime output with accepted runtime captures using the
+existing scene tolerance; tests never regenerate the PNGs. Separately, the
+source/atlas gallery retains **38 flags / 1.57% aggregate** for visible inspection.
+No gallery threshold was changed to hide browser/source resampling differences.
+
+Decimal MB; downloads include the selected catalog, atlas JSON/PNG and unique
+tiles, before HTTP compression. With JSON gzipped, selected-pack transfers are
+0.98/2.01/3.90 MB for classic and 7.40/11.52/23.84 MB for cartoon at 1×/2×/4×.
+Both packs satisfy the enforced 120 MB at 2× and 300 MB at 4× texture budgets.
+
+| Pack | Texture 1× | Texture 2× | Texture 4× | Download 1× | Download 2× | Download 4× |
+|---|---:|---:|---:|---:|---:|---:|
+| Classic | 46.61 MB | 105.64 MB | 254.21 MB | 1.17 MB | 2.20 MB | 4.09 MB |
+| Cartoon | 49.63 MB | 114.98 MB | 292.55 MB | 7.59 MB | 11.72 MB | 24.04 MB |
+
+**Deferred device testing and subsequent reporting.** All results above are
+Chromium/build results. Safari on the MacBook Air M1 and iPhone 13 mini still
+needs startup/decode, frame pacing, gameplay, rotation, menu and graphics-switching
+checks after integration into `phaser`, before release. This finalized report
+records the completed work before integration. After real-device testing has
+finished on `phaser`, add a dated follow-up there recording the tested commit,
+devices/browser versions, results and any findings that change the implementation,
+artwork, references, measurements or acceptance decisions. Document resulting
+changes and their validation in that follow-up; do not treat deferred checks as
+already passed or leave this report awaiting their results.
+
+### M9. Cleanup and merge (S)
+
+Work takes place on `phaser` after M8a integration. This milestone completes the
+migration cleanup, remaining verification and final merge into `master`.
+
+- Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables, the art pipeline), the README's technology section and a short "Custom art" section pointing to `art/README.md`, and the `package.json` description. Keep the version in the `3.0.0-dev.N` series through this milestone.
+- Complete the remaining manual and real-device verification required by the migration plan, including the deferred M8a pass on the integrated `phaser` branch: Safari on the MacBook Air M1 and iPhone 13 mini, gameplay, startup/frame budgets, rotation, menus and graphics switching. After testing has finished on `phaser`, add the dated follow-up described in the finalized M8a report, documenting results, findings that change the implementation or conclusions, and resulting changes and validation. Resolve or explicitly accept concrete exceptions before the final migration merge.
+- Merge master into `phaser` one last time, resolve conflicts, and run the full automated checks and CI against the combined result. Repeat any affected manual/device checks if those changes invalidate earlier results, and record the final verified commit.
+- Open the final `phaser` → `master` PR. Merge only when cleanup and verification are complete and the owner explicitly says to merge. This merge completes M9; release preparation follows in M10 on `master`.
+- **Done when:** cleanup is complete, required testing and verification are recorded and accepted, CI passes, and the verified migration has been merged into `master` with the owner's explicit approval.
+
+### M10. Release (S)
+
+Work takes place on `master` at the end, after M9 and all required testing and
+verification are complete. This is the separate release milestone.
+
+- Set the version to `3.0.0` on `master` and finalize release-specific documentation and metadata using the completed milestone and device-test reports.
+- Build and run the automated checks on the final release commit, then verify the built game and deployment at `/liano/`. Confirm that the release artifacts correspond to that verified commit; address any findings before publishing.
+- The owner tags the verified `master` commit as `v3.0.0`, writes the release notes and publishes the release.
+- **Done when:** the final `3.0.0` commit on `master` and its artifacts are verified, `v3.0.0` identifies that commit, and the release notes and release are published.
 
 ## 9. Tests
 
@@ -754,6 +983,8 @@ Everything below must work on the Phaser renderer as on v2.3:
 - Performance within the section 6 budgets on the iPhone 13 mini.
 
 ## 11. Open questions
+
+**M8a art direction, answered:** the owner chose a cohesive painted cartoon style for both characters and scenery, based on the day/night concepts. There are no unresolved planning questions for this milestone. The owner authorized implementation and approved continuing from the corrected style sample. The owner has now accepted the full cartoon appearance through `7abe519`. Final automated verification, reference promotion and reporting are complete; integration into `phaser` is next. Real-device checks are explicitly deferred until after integration and remain a pre-release requirement.
 
 Every question from the first two drafts is answered in section 1. New questions that come up during a milestone are added here and asked before that milestone's PR is merged into `phaser`.
 

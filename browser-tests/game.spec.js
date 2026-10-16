@@ -186,6 +186,9 @@ const SAME_WITHIN = 1e-6;
 test('every sound renders the same, sample for sample, through the sound manager as through the synthesized recipes', async ({ page }) => {
   const errors = await phaser(page);
   const results = await page.evaluate(async () => {
+    // The seeded noise below replaces global randomness. Pause live game work
+    // so Phaser cannot generate duplicate texture keys between seed resets.
+    window.__liano.app.loop.sleep();
     const { SoundPlayer } = await import('/src/audio/player.js');
     const { createPhaserSoundPlayer } = await import('/src/audio/manager.js');
     const recipes = await import('/src/audio/recipes.js');

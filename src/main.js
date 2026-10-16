@@ -24,6 +24,7 @@ import { installObstacleBlur } from './platform/obstacleBlur.js';
 import { applyResolutionChoice, rememberResolutionChoice, resolutionChoice } from './platform/resolution.js';
 import { ConfigMenu } from './render/configMenu.js';
 import { visibleMenuArea } from './render/menuLayout.js';
+import { applyArtChoice, artChoice, rememberArtChoice } from './platform/artStyle.js';
 
 // The game entry. The platform holds layout, pause, fullscreen, input and sound
 // for the scenes; driver.js advances the fixed-step simulation. The play scene draws
@@ -33,7 +34,16 @@ import { visibleMenuArea } from './render/menuLayout.js';
 let game = null;
 // Anything that breaks from here on, startup included, shows a reload message instead
 // of a frozen canvas, and stops the game's loop rather than failing every frame.
-const fatal = createFatalOverlay(document);
+const artPack = artChoice(location.search, window);
+const currentSettings = () => {
+  const current = game?.registry.get('platform');
+  const state = current?.game;
+  return { mode: state?.mode, muted: current?.sound?.muted,
+    settings: state ? { lives: state.lives, slip: state.slip, shadow: state.shadow } : undefined };
+};
+const fatal = createFatalOverlay(document, { reload: () => artPack === 'cartoon'
+  ? applyArtChoice('classic', window, currentSettings()) : location.reload(),
+  reloadLabel: artPack === 'cartoon' ? 'Reload classic graphics' : 'Reload game' });
 let sound = null;
 const fail = (error) => {
   game?.loop.sleep();
@@ -58,6 +68,9 @@ game = new Phaser.Game({
   parent: document.body,
   backgroundColor: '#000000',
   banner: false,
+  // Available to BootScene before READY resumes this module; resolve storage
+  // once so a preference change in another tab cannot mix startup choices.
+  callbacks: { preBoot: (app) => app.registry.set('artPack', artPack) },
   render: { antialias: true },
   // Several fingers each count as a press (2P on one screen), as in the Pixi version.
   input: { activePointers: 4 },
@@ -82,11 +95,15 @@ const platform = new Phaser.Events.EventEmitter();
 game.registry.set('platform', platform);
 platform.resolutionLimit = resolutionCap;
 platform.resolutionMode = resolutionPreference;
+platform.artPack = artPack;
+platform.fail = fail;
 platform.mobile = coarsePointer;
 platform.configMenu = new ConfigMenu(resolutionPreference, {
-  apply: (choice) => applyResolutionChoice(choice, window, { mode: platform.game.mode,
-    settings: { lives: platform.game.lives, slip: platform.game.slip, shadow: platform.game.shadow } }),
+  apply: (choice) => applyResolutionChoice(choice, window, currentSettings()),
   remember: rememberResolutionChoice,
+  art: artPack,
+  applyArt: (choice) => applyArtChoice(choice, window, currentSettings()),
+  rememberArt: rememberArtChoice,
   clear: () => platform.input?.clear(),
 });
 installObstacleBlur(platform);
@@ -101,13 +118,13 @@ function createObstacleWorker() {
   }
 }
 const prefetch = new ObstaclePrefetch(createObstacleWorker());
-// The title starts without slipping and with shadow enabled. Preserve current
+// The title starts without slipping or shadow. Preserve current
 // settings when the graphics submenu reloads assets.
 const titleSettings = new URLSearchParams(location.search);
 const theGame = new Game({
   slip: titleSettings.get('slip') === 'on',
   lives: titleSettings.get('lives') === 'on',
-  shadow: titleSettings.get('shadow') !== 'off',
+  shadow: titleSettings.get('shadow') === 'on',
   createSharedView: (world) => new SharedView(world, undefined, { smoothCamera: true }),
   // Split screen's worlds share the match seed, and so the prefetched gaps.
   createWorld: (options) => {
@@ -188,6 +205,7 @@ if (platform.fullscreenButton) {
 // user gesture (browsers block audio before one); later gestures resume it if the
 // browser suspended it, or replace a context that stays stuck.
 sound = createPhaserSoundPlayer(game.sound);
+sound.setMuted(new URLSearchParams(location.search).get('mute') === 'on');
 platform.sound = sound;
 // Rendering does not need a gesture; audible playback still waits for unlock().
 platform.soundReady = sound.prepare();
@@ -200,8 +218,8 @@ function toggleMute() {
 }
 
 // The game's input on Phaser's keyboard and pointers (input.js), read through the UI
-// scene, which is always running. Presses count only while running, and not just after
-// resuming (see pause.js). A tap on the mute button toggles sound instead, and one on
+// scene, which is always running. Manual pause accepts resume/menu controls;
+// gameplay presses wait until the resume grace period ends (see pause.js). A tap on the mute button toggles sound instead, and one on
 // the full-screen button is handled by its own controls.
 const ui = await new Promise((resolve) => platform.once('ui', resolve));
 const buttonAt = (hit, event) =>
@@ -217,7 +235,7 @@ const input = createInput(phaserKeys(ui.input.keyboard, {
   },
 }), phaserPointers(ui.input), {
   initialType: coarsePointer ? 'touch' : 'keyboard',
-  accepts: () => pause.acceptsInput(),
+  accepts: (role) => pause.acceptsInput(role),
   intercept: (event) => {
     if (platform.fullscreenButton && buttonAt(FULLSCREEN_HIT, event)) return true;
     if (buttonAt(MUTE_HIT, event)) { toggleMute(); return true; }

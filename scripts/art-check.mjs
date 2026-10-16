@@ -4,13 +4,32 @@
 // follow the art). `npm run art:check`; CI runs it too.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { Resvg } from '@resvg/resvg-js';
-import { hitboxStray, readCustom } from '../src/art/custom.js';
+import { hitboxStray, imageSize, readCustom } from '../src/art/custom.js';
+import { validatePack } from '../src/art/packs.js';
+import { cartoonInventory } from '../src/art/cartoonInventory.js';
 
 const root = new URL('../art/', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('manifest.json', root), 'utf8'));
 const dir = new URL('custom/', root);
 const files = existsSync(dir) ? Object.fromEntries(readdirSync(dir).map((name) => [name, readFileSync(new URL(name, dir))])) : {};
 const { replace, errors } = readCustom(manifest, files);
+const cartoonDir = new URL('packs/cartoon/', root);
+const cartoon = JSON.parse(readFileSync(new URL('manifest.json', cartoonDir), 'utf8'));
+errors.push(...validatePack(manifest, cartoon, 'cartoon'));
+const layout = JSON.parse(readFileSync(new URL('source-layout.json', cartoonDir), 'utf8'));
+for (const [key, { source, cell }] of Object.entries(layout.components)) {
+  const file = new URL(source, cartoonDir);
+  const size = existsSync(file) ? imageSize(source, readFileSync(file)) : null;
+  if (!size || ![cell.x, cell.y, cell.w, cell.h].every(Number.isFinite) || cell.x < 0 || cell.y < 0 || cell.w <= 0 || cell.h <= 0 || cell.x + cell.w > size.width || cell.y + cell.h > size.height) errors.push(`Invalid cartoon master crop: ${key}`);
+}
+const inventory = JSON.parse(readFileSync(new URL('inventory.json', cartoonDir), 'utf8'));
+if (JSON.stringify(cartoonInventory(manifest, inventory)) !== JSON.stringify(inventory)) errors.push('Cartoon inventory is out of sync');
+for (const piece of cartoon.pieces) for (const frame of piece.frames) {
+  if (!existsSync(new URL(frame, cartoonDir))) errors.push(`Missing cartoon source: ${frame}`);
+}
+for (const piece of inventory.pieces) for (const frame of piece.frames) {
+  if (!frame.source || !['painted', 'reviewed'].includes(frame.status)) errors.push(`Unfinished cartoon frame: ${frame.key}`);
+}
 
 // The opaque bounds of a picture stretched over a piece's box, in the piece's units.
 function drawnBounds(piece, name) {

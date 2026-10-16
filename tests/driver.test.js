@@ -10,6 +10,7 @@ import { MAX_FRAME_DT, SIM_DT } from '../src/config.js';
 // sound and prefetch that record what the driver asks of them.
 function setup({ ready } = {}) {
   const keys = new EventTarget();
+  const pointer = new EventTarget();
   const press = (code) => keys.dispatchEvent(Object.assign(new Event('keydown', { cancelable: true }), { code, repeat: false }));
   const game = new Game({ createWorld: (options) => new World({ ...options, makeObstacle: () => null, makeBanana: () => null }) });
   const pause = {
@@ -23,14 +24,14 @@ function setup({ ready } = {}) {
     toggle(reason) {
       if (!this.held.delete(reason)) this.held.add(reason);
     },
-    acceptsInput() {
-      return !this.paused;
+    acceptsInput(role) {
+      return !this.paused || (this.held.size === 1 && this.held.has('manual') && ['primary', 'start', 'menu'].includes(role));
     },
   };
   const sound = { paused: null, played: [], setPaused: (p) => (sound.paused = p), play: (recipe) => sound.played.push(recipe.name) };
   const prefetch = { updates: 0, update: () => prefetch.updates++ };
   const calls = { steps: 0, debug: 0, mute: 0 };
-  const input = createInput(keys, null, { accepts: () => pause.acceptsInput() });
+  const input = createInput(keys, pointer, { accepts: (role) => pause.acceptsInput(role) });
   const driver = createDriver({
     game,
     input,
@@ -42,7 +43,8 @@ function setup({ ready } = {}) {
     onDebugToggle: () => calls.debug++,
     onMuteToggle: () => calls.mute++,
   });
-  return { game, input, pause, sound, prefetch, calls, driver, press };
+  const tap = (pointerType) => pointer.dispatchEvent(Object.assign(new Event('pointerdown', { cancelable: true }), { pointerType, button: 0 }));
+  return { game, input, pause, sound, prefetch, calls, driver, press, tap };
 }
 
 describe('the game driver', () => {
@@ -108,6 +110,33 @@ describe('the game driver', () => {
     pause.toggle('graphics');
     driver.frame(1000 / 60);
     expect(game.state).toBe(GameState.TITLE);
+  });
+
+  it.each(['Space', 'Enter', 'mouse', 'touch'])('resumes manual pause with %s without releasing the monkey', (control) => {
+    const { game, driver, press, tap, pause } = setup();
+    press('Space'); driver.frame(1000 / 60);
+    press('KeyP'); driver.frame(1000 / 60);
+    expect(pause.paused).toBe(true);
+    if (control === 'mouse' || control === 'touch') tap(control); else press(control);
+    driver.frame(1000 / 60);
+    expect(pause.paused).toBe(false);
+    expect(game.state).toBe(GameState.PLAYING);
+    expect(game.world.monkey.state).toBe(MonkeyState.HANGING);
+  });
+
+  it('returns to the title and clears manual pause on Escape', () => {
+    const { game, driver, press, pause } = setup();
+    press('Space'); driver.frame(1000 / 60);
+    press('KeyP'); driver.frame(1000 / 60);
+    press('Escape'); driver.frame(1000 / 60);
+    expect([game.state, pause.paused]).toEqual([GameState.TITLE, false]);
+  });
+
+  it('does not resume from input queued in the same frame that pauses the run', () => {
+    const { driver, press, pause } = setup();
+    press('Space'); driver.frame(1000 / 60);
+    press('Space'); press('KeyP'); driver.frame(1000 / 60);
+    expect(pause.paused).toBe(true);
   });
 
   it('hands D and M to the version, and applies G, H and S to the game', () => {

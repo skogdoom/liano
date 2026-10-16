@@ -10,6 +10,15 @@ describe('rock outlines', () => {
     expect(picks.slice(0, ROCK_VARIANTS)).not.toEqual(picks.slice(ROCK_VARIANTS, 2 * ROCK_VARIANTS));
   });
 
+  it('selects only the six cartoon variants while retaining deterministic classic picks', () => {
+    const cartoon = Array.from({ length: 2000 }, (_, gap) => rockVariant(gap, 6));
+    expect(new Set(cartoon)).toEqual(new Set([0, 1, 2, 3, 4, 5]));
+    for (let gap = 0; gap < cartoon.length; gap++) {
+      expect(cartoon[gap]).toBe(Math.floor(rockVariant(gap) / 4));
+      expect(rockVariant(gap, 24)).toBe(rockVariant(gap));
+    }
+  });
+
   it('draws the same outline for the same variant, and different ones for different variants', () => {
     const outline = (variant) => drawRockBody(new RecordingGraphics(), variant).instructions[0].path[0].points;
     expect(outline(3)).toEqual(outline(3));

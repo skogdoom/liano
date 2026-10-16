@@ -64,18 +64,21 @@ export function titleMenuLayout(layout, area, { mobile = false } = {}) {
 }
 
 export function configMenuLayout(layout, area) {
-  const compact = area.height < 520 * MIN_SCALE && area.width >= 740 * MIN_SCALE;
-  const condensed = !compact && area.height < 520 * MIN_SCALE;
+  const compact = area.height < 600 * MIN_SCALE && area.width >= 740 * MIN_SCALE;
+  const condensed = !compact && area.height < 600 * MIN_SCALE;
   const width = compact ? 740 : Math.min(440, area.width / MIN_SCALE);
-  const height = compact ? 300 : condensed ? 450 : 520;
+  const height = compact ? 300 : condensed ? 520 : 600;
   const at = placement(layout, area, width, height);
   const points = compact ? [[60, -77], [260, -77], [60, 15], [260, 15]]
-    : [[0, condensed ? -95 : -90], [0, condensed ? -20 : -15], [0, condensed ? 50 : 60], [0, condensed ? 120 : 139]];
-  const back = compact ? { x: -210, y: 108 } : { x: 0, y: condensed ? 190 : 223 };
+    : [[0, condensed ? -134 : -139], [0, condensed ? -64 : -65], [0, condensed ? 6 : 9], [0, condensed ? 76 : 83]];
+  const back = compact ? { x: -210, y: 108 } : { x: 0, y: condensed ? 222 : 263 };
+  const art = compact ? { x: 160, y: 108 } : { x: 0, y: condensed ? 146 : 157 };
   return { ...at, compact, condensed,
-    heading: { x: compact ? -210 : 0, y: compact ? -85 : condensed ? -185 : -194, size: compact ? 46 : 52 },
-    subtitle: { x: compact ? -210 : 0, y: compact ? -28 : condensed ? -141 : -146, size: 22 },
-    hint: { x: compact ? -210 : 0, y: compact ? 34 : 181, size: compact ? 16 : 12 },
+    heading: { x: compact ? -210 : 0, y: compact ? -85 : condensed ? -230 : -247, size: compact ? 46 : 52 },
+    subtitle: { x: compact ? -210 : 0, y: compact ? -28 : condensed ? -183 : -198, size: 22 },
+    hint: { x: compact ? -210 : 0, y: compact ? 34 : 218, size: compact ? 16 : 12 },
+    art,
+    artHit: hit(art.x, art.y, compact ? 390 : width - 32, compact ? 74 : 68),
     back,
     backHit: hit(back.x, back.y, compact ? 300 : width - 32, compact ? 74 : 68),
     items: points.map(([x, y]) => ({ x, y, hit: hit(x, y, compact ? 190 : width - 32,

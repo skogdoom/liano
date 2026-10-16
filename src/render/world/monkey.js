@@ -3,7 +3,7 @@ import { MonkeyState } from '../../sim/monkey.js';
 import { makeContainer } from './build.js';
 
 // A monkey in the Phaser version (PHASER_PLAN.md, M5a): the pieces of one fur (p1, p2 or
-// shadow) in the order the Pixi view stacks its parts, posed by the same MonkeyPose.
+// shadow), posed by MonkeyPose. Painted bodies can cover the limb roots.
 export class MonkeyRig {
   constructor(scene, art, fur) {
     const piece = (part, frame = 0) => art.image(scene, `monkey.${fur}.${part}`, frame);
@@ -13,13 +13,23 @@ export class MonkeyRig {
     this.body = makeContainer(scene);
     this.legBack = limb('leg', LIMBS.legBack);
     this.legFront = limb('leg', LIMBS.legFront);
+    // The painted foot has an opposing big toe. Pair it with its mirror so
+    // both big toes face inward; reflection keeps the hip and foot endpoints.
+    if (art.catalog.presentation?.monkeyMirrorFrontLeg) this.legFront.scaleX *= -1;
     this.armBack = limb('arm', LIMBS.armBack);
     this.armFront = limb('arm', LIMBS.armFront);
     this.armFrontUnit = this.armFront.scaleY;
     // Open (frame 0), or crossed after a fall (frame 1); the shadow's are see-through.
     this.eyesKey = fur === 'shadow' ? 'monkey.shadow.eyes' : 'monkey.eyes';
     this.eyes = art.image(scene, this.eyesKey);
-    this.body.add([piece('tail'), this.legBack, this.legFront, this.armBack, piece('torso'), piece('head'), this.eyes, this.armFront]);
+    const face = [piece('head'), this.eyes];
+    const torso = piece('torso');
+    // Fur on the torso covers the turning shoulder/hip roots. Keep the face
+    // foremost even when the gripping arm reaches across it. Classic retains
+    // its original foreground arm and all poses keep the same grip geometry.
+    const front = art.catalog.presentation?.monkeyLimbsBehindBody
+      ? [this.armFront, torso, ...face] : [torso, ...face, this.armFront];
+    this.body.add([piece('tail'), this.legBack, this.legFront, this.armBack, ...front]);
     this.view.add(this.body);
     this.pose = new MonkeyPose();
   }

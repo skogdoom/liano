@@ -7,6 +7,14 @@ wing, a temple's base) drawn by the game's own code. `npm run art` writes each p
 pictures into `generated/` as SVG, and the build turns them into the textures the game
 loads. There are 175 pieces, 594 pictures in all.
 
+These are the **classic** sources. The separate [cartoon authoring guide](packs/cartoon/README.md)
+describes the painted masters, vector recipes and complete alternative pack. Classic
+graphics default to Off (cartoon); change the title Config row (X on desktop) to reload with the
+other pack. Explicit test URLs use `?art=classic` or `?art=cartoon`.
+`npm run art:build` builds both into `public/art/classic/` and
+`public/art/cartoon/`, but the game downloads only its selected pack. The gallery
+at `/art.html` selects either pack; `/rigs.html` shows assembled gameplay fixtures.
+
 ## Replacing a piece
 
 Put your picture in `custom/`, named after the piece: `custom/<key>.svg` or

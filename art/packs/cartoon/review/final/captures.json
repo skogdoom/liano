@@ -1,0 +1,3372 @@
+{
+  "commit": "3f72b69",
+  "renderer": "Chromium/SwiftShader",
+  "fixtures": [
+    {
+      "id": "world.monkeys",
+      "title": "world.monkeys"
+    },
+    {
+      "id": "world.lianas",
+      "title": "world.lianas"
+    },
+    {
+      "id": "world.lianasBetween",
+      "title": "world.lianasBetween"
+    },
+    {
+      "id": "world.shadow",
+      "title": "world.shadow"
+    },
+    {
+      "id": "world.branches",
+      "title": "world.branches"
+    },
+    {
+      "id": "world.thornBushes",
+      "title": "world.thornBushes"
+    },
+    {
+      "id": "world.rocks",
+      "title": "world.rocks"
+    },
+    {
+      "id": "world.beehives",
+      "title": "world.beehives"
+    },
+    {
+      "id": "world.decoration.bird",
+      "title": "world.decoration.bird"
+    },
+    {
+      "id": "world.decoration.snake",
+      "title": "world.decoration.snake"
+    },
+    {
+      "id": "world.decoration.monkey",
+      "title": "world.decoration.monkey"
+    },
+    {
+      "id": "world.decoration.nest",
+      "title": "world.decoration.nest"
+    },
+    {
+      "id": "world.decoration.panther",
+      "title": "world.decoration.panther"
+    },
+    {
+      "id": "world.decoration.hangingBat",
+      "title": "world.decoration.hangingBat"
+    },
+    {
+      "id": "world.decoration.owl",
+      "title": "world.decoration.owl"
+    },
+    {
+      "id": "world.decoration.flowers",
+      "title": "world.decoration.flowers"
+    },
+    {
+      "id": "world.decoration.coconuts",
+      "title": "world.decoration.coconuts"
+    },
+    {
+      "id": "world.moving.spider",
+      "title": "world.moving.spider"
+    },
+    {
+      "id": "world.moving.spider.1",
+      "title": "world.moving.spider.1"
+    },
+    {
+      "id": "world.moving.snake",
+      "title": "world.moving.snake"
+    },
+    {
+      "id": "world.moving.snake.1",
+      "title": "world.moving.snake.1"
+    },
+    {
+      "id": "world.moving.bird",
+      "title": "world.moving.bird"
+    },
+    {
+      "id": "world.moving.bird.1",
+      "title": "world.moving.bird.1"
+    },
+    {
+      "id": "world.moving.bat",
+      "title": "world.moving.bat"
+    },
+    {
+      "id": "world.moving.bat.1",
+      "title": "world.moving.bat.1"
+    },
+    {
+      "id": "world.moving.blueBird",
+      "title": "world.moving.blueBird"
+    },
+    {
+      "id": "world.moving.blueBird.1",
+      "title": "world.moving.blueBird.1"
+    },
+    {
+      "id": "world.moving.purpleBird",
+      "title": "world.moving.purpleBird"
+    },
+    {
+      "id": "world.moving.purpleBird.1",
+      "title": "world.moving.purpleBird.1"
+    },
+    {
+      "id": "world.moving.circleBat",
+      "title": "world.moving.circleBat"
+    },
+    {
+      "id": "world.moving.circleBat.1",
+      "title": "world.moving.circleBat.1"
+    },
+    {
+      "id": "world.bananas",
+      "title": "world.bananas"
+    },
+    {
+      "id": "scene.day",
+      "title": "scene.day"
+    },
+    {
+      "id": "scene.ahead",
+      "title": "scene.ahead"
+    },
+    {
+      "id": "scene.dusk",
+      "title": "scene.dusk"
+    },
+    {
+      "id": "scene.night",
+      "title": "scene.night"
+    },
+    {
+      "id": "scene.obstacles.day",
+      "title": "scene.obstacles.day"
+    },
+    {
+      "id": "scene.obstacles.night",
+      "title": "scene.obstacles.night"
+    },
+    {
+      "id": "scene.flying.day",
+      "title": "scene.flying.day"
+    },
+    {
+      "id": "scene.flying.night",
+      "title": "scene.flying.night"
+    },
+    {
+      "id": "scene.temple.0.day",
+      "title": "scene.temple.0.day"
+    },
+    {
+      "id": "scene.temple.0.night",
+      "title": "scene.temple.0.night"
+    },
+    {
+      "id": "scene.temple.1.day",
+      "title": "scene.temple.1.day"
+    },
+    {
+      "id": "scene.temple.1.night",
+      "title": "scene.temple.1.night"
+    },
+    {
+      "id": "scene.temple.2.day",
+      "title": "scene.temple.2.day"
+    },
+    {
+      "id": "scene.temple.2.night",
+      "title": "scene.temple.2.night"
+    },
+    {
+      "id": "scene.temple.3.day",
+      "title": "scene.temple.3.day"
+    },
+    {
+      "id": "scene.temple.3.night",
+      "title": "scene.temple.3.night"
+    },
+    {
+      "id": "scene.temple.3.dusk",
+      "title": "scene.temple.3.dusk"
+    },
+    {
+      "id": "ui.hud.solo",
+      "title": "ui.hud.solo"
+    },
+    {
+      "id": "ui.hud.soloMany",
+      "title": "ui.hud.soloMany"
+    },
+    {
+      "id": "ui.hud.shared",
+      "title": "ui.hud.shared"
+    },
+    {
+      "id": "ui.hud.split",
+      "title": "ui.hud.split"
+    },
+    {
+      "id": "ui.title",
+      "title": "ui.title"
+    },
+    {
+      "id": "ui.title.on",
+      "title": "ui.title.on"
+    },
+    {
+      "id": "ui.title.shared",
+      "title": "ui.title.shared"
+    },
+    {
+      "id": "ui.title.touch",
+      "title": "ui.title.touch"
+    },
+    {
+      "id": "ui.title.portrait",
+      "title": "ui.title.portrait"
+    },
+    {
+      "id": "ui.results",
+      "title": "ui.results"
+    },
+    {
+      "id": "ui.results.fading",
+      "title": "ui.results.fading"
+    },
+    {
+      "id": "ui.results.2p",
+      "title": "ui.results.2p"
+    },
+    {
+      "id": "ui.paused",
+      "title": "ui.paused"
+    },
+    {
+      "id": "ui.paused.away",
+      "title": "ui.paused.away"
+    },
+    {
+      "id": "ui.banner",
+      "title": "ui.banner"
+    },
+    {
+      "id": "ui.banner.split",
+      "title": "ui.banner.split"
+    },
+    {
+      "id": "ui.arrow",
+      "title": "ui.arrow"
+    },
+    {
+      "id": "ui.buttons",
+      "title": "ui.buttons"
+    },
+    {
+      "id": "ui.buttons.on",
+      "title": "ui.buttons.on"
+    },
+    {
+      "id": "ui.buttons.portrait",
+      "title": "ui.buttons.portrait"
+    },
+    {
+      "id": "ui.hud.portrait",
+      "title": "ui.hud.portrait"
+    }
+  ],
+  "comparisons": [
+    {
+      "key": "backdrop.canopy",
+      "frame": 0,
+      "name": "backdrop.canopy",
+      "custom": false,
+      "share": 0.015375409807477678,
+      "differing": 14107,
+      "solid": 120,
+      "pixels": 917504,
+      "pass": false
+    },
+    {
+      "key": "perchedBird.red.head",
+      "frame": 0,
+      "name": "perchedBird.red.head",
+      "custom": false,
+      "share": 0.25612287256122873,
+      "differing": 1851,
+      "solid": 154,
+      "pixels": 7227,
+      "pass": false
+    },
+    {
+      "key": "perchedBird.purple.head",
+      "frame": 0,
+      "name": "perchedBird.purple.head",
+      "custom": false,
+      "share": 0.25612287256122873,
+      "differing": 1851,
+      "solid": 154,
+      "pixels": 7227,
+      "pass": false
+    },
+    {
+      "key": "snake.coil",
+      "frame": 0,
+      "name": "snake.coil",
+      "custom": false,
+      "share": 0.2212659135736059,
+      "differing": 4936,
+      "solid": 161,
+      "pixels": 22308,
+      "pass": false
+    },
+    {
+      "key": "snake.head",
+      "frame": 0,
+      "name": "snake.head",
+      "custom": false,
+      "share": 0.15550688360450562,
+      "differing": 1988,
+      "solid": 303,
+      "pixels": 12784,
+      "pass": false
+    },
+    {
+      "key": "bird.red.body",
+      "frame": 0,
+      "name": "bird.red.body",
+      "custom": false,
+      "share": 0.2718253968253968,
+      "differing": 2055,
+      "solid": 153,
+      "pixels": 7560,
+      "pass": false
+    },
+    {
+      "key": "bird.blue.body",
+      "frame": 0,
+      "name": "bird.blue.body",
+      "custom": false,
+      "share": 0.2509902022097144,
+      "differing": 2408,
+      "solid": 125,
+      "pixels": 9594,
+      "pass": false
+    },
+    {
+      "key": "bird.purple.body",
+      "frame": 0,
+      "name": "bird.purple.body",
+      "custom": false,
+      "share": 0.2791578947368421,
+      "differing": 2652,
+      "solid": 245,
+      "pixels": 9500,
+      "pass": false
+    }
+  ],
+  "share": 0.011788647614547856,
+  "menus": [
+    {
+      "id": "desktop",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "defaults": {
+        "art": "cartoon",
+        "shadow": false
+      }
+    },
+    {
+      "id": "portrait",
+      "viewport": {
+        "width": 375,
+        "height": 600
+      },
+      "defaults": {
+        "art": "cartoon",
+        "shadow": false
+      }
+    },
+    {
+      "id": "landscape",
+      "viewport": {
+        "width": 812,
+        "height": 250
+      },
+      "defaults": {
+        "art": "cartoon",
+        "shadow": false
+      }
+    }
+  ],
+  "errors": [],
+  "followUps": [
+    {
+      "change": "Climbing-snake coils pass behind and in front of the vine",
+      "baseCommit": "08343c6",
+      "refreshed": [
+        "world.moving.snake",
+        "world.moving.snake.1",
+        "media/rig-motion.mp4",
+        "media/snake-turn.mp4"
+      ],
+      "renderer": "Chromium/SwiftShader"
+    },
+    {
+      "change": "Match gameplay single-texture batching in the rig gallery; prevents missing gray-bat fragments at 1x",
+      "baseCommit": "0ed7744",
+      "refreshed": [
+        "scene.flying.day",
+        "scene.flying.night"
+      ],
+      "renderer": "Chromium/SwiftShader; verified at 1x and 2x"
+    },
+    {
+      "change": "Drawing defects: registered player/ghost tail roots, leaves behind climbing coils, short cheek-connected snake neck, clear sandstone doorway",
+      "baseCommit": "9b5338c",
+      "refreshed": [
+        "scene.flying.day",
+        "scene.flying.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "scene.temple.0.day",
+        "scene.temple.0.night",
+        "scene.temple.1.day",
+        "scene.temple.1.night",
+        "scene.temple.2.day",
+        "scene.temple.2.night",
+        "scene.temple.3.day",
+        "scene.temple.3.dusk",
+        "scene.temple.3.night",
+        "world.shadow",
+        "lighting-day",
+        "lighting-afternoon",
+        "lighting-dusk",
+        "lighting-night",
+        "lighting-dawn",
+        "runtime/monkey-joints.png",
+        "runtime/monkeys.png",
+        "runtime/shadow.png",
+        "runtime/snakes-moving.png",
+        "runtime/snakes-moving-second.png",
+        "media/rig-motion.mp4",
+        "media/snake-turn.mp4"
+      ],
+      "renderer": "Chromium/SwiftShader; single-texture batches",
+      "validation": "16 focused unit checks; gallery, monkey rigs and unchanged classic-reference browser checks pass; 18 monkey poses and 21 snake position samples inspected; same eight comparison flags remain"
+    },
+    {
+      "change": "Conceal the climbing-snake neck behind both coil layers to remove the flat edge beside the cheek",
+      "baseCommit": "37e2263",
+      "refreshed": [
+        "runtime/snakes-moving.png",
+        "runtime/snakes-moving-second.png",
+        "media/snake-turn.mp4",
+        "media/rig-motion.mp4"
+      ],
+      "renderer": "Chromium/SwiftShader; single-texture batches",
+      "validation": "Five snake-pose tests, production build, native wrap occlusion and 21 position samples pass"
+    },
+    {
+      "change": "Independent one-pixel extrusion margins prevent stone pixels bleeding into the transparent temple-mist edge",
+      "baseCommit": "37e2263",
+      "refreshed": [
+        "scene.temple.0.day",
+        "scene.temple.0.night",
+        "scene.temple.1.day",
+        "scene.temple.1.night",
+        "scene.temple.2.day",
+        "scene.temple.2.night",
+        "scene.temple.3.day",
+        "scene.temple.3.dusk",
+        "scene.temple.3.night",
+        "media/rig-motion.mp4"
+      ],
+      "renderer": "Chromium/SwiftShader; single-texture batches",
+      "validation": "41 focused unit tests, 11 browser checks and build pass; native mist-edge difference is zero while mist remains visible; texture layout/memory unchanged"
+    },
+    {
+      "change": "Larger feet for players, ghost and hanging decoration; a dedicated brighter smiling hanging face; pupils and fallen crosses aligned inside painted eye sockets",
+      "baseCommit": "3ad458e",
+      "refreshed": [
+        "runtime/monkey-joints.png",
+        "runtime/hanging-monkey-eyes.png",
+        "runtime/monkeys-hanging.png",
+        "runtime/monkeys.png",
+        "runtime/shadow.png",
+        "world.shadow",
+        "world.decoration.monkey",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "scene.flying.day",
+        "scene.flying.night",
+        "scene.temple.0.day",
+        "scene.temple.0.night",
+        "scene.temple.1.day",
+        "scene.temple.1.night",
+        "scene.temple.2.day",
+        "scene.temple.2.night",
+        "scene.temple.3.day",
+        "scene.temple.3.night",
+        "scene.temple.3.dusk",
+        "lighting-day",
+        "lighting-afternoon",
+        "lighting-dusk",
+        "lighting-night",
+        "lighting-dawn",
+        "media/rig-motion.mp4"
+      ],
+      "renderer": "Chromium/SwiftShader; single-texture batches",
+      "validation": "16 focused unit tests, source/inventory checks, production build and 11 browser checks pass; 18 player/ghost poses and open/blink hanging poses in both directions inspected; same eight source/atlas flags remain (1.19% aggregate); artwork acceptance pending"
+    },
+    {
+      "change": "Slimmer furry arms, wider thighs/calves and thinner curled tails; retained hand/foot sizes, registered limb lengths and concealed tail roots; paired left/right feet with both opposing big toes on the inside",
+      "baseCommit": "0ad1a03",
+      "refreshed": [
+        "runtime/monkey-joints.png",
+        "runtime/hanging-monkey-eyes.png",
+        "runtime/monkeys-hanging.png",
+        "runtime/monkeys.png",
+        "runtime/shadow.png",
+        "world.shadow",
+        "world.decoration.monkey",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "scene.flying.day",
+        "scene.flying.night",
+        "scene.temple.0.day",
+        "scene.temple.0.night",
+        "scene.temple.1.day",
+        "scene.temple.1.night",
+        "scene.temple.2.day",
+        "scene.temple.2.night",
+        "scene.temple.3.day",
+        "scene.temple.3.night",
+        "scene.temple.3.dusk",
+        "lighting-day",
+        "lighting-afternoon",
+        "lighting-dusk",
+        "lighting-night",
+        "lighting-dawn",
+        "media/rig-motion.mp4"
+      ],
+      "renderer": "Chromium/SwiftShader; single-texture batches",
+      "validation": "16 focused unit tests, source/inventory checks, production build and 10 browser checks pass; 18 player/ghost poses and both hanging-monkey facing directions inspected; same eight source/atlas flags remain (1.19% aggregate); artwork acceptance pending"
+    },
+    {
+      "change": "Fuller paired bird/bat wings, fixed painted shoulder pivots, neutral bird face/feet colours and distinct feather accent palettes",
+      "baseCommit": "6d5a368",
+      "refreshed": [
+        "runtime/birds-flap-cycle.png",
+        "runtime/bats-flap-cycle.png",
+        "runtime/birds-moving.png",
+        "runtime/birds-blue-moving.png",
+        "runtime/birds-purple-moving.png",
+        "runtime/bats-moving.png",
+        "runtime/bats-circling.png",
+        "runtime/flying-day.png",
+        "runtime/flying-night.png",
+        "runtime/obstacles-day.png",
+        "runtime/obstacles-night.png",
+        "world.moving.bird",
+        "world.moving.blueBird",
+        "world.moving.purpleBird",
+        "world.moving.bat",
+        "world.moving.circleBat",
+        "scene.flying.day",
+        "scene.flying.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "media/flying-motion.mp4",
+        "media/rig-motion.mp4"
+      ],
+      "renderer": "Chromium/SwiftShader; single-texture batches",
+      "validation": "47 focused art checks, source/inventory validation, production build and 11 browser checks pass; 126 native poses inspected in both directions; 33 current gallery flags, 1.36% aggregate; no tolerance changes; artwork/device acceptance pending",
+      "gallery": {
+        "share": 0.013555068987018951,
+        "flags": [
+          {
+            "key": "backdrop.canopy",
+            "frame": 0,
+            "name": "backdrop.canopy",
+            "custom": false,
+            "share": 0.015375409807477678,
+            "differing": 14107,
+            "solid": 120,
+            "pixels": 917504,
+            "pass": false
+          },
+          {
+            "key": "perchedBird.red.head",
+            "frame": 0,
+            "name": "perchedBird.red.head",
+            "custom": false,
+            "share": 0.25612287256122873,
+            "differing": 1851,
+            "solid": 154,
+            "pixels": 7227,
+            "pass": false
+          },
+          {
+            "key": "perchedBird.purple.head",
+            "frame": 0,
+            "name": "perchedBird.purple.head",
+            "custom": false,
+            "share": 0.25612287256122873,
+            "differing": 1851,
+            "solid": 154,
+            "pixels": 7227,
+            "pass": false
+          },
+          {
+            "key": "snake.coil",
+            "frame": 0,
+            "name": "snake.coil",
+            "custom": false,
+            "share": 0.2212659135736059,
+            "differing": 4936,
+            "solid": 161,
+            "pixels": 22308,
+            "pass": false
+          },
+          {
+            "key": "snake.head",
+            "frame": 0,
+            "name": "snake.head",
+            "custom": false,
+            "share": 0.15550688360450562,
+            "differing": 1988,
+            "solid": 303,
+            "pixels": 12784,
+            "pass": false
+          },
+          {
+            "key": "bird.red.body",
+            "frame": 0,
+            "name": "bird.red.body",
+            "custom": false,
+            "share": 0.24391534391534392,
+            "differing": 1844,
+            "solid": 115,
+            "pixels": 7560,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.body",
+            "frame": 0,
+            "name": "bird.blue.body",
+            "custom": false,
+            "share": 0.31196581196581197,
+            "differing": 2993,
+            "solid": 320,
+            "pixels": 9594,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 1,
+            "name": "bird.blue.wing.1",
+            "custom": false,
+            "share": 0.0420292377305952,
+            "differing": 966,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 2,
+            "name": "bird.blue.wing.2",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 106,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 3,
+            "name": "bird.blue.wing.3",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 97,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 4,
+            "name": "bird.blue.wing.4",
+            "custom": false,
+            "share": 0.04081099895579533,
+            "differing": 938,
+            "solid": 105,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 6,
+            "name": "bird.blue.wing.6",
+            "custom": false,
+            "share": 0.04220327184128089,
+            "differing": 970,
+            "solid": 104,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 7,
+            "name": "bird.blue.wing.7",
+            "custom": false,
+            "share": 0.040680473372781065,
+            "differing": 935,
+            "solid": 105,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 8,
+            "name": "bird.blue.wing.8",
+            "custom": false,
+            "share": 0.04072398190045249,
+            "differing": 936,
+            "solid": 97,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 9,
+            "name": "bird.blue.wing.9",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 132,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 10,
+            "name": "bird.blue.wing.10",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 142,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 11,
+            "name": "bird.blue.wing.11",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 99,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 13,
+            "name": "bird.blue.wing.13",
+            "custom": false,
+            "share": 0.04146362687086669,
+            "differing": 953,
+            "solid": 114,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 14,
+            "name": "bird.blue.wing.14",
+            "custom": false,
+            "share": 0.04098503306648103,
+            "differing": 942,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 15,
+            "name": "bird.blue.wing.15",
+            "custom": false,
+            "share": 0.042290288896623736,
+            "differing": 972,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 16,
+            "name": "bird.blue.wing.16",
+            "custom": false,
+            "share": 0.04255134006265228,
+            "differing": 978,
+            "solid": 103,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 18,
+            "name": "bird.blue.wing.18",
+            "custom": false,
+            "share": 0.041985729202923774,
+            "differing": 965,
+            "solid": 110,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 19,
+            "name": "bird.blue.wing.19",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 108,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 20,
+            "name": "bird.blue.wing.20",
+            "custom": false,
+            "share": 0.04211625478593804,
+            "differing": 968,
+            "solid": 130,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 21,
+            "name": "bird.blue.wing.21",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 22,
+            "name": "bird.blue.wing.22",
+            "custom": false,
+            "share": 0.04146362687086669,
+            "differing": 953,
+            "solid": 119,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 23,
+            "name": "bird.blue.wing.23",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 116,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 24,
+            "name": "bird.blue.wing.24",
+            "custom": false,
+            "share": 0.04163766098155238,
+            "differing": 957,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 25,
+            "name": "bird.blue.wing.25",
+            "custom": false,
+            "share": 0.04211625478593804,
+            "differing": 968,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 26,
+            "name": "bird.blue.wing.26",
+            "custom": false,
+            "share": 0.04159415245388096,
+            "differing": 956,
+            "solid": 102,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 28,
+            "name": "bird.blue.wing.28",
+            "custom": false,
+            "share": 0.04207274625826662,
+            "differing": 967,
+            "solid": 110,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 31,
+            "name": "bird.blue.wing.31",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 114,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.purple.body",
+            "frame": 0,
+            "name": "bird.purple.body",
+            "custom": false,
+            "share": 0.2830526315789474,
+            "differing": 2689,
+            "solid": 173,
+            "pixels": 9500,
+            "pass": false
+          }
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 48644096,
+          "2": 113508352,
+          "4": 289996800
+        },
+        "downloadBytes": {
+          "1": 7402083,
+          "2": 11062294,
+          "4": 21504937
+        }
+      }
+    },
+    {
+      "change": "Branch decorations and contrast",
+      "baseCommit": "18c2fd7",
+      "refreshed": [
+        "world.decoration.nest",
+        "world.decoration.panther",
+        "world.decoration.hangingBat",
+        "world.decoration.coconuts",
+        "world.decoration.flowers",
+        "world.decoration.snake",
+        "decorations-day.webp",
+        "decorations-night.webp"
+      ],
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "Open woven nest with visible empty, egg and hatched chick/shell states.",
+        "Seat cartoon panther 2 units closer to branch; anchor hanging bats at painted branch underside.",
+        "Dark outlines and highlights for coconuts and flowers; warm dark edges and lighter rim on perched snake to separate it from foliage."
+      ],
+      "validation": {
+        "focusedUnitTests": 21,
+        "browserTests": 9,
+        "nativeDecorationFixtures": 12,
+        "context": "Day/night 4\u00d7 atlas sheets, including all three nest states and leaf overlap.",
+        "reviewPage": "Eight tabs, all decoration images load, enlarged context view, video playback, comparison inventory, notes export and mobile width."
+      },
+      "gallery": {
+        "share": 0.013615134169356603,
+        "flags": [
+          {
+            "key": "backdrop.canopy",
+            "frame": 0,
+            "name": "backdrop.canopy",
+            "custom": false,
+            "share": 0.015375409807477678,
+            "differing": 14107,
+            "solid": 120,
+            "pixels": 917504,
+            "pass": false
+          },
+          {
+            "key": "perchedBird.red.head",
+            "frame": 0,
+            "name": "perchedBird.red.head",
+            "custom": false,
+            "share": 0.25612287256122873,
+            "differing": 1851,
+            "solid": 154,
+            "pixels": 7227,
+            "pass": false
+          },
+          {
+            "key": "perchedBird.purple.head",
+            "frame": 0,
+            "name": "perchedBird.purple.head",
+            "custom": false,
+            "share": 0.25612287256122873,
+            "differing": 1851,
+            "solid": 154,
+            "pixels": 7227,
+            "pass": false
+          },
+          {
+            "key": "snake.coil",
+            "frame": 0,
+            "name": "snake.coil",
+            "custom": false,
+            "share": 0.2212659135736059,
+            "differing": 4936,
+            "solid": 161,
+            "pixels": 22308,
+            "pass": false
+          },
+          {
+            "key": "snake.head",
+            "frame": 0,
+            "name": "snake.head",
+            "custom": false,
+            "share": 0.15550688360450562,
+            "differing": 1988,
+            "solid": 303,
+            "pixels": 12784,
+            "pass": false
+          },
+          {
+            "key": "bird.red.body",
+            "frame": 0,
+            "name": "bird.red.body",
+            "custom": false,
+            "share": 0.24391534391534392,
+            "differing": 1844,
+            "solid": 115,
+            "pixels": 7560,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.body",
+            "frame": 0,
+            "name": "bird.blue.body",
+            "custom": false,
+            "share": 0.31196581196581197,
+            "differing": 2993,
+            "solid": 320,
+            "pixels": 9594,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 1,
+            "name": "bird.blue.wing.1",
+            "custom": false,
+            "share": 0.0420292377305952,
+            "differing": 966,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 2,
+            "name": "bird.blue.wing.2",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 106,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 3,
+            "name": "bird.blue.wing.3",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 97,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 4,
+            "name": "bird.blue.wing.4",
+            "custom": false,
+            "share": 0.04081099895579533,
+            "differing": 938,
+            "solid": 105,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 6,
+            "name": "bird.blue.wing.6",
+            "custom": false,
+            "share": 0.04220327184128089,
+            "differing": 970,
+            "solid": 104,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 7,
+            "name": "bird.blue.wing.7",
+            "custom": false,
+            "share": 0.040680473372781065,
+            "differing": 935,
+            "solid": 105,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 8,
+            "name": "bird.blue.wing.8",
+            "custom": false,
+            "share": 0.04072398190045249,
+            "differing": 936,
+            "solid": 97,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 9,
+            "name": "bird.blue.wing.9",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 132,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 10,
+            "name": "bird.blue.wing.10",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 142,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 11,
+            "name": "bird.blue.wing.11",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 99,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 13,
+            "name": "bird.blue.wing.13",
+            "custom": false,
+            "share": 0.04146362687086669,
+            "differing": 953,
+            "solid": 114,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 14,
+            "name": "bird.blue.wing.14",
+            "custom": false,
+            "share": 0.04098503306648103,
+            "differing": 942,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 15,
+            "name": "bird.blue.wing.15",
+            "custom": false,
+            "share": 0.042290288896623736,
+            "differing": 972,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 16,
+            "name": "bird.blue.wing.16",
+            "custom": false,
+            "share": 0.04255134006265228,
+            "differing": 978,
+            "solid": 103,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 18,
+            "name": "bird.blue.wing.18",
+            "custom": false,
+            "share": 0.041985729202923774,
+            "differing": 965,
+            "solid": 110,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 19,
+            "name": "bird.blue.wing.19",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 108,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 20,
+            "name": "bird.blue.wing.20",
+            "custom": false,
+            "share": 0.04211625478593804,
+            "differing": 968,
+            "solid": 130,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 21,
+            "name": "bird.blue.wing.21",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 22,
+            "name": "bird.blue.wing.22",
+            "custom": false,
+            "share": 0.04146362687086669,
+            "differing": 953,
+            "solid": 119,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 23,
+            "name": "bird.blue.wing.23",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 116,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 24,
+            "name": "bird.blue.wing.24",
+            "custom": false,
+            "share": 0.04163766098155238,
+            "differing": 957,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 25,
+            "name": "bird.blue.wing.25",
+            "custom": false,
+            "share": 0.04211625478593804,
+            "differing": 968,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 26,
+            "name": "bird.blue.wing.26",
+            "custom": false,
+            "share": 0.04159415245388096,
+            "differing": 956,
+            "solid": 102,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 28,
+            "name": "bird.blue.wing.28",
+            "custom": false,
+            "share": 0.04207274625826662,
+            "differing": 967,
+            "solid": 110,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 31,
+            "name": "bird.blue.wing.31",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 114,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.purple.body",
+            "frame": 0,
+            "name": "bird.purple.body",
+            "custom": false,
+            "share": 0.2830526315789474,
+            "differing": 2689,
+            "solid": 173,
+            "pixels": 9500,
+            "pass": false
+          }
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 48644096,
+          "2": 113508352,
+          "4": 289996800
+        },
+        "downloadBytes": {
+          "1": 7395884,
+          "2": 11036916,
+          "4": 21418131
+        }
+      }
+    },
+    {
+      "change": "Six distinct painted stones and copper perched-snake palette",
+      "baseCommit": "d46c813",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.rocks",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "world.decoration.snake",
+        "rocks-platforms.png",
+        "rocks-hanging.webp",
+        "decorations-day.webp",
+        "decorations-night.webp"
+      ],
+      "changes": [
+        "Replace 24 similar cartoon rock outlines with six painted stones of distinct silhouette, colour, cracks and moss. Classic retains 24 variants.",
+        "Choose a static variant from the loaded atlas frame count; retain gap seed, animation and collision shapes.",
+        "Register platform contact and hanging vine endpoints against each painted stone silhouette. Retire only old cartoon rock frame keys 6\u201323.",
+        "Paint a dedicated copper/orange perched-snake head with a matching copper/gold body to separate it from green branch-tip leaves. Climbing snakes retain their green artwork."
+      ],
+      "validation": {
+        "fullUnitTests": 767,
+        "focusedUnitTestsAfterSnakePalette": 47,
+        "browserTests": 11,
+        "nativeStoneViews": "All six variants on platforms and hanging, plus jungle day/night scenes.",
+        "nativeSnakeViews": "Branch fixtures and enlarged day/night leaf-overlap sheets.",
+        "reviewPage": "Passed: eight tabs, all 34 comparisons, stone and decoration image loading/enlargement, video playback, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "share": 0.013981171782698113,
+        "flags": [
+          {
+            "key": "backdrop.canopy",
+            "frame": 0,
+            "name": "backdrop.canopy",
+            "custom": false,
+            "share": 0.015375409807477678,
+            "differing": 14107,
+            "solid": 120,
+            "pixels": 917504,
+            "pass": false
+          },
+          {
+            "key": "perchedBird.red.head",
+            "frame": 0,
+            "name": "perchedBird.red.head",
+            "custom": false,
+            "share": 0.25612287256122873,
+            "differing": 1851,
+            "solid": 154,
+            "pixels": 7227,
+            "pass": false
+          },
+          {
+            "key": "perchedBird.purple.head",
+            "frame": 0,
+            "name": "perchedBird.purple.head",
+            "custom": false,
+            "share": 0.25612287256122873,
+            "differing": 1851,
+            "solid": 154,
+            "pixels": 7227,
+            "pass": false
+          },
+          {
+            "key": "perchedSnake.head",
+            "frame": 0,
+            "name": "perchedSnake.head",
+            "custom": false,
+            "share": 0.4230914588057445,
+            "differing": 2239,
+            "solid": 451,
+            "pixels": 5292,
+            "pass": false
+          },
+          {
+            "key": "snake.coil",
+            "frame": 0,
+            "name": "snake.coil",
+            "custom": false,
+            "share": 0.2212659135736059,
+            "differing": 4936,
+            "solid": 161,
+            "pixels": 22308,
+            "pass": false
+          },
+          {
+            "key": "snake.head",
+            "frame": 0,
+            "name": "snake.head",
+            "custom": false,
+            "share": 0.15550688360450562,
+            "differing": 1988,
+            "solid": 303,
+            "pixels": 12784,
+            "pass": false
+          },
+          {
+            "key": "bird.red.body",
+            "frame": 0,
+            "name": "bird.red.body",
+            "custom": false,
+            "share": 0.24391534391534392,
+            "differing": 1844,
+            "solid": 115,
+            "pixels": 7560,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.body",
+            "frame": 0,
+            "name": "bird.blue.body",
+            "custom": false,
+            "share": 0.31196581196581197,
+            "differing": 2993,
+            "solid": 320,
+            "pixels": 9594,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 1,
+            "name": "bird.blue.wing.1",
+            "custom": false,
+            "share": 0.0420292377305952,
+            "differing": 966,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 2,
+            "name": "bird.blue.wing.2",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 106,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 3,
+            "name": "bird.blue.wing.3",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 97,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 4,
+            "name": "bird.blue.wing.4",
+            "custom": false,
+            "share": 0.04081099895579533,
+            "differing": 938,
+            "solid": 105,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 6,
+            "name": "bird.blue.wing.6",
+            "custom": false,
+            "share": 0.04220327184128089,
+            "differing": 970,
+            "solid": 104,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 7,
+            "name": "bird.blue.wing.7",
+            "custom": false,
+            "share": 0.040680473372781065,
+            "differing": 935,
+            "solid": 105,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 8,
+            "name": "bird.blue.wing.8",
+            "custom": false,
+            "share": 0.04072398190045249,
+            "differing": 936,
+            "solid": 97,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 9,
+            "name": "bird.blue.wing.9",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 132,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 10,
+            "name": "bird.blue.wing.10",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 142,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 11,
+            "name": "bird.blue.wing.11",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 99,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 13,
+            "name": "bird.blue.wing.13",
+            "custom": false,
+            "share": 0.04146362687086669,
+            "differing": 953,
+            "solid": 114,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 14,
+            "name": "bird.blue.wing.14",
+            "custom": false,
+            "share": 0.04098503306648103,
+            "differing": 942,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 15,
+            "name": "bird.blue.wing.15",
+            "custom": false,
+            "share": 0.042290288896623736,
+            "differing": 972,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 16,
+            "name": "bird.blue.wing.16",
+            "custom": false,
+            "share": 0.04255134006265228,
+            "differing": 978,
+            "solid": 103,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 18,
+            "name": "bird.blue.wing.18",
+            "custom": false,
+            "share": 0.041985729202923774,
+            "differing": 965,
+            "solid": 110,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 19,
+            "name": "bird.blue.wing.19",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 108,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 20,
+            "name": "bird.blue.wing.20",
+            "custom": false,
+            "share": 0.04211625478593804,
+            "differing": 968,
+            "solid": 130,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 21,
+            "name": "bird.blue.wing.21",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 22,
+            "name": "bird.blue.wing.22",
+            "custom": false,
+            "share": 0.04146362687086669,
+            "differing": 953,
+            "solid": 119,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 23,
+            "name": "bird.blue.wing.23",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 116,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 24,
+            "name": "bird.blue.wing.24",
+            "custom": false,
+            "share": 0.04163766098155238,
+            "differing": 957,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 25,
+            "name": "bird.blue.wing.25",
+            "custom": false,
+            "share": 0.04211625478593804,
+            "differing": 968,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 26,
+            "name": "bird.blue.wing.26",
+            "custom": false,
+            "share": 0.04159415245388096,
+            "differing": 956,
+            "solid": 102,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 28,
+            "name": "bird.blue.wing.28",
+            "custom": false,
+            "share": 0.04207274625826662,
+            "differing": 967,
+            "solid": 110,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 31,
+            "name": "bird.blue.wing.31",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 114,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.purple.body",
+            "frame": 0,
+            "name": "bird.purple.body",
+            "custom": false,
+            "share": 0.2830526315789474,
+            "differing": 2689,
+            "solid": 173,
+            "pixels": 9500,
+            "pass": false
+          }
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110100480,
+          "4": 275644416
+        },
+        "downloadBytes": {
+          "1": 7360483,
+          "2": 11054643,
+          "4": 21637772
+        }
+      }
+    },
+    {
+      "change": "Hide cartoon hanging-stone side sling",
+      "baseCommit": "21f94a1",
+      "refreshed": [
+        "world.rocks",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "rocks-hanging.webp"
+      ],
+      "validation": {
+        "focusedUnitTests": 17,
+        "browserTests": 3,
+        "native": "All six hanging stones have no sling image and retain the registered top-vine endpoint; standing stone offsets are unchanged."
+      }
+    },
+    {
+      "change": "Painted obstacle beams, straight support pillars and denser horizontal branches",
+      "baseCommit": "21f94a1",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.branches",
+        "world.thornBushes",
+        "world.rocks",
+        "world.beehives",
+        "all nine world.decoration fixtures",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "six standing/hanging stone sheets"
+      ],
+      "changes": [
+        "Painted wood master supplies stone/thorn-bush platforms and the beehive crossbar.",
+        "Dedicated straight bark shaft replaces branched/rooted trunk images in all three vertical support pieces.",
+        "Stone offsets register to the shelf\u2019s painted top edge. Side slings remain hidden.",
+        "Horizontal branch frames rasterize at 2\u00d7 baseline density with unchanged size/pivot; 13 review fixtures use 2\u00d7 captures."
+      ],
+      "validation": {
+        "focusedUnitTests": 47,
+        "browserTests": 4,
+        "native": "All six stone attachments and 26 obstacle/branch captures; two full world views refreshed.",
+        "reviewPage": "Passed: eight tabs, image zoom, all comparison entries, stone/decorations previews, video playback, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "share": 0.014335755983283472,
+        "flags": [
+          {
+            "key": "backdrop.canopy",
+            "frame": 0,
+            "name": "backdrop.canopy",
+            "custom": false,
+            "share": 0.015375409807477678,
+            "differing": 14107,
+            "solid": 120,
+            "pixels": 917504,
+            "pass": false
+          },
+          {
+            "key": "perchedBird.red.head",
+            "frame": 0,
+            "name": "perchedBird.red.head",
+            "custom": false,
+            "share": 0.25612287256122873,
+            "differing": 1851,
+            "solid": 154,
+            "pixels": 7227,
+            "pass": false
+          },
+          {
+            "key": "perchedBird.purple.head",
+            "frame": 0,
+            "name": "perchedBird.purple.head",
+            "custom": false,
+            "share": 0.25612287256122873,
+            "differing": 1851,
+            "solid": 154,
+            "pixels": 7227,
+            "pass": false
+          },
+          {
+            "key": "perchedSnake.head",
+            "frame": 0,
+            "name": "perchedSnake.head",
+            "custom": false,
+            "share": 0.4230914588057445,
+            "differing": 2239,
+            "solid": 451,
+            "pixels": 5292,
+            "pass": false
+          },
+          {
+            "key": "thornBush.mound",
+            "frame": 0,
+            "name": "thornBush.mound",
+            "custom": false,
+            "share": 0.3631965298631965,
+            "differing": 2177,
+            "solid": 180,
+            "pixels": 5994,
+            "pass": false
+          },
+          {
+            "key": "rock.ledge",
+            "frame": 0,
+            "name": "rock.ledge",
+            "custom": false,
+            "share": 0.3782126168224299,
+            "differing": 2590,
+            "solid": 314,
+            "pixels": 6848,
+            "pass": false
+          },
+          {
+            "key": "snake.coil",
+            "frame": 0,
+            "name": "snake.coil",
+            "custom": false,
+            "share": 0.2212659135736059,
+            "differing": 4936,
+            "solid": 161,
+            "pixels": 22308,
+            "pass": false
+          },
+          {
+            "key": "snake.head",
+            "frame": 0,
+            "name": "snake.head",
+            "custom": false,
+            "share": 0.15550688360450562,
+            "differing": 1988,
+            "solid": 303,
+            "pixels": 12784,
+            "pass": false
+          },
+          {
+            "key": "bird.red.body",
+            "frame": 0,
+            "name": "bird.red.body",
+            "custom": false,
+            "share": 0.24391534391534392,
+            "differing": 1844,
+            "solid": 115,
+            "pixels": 7560,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.body",
+            "frame": 0,
+            "name": "bird.blue.body",
+            "custom": false,
+            "share": 0.31196581196581197,
+            "differing": 2993,
+            "solid": 320,
+            "pixels": 9594,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 1,
+            "name": "bird.blue.wing.1",
+            "custom": false,
+            "share": 0.0420292377305952,
+            "differing": 966,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 2,
+            "name": "bird.blue.wing.2",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 106,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 3,
+            "name": "bird.blue.wing.3",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 97,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 4,
+            "name": "bird.blue.wing.4",
+            "custom": false,
+            "share": 0.04081099895579533,
+            "differing": 938,
+            "solid": 105,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 6,
+            "name": "bird.blue.wing.6",
+            "custom": false,
+            "share": 0.04220327184128089,
+            "differing": 970,
+            "solid": 104,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 7,
+            "name": "bird.blue.wing.7",
+            "custom": false,
+            "share": 0.040680473372781065,
+            "differing": 935,
+            "solid": 105,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 8,
+            "name": "bird.blue.wing.8",
+            "custom": false,
+            "share": 0.04072398190045249,
+            "differing": 936,
+            "solid": 97,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 9,
+            "name": "bird.blue.wing.9",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 132,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 10,
+            "name": "bird.blue.wing.10",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 142,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 11,
+            "name": "bird.blue.wing.11",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 99,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 13,
+            "name": "bird.blue.wing.13",
+            "custom": false,
+            "share": 0.04146362687086669,
+            "differing": 953,
+            "solid": 114,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 14,
+            "name": "bird.blue.wing.14",
+            "custom": false,
+            "share": 0.04098503306648103,
+            "differing": 942,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 15,
+            "name": "bird.blue.wing.15",
+            "custom": false,
+            "share": 0.042290288896623736,
+            "differing": 972,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 16,
+            "name": "bird.blue.wing.16",
+            "custom": false,
+            "share": 0.04255134006265228,
+            "differing": 978,
+            "solid": 103,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 18,
+            "name": "bird.blue.wing.18",
+            "custom": false,
+            "share": 0.041985729202923774,
+            "differing": 965,
+            "solid": 110,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 19,
+            "name": "bird.blue.wing.19",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 108,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 20,
+            "name": "bird.blue.wing.20",
+            "custom": false,
+            "share": 0.04211625478593804,
+            "differing": 968,
+            "solid": 130,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 21,
+            "name": "bird.blue.wing.21",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 22,
+            "name": "bird.blue.wing.22",
+            "custom": false,
+            "share": 0.04146362687086669,
+            "differing": 953,
+            "solid": 119,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 23,
+            "name": "bird.blue.wing.23",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 116,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 24,
+            "name": "bird.blue.wing.24",
+            "custom": false,
+            "share": 0.04163766098155238,
+            "differing": 957,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 25,
+            "name": "bird.blue.wing.25",
+            "custom": false,
+            "share": 0.04211625478593804,
+            "differing": 968,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 26,
+            "name": "bird.blue.wing.26",
+            "custom": false,
+            "share": 0.04159415245388096,
+            "differing": 956,
+            "solid": 102,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 28,
+            "name": "bird.blue.wing.28",
+            "custom": false,
+            "share": 0.04207274625826662,
+            "differing": 967,
+            "solid": 110,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 31,
+            "name": "bird.blue.wing.31",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 114,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.purple.body",
+            "frame": 0,
+            "name": "bird.purple.body",
+            "custom": false,
+            "share": 0.2830526315789474,
+            "differing": 2689,
+            "solid": 173,
+            "pixels": 9500,
+            "pass": false
+          }
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110788608,
+          "4": 282001408
+        },
+        "downloadBytes": {
+          "1": 7386748,
+          "2": 11119983,
+          "4": 22027345
+        }
+      }
+    },
+    {
+      "change": "Natural low-branch joins and concealed hive-tie tops",
+      "baseCommit": "c4d8c33",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.branches",
+        "world.beehives",
+        "all nine world.decoration fixtures",
+        "scene.ahead",
+        "scene.night"
+      ],
+      "changes": [
+        "Low cartoon branches crop their sawn left end beneath a foreground pole; hanging branches and classic retain their original ends and layer order.",
+        "The green beehive tie draws behind the crossbar so it emerges from the underside."
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 3,
+        "native": "Eight actual classic/cartoon high/low rigs at both obstacle scales, plus 22 fixture captures at 1\u00d7/2\u00d7 and two world views.",
+        "reviewPage": "Passed: eight tabs, image zoom, video playback, all comparisons, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "share": 0.01433681854283728,
+        "flags": [
+          {
+            "key": "backdrop.canopy",
+            "frame": 0,
+            "name": "backdrop.canopy",
+            "custom": false,
+            "share": 0.015375409807477678,
+            "differing": 14107,
+            "solid": 120,
+            "pixels": 917504,
+            "pass": false
+          },
+          {
+            "key": "perchedBird.red.head",
+            "frame": 0,
+            "name": "perchedBird.red.head",
+            "custom": false,
+            "share": 0.25612287256122873,
+            "differing": 1851,
+            "solid": 154,
+            "pixels": 7227,
+            "pass": false
+          },
+          {
+            "key": "perchedBird.purple.head",
+            "frame": 0,
+            "name": "perchedBird.purple.head",
+            "custom": false,
+            "share": 0.25612287256122873,
+            "differing": 1851,
+            "solid": 154,
+            "pixels": 7227,
+            "pass": false
+          },
+          {
+            "key": "perchedSnake.head",
+            "frame": 0,
+            "name": "perchedSnake.head",
+            "custom": false,
+            "share": 0.4230914588057445,
+            "differing": 2239,
+            "solid": 451,
+            "pixels": 5292,
+            "pass": false
+          },
+          {
+            "key": "thornBush.mound",
+            "frame": 0,
+            "name": "thornBush.mound",
+            "custom": false,
+            "share": 0.3631965298631965,
+            "differing": 2177,
+            "solid": 180,
+            "pixels": 5994,
+            "pass": false
+          },
+          {
+            "key": "rock.ledge",
+            "frame": 0,
+            "name": "rock.ledge",
+            "custom": false,
+            "share": 0.3782126168224299,
+            "differing": 2590,
+            "solid": 314,
+            "pixels": 6848,
+            "pass": false
+          },
+          {
+            "key": "snake.coil",
+            "frame": 0,
+            "name": "snake.coil",
+            "custom": false,
+            "share": 0.2212659135736059,
+            "differing": 4936,
+            "solid": 161,
+            "pixels": 22308,
+            "pass": false
+          },
+          {
+            "key": "snake.head",
+            "frame": 0,
+            "name": "snake.head",
+            "custom": false,
+            "share": 0.15550688360450562,
+            "differing": 1988,
+            "solid": 303,
+            "pixels": 12784,
+            "pass": false
+          },
+          {
+            "key": "bird.red.body",
+            "frame": 0,
+            "name": "bird.red.body",
+            "custom": false,
+            "share": 0.24391534391534392,
+            "differing": 1844,
+            "solid": 115,
+            "pixels": 7560,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.body",
+            "frame": 0,
+            "name": "bird.blue.body",
+            "custom": false,
+            "share": 0.31196581196581197,
+            "differing": 2993,
+            "solid": 320,
+            "pixels": 9594,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 1,
+            "name": "bird.blue.wing.1",
+            "custom": false,
+            "share": 0.0420292377305952,
+            "differing": 966,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 2,
+            "name": "bird.blue.wing.2",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 106,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 3,
+            "name": "bird.blue.wing.3",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 97,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 4,
+            "name": "bird.blue.wing.4",
+            "custom": false,
+            "share": 0.04081099895579533,
+            "differing": 938,
+            "solid": 105,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 6,
+            "name": "bird.blue.wing.6",
+            "custom": false,
+            "share": 0.04220327184128089,
+            "differing": 970,
+            "solid": 104,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 7,
+            "name": "bird.blue.wing.7",
+            "custom": false,
+            "share": 0.040680473372781065,
+            "differing": 935,
+            "solid": 105,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 8,
+            "name": "bird.blue.wing.8",
+            "custom": false,
+            "share": 0.04072398190045249,
+            "differing": 936,
+            "solid": 97,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 9,
+            "name": "bird.blue.wing.9",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 132,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 10,
+            "name": "bird.blue.wing.10",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 142,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 11,
+            "name": "bird.blue.wing.11",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 99,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 13,
+            "name": "bird.blue.wing.13",
+            "custom": false,
+            "share": 0.04146362687086669,
+            "differing": 953,
+            "solid": 114,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 14,
+            "name": "bird.blue.wing.14",
+            "custom": false,
+            "share": 0.04098503306648103,
+            "differing": 942,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 15,
+            "name": "bird.blue.wing.15",
+            "custom": false,
+            "share": 0.042290288896623736,
+            "differing": 972,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 16,
+            "name": "bird.blue.wing.16",
+            "custom": false,
+            "share": 0.04255134006265228,
+            "differing": 978,
+            "solid": 103,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 18,
+            "name": "bird.blue.wing.18",
+            "custom": false,
+            "share": 0.041985729202923774,
+            "differing": 965,
+            "solid": 110,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 19,
+            "name": "bird.blue.wing.19",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 108,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 20,
+            "name": "bird.blue.wing.20",
+            "custom": false,
+            "share": 0.04211625478593804,
+            "differing": 968,
+            "solid": 130,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 21,
+            "name": "bird.blue.wing.21",
+            "custom": false,
+            "share": 0.041681169509223806,
+            "differing": 958,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 22,
+            "name": "bird.blue.wing.22",
+            "custom": false,
+            "share": 0.04146362687086669,
+            "differing": 953,
+            "solid": 119,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 23,
+            "name": "bird.blue.wing.23",
+            "custom": false,
+            "share": 0.04150713539853811,
+            "differing": 954,
+            "solid": 116,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 24,
+            "name": "bird.blue.wing.24",
+            "custom": false,
+            "share": 0.04163766098155238,
+            "differing": 957,
+            "solid": 98,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 25,
+            "name": "bird.blue.wing.25",
+            "custom": false,
+            "share": 0.04211625478593804,
+            "differing": 968,
+            "solid": 107,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 26,
+            "name": "bird.blue.wing.26",
+            "custom": false,
+            "share": 0.04159415245388096,
+            "differing": 956,
+            "solid": 102,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 28,
+            "name": "bird.blue.wing.28",
+            "custom": false,
+            "share": 0.04207274625826662,
+            "differing": 967,
+            "solid": 110,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.blue.wing",
+            "frame": 31,
+            "name": "bird.blue.wing.31",
+            "custom": false,
+            "share": 0.04194222067525235,
+            "differing": 964,
+            "solid": 114,
+            "pixels": 22984,
+            "pass": false
+          },
+          {
+            "key": "bird.purple.body",
+            "frame": 0,
+            "name": "bird.purple.body",
+            "custom": false,
+            "share": 0.2830526315789474,
+            "differing": 2689,
+            "solid": 173,
+            "pixels": 9500,
+            "pass": false
+          }
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110788608,
+          "4": 282001408
+        },
+        "downloadBytes": {
+          "1": 7386799,
+          "2": 11120129,
+          "4": 22028015
+        }
+      }
+    },
+    {
+      "change": "Perched-snake tail silhouette, unified skin and neck attachment",
+      "baseCommit": "5d82498",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.decoration.snake at 1\u00d7/2\u00d7",
+        "perched-snake-poses: six limb/pole poses",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night"
+      ],
+      "changes": [
+        "A slender curved painted tail replaces the broad leaf-shaped tail; branch foliage stays green.",
+        "Coils and neck share an orange-and-cream palette matching the painted head and tail.",
+        "The neck joins the rear of the painted head, with the root covered by the final coil and no exposed round endpoint caps. Classic retains its original neck placement and layers."
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 3,
+        "native": "Six limb/pole poses in both directions; two native fixture captures, day/night context and whole-world views.",
+        "reviewPage": "Passed: eight tabs, image zoom, video playback, all comparisons, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "share": 0.014400784627976436,
+        "flags": [
+          "backdrop.canopy",
+          "perchedBird.red.head",
+          "perchedBird.purple.head",
+          "perchedSnake.head",
+          "thornBush.mound",
+          "rock.ledge",
+          "snake.coil",
+          "snake.head",
+          "bird.red.body",
+          "bird.blue.body",
+          "bird.blue.wing.1",
+          "bird.blue.wing.2",
+          "bird.blue.wing.3",
+          "bird.blue.wing.4",
+          "bird.blue.wing.6",
+          "bird.blue.wing.7",
+          "bird.blue.wing.8",
+          "bird.blue.wing.9",
+          "bird.blue.wing.10",
+          "bird.blue.wing.11",
+          "bird.blue.wing.13",
+          "bird.blue.wing.14",
+          "bird.blue.wing.15",
+          "bird.blue.wing.16",
+          "bird.blue.wing.18",
+          "bird.blue.wing.19",
+          "bird.blue.wing.20",
+          "bird.blue.wing.21",
+          "bird.blue.wing.22",
+          "bird.blue.wing.23",
+          "bird.blue.wing.24",
+          "bird.blue.wing.25",
+          "bird.blue.wing.26",
+          "bird.blue.wing.28",
+          "bird.blue.wing.31",
+          "bird.purple.body"
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110788608,
+          "4": 282001408
+        },
+        "downloadBytes": {
+          "1": 7386945,
+          "2": 11123866,
+          "4": 22047339
+        }
+      }
+    },
+    {
+      "change": "Sparse seeded details on branch-bearing poles",
+      "baseCommit": "a3e97f2",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.branches",
+        "all nine world.decoration fixtures",
+        "scene.ahead",
+        "scene.night",
+        "branch-pole-variations: eight poles at two obstacle scales"
+      ],
+      "changes": [
+        "Branch poles receive two or three small seeded leaf sprigs, vines or cut branch ends, built from existing painted atlas pieces.",
+        "Branch ends and sprig roots draw behind the pole; trailing vines draw in front. Details have their own per-gap seed and remain static.",
+        "Details apply only to cartoon standing branches. Platform supports, hive supports, hanging branches and classic retain their existing rendering. No additional atlas frames or textures."
+      ],
+      "validation": {
+        "focusedUnitTests": 13,
+        "browserTests": 3,
+        "native": "80 rigs checked for repeatability and unchanged hanging/platform/hive supports across eight gaps and two obstacle scales; eight-pole sheet and 22 fixture captures.",
+        "reviewPage": "Passed: eight tabs, image zoom, video playback, all comparisons, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "status": "Source frames unchanged; previous 36 flags (1.44% aggregate) remain visible."
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110788608,
+          "4": 282001408
+        },
+        "downloadBytes": {
+          "1": 7386960,
+          "2": 11123881,
+          "4": 22047354
+        }
+      }
+    },
+    {
+      "change": "Natural pole details, unified painted snake skin, tucked tail and mouth registration",
+      "baseCommit": "017b24a",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.branches",
+        "all nine world.decoration fixtures",
+        "scene.ahead",
+        "scene.night",
+        "decorations-day",
+        "decorations-night",
+        "branch-pole-variations",
+        "branch-pole-snake-clearance",
+        "perched-snake-poses"
+      ],
+      "changes": [
+        "Sawn branch stubs are longer and tilt about 45 degrees up or down. Fine creepers drop along the pole edge, with attached leaves and concealed roots.",
+        "Perched coils and neck share a painted orange-scale/cream-belly skin; legacy flat stripe and diamond marks are omitted for this pack. Static coils are rasterized at build time.",
+        "The painted tail is shorter and curves back toward the wood, with its root tucked beneath the last coil.",
+        "A painted-head mouth landmark registers the tongue to the mouth opening; head rotation and mirroring move them together.",
+        "Snake rigs provide a conservative occupied lower edge, and pole details reserve space above it plus their own upward reach."
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 3,
+        "native": "Six limb/pole poses; eight plain and eight snake-bearing pole variations; 80 repeatability/support-scope checks and 768 clearance checks across 64 seeds, two obstacle scales and six head poses; 22 fixture captures.",
+        "reviewPage": "Passed: eight tabs, image zoom, video playback, all comparisons, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "share": 0.01450279034514187,
+        "flags": [
+          "backdrop.canopy",
+          "perchedBird.red.head",
+          "perchedBird.purple.head",
+          "perchedSnake.head",
+          "thornBush.mound",
+          "rock.ledge",
+          "snake.coil",
+          "snake.head",
+          "bird.red.body",
+          "bird.blue.body",
+          "bird.blue.wing.1",
+          "bird.blue.wing.2",
+          "bird.blue.wing.3",
+          "bird.blue.wing.4",
+          "bird.blue.wing.6",
+          "bird.blue.wing.7",
+          "bird.blue.wing.8",
+          "bird.blue.wing.9",
+          "bird.blue.wing.10",
+          "bird.blue.wing.11",
+          "bird.blue.wing.13",
+          "bird.blue.wing.14",
+          "bird.blue.wing.15",
+          "bird.blue.wing.16",
+          "bird.blue.wing.18",
+          "bird.blue.wing.19",
+          "bird.blue.wing.20",
+          "bird.blue.wing.21",
+          "bird.blue.wing.22",
+          "bird.blue.wing.23",
+          "bird.blue.wing.24",
+          "bird.blue.wing.25",
+          "bird.blue.wing.26",
+          "bird.blue.wing.28",
+          "bird.blue.wing.31",
+          "bird.purple.body"
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110788608,
+          "4": 282001408
+        },
+        "downloadBytes": {
+          "1": 7394694,
+          "2": 11158302,
+          "4": 22170544
+        }
+      }
+    },
+    {
+      "change": "Continuous snake underside, fuller tail, tapered/tucked branch stubs and lower platform rocks",
+      "baseCommit": "0ac207d",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.branches",
+        "all nine world.decoration fixtures",
+        "world.rocks",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "decorations-day",
+        "decorations-night",
+        "perched-snake-poses",
+        "branch-pole-variations",
+        "branch-pole-snake-clearance",
+        "six standing stone variants"
+      ],
+      "changes": [
+        "Painted heads face back over the coils. Cubic necks trace head-to-body so their belly side and join tangent follow the coils. Head/tongue mirror together.",
+        "A fuller hook tail has a continuous inner belly stripe, uniform scale and body-width root registered by landmarks. Its root follows the last coil tangent and is covered by the coil cap. Pole clearance includes the larger curl.",
+        "Sawn stubs have a slightly wider base, using a static textured trapezoid and the original painted frame. The custom strip batch forwards the actual atlas page; no new texture or shader. Left-side stubs sit 2.5 world pixels farther behind the pole.",
+        "Every standing stone moves two world pixels deeper into its painted shelf. Hanging stones, classic graphics and collision geometry retain their positions."
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 4,
+        "native": "Six mirrored limb/pole poses; 160 repeatability/support-scope checks at two atlas densities and both obstacle sizes; 768 snake-clearance poses across 64 seeds; eight plain and eight snake-bearing pole previews; 22 fixture captures; all six stone variants. Final left-side placement checked with refreshed pole/branch/world captures.",
+        "reviewPage": "Passed: eight tabs, image zoom, video playback, all comparisons, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "share": 0.014598930733570289,
+        "flags": [
+          "backdrop.canopy",
+          "perchedBird.red.head",
+          "perchedBird.purple.head",
+          "perchedSnake.head",
+          "thornBush.mound",
+          "rock.ledge",
+          "snake.coil",
+          "snake.head",
+          "bird.red.body",
+          "bird.blue.body",
+          "bird.blue.wing.1",
+          "bird.blue.wing.2",
+          "bird.blue.wing.3",
+          "bird.blue.wing.4",
+          "bird.blue.wing.6",
+          "bird.blue.wing.7",
+          "bird.blue.wing.8",
+          "bird.blue.wing.9",
+          "bird.blue.wing.10",
+          "bird.blue.wing.11",
+          "bird.blue.wing.13",
+          "bird.blue.wing.14",
+          "bird.blue.wing.15",
+          "bird.blue.wing.16",
+          "bird.blue.wing.18",
+          "bird.blue.wing.19",
+          "bird.blue.wing.20",
+          "bird.blue.wing.21",
+          "bird.blue.wing.22",
+          "bird.blue.wing.23",
+          "bird.blue.wing.24",
+          "bird.blue.wing.25",
+          "bird.blue.wing.26",
+          "bird.blue.wing.28",
+          "bird.blue.wing.31",
+          "bird.purple.body"
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110788608,
+          "4": 282001408
+        },
+        "downloadBytes": {
+          "1": 7397344,
+          "2": 11167199,
+          "4": 22262913
+        }
+      }
+    },
+    {
+      "change": "Tapered snake wraps, visible short tail and rear neck emergence",
+      "baseCommit": "f8bfa51",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.decoration.snake at 1\u00d7/2\u00d7",
+        "perched-snake-poses",
+        "branch-pole-snake-clearance",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "changes": [
+        "The final coil tapers from body width into a short painted tail that stays visible and follows the wood closely. Pole wraps fit the painted shaft. The neck crosses behind the wood and emerges just beyond the headward coil (slightly higher on poles). The pole neck/head sit lower for a compact rise; horizontal heads have a gentler angle, and tongues follow the mouth.",
+        "Static tapered coil and branch-stub strips bind their actual atlas page, including after context restoration. Classic placement and gameplay geometry stay unchanged."
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 4,
+        "native": "Six limb/pole poses in both directions, two native fixture captures and day/night context; 768 clearance poses across 64 seeds/two obstacle sizes include both front and rear snake bounds.",
+        "reviewPage": "Eight review tabs, image enlargement, videos, comparison images, notes export and mobile layout checked."
+      },
+      "gallery": {
+        "status": "The same 36 comparison flags remain visible, with 1.45% aggregate differing pixels; thresholds unchanged."
+      }
+    },
+    {
+      "change": "Fitted branch wraps, open tail tips and identical green snake palette",
+      "baseCommit": "f46adeb",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "Branch neck roots extend into the painted bark, front branch wraps sit two world units lower, and pole heads sit 1.5 units lower over the neck end. Tail tips have a slightly longer, more open curve. A green palette shares all copper geometry and animation, preserving pale details, gold eyes, tongue color and alpha; colors alternate by branch gap independently of pose/gameplay randomness."
+      ],
+      "refreshed": [
+        "world.decoration.snake at 1\u00d7/2\u00d7",
+        "perched-snake-poses",
+        "perched-snake-palettes",
+        "branch-pole-snake-clearance",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 4,
+        "native": "Copper/green limb/pole previews and mirrored poses; 768 clearance poses across 64 gaps/two obstacle scales/six times. Palette tests compare alpha for all seven frames and preserve pale detail colors.",
+        "reviewPage": "Eight tabs, image zoom, videos, comparison images, notes export and mobile layout checked."
+      },
+      "coverage": {
+        "pieces": 181,
+        "frames": 584,
+        "inventoryPieces": 180,
+        "inventoryFrames": 583
+      },
+      "gallery": {
+        "flagged": 37,
+        "differingShare": 0.014647441249548457,
+        "thresholdsChanged": false
+      },
+      "approval": "Copper pose and green palette accepted by the owner."
+    },
+    {
+      "change": "Smaller bat eyes, registered panther eyes, removed forehead oval and upward pole stubs",
+      "baseCommit": "dc446a0",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "Hanging-bat eyes are smaller in all four palettes. Panther eyes follow the painted sockets with perspective sizing, and the legacy ear overlay is hidden to remove the gray forehead oval. Cut branch stubs point 45\u00b0 upward on both sides; later seeded pole decoration choices retain their positions."
+      ],
+      "refreshed": [
+        "panther-eyes",
+        "hanging-bat-eyes",
+        "branch-pole-stubs-up",
+        "world.decoration.panther at 1\u00d7/2\u00d7",
+        "world.decoration.hangingBat at 1\u00d7/2\u00d7",
+        "world.branches at 1\u00d7/2\u00d7",
+        "decorations-day",
+        "decorations-night",
+        "branch-pole-variations",
+        "branch-pole-snake-clearance",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "sourceAndInventory": "Passed",
+        "productionBuild": "Passed",
+        "browserReferenceTests": 1,
+        "nativeSupportChecks": 80,
+        "nativeSnakeClearancePoses": 768,
+        "reviewPage": "Eight tabs, image zoom, video playback, comparison images, notes export and mobile width checked."
+      },
+      "gallery": {
+        "flagged": 37,
+        "differingShare": 0.014631134525375938,
+        "thresholdsChanged": false
+      },
+      "approval": "Owner accepted the bat eyes, corrected panther without forehead oval, and upward 45\u00b0 pole stubs."
+    },
+    {
+      "change": "Painted panther tail with registered rear-haunch attachment and clean hanging-bat ears",
+      "baseCommit": "eae56af",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "The panther has a painted fur-and-spots tail matched to its body, attached behind the rear haunch with a fixed root and shared breathing transform. Its sixteen-frame sway retains a covered join and clear atlas edges. The legacy hanging-bat ear overlay is hidden in all four palettes, removing the triangular artifact."
+      ],
+      "sources": [
+        "masters/panther-tail.png",
+        "components/panther-tail.png",
+        "generated/panther.tail.0.svg through generated/panther.tail.15.svg"
+      ],
+      "refreshed": [
+        "panther-eyes",
+        "hanging-bat-eyes",
+        "world.decoration.panther at 1\u00d7/2\u00d7",
+        "world.decoration.hangingBat at 1\u00d7/2\u00d7",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "sourceAndInventory": "Passed",
+        "productionBuild": "Passed",
+        "browserReferenceTests": 1,
+        "tailFramesChecked": 16,
+        "native": "Both facing directions of the panther, all four hanging-bat palettes; painted tail root opaque in every frame and covered by the body, with no frame-edge clipping.",
+        "reviewPage": "Eight tabs, image zoom, video playback, comparison images, notes export and mobile width checked."
+      },
+      "gallery": {
+        "flagged": 37,
+        "differingShare": 0.015166601840064239,
+        "thresholdsChanged": false
+      },
+      "approval": "Owner accepted the painted panther tail/attachment and removed bat-ear triangle."
+    },
+    {
+      "change": "Larger yellow spider eyes, brighter body and complete antialiased leg poses",
+      "baseCommit": "10c9b68",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "The spider has brighter lavender fur and two larger, separated yellow eyes with small pupils. Its eight legs use 24 complete antialiased poses, replacing separately rotated narrow strips that appeared jagged at game size. Classic rendering, movement and collision shapes are unchanged."
+      ],
+      "sources": [
+        "masters/spider-clear.png",
+        "components/spider.png",
+        "generated/spider.body.svg",
+        "generated/spider.legs.0.svg through generated/spider.legs.23.svg"
+      ],
+      "refreshed": [
+        "spider-day-night",
+        "spider-motion",
+        "world.moving.spider at 1\u00d7/2\u00d7",
+        "world.moving.spider.1 at 1\u00d7/2\u00d7",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "sourceAndInventory": "Passed",
+        "productionBuild": "Passed",
+        "focusedTests": 16,
+        "browserReferenceTests": 1,
+        "legFramesChecked": 24,
+        "native": "All 24 leg poses by day/night; game-size samples use the 1\u00d7 atlas and enlarged detail uses the 4\u00d7 atlas. Both spider fixtures rendered at 1\u00d7/2\u00d7.",
+        "textureMemoryMB": {
+          "2x": 115,
+          "4x": 293
+        },
+        "reviewPage": "Eight tabs, image zoom, video playback, comparison images, notes export and mobile width checked."
+      },
+      "gallery": {
+        "flagged": 37,
+        "differingShare": 0.01530731452410044,
+        "thresholdsChanged": false
+      },
+      "approval": "Owner accepted the final day/night animation with larger yellow eyes, small pupils and complete antialiased leg poses."
+    },
+    {
+      "change": "Painted owl with hooked beak and registered hanging-bat eyes",
+      "baseCommit": "62230a2",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "The owl now matches the painted animals with textured feathers, layered wings, a cream facial disc and a rounded amber beak with a short hooked tip. Its head turns, pupils, blink and breathing remain articulated, with the face kept inside the head and toes meeting the branch. Hanging-bat eyes register to the painted sockets per palette, accounting for the taller brown body frame and removing dark crescents beneath the whites. Classic artwork, movement and collision shapes are unchanged."
+      ],
+      "sources": [
+        "masters/owl-components.png",
+        "masters/owl-beak.png",
+        "components/owl-body.png",
+        "components/owl-head.png",
+        "components/owl-disc.png",
+        "components/owl-beak.png",
+        "bat-hanging eye landmarks in source-layout.json"
+      ],
+      "refreshed": [
+        "owl-day-night",
+        "owl-beak",
+        "brown-bat-eyes",
+        "hanging-bat-eyes",
+        "world.decoration.owl at 1\u00d7/2\u00d7",
+        "world.decoration.hangingBat at 1\u00d7/2\u00d7",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "sourceAndInventory": "Passed",
+        "productionBuild": "Passed",
+        "focusedTests": 16,
+        "browserReferenceTests": 1,
+        "atlasMargins": "All four open bat-eye pairs and the owl beak have clear top/bottom margins at 4\u00d7.",
+        "native": "All four bat palettes; owl turns, blink, branch contact and beak in day/night contexts. Game-size owl samples use the 1\u00d7 atlas and enlarged detail uses the 4\u00d7 atlas. Both real fixtures rendered at 1\u00d7/2\u00d7.",
+        "textureMemoryMB": {
+          "2x": 115,
+          "4x": 293
+        },
+        "reviewPage": "Eight tabs, image zoom, video playback, comparison images, notes export, new owl/bat close-ups and mobile width checked."
+      },
+      "gallery": {
+        "flagged": 37,
+        "differingShare": 0.015341115581275794,
+        "thresholdsChanged": false
+      },
+      "approval": "Owner accepted the final beak preview after the combined owl/bat-eye review."
+    },
+    {
+      "change": "Painted shallow nest, shared ivory egg and centered slim hatchling",
+      "baseCommit": "7f87fdc",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "The three nest states share a shallow painted chestnut bowl and a pale ivory speckled egg. The hatched state omits the loose shell cap and places a slim, golden-yellow chick lower and centered within the lower shell. Its head and animated beak clear the rim; mirrored poses preserve the same seating. Classic artwork and behavior are unchanged."
+      ],
+      "sources": [
+        "masters/nest-and-egg.png",
+        "masters/nest-chick.png",
+        "components/nest-bowl.png",
+        "components/nest-egg.png",
+        "components/nest-chick.png",
+        "components/nest-chick-upper-beak.png",
+        "components/nest-chick-lower-beak.png"
+      ],
+      "refreshed": [
+        "nest-day",
+        "nest-night",
+        "world.decoration.nest at 1\u00d7/2\u00d7",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "sourceAndInventory": "Passed",
+        "productionBuild": "Passed",
+        "focusedTests": 16,
+        "browserReferenceTests": 1,
+        "native": "All three nest states, mirrored hatchling, peeping and game-size sample at 1\u00d7/4\u00d7 atlas densities by day and night; shell in front of lower torso, shell cap absent. Beak clears rim over eight-second pose sweep. Real fixture captured at 1\u00d7/2\u00d7.",
+        "textureMemoryMB": {
+          "2x": 115,
+          "4x": 293
+        },
+        "reviewPage": "Eight tabs, image zoom, video, comparisons, notes export, accepted nest previews and mobile width checked."
+      },
+      "gallery": {
+        "flagged": 38,
+        "differingShare": 0.015742163891046115,
+        "thresholdsChanged": false,
+        "addedFlag": "nest.back: browser/source and runtime atlas image resampling differ; native accepted artwork inspected."
+      },
+      "approval": "Owner accepted the centered hatchling after reviewing proportions, shell seating, contrast and nest height."
+    }
+  ],
+  "artworkAcceptance": {
+    "commit": "7abe519",
+    "date": "2026-10-16",
+    "decision": "Owner accepts the current cartoon appearance; thirteen fixed captures are promoted to automated regression references."
+  },
+  "deviceValidation": {
+    "status": "pending",
+    "timing": "After M8a integration into phaser, before release",
+    "integrationGate": false,
+    "releaseGate": true,
+    "decision": "Owner requested postponing real-device checks until after integration into phaser.",
+    "reporting": "After testing has finished on phaser, add a dated follow-up recording results and any findings or resulting changes that affect the finalized report."
+  },
+  "finalAutomatedVerification": {
+    "date": "2026-10-16",
+    "artworkCommit": "7abe519c71fede8796601be6146ee22cf5e98b48",
+    "planCommit": "6b0be10",
+    "unit": {
+      "files": 71,
+      "tests": 769,
+      "status": "passed"
+    },
+    "browser": {
+      "tests": 90,
+      "status": "passed across full run and focused reruns",
+      "initialRun": {
+        "passed": 82,
+        "failed": 3
+      },
+      "fixedChecks": "Preserve classic comparison limits, check cartoon image/tile differences with existing scene parity, and stop live game updates while the offline sound test resets randomness.",
+      "regressionChecks": 3
+    },
+    "sourceRegeneration": "Deterministic; no generated source changes",
+    "artAndInventoryValidation": "Passed",
+    "productionBuild": "Passed",
+    "windowTable": "Unchanged",
+    "classicReferences": "All twelve PNGs unchanged; browser comparison passes",
+    "cartoonReferences": {
+      "count": 13,
+      "manifest": "browser-tests/references/cartoon/manifest.json",
+      "negativeControl": "Incorrect classic day image rejected"
+    },
+    "assetMetrics": {
+      "classic": {
+        "1": {
+          "textureBytes": 46612480,
+          "downloadBytes": 1172193,
+          "gzipMetadataDownloadBytes": 981876,
+          "files": 11
+        },
+        "2": {
+          "textureBytes": 105644032,
+          "downloadBytes": 2196767,
+          "gzipMetadataDownloadBytes": 2005556,
+          "files": 12
+        },
+        "4": {
+          "textureBytes": 254214144,
+          "downloadBytes": 4094570,
+          "gzipMetadataDownloadBytes": 3901888,
+          "files": 14
+        }
+      },
+      "cartoon": {
+        "1": {
+          "textureBytes": 49627136,
+          "downloadBytes": 7592451,
+          "gzipMetadataDownloadBytes": 7395724,
+          "files": 11
+        },
+        "2": {
+          "textureBytes": 114982912,
+          "downloadBytes": 11720563,
+          "gzipMetadataDownloadBytes": 11522710,
+          "files": 13
+        },
+        "4": {
+          "textureBytes": 292552704,
+          "downloadBytes": 24037227,
+          "gzipMetadataDownloadBytes": 23837722,
+          "files": 14
+        }
+      }
+    },
+    "deviceValidation": "Deferred until after integration into phaser; required before release"
+  },
+  "report": {
+    "status": "finalized for integration",
+    "date": "2026-10-16",
+    "location": "PHASER_PLAN.md: M8a final report",
+    "scope": "Accepted artwork, completed implementation, automated verification, regression references and build measurements before integration.",
+    "deviceFollowUp": {
+      "branch": "phaser",
+      "timing": "After real-device testing has finished",
+      "record": [
+        "Tested commit and device/browser versions",
+        "Results and findings that change implementation, artwork, references, measurements or acceptance decisions",
+        "Resulting changes and their validation"
+      ]
+    }
+  }
+}

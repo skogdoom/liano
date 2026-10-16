@@ -98,14 +98,14 @@ export function templeRig(b, o, rand) {
         shownTint = tint;
       }
       if (!fire) return;
-      const dark = darknessOf(tint);
+      const light = Math.max(darknessOf(tint), art.catalog.presentation?.templeFireDaylight ?? 0);
       TEMPLE_BRAZIERS.forEach((x, i) => {
         const flame = templeFlame(t, phase, i);
         art.setFrame(fire.flames[i], 'temple.flame', flameFrameFor(flame.sway, flame.k));
         fire.flames[i].setX(x);
-        const layers = templeGlowLayers(dark * flame.flicker, flame.reach);
+        const layers = templeGlowLayers(light * flame.flicker, flame.reach);
         fire.glows[i].forEach((disc, j) => {
-          disc.visible = dark > 0;
+          disc.visible = light > 0;
           disc.setPosition(x, TEMPLE_GLOW_Y).setScale((glowUnit * layers[j].radius) / TEMPLE_GLOW_RADIUS).setAlpha(layers[j].alpha);
         });
       });

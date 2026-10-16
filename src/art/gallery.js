@@ -1,7 +1,7 @@
 import { PARITY, compareImages, solidPixels } from '../visualDiff.js';
 import { ATLAS_SCALES, TILE_EDGE } from './catalog.js';
 import { frameName } from './piece.js';
-import { PIECES } from './pieces/index.js';
+import { artChoice } from '../platform/artStyle.js';
 
 // The art gallery (art.html, dev only): every piece and frame from the built atlases next
 // to the game's drawing of it, the difference between them, the
@@ -16,6 +16,9 @@ import { PIECES } from './pieces/index.js';
 const SCENE_PIXELS = 1280 * 720;
 
 const params = new URLSearchParams(location.search);
+const pack = artChoice(location.search);
+const base = `/art/${pack}/`;
+const sourceRoot = pack === 'cartoon' ? '/art/packs/cartoon/' : '/art/';
 const scale = ATLAS_SCALES.includes(Number(params.get('scale'))) ? Number(params.get('scale')) : 2;
 const frameSolidLimit = (PARITY.solidPerMillion * SCENE_PIXELS * scale ** 2) / 1e6;
 const guides = params.get('guides') !== 'off';
@@ -23,8 +26,10 @@ const only = params.get('piece');
 const css = '#4a8060';
 
 const controls = document.querySelector('.controls');
-for (const s of ATLAS_SCALES) controls.insertAdjacentHTML('beforeend', `<a href="?scale=${s}${guides ? '' : '&guides=off'}">${s}×${s === scale ? ' (shown)' : ''}</a>`);
-controls.insertAdjacentHTML('beforeend', `<a href="?scale=${scale}${guides ? '&guides=off' : ''}">guides ${guides ? 'off' : 'on'}</a>`);
+for (const id of ['classic', 'cartoon']) controls.insertAdjacentHTML('beforeend', `<a href="?art=${id}&scale=${scale}">${id}${id === pack ? ' (shown)' : ''}</a>`);
+for (const s of ATLAS_SCALES) controls.insertAdjacentHTML('beforeend', `<a href="?art=${pack}&scale=${s}${guides ? '' : '&guides=off'}">${s}×${s === scale ? ' (shown)' : ''}</a>`);
+controls.insertAdjacentHTML('beforeend', `<a href="?art=${pack}&scale=${scale}${guides ? '&guides=off' : ''}">guides ${guides ? 'off' : 'on'}</a>`);
+controls.insertAdjacentHTML('beforeend', `<a href="/rigs.html?art=${pack}">assembled rigs</a>`);
 
 const loadImage = async (src) => {
   const img = new Image();
@@ -88,7 +93,7 @@ function drawGuides(context, contract, zoom) {
 // Rasterize the generated SVG at the exact cell size used by the atlas build.
 // This keeps the artist's gallery independent of a game rendering library.
 async function svgFrame(piece, i, box, w, h, zoom) {
-  const source = await (await fetch(`/art/generated/${frameName(piece, i)}.svg`)).text();
+  const source = await (await fetch(`${sourceRoot}${piece.frames[i]}`)).text();
   const svg = new DOMParser().parseFromString(source, 'image/svg+xml').documentElement;
   svg.setAttribute('width', w);
   svg.setAttribute('height', h);
@@ -132,21 +137,21 @@ function blurSideways(data, w, h, sigma, wrap = true) {
   }
 }
 
-const [catalog, manifest] = await Promise.all([loadJson('/art/pieces.json'), loadJson('/art/manifest.json')]);
+const [catalog, manifest] = await Promise.all([loadJson(`${base}pieces.json`), loadJson(`${base}manifest.json`)]);
 const contracts = Object.fromEntries(manifest.pieces.map((p) => [p.key, p]));
 const atlases = {};
 for (const set of catalog.sets) {
-  const json = await loadJson(`/art/${set}@${scale}x.json`);
+  const json = await loadJson(`${base}${set}@${scale}x.json`);
   for (const texture of json.textures) {
-    const image = await loadImage(`/art/${texture.image}`);
+    const image = await loadImage(`${base}${texture.image}`);
     for (const f of texture.frames) atlases[f.filename] = { image, frame: f.frame };
   }
 }
-const customs = new Set(Object.keys(await loadJson('/art/custom.json').catch(() => ({}))));
+const customs = new Set(Object.keys(await loadJson(`${base}custom.json`).catch(() => ({}))));
 
 const results = [];
 const list = document.getElementById('pieces');
-for (const piece of PIECES) {
+for (const piece of manifest.pieces) {
   if (only && piece.key !== only) continue;
   const contract = contracts[piece.key];
   const info = catalog.pieces[piece.key];
@@ -171,18 +176,20 @@ for (const piece of PIECES) {
   list.append(section);
 
   const view = contract.box.w * at.zoom > 900 ? 900 / (contract.box.w * at.zoom) : Math.min(4, 160 / Math.max(at.size[0], at.size[1]));
+  const animationFrames = [];
   for (let i = 0; i < piece.frames.length; i++) {
     const name = frameName(piece, i);
     const [w, h] = piece.kind === 'tile' ? [at.size[0], at.size[1]] : at.size;
     // From the atlas (or the tile's own image).
     const built = canvasOf(w, h, view);
-    if (piece.kind === 'tile') built.context.drawImage(await loadImage(`/art/${at.image}`), 0, TILE_EDGE, w, h, 0, 0, w, h);
+    if (piece.kind === 'tile') built.context.drawImage(await loadImage(`${base}${at.image}`), 0, TILE_EDGE, w, h, 0, 0, w, h);
     else {
       const { image, frame } = atlases[name];
       built.context.drawImage(image, frame.x, frame.y, frame.w, frame.h, 0, 0, w, h);
     }
     const builtData = built.context.getImageData(0, 0, w, h).data;
     if (guides) drawGuides(built.context, contract, at.zoom);
+    animationFrames.push(built.canvas);
     const drawn = await svgFrame(piece, i, contract.box, w, h, at.zoom);
     // A softened piece: the drawing blurred sideways as the build blurs it.
     if (contract.soften) {
@@ -205,6 +212,29 @@ for (const piece of PIECES) {
     );
     row.lastChild.querySelector('figcaption').className = custom ? 'custom' : pass ? 'pass' : 'fail';
   }
+  if (piece.frames.length > 1) {
+    const preview = document.createElement('canvas'); preview.width = at.size[0]; preview.height = at.size[1];
+    preview.style.width = `${preview.width * view}px`;
+    const slider = document.createElement('input'); slider.type = 'range'; slider.min = '0'; slider.max = String(piece.frames.length - 1); slider.value = '0';
+    slider.setAttribute('aria-label', `${piece.key} frame`);
+    const play = document.createElement('button'); play.textContent = 'Animate frames';
+    let playing = false, timer = null;
+    const show = (frame) => { preview.getContext('2d').drawImage(animationFrames[frame], 0, 0); slider.value = String(frame); };
+    slider.addEventListener('input', () => show(Number(slider.value)));
+    play.addEventListener('click', () => {
+      playing = !playing; play.textContent = playing ? 'Stop animation' : 'Animate frames';
+      if (timer) clearInterval(timer);
+      if (playing) { let tick = Number(slider.value); timer = setInterval(() => {
+        const period = 2 * (piece.frames.length - 1), index = ++tick % period;
+        show(index < piece.frames.length ? index : period - index);
+      }, 1000 / (contract.fps ?? 30)); }
+    });
+    section.prepend(preview, slider, play); show(0);
+  } else if (piece.kind === 'tile') {
+    const seam = canvasOf(at.size[0] * 2, at.size[1], Math.min(view, 900 / (at.size[0] * 2)));
+    seam.context.drawImage(animationFrames[0], 0, 0); seam.context.drawImage(animationFrames[0], at.size[0], 0);
+    row.prepend(figure(seam.canvas, 'Two adjacent tiles: inspect the repeat seam'));
+  }
 }
 const failed = results.filter((r) => !r.pass);
 const generated = results.filter((r) => !r.custom);
@@ -214,9 +244,9 @@ const solidPerMillion = (generated.reduce((n, r) => n + r.solid, 0) / total) * 1
 const sharePass = share < PARITY.share && solidPerMillion <= PARITY.solidPerMillion;
 const summary = document.getElementById('summary');
 summary.textContent =
-  `${PIECES.length} pieces, ${results.length} frames at ${scale}×: ${(share * 100).toFixed(2)} % of all their pixels differ (limit ${PARITY.share * 100} %), ` +
+  `${manifest.pieces.length} pieces, ${results.length} frames at ${scale}×: ${(share * 100).toFixed(2)} % of all their pixels differ (limit ${PARITY.share * 100} %), ` +
   `${solidPerMillion.toFixed(1)} solid per million (limit ${PARITY.solidPerMillion}); ` +
   (failed.length ? `${failed.length} frames with solid patches over ${frameSolidLimit.toFixed(0)} px: ${failed.map((r) => r.name).join(', ')}.` : `no frame with solid patches over ${frameSolidLimit.toFixed(0)} px.`);
 summary.className = failed.length || !sharePass ? 'fail' : 'pass';
-window.__gallery = { scale, share, solidPerMillion, pass: sharePass && failed.length === 0, frames: results };
+window.__gallery = { pack, scale, share, solidPerMillion, pass: sharePass && failed.length === 0, frames: results };
 document.documentElement.dataset.gallery = 'done';

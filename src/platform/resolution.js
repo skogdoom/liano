@@ -1,4 +1,5 @@
 import { MAX_RESOLUTION } from '../config.js';
+import { reloadSettings } from './reloadSettings.js';
 
 export const RESOLUTION_STORAGE_KEY = 'liano.phaser.resolution';
 
@@ -37,20 +38,10 @@ export function rememberResolutionChoice(choice, win = window) {
   try { win.localStorage.setItem(RESOLUTION_STORAGE_KEY, choice); } catch { /* URL still applies it. */ }
 }
 
-export function applyResolutionChoice(choice, win = window, { mode, settings } = {}) {
+export function applyResolutionChoice(choice, win = window, state = {}) {
   if (!validChoice(choice)) return;
   rememberResolutionChoice(choice, win);
-  const next = new URL(win.location.href);
+  const next = reloadSettings(win.location.href, state);
   next.searchParams.set('resolution', choice);
-  if (mode === 'solo') next.searchParams.delete('mode');
-  else if (mode === 'shared' || mode === 'split') next.searchParams.set('mode', mode);
-  for (const key of ['slip', 'lives', 'shadow']) {
-    if (typeof settings?.[key] !== 'boolean') continue;
-    if (key === 'shadow') {
-      if (settings.shadow) next.searchParams.delete('shadow');
-      else next.searchParams.set('shadow', 'off');
-    } else if (settings[key]) next.searchParams.set(key, 'on');
-    else next.searchParams.delete(key);
-  }
   win.location.assign(next.href);
 }
