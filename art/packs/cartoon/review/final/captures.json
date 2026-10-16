@@ -3275,11 +3275,14 @@
   },
   "deviceValidation": {
     "status": "pending",
-    "timing": "After M8a integration into phaser, before release",
+    "timing": "After M9a fullscreen canopy fix and M9b plan consolidation, before M10 release",
     "integrationGate": false,
     "releaseGate": true,
-    "decision": "Owner requested postponing real-device checks until after integration into phaser.",
-    "reporting": "After testing has finished on phaser, add a dated follow-up recording results and any findings or resulting changes that affect the finalized report."
+    "decision": "Owner moved all remaining testing and verification to a new branch created from master after M9.",
+    "reporting": "After testing has finished on release-verification in M9c, add a dated follow-up recording results and any findings or resulting changes that affect the finalized report.",
+    "branch": "release-verification",
+    "milestone": "M9c",
+    "branchBase": "master after M9 integration"
   },
   "finalAutomatedVerification": {
     "date": "2026-10-16",
@@ -3360,13 +3363,14 @@
     "location": "PHASER_PLAN.md: M8a final report",
     "scope": "Accepted artwork, completed implementation, automated verification, regression references and build measurements before integration.",
     "deviceFollowUp": {
-      "branch": "phaser",
+      "branch": "release-verification",
       "timing": "After real-device testing has finished",
       "record": [
         "Tested commit and device/browser versions",
         "Results and findings that change implementation, artwork, references, measurements or acceptance decisions",
         "Resulting changes and their validation"
-      ]
+      ],
+      "milestone": "M9c"
     }
   },
   "integration": {
