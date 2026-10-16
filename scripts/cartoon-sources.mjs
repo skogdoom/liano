@@ -11,12 +11,13 @@ import { packAlpha, packFrameCount, packPieces } from '../src/art/packs.js';
 import { paintedSpiderLegs } from '../src/art/spiderPose.js';
 import { registerLimb, registerTriangle } from '../src/art/registration.js';
 import { ARM, LEG } from '../src/views/monkey.js';
-import { TEMPLE_BRAZIERS } from '../src/views/obstacles.js';
+import { NEST_PARTS, TEMPLE_BRAZIERS } from '../src/views/obstacles.js';
 
 // The hanging decoration shares the painted player limbs, with its own fur.
 // Match this baked multiplier with the runtime tint on those reused leg images.
 const hangingMonkeyTint = 0xffd0c8;
 const pantherEyeOffset = [3, 3];
+const nestEggScale = 1.2;
 const forestFloorColor = '#111c18';
 
 const root = new URL('../art/packs/cartoon/', import.meta.url);
@@ -558,6 +559,24 @@ function creature(p, frame) {
   throw new Error(`Unpainted creature: ${p.key}`);
 }
 
+const paintedNestBowl = part => {
+  const image = picture('nest-bowl', { x: -19.6, y: -10.8, w: 39.2, h: 15 }, 0);
+  if (part === 'back') return image;
+  const front = 'M-21 -7Q0 6 21 -7V6H-21Z';
+  const rim = 'M-21 -7.6Q0 5.4 21 -7.6L21 -6.4Q0 6.6 -21 -6.4Z';
+  return `<defs><clipPath id="bowl-layer"><path d="${part === 'front' ? front : rim}"/></clipPath></defs><g clip-path="url(#bowl-layer)">${image}</g>`;
+};
+const paintedNestShell = cap => {
+  const offset = (NEST_PARTS.egg.y - NEST_PARTS.shell.y) / nestEggScale;
+  const shift = cap ? 4.6 : 0;
+  const crack = 'M-6.5 -1.6L-5.3 -1.5 -4.3 -3.6 -2.5 -2 -1.2 -4.15 .4 -1.6 2 -3.25 3.1 -1.9 4.55 -3.5 6.5 -1.4';
+  const mask = crack + (cap ? 'V-7H-7Z' : 'V7H-7Z');
+  const egg = picture('nest-egg', { x: -6, y: -8 + (cap ? -2 : offset), w: 12, h: 16 }, 0);
+  // Cap uses the same pixels above the fracture, translated into its own box.
+  // The lower shell stays registered to the intact egg's seat after scaling.
+  return `<defs><clipPath id="shell-cut"><path d="${mask}"/></clipPath></defs><g transform="translate(0 ${shift})"><g clip-path="url(#shell-cut)">${egg}${line(crack, '#a58a60', .35)}</g></g>`;
+};
+
 function prop(p, frame) {
   const [family, part] = p.key.split('.');
   const { x, y, w, h } = p.box;
@@ -615,30 +634,21 @@ function prop(p, frame) {
   if (family === 'nest') {
     const straw = ['#efd08b', '#b77b43', '#67402b'];
     if (['twig', 'lightTwig', 'rimTwig'].some((v) => part.startsWith(v))) return part.endsWith('End') ? defs(straw) + ellipse(0, 0, .6, .6) : roundStrip(p, straw);
-    const shellColors = ['#fff9df', '#eee2be', '#c7b88f'];
-    if (part === 'egg') return defs(shellColors) + path('M0 -8C-3 -8 -6 -1 -6 2C-6 10 6 10 6 2C6 -1 3 -8 0 -8Z', 'url(#paint)', '#5b4530', .9)
-      + ellipse(-2, -2, 1.8, 3, '#fffdec', 'opacity=".7"')
-      + [[2, 1], [-2, 4], [1, -4]].map(([x, y]) => ellipse(x, y, .7, .5, '#a38b63')).join('');
-    if (part === 'shell') return defs(shellColors) + path('M-6 -2L-4 -4 -2 -1 0 -4 2 -1 4 -4 6 -2L6 3Q0 8 -6 3Z', 'url(#paint)', '#5b4530', .8);
-    if (part === 'cap') return defs(shellColors) + path('M-6 0L-4 -4 -2 -1 0 -5 2 -1 4 -4 6 0L5 3H-5Z', 'url(#paint)', '#5b4530', .8);
-    if (part === 'chick') return defs(['#fff2a0', '#f3c84e', '#c58b32'])
-      + path('M-6 1Q-7 -4 -3 -6L-2 -9 0 -7 2 -9 3 -6Q8 -3 6 3Q3 8 -2 6Q-6 5 -6 1Z', 'url(#paint)', '#634628', .8)
-      + ellipse(-3, 2, 2, 2.5, '#d6a640') + ellipse(2.4, -2, 1.2, 1.6, '#302923') + ellipse(2.7, -2.6, .4, .5, '#fff9de');
-    if (part === 'chickBeak') return path(`M5 -2L10 ${-1 - frame * .25}L11 1L10 ${2 + frame * .35}L5 2Z`, '#f5a945', '#634628', .7);
-    if (part === 'leaf') return defs(['#d7af69', '#ab763d', '#66452e']) + `<g transform="translate(-3 -9)">${leaf(10, 3)}</g>`;
-    // A hollow back, shallow front wall, and an open curved lip. The old
-    // filled rim was a third bowl covering the egg and chick's cracked shell.
-    if (part === 'back') return defs(straw)
-      + ellipse(0, -9, 19, 7, 'url(#paint)', 'stroke="#4b3022" stroke-width="1.2"')
-      + ellipse(0, -9, 15.8, 4.7, '#503426')
-      + line('M-15 -11Q0 -18 15 -11', '#f0ce83', 1.1);
-    if (part === 'front') {
-      body = defs(straw) + path('M-20 -9Q0 -1 20 -9Q20 3 0 4Q-20 3 -20 -9Z', 'url(#paint)', '#4b3022', 1.2);
-      for (let i = 0; i < 3; i++) body += line(`M${-18 + i * 2} ${-5 + i * 3}Q0 ${4 + i * 2} ${18 - i * 2} ${-5 + i * 3}`, i % 2 ? '#6e4329' : '#e5bd79', 1);
-      for (const x of [-14, -7, 0, 7, 14]) body += line(`M${x - 2} -3l4 5`, '#8b552f', .7);
-      return body;
+    if (part === 'egg') return picture('nest-egg', p.box);
+    if (part === 'shell') return paintedNestShell(false);
+    if (part === 'cap') return paintedNestShell(true);
+    // Keep the cheek registered to the jaws after trimming the slimmer torso.
+    if (part === 'chick') return picture('nest-chick', { x: -4.4, y: -10, w: 11.4, h: 17 }, 0);
+    if (part === 'chickBeak') {
+      const open = frame / (p.frames.length - 1);
+      // Both painted jaws pivot at the cheek; its feathered edge covers the
+      // roots, so peeping opens a mouth rather than stretching the whole bill.
+      const jaw = (key, box, angle) => `<g transform="translate(5.7 0) rotate(${angle}) translate(-5.7 0)">${picture(key, box, 0)}</g>`;
+      return jaw('nest-chick-lower-beak', { x: 5.7, y: -.05, w: 4.8, h: 1.7 }, open * 24)
+        + jaw('nest-chick-upper-beak', { x: 5.7, y: -2.7, w: 5.1, h: 2.7 }, -open * 18);
     }
-    if (part === 'rim') return line('M-20 -9Q0 0 20 -9', '#4b3022', 2.6) + line('M-20 -9Q0 0 20 -9', '#e8bb73', 1.2);
+    if (part === 'leaf') return defs(['#d7af69', '#ab763d', '#66452e']) + `<g transform="translate(-3 -9)">${leaf(10, 3)}</g>`;
+    if (['back', 'front', 'rim'].includes(part)) return paintedNestBowl(part);
   }
   if (family === 'flower') {
     if (part === 'stem') return defs() + line('M0 0Q4 -12 0 -20', '#283623', 3) + line('M0 0Q4 -12 0 -20', '#86b955', 1.6) + `<g transform="translate(0 -9) rotate(-45)">${leaf(7, 2)}</g>`;
@@ -730,7 +740,7 @@ manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, snakePoleThickness: 19, perchedSnakeTaperedEnd: true, perchedSnakeGreen: true,
   standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1], perchedSnakePaintedSkin: true, perchedSnakeContinuous: true,
   pantherSeatY: 2, pantherEyeOffset, pantherPaintedEars: true, pantherPaintedTail: true, hangingBatRootY: 1, hangingBatPaintedEars: true, hangingBatEyeOffsets, owlFaceTravel: .35,
-  spiderLegPoses: true, climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
+  nestPaintedChick: true, nestPaintedBowl: true, nestEggScale, nestChickScale: .9, nestChickY: .1, nestShellCap: false, spiderLegPoses: true, climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
   hangingMonkeyLegTint: hangingMonkeyTint,
   hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),
   batWingOffset: [6, 4], templeFireDaylight: .18,

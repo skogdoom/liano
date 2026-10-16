@@ -3988,6 +3988,12 @@
       ]
     },
     "owlFaceTravel": 0.35,
+    "nestPaintedChick": true,
+    "nestPaintedBowl": true,
+    "nestEggScale": 1.2,
+    "nestChickScale": 0.9,
+    "nestChickY": 0.1,
+    "nestShellCap": false,
     "spiderLegPoses": true,
     "climbingSnake": "articulated",
     "monkeyRootY": -3,

@@ -130,6 +130,18 @@ disc's sideways motion to 35% so it remains within the feathered head. Classic
 retains its original artwork and face travel; placement and collision contracts
 are unchanged.
 
+Nests use a shallow painted chestnut-twig bowl split into back and front layers.
+The intact ivory egg and cracked lower shell share the same painted egg image,
+including speckles and shading; the loose shell cap is hidden. The egg exports
+at 120% of its classic dimensions. A slim golden-yellow hatchling is mirrored
+within the nest, shifted 1.2 units back toward the shell center, and seated with
+a 0.1-unit vertical offset from its animated pose. Its scale is 90%; its tapered
+torso stays behind the shell while the head and beak clear the rim throughout
+the bobbing animation. Two separately painted jaws retain the nine-frame peep,
+with their roots covered by the cheek. The nest, egg and chick have separate
+brown, ivory and yellow values for game-size contrast. Classic retains its
+original nest, twigs, leaf, shell cap, chick artwork and poses.
+
 The spider's brighter lavender body has two widely separated, enlarged yellow
 eyes with small pupils. `spiderLegPoses` selects a cartoon-only `spider.legs`
 flipbook of 24 complete eight-leg poses behind that body. Rasterizing the whole

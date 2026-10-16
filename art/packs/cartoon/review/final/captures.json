@@ -3219,6 +3219,53 @@
         "thresholdsChanged": false
       },
       "approval": "Owner accepted the final beak preview after the combined owl/bat-eye review."
+    },
+    {
+      "change": "Painted shallow nest, shared ivory egg and centered slim hatchling",
+      "baseCommit": "7f87fdc",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "The three nest states share a shallow painted chestnut bowl and a pale ivory speckled egg. The hatched state omits the loose shell cap and places a slim, golden-yellow chick lower and centered within the lower shell. Its head and animated beak clear the rim; mirrored poses preserve the same seating. Classic artwork and behavior are unchanged."
+      ],
+      "sources": [
+        "masters/nest-and-egg.png",
+        "masters/nest-chick.png",
+        "components/nest-bowl.png",
+        "components/nest-egg.png",
+        "components/nest-chick.png",
+        "components/nest-chick-upper-beak.png",
+        "components/nest-chick-lower-beak.png"
+      ],
+      "refreshed": [
+        "nest-day",
+        "nest-night",
+        "world.decoration.nest at 1\u00d7/2\u00d7",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "sourceAndInventory": "Passed",
+        "productionBuild": "Passed",
+        "focusedTests": 16,
+        "browserReferenceTests": 1,
+        "native": "All three nest states, mirrored hatchling, peeping and game-size sample at 1\u00d7/4\u00d7 atlas densities by day and night; shell in front of lower torso, shell cap absent. Beak clears rim over eight-second pose sweep. Real fixture captured at 1\u00d7/2\u00d7.",
+        "textureMemoryMB": {
+          "2x": 115,
+          "4x": 293
+        },
+        "reviewPage": "Eight tabs, image zoom, video, comparisons, notes export, accepted nest previews and mobile width checked."
+      },
+      "gallery": {
+        "flagged": 38,
+        "differingShare": 0.015742163891046115,
+        "thresholdsChanged": false,
+        "addedFlag": "nest.back: browser/source and runtime atlas image resampling differ; native accepted artwork inspected."
+      },
+      "approval": "Owner accepted the centered hatchling after reviewing proportions, shell seating, contrast and nest height."
     }
   ]
 }

@@ -243,10 +243,13 @@ function monkey(b, rand) {
 function nest(b, rand) {
   const { dir, x: cx, state, phase, twigs, rimTwigs } = nestPlacement(rand);
   const part = b.container(cx, branchTop(cx)).setScale(dir, 1);
+  const paintedBowl = b.art.catalog.presentation?.nestPaintedBowl;
+  const eggScale = b.art.catalog.presentation?.nestEggScale ?? 1;
+  const eggPiece = key => b.image(key).setScale(b.art.unit(key) * eggScale);
   // The back of the bowl with the twigs out of its rim, the contents, then the front wall
   // with its twigs and rim, so the contents sit in the nest.
-  const back = [b.image('nest.back'), ...rimTwigs.flatMap(({ x, lean, rise }) => b.line('nest.rimTwig', [[x, -8], [x + lean, rise]]))];
-  const front = [
+  const back = paintedBowl ? [b.image('nest.back')] : [b.image('nest.back'), ...rimTwigs.flatMap(({ x, lean, rise }) => b.line('nest.rimTwig', [[x, -8], [x + lean, rise]]))];
+  const front = paintedBowl ? [b.image('nest.front')] : [
     b.image('nest.front'),
     ...twigs.flatMap(({ x, y, len, tilt, light }) => b.line(light ? 'nest.lightTwig' : 'nest.twig', [[x - len / 2, y - tilt * len], [x + len / 2, y + tilt * len]])),
     b.image('nest.rim'),
@@ -254,22 +257,33 @@ function nest(b, rand) {
   const contents = b.container();
   let animate = () => {};
   if (state === 'egg') {
-    const egg = b.image('nest.egg').setPosition(NEST_PARTS.egg.x, NEST_PARTS.egg.y);
+    const egg = eggPiece('nest.egg').setPosition(NEST_PARTS.egg.x, NEST_PARTS.egg.y);
     contents.add(egg);
     animate = (t) => egg.setRotation(eggRock(t, phase));
   } else if (state === 'hatched') {
     const chick = b.container(NEST_PARTS.chick.x, NEST_PARTS.chick.y);
     const beak = b.image('nest.chickBeak');
-    chick.add([b.image('nest.chick'), beak]);
-    const cap = b.image('nest.cap').setPosition(NEST_PARTS.cap.x, NEST_PARTS.cap.y).setRotation(NEST_PARTS.cap.rotation);
-    contents.add([b.image('nest.shell').setPosition(NEST_PARTS.shell.x, NEST_PARTS.shell.y), chick, cap]);
+    const body = b.image('nest.chick');
+    const painted = b.art.catalog.presentation?.nestPaintedChick;
+    // Preserve the hatchling's facing when the whole nest is mirrored.
+    // Cover the jaw roots with the cheek and tuck the lower body into the shell.
+    if (painted) {
+      const scale = b.art.catalog.presentation.nestChickScale ?? 1;
+      chick.setX(NEST_PARTS.chick.x + 1.2).setScale(-scale, scale);
+    }
+    chick.add(painted ? [beak, body] : [body, beak]);
+    const shell = eggPiece('nest.shell').setPosition(NEST_PARTS.shell.x, NEST_PARTS.shell.y);
+    contents.add(painted ? [chick, shell] : [shell, chick]);
+    if (b.art.catalog.presentation?.nestShellCap !== false) {
+      contents.add(eggPiece('nest.cap').setPosition(NEST_PARTS.cap.x, NEST_PARTS.cap.y).setRotation(NEST_PARTS.cap.rotation));
+    }
     animate = (t) => {
       const pose = chickPose(t, phase);
-      chick.setY(pose.y).setRotation(pose.rotation);
+      chick.setY(pose.y + (b.art.catalog.presentation?.nestChickY ?? 0)).setRotation(pose.rotation);
       b.art.setFrame(beak, 'nest.chickBeak', CHICK_BEAK.frameFor(pose.open));
     };
   } else {
-    contents.add(b.image('nest.leaf'));
+    if (!paintedBowl) contents.add(b.image('nest.leaf'));
   }
   part.add([...back, contents, ...front]);
   return { part, animate };
