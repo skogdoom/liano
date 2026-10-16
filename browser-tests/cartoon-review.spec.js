@@ -4,6 +4,7 @@ import { DEV } from '../playwright.config.js';
 import { collectErrors } from './helpers.js';
 
 const review = JSON.parse(readFileSync(new URL('../art/packs/cartoon/review/manifest.json', import.meta.url), 'utf8'));
+const inventory = JSON.parse(readFileSync(new URL('../art/packs/cartoon/inventory.json', import.meta.url), 'utf8'));
 
 test('cartoon style review shows all samples and switches game-scale views without loading the game', async ({ page }) => {
   const errors = collectErrors(page);
@@ -12,8 +13,8 @@ test('cartoon style review shows all samples and switches game-scale views witho
   await page.goto(`${DEV}cartoon.html`);
   await page.waitForFunction(() => document.documentElement.dataset.cartoonReview === 'ready');
   await expect(page.locator('#cards article')).toHaveCount(9);
-  await expect(page.locator('#coverage')).toContainText('175 pieces / 576 required frames');
-  await expect(page.locator('#coverage')).toContainText('576 painted');
+  await expect(page.locator('#coverage')).toContainText(`${inventory.pieceCount} pieces / ${inventory.frameCount} required frames`);
+  await expect(page.locator('#coverage')).toContainText(`${inventory.frameCount} painted`);
   await expect(page.locator('#scale')).toContainText('1280 × 720');
   await page.selectOption('#viewport', 'portrait');
   await page.selectOption('#light', 'night');

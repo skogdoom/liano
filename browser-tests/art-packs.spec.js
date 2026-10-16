@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import { DEV } from '../playwright.config.js';
 import { collectErrors, started, openConfig, menuLabelPoint } from './helpers.js';
+
+const cartoonManifest = JSON.parse(readFileSync(new URL('../art/packs/cartoon/manifest.json', import.meta.url), 'utf8'));
 
 for (const art of ['classic', 'cartoon']) test(`${art} loads only its own pack and starts all desktop modes`, async ({ page }) => {
   const errors = collectErrors(page), requests = [];
@@ -119,7 +122,9 @@ test('the cartoon frame gallery covers the complete pack and previews flipbooks'
   await page.goto(`${DEV}art.html?art=cartoon&scale=2`);
   await page.waitForFunction(() => document.documentElement.dataset.gallery === 'done', null, { timeout: 200_000 });
   const gallery = await page.evaluate(() => window.__gallery);
-  expect(gallery.pack).toBe('cartoon'); expect(gallery.frames).toHaveLength(584);
+  expect(gallery.pack).toBe('cartoon');
+  expect(gallery.frames.map(({ key, frame }) => [key, frame])).toEqual(
+    cartoonManifest.pieces.flatMap((piece) => piece.frames.map((_, frame) => [piece.key, frame])));
   console.log(`cartoon gallery: ${(gallery.share * 100).toFixed(2)}% differing, ${gallery.frames.filter((f) => !f.pass).length} frames flagged`);
   const wing = page.locator('section').filter({ has: page.locator('h2', { hasText: /^bird\.red\.wing$/ }) });
   await wing.getByRole('slider').fill('32');
