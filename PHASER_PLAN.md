@@ -1,6 +1,6 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (fifth draft: adds the planned cartoon sprite pack, M8a). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a’s first complete cartoon pack and Config reload selector are implemented on `phaser-sprites`, between M8 and M9; the owner has accepted the cartoon artwork. Final automated verification, approved regression references and the report remain before integration into `phaser`; real-device checks are deferred until after integration and remain required before release. M9 follows M8a.**
+Status: **agreed plan (fifth draft: adds the planned cartoon sprite pack, M8a). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a’s first complete cartoon pack and Config reload selector are implemented on `phaser-sprites`, between M8 and M9; the owner has accepted the cartoon artwork. Final automated verification, approved regression references and the report are complete; integration into `phaser` is next; real-device checks are deferred until after integration and remain required before release. M9 follows M8a.**
 
 **Nothing is merged into master until every milestone (M0 to M9, including M8a) is finished and the owner explicitly says to merge.** Milestone PRs go into `phaser` only.
 
@@ -725,7 +725,7 @@ Only once M7 is accepted: until then the Pixi version is the reference.
 
 ### M8a. Cartoon sprite sheets and the classic graphics toggle (L)
 
-**Status: implementation started on `phaser-sprites` from `phaser`, after the owner’s go-ahead.** This milestone is between M8 (Pixi removal) and M9 (cleanup/release). The owner approved continuing from the corrected style sample. The complete production pack and reload selector are implemented; cartoon is now the default, and the owner has accepted its appearance through `7abe519`. Final automated verification, approved regression references and the report remain before integration into `phaser`. By owner decision, real-device checks take place after that integration, before release.
+**Status: artwork accepted and automated verification complete on `phaser-sprites`; ready for integration preparation into `phaser`.** This milestone is between M8 (Pixi removal) and M9 (cleanup/release). The owner approved continuing from the corrected style sample. The complete production pack and reload selector are implemented; cartoon is now the default, and the owner has accepted its appearance through `7abe519`. Final automated verification, approved regression references and the report are complete; the milestone is ready for integration preparation into `phaser`. By owner decision, real-device checks take place after that integration, before release.
 
 **Outcome.** Prepare and integrate a complete cartoon sprite pack that can replace all current graphics, alongside a complete classic pack. The Config menu selects between them through **Classic graphics: On/Off** and reloads the game when the value changes. Cartoon is now the default. Both packs use the same rules, physics, generated levels, obstacles, animation timing, camera motion, modes and sounds.
 
@@ -802,7 +802,7 @@ Add a clearly labelled **Classic graphics: On/Off** row inside the existing titl
 
 **Done when:** the owner approves the cohesive concept-derived artwork; cartoon assets replace every required current visual family without hidden classic fallbacks; both complete packs build and fit the existing budgets (or explicitly accepted exceptions); classic defaults to Off; Config switches correctly by reload on desktop/mobile; tests and classic/cartoon visual checks pass; the milestone report and asset-editing guide are complete. These requirements gate integration into `phaser`; mobile layout and reload behavior can be verified in automated browser checks beforehand. Real-device gameplay, startup and frame checks remain pending until after integration, and must be completed before release. M9 starts afterward. The owner explicitly changed the defaults to Classic graphics Off and Shadow Off.
 
-**M8a implementation report (draft artwork ready for review, version 3.0.0-dev.9).**
+**Historical M8a implementation report (initial review build, version 3.0.0-dev.9).** The finalized report below supersedes these initial counts, sizes and acceptance notes.
 
 - Produced an independent cartoon source set covering all **175 baseline pieces** plus the explicit stone/sun wordmark. The current set has **576 required frames / 577 including the wordmark** after reducing the static cartoon stones from 24 to six; all animated flipbooks retain their original counts. Painted PNG masters supply monkey components, including separate fur-covered torso/arm/leg masters, creatures, foliage/wood, distant scenery, a level branch aligned with its collision guide, cleaned snake components, a lighter spider body, highlighted birds/bats, separate waterfalls refined climbing-snake coils and a scalloped bat wing. Editable vector recipes supply strips, repeatable stone, animated wings/fire, small props and UI. No classic drawing is reused as a fallback. Production frames are marked painted; complete owner review is not claimed.
 - Kept the classic generated/override pipeline intact. Builds emit separate `public/art/classic/` and `public/art/cartoon/` catalogs, boot/main sheets and tiles at 1×/2×/4×. Coverage, frame order, box/scale/pivot/attachment/tint/alpha/animation contracts are validated. Missing/incompatible sources, empty sprites, incorrect shadow alpha and texture-budget overruns fail the build. Cartoon cells have isolated rasterization and independent one-pixel extrusion margins inside the two-pixel gap; tiles retain wrapped softening and edge rows.
@@ -826,7 +826,7 @@ Add a clearly labelled **Classic graphics: On/Off** row inside the existing titl
 
 - Both packs satisfy 120 MB at 2× and 300 MB at 4×. The painted pack has a larger compressed download; the loader still fetches only that pack and scale. Startup/decode timing and the cached 1.5-second/60 Hz budgets must be checked on Safari M1 and iPhone 13 mini after integration into `phaser`, before release; Chromium software rendering is not a substitute for those device results.
 - Validation: production build and source/inventory checks pass; the latest full unit run passed **71 files / 767 tests**, with focused checks after later changes. Classic references and the classic gallery remain passing (0.17% differing pixels). The cartoon gallery's aggregate comparison is about **1.43%**, above the gallery's 1% aggregate guide; **36 frames** remain flagged at 2×. The current built/source/difference images are visible in the artwork review, with no relaxed thresholds or hidden flags. All **82 Chromium browser checks** pass across the full run and focused retries: 81 passed in the full run; the newly added mode test queued a redundant mode key with Start, then passed after waiting for mode selection appropriately. The anatomy follow-up passed 22 focused unit checks. The lighting/attachment follow-up passes 20 focused unit checks and ten browser checks, including the unchanged classic references; native pixel comparisons confirm warm light on the stone by day/dusk/night and unchanged classic daylight behavior. The joint-layer follow-up passes 20 focused unit checks and ten browser checks; 18 native poses cover both players and the ghost through hangs, swings, flights, catch corrections and falls, alongside the animated hanging decoration. The hanging-eye correction passes 18 focused unit checks and three browser checks, with native open/blink inspection in both facing directions using 4× atlas art. The concealed snake-turn/rock-seating follow-up passes 27 focused unit checks, including art defaults/reload persistence and painted registration, plus 17 browser checks for art selection, mobile/desktop menus and unchanged classic references; a native 60 fps preview includes normal-speed climbing and a quarter-speed reversal, while all 24 standing stone variants and hanging-vine endpoints are inspected through the native rigs. The brighter copper-red hanging palette also passes the focused gallery/pose/classic-reference checks. The pause/floor follow-up passes the full 71-file / 760-test unit suite and three browser checks: Escape exits manual pause to the title; Space/Enter/click/tap resume without releasing the monkey; focus/context-loss guards remain active. The floor blend is baked into the foreground tile and matching fill. No visual or timing thresholds were relaxed.
-- **Current acceptance and integration gates (owner decision, 2026-10-16):** the owner accepts the cartoon graphics through `7abe519`. Before integration into `phaser`, complete final automated verification, promote selected approved captures to regression references, document the 38 current source/atlas comparison flags (1.57% aggregate), and finish the milestone report. Real-device gameplay/startup/frame and mobile usability checks are deferred until after integration into `phaser`; they remain required before release and are not recorded as passed. M8a is not yet marked done and M9 has not started.
+- **Current acceptance and integration gates (owner decision, 2026-10-16):** the owner accepts the cartoon graphics through `7abe519`. Final automated verification is complete, thirteen approved captures are promoted to regression references, and the final report below records current sizes and the 38 source/atlas comparison flags (1.57% aggregate). Integration into `phaser` is next. Real-device gameplay/startup/frame and mobile usability checks are deferred until after integration into `phaser`; they remain required before release and are not recorded as passed. M8a is ready for integration preparation; it has not yet been integrated and M9 has not started.
 - Climbing-snake wrap follow-up: the painted coils alternate behind and in front of their green stalk, using non-overlapping crops of the existing atlas frame. Rear and front sections share drawing time and scale; head-reversal behavior and collision geometry are unchanged.
 - First artwork-note pass (drawing defects): player/ghost tail roots now register inside the painted rear hip; climbing-vine leaves render behind both coil layers; a short neck connects the coil to the rotated/scaled cheek behind both coil layers, concealing its flat edge; the sandstone doorway's stray spiral is removed. Refreshed monkey poses, snake fixtures/clips, world lighting and temple review captures remain candidates. Source/inventory checks, 16 focused tests, the cartoon gallery/rig browser checks and unchanged classic references pass. The same eight source-comparison flags remain. Nests, decoration placement and contrast were addressed in the later branch-decoration pass below.
 
@@ -868,10 +868,74 @@ Add a clearly labelled **Classic graphics: On/Off** row inside the existing titl
 
 - Accepted painted-nest follow-up: The three nest states share a shallow painted chestnut bowl and a pale ivory speckled egg. The hatched state omits the loose shell cap and places a slim, golden-yellow chick lower and centered within the lower shell. Its head and animated beak clear the rim; mirrored poses preserve the same seating. Classic artwork and behavior are unchanged. Owner accepted the centered hatchling preview. Source/inventory checks, atlas and production builds, 16 focused tests and the unchanged classic browser reference pass. Native 1×/4× previews cover empty, intact, hatched, mirrored and open-beak poses by day and night; an eight-second pose sweep confirms the beak clears the rim. The real nest fixture was refreshed at 1×/2× along with decoration contexts and affected world scenes. Gallery comparison now reports 38 flags (1.57% aggregate), including nest.back source/atlas resampling differences; thresholds are unchanged. Texture memory remains 115 MB at 2× and 293 MB at 4×. Overall M8a artwork/device acceptance remains pending.
 
+**M8a final report (2026-10-16, finalized for integration).**
+
+The owner accepts the cartoon appearance through artwork commit `7abe519`.
+Implementation, artwork review, automated verification and regression references
+are complete on `phaser-sprites`. This report closes the work before integration;
+real-device testing will take place on `phaser` afterward and is not an
+integration prerequisite. The milestone has not yet been integrated.
+
+The production pack has **182 pieces / 608 frames** including the wordmark
+(181 required pieces / 607 frames in the inventory), with independent classic
+and cartoon catalogs and no hidden classic artwork fallback. Cartoon graphics
+and Shadow Off are the fresh-install defaults. Deliberate art-pack choices
+persist; switching packs preserves the current match settings and quality.
+The art guide covers sources, sheet contracts, exports, pack selection and the
+capture/replacement workflow. These final counts and measurements supersede the
+initial implementation report above.
+
+| Automated verification | Final result |
+|---|---|
+| Unit suite | 71 files / 769 tests pass |
+| Browser suite | 90 checks pass across the full run and focused reruns |
+| Artwork sources and coverage | Deterministic regeneration; validation passes |
+| Production build and window table | Build passes; generated table unchanged |
+| Classic regression references | All 12 original PNGs unchanged; comparison passes |
+| Cartoon regression references | 13 accepted captures (4.50 MB); all comparisons pass |
+| Reference negative control | Deliberately incorrect day image rejected |
+
+The browser pass corrected stale gallery/coverage expectations to use the current
+manifests and explicitly selects classic for its strict source comparison.
+Image/TileSprite comparisons exercise both packs: classic retains its original
+tighter limit; cartoon uses the existing scene-parity limits with solid-patch
+detection. All six size/pack combinations pass with no solid differences.
+The offline audio test stops the live game loop before resetting global
+randomness, avoiding duplicate Phaser texture keys. These are test corrections;
+production artwork and gameplay are unchanged.
+
+The cartoon references cover player/shadow/snake/nest poses, day/night gameplay,
+dusk temple lighting, shared HUD/results and title/Config menus at 375×600 and
+812×250. They compare runtime output with accepted runtime captures using the
+existing scene tolerance; tests never regenerate the PNGs. Separately, the
+source/atlas gallery retains **38 flags / 1.57% aggregate** for visible inspection.
+No gallery threshold was changed to hide browser/source resampling differences.
+
+Decimal MB; downloads include the selected catalog, atlas JSON/PNG and unique
+tiles, before HTTP compression. With JSON gzipped, selected-pack transfers are
+0.98/2.01/3.90 MB for classic and 7.40/11.52/23.84 MB for cartoon at 1×/2×/4×.
+Both packs satisfy the enforced 120 MB at 2× and 300 MB at 4× texture budgets.
+
+| Pack | Texture 1× | Texture 2× | Texture 4× | Download 1× | Download 2× | Download 4× |
+|---|---:|---:|---:|---:|---:|---:|
+| Classic | 46.61 MB | 105.64 MB | 254.21 MB | 1.17 MB | 2.20 MB | 4.09 MB |
+| Cartoon | 49.63 MB | 114.98 MB | 292.55 MB | 7.59 MB | 11.72 MB | 24.04 MB |
+
+**Deferred device testing and subsequent reporting.** All results above are
+Chromium/build results. Safari on the MacBook Air M1 and iPhone 13 mini still
+needs startup/decode, frame pacing, gameplay, rotation, menu and graphics-switching
+checks after integration into `phaser`, before release. This finalized report
+records the completed work before integration. After real-device testing has
+finished on `phaser`, add a dated follow-up there recording the tested commit,
+devices/browser versions, results and any findings that change the implementation,
+artwork, references, measurements or acceptance decisions. Document resulting
+changes and their validation in that follow-up; do not treat deferred checks as
+already passed or leave this report awaiting their results.
+
 ### M9. Cleanup and release (S)
 
 - Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables, the art pipeline), the README's technology section and a short "Custom art" section pointing to `art/README.md`, and the `package.json` description; set the version to 3.0.0.
-- Complete the deferred M8a real-device pass on the integrated `phaser` branch: Safari on the MacBook Air M1 and iPhone 13 mini, including gameplay, startup/frame budgets, rotation, menus and graphics switching. Record results and resolve or explicitly accept concrete exceptions before release.
+- Complete the deferred M8a real-device pass on the integrated `phaser` branch: Safari on the MacBook Air M1 and iPhone 13 mini, including gameplay, startup/frame budgets, rotation, menus and graphics switching. After real-device testing has finished on `phaser`, add the dated device-test follow-up described in the finalized M8a report, documenting results, any findings that change the implementation or conclusions, and resulting changes and validation. Resolve or explicitly accept concrete exceptions before release.
 - Merge master into `phaser` one last time, run CI and open the PR into master. It is merged only when the owner explicitly says so, after every milestone, including M8a, is finished. The owner tags `v3.0.0` and writes the release notes.
 
 ## 9. Tests
@@ -905,7 +969,7 @@ Everything below must work on the Phaser renderer as on v2.3:
 
 ## 11. Open questions
 
-**M8a art direction, answered:** the owner chose a cohesive painted cartoon style for both characters and scenery, based on the day/night concepts. There are no unresolved planning questions for this milestone. The owner authorized implementation and approved continuing from the corrected style sample. The owner has now accepted the full cartoon appearance through `7abe519`. Final automated verification, reference promotion and reporting remain before integration into `phaser`. Real-device checks are explicitly deferred until after integration and remain a pre-release requirement.
+**M8a art direction, answered:** the owner chose a cohesive painted cartoon style for both characters and scenery, based on the day/night concepts. There are no unresolved planning questions for this milestone. The owner authorized implementation and approved continuing from the corrected style sample. The owner has now accepted the full cartoon appearance through `7abe519`. Final automated verification, reference promotion and reporting are complete; integration into `phaser` is next. Real-device checks are explicitly deferred until after integration and remain a pre-release requirement.
 
 Every question from the first two drafts is answered in section 1. New questions that come up during a milestone are added here and asked before that milestone's PR is merged into `phaser`.
 

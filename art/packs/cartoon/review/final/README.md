@@ -1,10 +1,12 @@
 # M8a final artwork review candidates
 
 Current status (2026-10-16): the owner accepts the cartoon appearance through
-`7abe519`. Selected captures still need promotion to automated regression
-references. Real-device checks are deferred until after integration into
+`7abe519`. Thirteen captures are promoted to automated regression
+references under `browser-tests/references/cartoon/`. Real-device checks are deferred until after integration into
 `phaser`, and remain required before release. Historical candidate/acceptance
 notes below describe earlier review stages.
+
+The M8a report is finalized for integration. After real-device testing has finished on `phaser`, document any findings that change the implementation, artwork, references, measurements or acceptance decisions in a dated follow-up on that branch, together with the resulting changes and their validation. Device testing remains required before release.
 
 The temple-mist follow-up refreshes all nine temple scenes and the montage.
 Independent atlas borders remove the gray horizontal edge without hiding the
@@ -128,3 +130,6 @@ Source/inventory checks, production build, 16 focused tests and unchanged classi
 
 Accepted painted-nest follow-up on `7f87fdc`: The three nest states share a shallow painted chestnut bowl and a pale ivory speckled egg. The hatched state omits the loose shell cap and places a slim, golden-yellow chick lower and centered within the lower shell. Its head and animated beak clear the rim; mirrored poses preserve the same seating. Classic artwork and behavior are unchanged.
 Owner accepted the centered hatchling preview. Source/inventory checks, atlas and production builds, 16 focused tests and the unchanged classic browser reference pass. Native 1×/4× previews cover empty, intact, hatched, mirrored and open-beak poses by day and night; an eight-second pose sweep confirms the beak clears the rim. The real nest fixture was refreshed at 1×/2× along with decoration contexts and affected world scenes. Gallery comparison now reports 38 flags (1.57% aggregate), including nest.back source/atlas resampling differences; thresholds are unchanged. Texture memory remains 115 MB at 2× and 293 MB at 4×. The Decorations tab includes the accepted day/night nest previews, with a native 1× game-size sample.
+
+Final automated verification and cartoon regression references (2026-10-16): 769 unit tests in 71 files pass. Source regeneration is deterministic; art/coverage validation, the production build and the generated window-table check pass. The browser suite covers 90 checks across the full run and focused reruns, including the new references and a negative control. Updated stale gallery/coverage expectations to use the current manifests and explicitly selected classic for its strict source comparison. Image/TileSprite checks now exercise both packs: classic retains its original tighter comparison, and cartoon uses the established scene-parity limits with solid-patch detection; all six sizes/pack combinations pass with no solid differences. The offline audio test stops the live game loop before resetting global randomness, avoiding duplicate Phaser texture keys without changing game audio. Thirteen approved cartoon PNG references (4.50 MB) cover rigs, gameplay, temple lighting, HUD/results and small-screen title/Config layouts; the original twelve classic references are byte-for-byte unchanged. All reference comparisons pass, and a deliberately incorrect day image is rejected. Production artwork and gameplay are unchanged.
+Only integration preparation remains before the milestone PR; real-device checks follow integration into `phaser`, before release.

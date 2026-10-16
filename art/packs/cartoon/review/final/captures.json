@@ -3271,13 +3271,102 @@
   "artworkAcceptance": {
     "commit": "7abe519",
     "date": "2026-10-16",
-    "decision": "Owner accepts the current cartoon appearance. Selected captures still need promotion to automated regression references."
+    "decision": "Owner accepts the current cartoon appearance; thirteen fixed captures are promoted to automated regression references."
   },
   "deviceValidation": {
     "status": "pending",
     "timing": "After M8a integration into phaser, before release",
     "integrationGate": false,
     "releaseGate": true,
-    "decision": "Owner requested postponing real-device checks until after integration into phaser."
+    "decision": "Owner requested postponing real-device checks until after integration into phaser.",
+    "reporting": "After testing has finished on phaser, add a dated follow-up recording results and any findings or resulting changes that affect the finalized report."
+  },
+  "finalAutomatedVerification": {
+    "date": "2026-10-16",
+    "artworkCommit": "7abe519c71fede8796601be6146ee22cf5e98b48",
+    "planCommit": "6b0be10",
+    "unit": {
+      "files": 71,
+      "tests": 769,
+      "status": "passed"
+    },
+    "browser": {
+      "tests": 90,
+      "status": "passed across full run and focused reruns",
+      "initialRun": {
+        "passed": 82,
+        "failed": 3
+      },
+      "fixedChecks": "Preserve classic comparison limits, check cartoon image/tile differences with existing scene parity, and stop live game updates while the offline sound test resets randomness.",
+      "regressionChecks": 3
+    },
+    "sourceRegeneration": "Deterministic; no generated source changes",
+    "artAndInventoryValidation": "Passed",
+    "productionBuild": "Passed",
+    "windowTable": "Unchanged",
+    "classicReferences": "All twelve PNGs unchanged; browser comparison passes",
+    "cartoonReferences": {
+      "count": 13,
+      "manifest": "browser-tests/references/cartoon/manifest.json",
+      "negativeControl": "Incorrect classic day image rejected"
+    },
+    "assetMetrics": {
+      "classic": {
+        "1": {
+          "textureBytes": 46612480,
+          "downloadBytes": 1172193,
+          "gzipMetadataDownloadBytes": 981876,
+          "files": 11
+        },
+        "2": {
+          "textureBytes": 105644032,
+          "downloadBytes": 2196767,
+          "gzipMetadataDownloadBytes": 2005556,
+          "files": 12
+        },
+        "4": {
+          "textureBytes": 254214144,
+          "downloadBytes": 4094570,
+          "gzipMetadataDownloadBytes": 3901888,
+          "files": 14
+        }
+      },
+      "cartoon": {
+        "1": {
+          "textureBytes": 49627136,
+          "downloadBytes": 7592451,
+          "gzipMetadataDownloadBytes": 7395724,
+          "files": 11
+        },
+        "2": {
+          "textureBytes": 114982912,
+          "downloadBytes": 11720563,
+          "gzipMetadataDownloadBytes": 11522710,
+          "files": 13
+        },
+        "4": {
+          "textureBytes": 292552704,
+          "downloadBytes": 24037227,
+          "gzipMetadataDownloadBytes": 23837722,
+          "files": 14
+        }
+      }
+    },
+    "deviceValidation": "Deferred until after integration into phaser; required before release"
+  },
+  "report": {
+    "status": "finalized for integration",
+    "date": "2026-10-16",
+    "location": "PHASER_PLAN.md: M8a final report",
+    "scope": "Accepted artwork, completed implementation, automated verification, regression references and build measurements before integration.",
+    "deviceFollowUp": {
+      "branch": "phaser",
+      "timing": "After real-device testing has finished",
+      "record": [
+        "Tested commit and device/browser versions",
+        "Results and findings that change implementation, artwork, references, measurements or acceptance decisions",
+        "Resulting changes and their validation"
+      ]
+    }
   }
 }

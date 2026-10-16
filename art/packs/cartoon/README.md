@@ -29,6 +29,18 @@ style review. The production monkey uses separate components and the existing
 continuous pose/joint calculations. Source/atlas comparisons expose browser/resvg
 sampling differences in painted edges; keep the flags visible for art review.
 
+## Accepted regression references
+
+The owner accepted the cartoon appearance through `7abe519`. Thirteen fixed
+captures under `browser-tests/references/cartoon/` now protect the approved
+artwork, day/night gameplay, dusk temple light, player/shadow/snake/nest poses,
+shared HUD/results and small-screen title/Config menus. Open
+`/cartoon-reference.html` for saved/current/difference images; the normal browser
+suite checks them with the existing scene tolerance. The reference README explains
+explicit capture and replacement; tests never regenerate the PNGs. Classic
+reference images are unchanged. Real-device acceptance follows integration into
+`phaser` and remains required before release.
+
 ## Sources and exports
 
 `masters/` contains painted PNG component masters: the original monkey sheet,
