@@ -193,6 +193,20 @@ const pantherEyes = frame => {
   }).join('');
 };
 
+// The painted tail's root stays registered inside the rear haunch throughout
+// the flipbook. A small rotation sways the hanging end without sliding the join.
+const paintedPantherTail = frame => {
+  const tail = pictures.get('panther-tail'), body = pictures.get('panther');
+  const box = baseline.pieces.find(p => p.key === 'panther.body').box;
+  const [u, v] = body.landmarks.tailRoot;
+  const root = [box.x + 1 + u / body.w * (box.w - 2), box.y + 1 + v / body.h * (box.h - 2)];
+  const { root: [x, y], rootTop, rootBottom } = tail.landmarks;
+  const diameter = Math.hypot(rootBottom[0] - rootTop[0], rootBottom[1] - rootTop[1]);
+  const scale = Math.min(28 / tail.w, 30 / tail.h, 4.5 / diameter);
+  const angle = (-6 + frame * 12 / 15) * .7;
+  return `<g transform="translate(${root.join(' ')}) rotate(${angle})"><use href="#picture-panther-tail" transform="matrix(${scale} 0 0 ${scale} ${-x * scale} ${-y * scale})"/></g>`;
+};
+
 // Geometry is measured in the trimmed painted head, then transformed with the
 // head itself. Keeping the original whites avoids drawing new eyes over the fur.
 const monkeyEyes = (frame, blink = false, key = 'monkey-head') => {
@@ -431,10 +445,7 @@ function creature(p, frame) {
     if (component === 'body') return picture('panther', p.box);
     if (component === 'eyes') return pantherEyes(frame);
     if (component === 'ear') return ellipse(0, 0, 2.1, 2.4, '#ad8585');
-    if (component === 'tail') {
-      const curl = -6 + frame * 12 / 15;
-      return defs(palettes.black) + path(`M-33 -12 Q-52 2 -37 19 Q${-26 + curl} 26 ${-34 + curl} 15`, 'none', '#1a272e', 7) + line(`M-34 -12 Q-50 1 -37 19`, '#59676a', 1.2);
-    }
+    if (component === 'tail') return paintedPantherTail(frame);
   }
   if (family === 'bird' || family === 'perchedBird') {
     if (component === 'body') return family === 'bird'
@@ -690,7 +701,7 @@ const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, snakePoleThickness: 19, perchedSnakeTaperedEnd: true, perchedSnakeGreen: true,
   standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1], perchedSnakePaintedSkin: true, perchedSnakeContinuous: true,
-  pantherSeatY: 2, pantherEyeOffset, pantherPaintedEars: true, hangingBatRootY: 1,
+  pantherSeatY: 2, pantherEyeOffset, pantherPaintedEars: true, pantherPaintedTail: true, hangingBatRootY: 1, hangingBatPaintedEars: true,
   climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
   hangingMonkeyLegTint: hangingMonkeyTint,
   hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),

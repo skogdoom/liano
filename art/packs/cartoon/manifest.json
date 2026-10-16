@@ -3926,7 +3926,9 @@
       3
     ],
     "pantherPaintedEars": true,
+    "pantherPaintedTail": true,
     "hangingBatRootY": 1,
+    "hangingBatPaintedEars": true,
     "climbingSnake": "articulated",
     "monkeyRootY": -3,
     "monkeyLimbsBehindBody": true,

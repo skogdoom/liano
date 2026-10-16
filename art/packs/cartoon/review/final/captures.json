@@ -3087,6 +3087,45 @@
         "thresholdsChanged": false
       },
       "approval": "Owner accepted the bat eyes, corrected panther without forehead oval, and upward 45\u00b0 pole stubs."
+    },
+    {
+      "change": "Painted panther tail with registered rear-haunch attachment and clean hanging-bat ears",
+      "baseCommit": "eae56af",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "The panther has a painted fur-and-spots tail matched to its body, attached behind the rear haunch with a fixed root and shared breathing transform. Its sixteen-frame sway retains a covered join and clear atlas edges. The legacy hanging-bat ear overlay is hidden in all four palettes, removing the triangular artifact."
+      ],
+      "sources": [
+        "masters/panther-tail.png",
+        "components/panther-tail.png",
+        "generated/panther.tail.0.svg through generated/panther.tail.15.svg"
+      ],
+      "refreshed": [
+        "panther-eyes",
+        "hanging-bat-eyes",
+        "world.decoration.panther at 1\u00d7/2\u00d7",
+        "world.decoration.hangingBat at 1\u00d7/2\u00d7",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "sourceAndInventory": "Passed",
+        "productionBuild": "Passed",
+        "browserReferenceTests": 1,
+        "tailFramesChecked": 16,
+        "native": "Both facing directions of the panther, all four hanging-bat palettes; painted tail root opaque in every frame and covered by the body, with no frame-edge clipping.",
+        "reviewPage": "Eight tabs, image zoom, video playback, comparison images, notes export and mobile width checked."
+      },
+      "gallery": {
+        "flagged": 37,
+        "differingShare": 0.015166601840064239,
+        "thresholdsChanged": false
+      },
+      "approval": "Owner accepted the painted panther tail/attachment and removed bat-ear triangle."
     }
   ]
 }

@@ -52,7 +52,7 @@ for (const field of fields) {
 }
 document.querySelector('#export').onclick = () => {
   const notes = {
-    build: '3f72b69 + accepted bat/panther eyes and upward pole stubs on dc446a0',
+    build: '3f72b69 + accepted painted panther tail and bat ears on eae56af',
     notes: Object.fromEntries(fields.map(field => [field.dataset.notes, field.value])),
   };
   const link = document.createElement('a');

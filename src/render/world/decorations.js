@@ -284,7 +284,10 @@ function panther(b, rand) {
     .setVisible(!b.art.catalog.presentation?.pantherPaintedEars);
   const eyes = b.image('panther.eyes').setPosition(...(b.art.catalog.presentation?.pantherEyeOffset ?? [0, 0]));
   body.add([b.image('panther.body'), ear, eyes]);
-  part.add([tail, body]);
+  if (b.art.catalog.presentation?.pantherPaintedTail) {
+    body.addAt(tail, 0);
+    part.add(body);
+  } else part.add([tail, body]);
   const earUnit = b.art.unit('panther.ear');
   return {
     part,
@@ -305,7 +308,7 @@ function hangingBatRig(b, rand) {
   const part = b.container(x, b.art.catalog.presentation?.hangingBatRootY ?? under()).setScale(dir, 1);
   // Everything hangs from the feet at (0, 0).
   const swing = b.container();
-  const ear = b.image(key('ear'));
+  const ear = b.image(key('ear')).setVisible(!b.art.catalog.presentation?.hangingBatPaintedEars);
   const eyes = b.image(key('eyes'));
   swing.add([b.image(key('body')), ear, eyes]);
   part.add(swing);

@@ -100,6 +100,19 @@ inside their frame, leaving more fur visible. Panther eyes follow `eyeNear` and
 sloped near socket. `presentation.pantherEyeOffset` places the exported eyes
 without changing the classic frame contract. `pantherPaintedEars` hides the
 legacy animated ear patch because the painted body already includes both ears.
+`hangingBatPaintedEars` similarly hides the legacy triangular ear overlay on all
+four hanging-bat palettes; their painted ears are already part of the body.
+
+The panther has a separate painted charcoal-fur tail master with matching spots
+and soft highlights. Its `root`/`rootTop`/`rootBottom` landmarks set a uniform
+export scale with a root diameter capped at 4.5 world units. The body's `tailRoot`
+registers it at the rear haunch (−29, −6), hidden beneath the body in all sixteen
+frames. A gentle ±4.2° sway pivots around that fixed root. With
+`pantherPaintedTail`, tail and body share the breathing transform while the body
+covers the join; classic keeps its original tail and layer/animation behavior.
+The component export is capped at 320 pixels wide; the full master stays out of
+production atlas cells.
+
 
 Branch snakes use single-strand band recipes with separate animated neck/head and
 tail; the climbing snake's full coil image is not a repeatable branch band. The
