@@ -72,8 +72,8 @@ components and already draws its torso/face over the limb roots. Classic retains
 its original layer order. The replacement component exports retain their previous
 pixel widths; do not embed the full-resolution masters in production frames.
 
-`scripts/cartoon-sources.mjs` produces all **594 required frames** plus the new
-`ui.wordmark`: **176 pieces / 595 frames**. It combines painted components with
+`scripts/cartoon-sources.mjs` produces all **576 required frames** plus the new
+`ui.wordmark`: **176 pieces / 577 frames**. It combines painted components with
 editable vector recipes for bent strips, repeatable stone courses, feather/membrane
 animation, small props and UI. Variants share the same pivots and scale; bird/bat
 wings and fire use the original frame ordering. Player 2 has a distinct ginger
@@ -201,7 +201,7 @@ settings and the version remain live text.
 
 ## Inventory and completion
 
-`inventory.json` tracks all 175 baseline contracts and 594 stable frame keys:
+`inventory.json` tracks all 175 baseline contracts and 576 current frame keys:
 logical boxes, pivots, joins, hitbox guides, tint/alpha, strip/slice/softening rules,
 1×/2×/4× export sizes and source/sheet/cell/status fields. The build records the
 actual 2× atlas placement; tiles reference their separate image. `ui.wordmark` is
@@ -214,3 +214,16 @@ synchronization; `art:check` also requires complete cartoon sources. Production
 frames are **painted**, rather than claiming the owner has reviewed every family.
 Final artwork approval and the Safari M1/iPhone 13 mini gameplay/startup pass remain
 milestone acceptance steps. Classic references are kept unchanged.
+
+The cartoon stone set has six painted variants: sandstone, blue slate, red ochre,
+violet granite, mossy grey and banded limestone. Each has its own silhouette and
+surface features. These are static choices, so the cartoon pack intentionally
+contains six `rock.body` frames while classic keeps 24. All animated flipbooks
+retain their original counts. The gap seed selects against the loaded pack's
+count. Platform seating and hanging-vine endpoints come from each painted
+silhouette; collision geometry is unchanged. The source exporter removes the
+retired cartoon rock frames and preserves inventory progress on retained keys.
+
+The perched branch snake uses a dedicated copper/orange head master and matching
+copper/gold strips. The hue difference separates it from the green leaves on
+the branch; the climbing snake keeps its green head and coils.

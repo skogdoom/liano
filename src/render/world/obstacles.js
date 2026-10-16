@@ -61,7 +61,7 @@ function thornBush(b, o, rand, hangs, view) {
 
 function rock(b, o, rand, hangs, view) {
   const [{ r }] = OBSTACLE_HITBOXES.rock;
-  const variant = rockVariant(o.gap);
+  const variant = rockVariant(o.gap, b.art.at('rock.body').frames.length);
   const vineEnd = b.art.catalog.presentation?.hangingRockVineY?.[variant] ?? -r + 4;
   const parts = hangs
     ? [...vine(b, 0, canopyY(o), vineEnd, 9), b.image('rock.sling')]

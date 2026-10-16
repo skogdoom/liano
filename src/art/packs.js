@@ -8,6 +8,9 @@ const same = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical
 // and the classic pack at their original alpha; geometry/animation stay shared.
 export const packAlpha = (id, piece) => id === 'cartoon' && piece.key.startsWith('monkey.shadow.') ? 0.56 : piece.alpha;
 
+// Static variation is pack-specific; animation and attachment contracts stay fixed.
+export const packFrameCount = (id, piece) => id === 'cartoon' && piece.key === 'rock.body' ? 6 : piece.frames.length;
+
 // Coverage is strict: a partial cartoon pack must never be shipped with an
 // implicit classic fallback. The baseline also fixes all rig/animation contracts.
 export function validatePack(baseline, manifest, id, sidecars = {}) {
@@ -25,7 +28,7 @@ export function validatePack(baseline, manifest, id, sidecars = {}) {
       for (const key of ['kind', 'set', 'box', 'scale', 'tint', 'alpha', 'density', 'soften', 'attach', 'slices', 'length', 'fps', 'hitbox']) {
         if (!same(piece[key], key === 'alpha' ? packAlpha(id, expected) : expected[key])) errors.push(`${piece.key}: incompatible ${key}`);
       }
-      if (piece.frames.length !== expected.frames.length) errors.push(`${piece.key}: wrong frame count`);
+      if (piece.frames.length !== packFrameCount(id, expected)) errors.push(`${piece.key}: wrong frame count`);
     }
     const frames = new Set();
     for (let i = 0; i < piece.frames.length; i++) {

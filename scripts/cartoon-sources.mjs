@@ -1,13 +1,13 @@
 // Deterministic sprite exports from painted component masters and editable
 // vector recipes. Never reads classic drawings; only their placement contracts.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { Resvg } from '@resvg/resvg-js';
 import { guideLayer } from '../src/art/svg.js';
 import { frameName } from '../src/art/piece.js';
 import { cartoonInventory } from '../src/art/cartoonInventory.js';
 import { OBSTACLE_HITBOXES } from '../src/config.js';
 import { imageSize } from '../src/art/custom.js';
-import { packAlpha } from '../src/art/packs.js';
+import { packAlpha, packFrameCount } from '../src/art/packs.js';
 import { registerLimb, registerTriangle } from '../src/art/registration.js';
 import { ARM, LEG } from '../src/views/monkey.js';
 import { TEMPLE_BRAZIERS } from '../src/views/obstacles.js';
@@ -47,10 +47,10 @@ for (const [key, { source, cell }] of Object.entries(layout.components)) {
   writeFileSync(new URL(`components/${key}.png`, root), cropped);
   const landmarks = layout.components[key].landmarks ?? {};
   if (Object.values(landmarks).some((point) => !Array.isArray(point) || point.length !== 2 || point.some((v) => !Number.isFinite(v) || v < 0 || v > 1))) throw new Error(`Invalid landmarks: ${key}`);
-  // Boundary samples let a whole wing cycle share one fit, so a single frame
-  // cannot silently clip its feathers or membrane against the atlas cell.
+  // Boundary samples fit a whole wing cycle inside its atlas cell and place
+  // stone contacts against the actual painted silhouette.
   const outline = [];
-  const samples = key.endsWith('-wing') ? exported.pixels : null;
+  const samples = key.endsWith('-wing') || key.startsWith('rock-') ? exported.pixels : null;
   if (samples) for (let y = 0; y < exported.height; y++) {
     let left = exported.width, right = -1;
     for (let x = 0; x < exported.width; x++) if (samples[(y * exported.width + x) * 4 + 3] >= 24) {
@@ -63,10 +63,17 @@ for (const [key, { source, cell }] of Object.entries(layout.components)) {
 }
 
 const n = (v) => Math.round(v * 1000) / 1000;
-const rockOutline = (frame) => Array.from({ length: 9 }, (_, i) => {
-  const a = i * 2 * Math.PI / 9, r = 29 + 3 * Math.sin(i * 2.7 + frame * 1.9);
-  return [n(Math.cos(a) * r), n(Math.sin(a) * r)];
-});
+const rockNames = ['sandstone', 'slate', 'ochre', 'granite', 'moss', 'limestone'];
+// Keep each painted silhouette's proportions within the shared collision guide.
+const rockPlacement = (frame) => {
+  const key = `rock-${rockNames[frame]}`, pic = pictures.get(key);
+  const scale = Math.min(64 / pic.w, 60 / pic.h);
+  return { key, pic, scale, x: -pic.w * scale / 2, y: -pic.h * scale / 2 };
+};
+const rockOutline = (frame) => {
+  const { pic, scale, x, y } = rockPlacement(frame);
+  return pic.outline.map(([px, py]) => [px * scale + x, py * scale + y]);
+};
 const hangingTorsoMatrix = () => {
   const { landmarks } = pictures.get('monkey-torso');
   return registerTriangle([landmarks.armBack, landmarks.armFront, landmarks.hip], [[-7, 25], [7, 25], [0, 41]]);
@@ -386,18 +393,18 @@ function creature(p, frame) {
     // painted climbing-snake body here produces several overlapping snakes.
     if (component === 'band') {
       const strand = frame ? 'M-4 0 Q4 11 4 22' : 'M-14 0 Q0 5 14 6';
-      return line(strand, '#30291c', 8) + line(strand, '#d5d17b', 6.6)
-        + line(strand, '#6fa83a', 4.4) + line(strand, '#c5dd65', 1.7);
+      return line(strand, '#48291c', 8) + line(strand, '#f2d191', 6.6)
+        + line(strand, '#d98a36', 4.4) + line(strand, '#ffc479', 1.7);
     }
-    if (component === 'neck') return `<defs><linearGradient id="neck" gradientUnits="userSpaceOnUse" x1="0" y1="-3" x2="0" y2="3"><stop stop-color="#e3df8d"/><stop offset=".45" stop-color="#85b744"/><stop offset="1" stop-color="#577c2b"/></linearGradient></defs>`
-      + rect(0, -2.8, p.length, 5.6, 'url(#neck)', 'stroke="#30291c" stroke-width="1.3"');
-    if (component === 'neckEnd') return ellipse(0, 0, 3, 3, '#85b744');
-    if (component === 'head') return picture('snake-head', p.box, 0);
-    if (component === 'tail') return defs(['#b5d76b', '#7fb745', '#477a30'])
-      + path(frame ? 'M-1 -3 Q-9 -4 -16 4 Q-6 4 2 3Z' : 'M-3 -1 Q0 8 -6 18 Q4 13 3 0Z', 'url(#paint)', '#30291c', 1.2);
+    if (component === 'neck') return `<defs><linearGradient id="neck" gradientUnits="userSpaceOnUse" x1="0" y1="-3" x2="0" y2="3"><stop stop-color="#f3c47e"/><stop offset=".45" stop-color="#d98a36"/><stop offset="1" stop-color="#9d501f"/></linearGradient></defs>`
+      + rect(0, -2.8, p.length, 5.6, 'url(#neck)', 'stroke="#48291c" stroke-width="1.3"');
+    if (component === 'neckEnd') return ellipse(0, 0, 3, 3, '#d98a36');
+    if (component === 'head') return picture('perched-snake-head', p.box, 0);
+    if (component === 'tail') return defs(['#f3c47e', '#d98a36', '#9d501f'])
+      + path(frame ? 'M-1 -3 Q-9 -4 -16 4 Q-6 4 2 3Z' : 'M-3 -1 Q0 8 -6 18 Q4 13 3 0Z', 'url(#paint)', '#48291c', 1.2);
   }
   if (family === 'perchedSnake' && component === 'tongue') return line('M8 0H16L19 -3M16 0L19 3', '#d16765', 1.1);
-  if (family === 'perchedSnake' && component === 'mark') return body + path('M-2 0L0 -2 2 0 0 2Z', '#37572c', 'none');
+  if (family === 'perchedSnake' && component === 'mark') return body + path('M-2 0L0 -2 2 0 0 2Z', '#8f431e', 'none');
   if ((family === 'snake' && component === 'stalkLeaf')) return `<g transform="scale(${frame ? -1 : 1} 1) translate(0 -3)">${defs()}${leaf(15, 4)}</g>`;
   if (family === 'hangingMonkey') {
     if (component === 'arms') {
@@ -453,12 +460,8 @@ function prop(p, frame) {
   }
   if (family === 'rock') {
     if (part === 'body') {
-      const pts = rockOutline(frame);
-      body = defs(['#eee1c6', '#b8aa96', '#78717a']) + path(`M${pts.map((v) => v.join(' ')).join('L')}Z`, 'url(#paint)', '#443c48', 1.4);
-      body += path(`M${pts[0].join(' ')}L-6 -15L${pts[5].join(' ')}L-16 6Z`, '#f0e5ce', 'none', 0, 'opacity=".82"') + line('M-16 -7L-4 -10L3 -3', '#fff0d5', 1.2);
-      body += line(`M${pts.slice(5).map(([px, py]) => `${n(px * .94)} ${n(py * .94)}`).join('L')}`, '#f5e8d1', 1.1);
-      body += path('M-24 19Q-12 17 -3 24L-6 29 -22 26Z', '#628650', 'none');
-      return body;
+      const { key, scale, x, y } = rockPlacement(frame);
+      return `<use href="#picture-${key}" transform="translate(${x} ${y}) scale(${scale})"/>`;
     }
     if (part === 'sling') return line('M-34 -6Q-25 13 0 3Q24 10 34 -9', '#97ac56', 4) + line('M-34 -7Q-25 11 0 1Q24 8 34 -10', '#d1cc83', 1);
     if (part === 'ledge') return body + path('M-39 34Q0 25 39 34L35 39H-35Z');
@@ -556,6 +559,13 @@ const manifest = structuredClone(baseline);
 const changedFrames = new Set();
 for (const p of manifest.pieces) {
   if (p.alpha !== undefined) p.alpha = packAlpha('cartoon', p);
+  const count = packFrameCount('cartoon', p);
+  for (let i = count; i < p.frames.length; i++) {
+    const retired = new URL(`generated/${frameName(p, i)}.svg`, root);
+    if (existsSync(retired)) unlinkSync(retired);
+  }
+  p.frames = p.frames.slice(0, count);
+  if (p.key === 'rock.body') p.purpose = 'Six distinct painted jungle boulders, selected by gap; origin at the unchanged collision centre.';
   p.frames = p.frames.map((_, i) => {
     paintBox = p.box;
     const family = p.key.split('.')[0];
@@ -604,14 +614,15 @@ manifest.presentation = {
   },
   // The ledge's quadratic top is y = 29.5 + 4.5 * (x / 39)^2.
   // Seat only standing stones; outlines already touching the ledge stay put.
-  standingRockY: baseline.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) =>
+  standingRockY: manifest.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) =>
     n(Math.max(0, Math.min(...rockOutline(frame).map(([x, y]) => 29.5 + 4.5 * (x / 39) ** 2 - y))))),
-  hangingRockVineY: baseline.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) => {
+  hangingRockVineY: manifest.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) => {
     const points = rockOutline(frame);
-    const crossings = points.flatMap(([x, y], i) => {
-      const [nextX, nextY] = points[(i + 1) % points.length];
-      return x * nextX > 0 ? [] : [y + (nextY - y) * -x / (nextX - x)];
-    });
+    const crossings = [];
+    for (let i = 0; i < points.length; i += 2) {
+      const [left, right] = [points[i], points[i + 1]];
+      if (left[0] <= 0 && right[0] >= 0) crossings.push(left[1]);
+    }
     // Extend into the painted top edge; the opaque stone covers the rope tip.
     return n(Math.min(...crossings) + 1.5);
   }),

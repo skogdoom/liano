@@ -32,6 +32,13 @@
     "canopy": { "source": "masters/foliage.png", "cell": { "x": 0, "y": 515, "w": 556, "h": 373 } },
     "trunk": { "source": "masters/foliage.png", "cell": { "x": 594, "y": 512, "w": 355, "h": 500 } },
     "branch": { "source": "masters/branch.png", "cell": { "x": 0, "y": 0, "w": 1536, "h": 1024 } },
-    "hanging-monkey-head": { "source": "masters/hanging-monkey-head.png", "cell": { "x": 0, "y": 0, "w": 1286, "h": 1223 }, "maxWidth": 355, "landmarks": { "eyeBack": [0.5637795275590551, 0.521404109589041], "eyeFront": [0.7716535433070866, 0.5736301369863014] }, "eyeSockets": { "eyeBack": { "rx": 0.07559055118110236, "ry": 0.11472602739726027, "angle": 10 }, "eyeFront": { "rx": 0.04488188976377953, "ry": 0.0916095890410959, "angle": 25 } } }
+    "hanging-monkey-head": { "source": "masters/hanging-monkey-head.png", "cell": { "x": 0, "y": 0, "w": 1286, "h": 1223 }, "maxWidth": 355, "landmarks": { "eyeBack": [0.5637795275590551, 0.521404109589041], "eyeFront": [0.7716535433070866, 0.5736301369863014] }, "eyeSockets": { "eyeBack": { "rx": 0.07559055118110236, "ry": 0.11472602739726027, "angle": 10 }, "eyeFront": { "rx": 0.04488188976377953, "ry": 0.0916095890410959, "angle": 25 } } },
+    "rock-sandstone": {"source": "masters/rocks.png", "cell": {"x": 0, "y": 0, "w": 512, "h": 512}, "maxWidth": 240},
+    "rock-slate": {"source": "masters/rocks.png", "cell": {"x": 512, "y": 0, "w": 512, "h": 512}, "maxWidth": 240},
+    "rock-ochre": {"source": "masters/rocks.png", "cell": {"x": 1024, "y": 0, "w": 512, "h": 512}, "maxWidth": 240},
+    "rock-granite": {"source": "masters/rocks.png", "cell": {"x": 0, "y": 512, "w": 512, "h": 512}, "maxWidth": 240},
+    "rock-moss": {"source": "masters/rocks.png", "cell": {"x": 512, "y": 512, "w": 512, "h": 512}, "maxWidth": 240},
+    "rock-limestone": {"source": "masters/rocks.png", "cell": {"x": 1024, "y": 512, "w": 512, "h": 512}, "maxWidth": 240},
+    "perched-snake-head": {"source": "masters/perched-snake-head.png", "cell": {"x": 0, "y": 0, "w": 1518, "h": 1036}, "maxWidth": 360}
   }
 }

@@ -64,14 +64,45 @@ describe('complete cartoon pack contracts', () => {
     }
   });
 
+  it('seats every painted stone on its ledge and attaches its hanging vine inside the silhouette', () => {
+    const piece = cartoon.pieces.find(p => p.key === 'rock.body');
+    for (let frame = 0; frame < piece.frames.length; frame++) {
+      const source = readFileSync(new URL(`../art/packs/cartoon/${piece.frames[frame]}`, import.meta.url));
+      const image = new Resvg(source, { fitTo: { mode: 'width', value: piece.box.w * 4 } }).render();
+      const pixels = image.pixels;
+      const alpha = (x, y) => pixels[(Math.floor((y - piece.box.y) * 4) * image.width + Math.floor((x - piece.box.x) * 4)) * 4 + 3];
+      expect(alpha(0, cartoon.presentation.hangingRockVineY[frame]), `variant ${frame}: floating vine`).toBeGreaterThan(180);
+      let gap = Infinity;
+      for (let y = 0; y < image.height; y++) for (let x = 0; x < image.width; x++) {
+        if (pixels[(y * image.width + x) * 4 + 3] < 128) continue;
+        const wx = x / 4 + piece.box.x, wy = y / 4 + piece.box.y + cartoon.presentation.standingRockY[frame];
+        gap = Math.min(gap, 29.5 + 4.5 * (wx / 39) ** 2 - wy);
+      }
+      expect(gap, `variant ${frame}: platform contact`).toBeGreaterThan(-1);
+      expect(gap, `variant ${frame}: platform gap`).toBeLessThan(1);
+    }
+  });
+
   it('covers every required frame plus the explicitly allowed title artwork', () => {
     expect(validatePack(classic, cartoon, 'cartoon')).toEqual([]);
     expect(cartoon.pieces).toHaveLength(176);
-    expect(cartoon.pieces.reduce((sum, p) => sum + p.frames.length, 0)).toBe(595);
+    expect(cartoon.pieces.reduce((sum, p) => sum + p.frames.length, 0)).toBe(577);
     const reordered = structuredClone(cartoon);
     const piece = reordered.pieces[0];
     piece.box = Object.fromEntries(Object.entries(piece.box).reverse());
     expect(validatePack(classic, reordered, 'cartoon')).toEqual([]);
+  });
+
+  it('allows six static cartoon stones while keeping classic variants and flipbooks complete', () => {
+    expect(classic.pieces.find(p => p.key === 'rock.body').frames).toHaveLength(24);
+    expect(cartoon.pieces.find(p => p.key === 'rock.body').frames).toHaveLength(6);
+    const broken = structuredClone(cartoon);
+    broken.pieces.find(p => p.key === 'rock.body').frames.pop();
+    expect(validatePack(classic, broken, 'cartoon')).toContain('rock.body: wrong frame count');
+    const unchanged = structuredClone(classic);
+    unchanged.pieces.find(p => p.key === 'rock.body').frames.length = 6;
+    // Use canonical source paths so this check isolates the static-variant policy.
+    expect(validatePack(classic, unchanged, 'classic')).toContain('rock.body: wrong frame count');
   });
 
   it('rejects missing or duplicate pieces, incompatible joints and incomplete flipbooks', () => {

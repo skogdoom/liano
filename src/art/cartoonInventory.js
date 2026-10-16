@@ -1,6 +1,6 @@
 import { ATLAS_SCALES, cellOf } from './catalog.js';
 import { frameName } from './piece.js';
-import { packAlpha } from './packs.js';
+import { packAlpha, packFrameCount } from './packs.js';
 
 export const FRAME_STATUSES = ['pending', 'painted', 'reviewed'];
 
@@ -16,8 +16,12 @@ export function cartoonInventory(manifest, previous = null) {
     }
   }
   const names = new Set();
+  const retired = new Set();
   const pieces = manifest.pieces.map((piece) => {
-    const frames = piece.frames.map((_, i) => {
+    const count = packFrameCount('cartoon', piece);
+    // Explicit static-frame retirement must not hide unrelated stale progress.
+    for (let i = count; i < piece.frames.length; i++) retired.add(frameName(piece, i));
+    const frames = piece.frames.slice(0, count).map((_, i) => {
       const key = frameName(piece, i);
       if (names.has(key)) throw new Error(`Duplicate manifest frame: ${key}`);
       names.add(key);
@@ -35,7 +39,7 @@ export function cartoonInventory(manifest, previous = null) {
     const { key, purpose, kind, set, box, scale, tint, attach, slices, length, fps, density, soften } = piece;
     const alpha = packAlpha('cartoon', piece);
     return {
-      key, purpose, kind, set, box: { ...box }, scale, tint,
+      key, purpose: key === 'rock.body' ? 'Six distinct painted jungle boulders, selected by gap; origin at the unchanged collision centre.' : purpose, kind, set, box: { ...box }, scale, tint,
       pivot: [0, 0],
       ...(attach && { attach: structuredClone(attach) }),
       ...(slices && { slices: { ...slices } }),
@@ -50,7 +54,7 @@ export function cartoonInventory(manifest, previous = null) {
     };
   });
   for (const key of progress.keys()) {
-    if (!names.has(key)) throw new Error(`Inventory frame no longer in the manifest: ${key}`);
+    if (!names.has(key) && !retired.has(key)) throw new Error(`Inventory frame no longer in the manifest: ${key}`);
   }
   return { schemaVersion: 1, pack: 'cartoon', pieceCount: pieces.length, frameCount: names.size, pieces };
 }

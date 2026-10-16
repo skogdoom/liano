@@ -146,3 +146,11 @@ new day/night inspection sheets are in `../final/media/` and the Decorations tab
 of `/art-review.html`. Nests have visible empty/egg/hatched states; panthers sit
 closer to the branch and bat feet meet its painted underside. Darker edges and
 highlights separate coconuts, flowers and branch snakes from foliage.
+
+The six-stone/copper-snake follow-up on `d46c813` replaces the 24 similar
+cartoon outlines with six painted designs. Inspect the Obstacles tab's standing
+and hanging sheets and the refreshed jungle rock scenes. The Decorations tab
+now shows copper perched snakes against green leaves by day/night. There are
+34 current source/atlas flags (1.40% aggregate), including the new head's
+sampling difference. The full 767-test run, 47 focused checks after the palette
+change, production/source/inventory checks and 11 browser checks pass.

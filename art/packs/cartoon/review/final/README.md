@@ -41,3 +41,11 @@ The snake is deliberately placed over the branch-tip leaves for inspection.
 The existing 33 atlas comparison flags remain; none involve these decorations.
 Source/inventory validation, 21 focused tests, production build and nine browser
 checks pass. The attached capture metadata records the current metrics.
+
+The six-stone/copper-snake follow-up on `d46c813` replaces the 24 similar
+cartoon outlines with six painted designs. Inspect the Obstacles tab's standing
+and hanging sheets and the refreshed jungle rock scenes. The Decorations tab
+now shows copper perched snakes against green leaves by day/night. There are
+34 current source/atlas flags (1.40% aggregate), including the new head's
+sampling difference. The full 767-test run, 47 focused checks after the palette
+change, production/source/inventory checks and 11 browser checks pass.

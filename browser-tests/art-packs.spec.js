@@ -103,6 +103,7 @@ test('a failed cartoon load offers an explicit recovery to classic', async ({ pa
   await expect(page.locator('#fatal')).toHaveClass(/shown/);
   await expect(page.locator('#fatal-message')).toHaveText('Cartoon graphics could not be loaded.');
   await expect(page.locator('#fatal button')).toHaveText('Reload classic graphics');
+  await page.waitForFunction(() => window.__liano?.game);
   await page.evaluate(() => { window.__liano.game.selectMode('shared'); window.__liano.game.lives = true; window.__liano.sound.setMuted(true); });
   await page.locator('#fatal button').click();
   await page.waitForURL((url) => url.searchParams.get('art') === 'classic');
@@ -118,7 +119,7 @@ test('the cartoon frame gallery covers the complete pack and previews flipbooks'
   await page.goto(`${DEV}art.html?art=cartoon&scale=2`);
   await page.waitForFunction(() => document.documentElement.dataset.gallery === 'done', null, { timeout: 200_000 });
   const gallery = await page.evaluate(() => window.__gallery);
-  expect(gallery.pack).toBe('cartoon'); expect(gallery.frames).toHaveLength(595);
+  expect(gallery.pack).toBe('cartoon'); expect(gallery.frames).toHaveLength(577);
   console.log(`cartoon gallery: ${(gallery.share * 100).toFixed(2)}% differing, ${gallery.frames.filter((f) => !f.pass).length} frames flagged`);
   const wing = page.locator('section').filter({ has: page.locator('h2', { hasText: /^bird\.red\.wing$/ }) });
   await wing.getByRole('slider').fill('32');
