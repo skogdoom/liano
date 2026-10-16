@@ -3819,6 +3819,8 @@
     "title": "ui.wordmark",
     "coconutRootY": 1,
     "snakeLimbThickness": 10,
+    "snakePoleThickness": 19,
+    "perchedSnakeTaperedEnd": true,
     "standingBranchJoin": {
       "top": -12,
       "details": true

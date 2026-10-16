@@ -98,3 +98,7 @@ pixels deeper into the shelf. Updated snake, pole, rock and world previews cover
 the new placement; hanging rocks stay put. Validation includes 19 focused tests,
 four browser checks, 160 support checks and 768 snake-clearance poses. The same
 36 source-comparison flags remain visible (1.46% aggregate).
+
+Tapered-wrap/neck-emergence follow-up on `f8bfa51`: The final coil tapers from body width into a short painted tail that stays visible and follows the wood closely. Pole wraps fit the painted shaft. The neck crosses behind the wood and emerges just beyond the headward coil (slightly higher on poles). The pole neck/head sit lower for a compact rise; horizontal heads have a gentler angle, and tongues follow the mouth.
+Snake front/rear bounds stay clear of pole details across 768 checked poses.
+Review fixtures, pose sheets, decoration context and world views are refreshed.

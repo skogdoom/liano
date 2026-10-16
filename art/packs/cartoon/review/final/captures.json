@@ -2982,6 +2982,35 @@
           "4": 22262913
         }
       }
+    },
+    {
+      "change": "Tapered snake wraps, visible short tail and rear neck emergence",
+      "baseCommit": "f8bfa51",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.decoration.snake at 1\u00d7/2\u00d7",
+        "perched-snake-poses",
+        "branch-pole-snake-clearance",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "changes": [
+        "The final coil tapers from body width into a short painted tail that stays visible and follows the wood closely. Pole wraps fit the painted shaft. The neck crosses behind the wood and emerges just beyond the headward coil (slightly higher on poles). The pole neck/head sit lower for a compact rise; horizontal heads have a gentler angle, and tongues follow the mouth.",
+        "Static tapered coil and branch-stub strips bind their actual atlas page, including after context restoration. Classic placement and gameplay geometry stay unchanged."
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 4,
+        "native": "Six limb/pole poses in both directions, two native fixture captures and day/night context; 768 clearance poses across 64 seeds/two obstacle sizes include both front and rear snake bounds.",
+        "reviewPage": "Eight review tabs, image enlargement, videos, comparison images, notes export and mobile layout checked."
+      },
+      "gallery": {
+        "status": "The same 36 comparison flags remain visible, with 1.45% aggregate differing pixels; thresholds unchanged."
+      }
     }
   ]
 }

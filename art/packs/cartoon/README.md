@@ -96,18 +96,23 @@ are added.
 
 Branch snakes use single-strand band recipes with separate animated neck/head and
 tail; the climbing snake's full coil image is not a repeatable branch band. The
-painted `perched-snake-tail` has a fuller hook with an inner belly stripe and
-`root`/`rootTop`/`rootBottom` landmarks. Its uniform export scale fits a body-width
-root; the rig aligns it to the coil’s exit tangent without a reflection.
+last coil narrows from seven to 2.8 world units and continues into a short,
+tapered end sampled from the same painted skin. `perchedSnakeTaperedEnd`
+selects this assembly; the older hook master remains a style reference. A rear
+decoration part puts the animated neck behind the actual wood; the short tail,
+coils and head remain visible in front. The neck emerges just beyond the headward
+coil, only slightly higher on poles and farther along horizontal branches. The
+pole neck and head sit lower to keep that rise compact. The horizontal
+head has a shorter rise and a head-aligned neck tangent.
 `presentation.perchedSnakeContinuous` turns the head back over the coils and
 traces the cubic neck head-to-body, preserving belly orientation at the join. `perched-snake-skin` supplies the same painted
 scales and cream belly to neck and coils; coil curves are rasterized at build
 time. `presentation.perchedSnakePaintedSkin` omits classic diamond overlays.
 The head’s normalized `mouth` landmark registers the tongue to its painted
 mouth opening in the same head coordinates. Branch foliage stays green. `presentation.perchedSnakeNeckSocket`
-registers the animated neck inside the rear of the head and selects neck-root
-occlusion beneath the final coil, without round joint caps. The
-pack's `presentation.snakeLimbThickness` fits wraps to the painted wood, and
+registers the animated neck inside the rear of the head, without visible joint caps. The
+pack's `presentation.snakeLimbThickness` and `snakePoleThickness` fit wraps
+to the painted wood (10 and 19 world units), and
 `presentation.coconutRootY` sets where coconuts meet it. Packs without those values
 retain classic placement. `presentation.standingRockY` seats each standing stone
 two world pixels into the painted ledge, using offsets derived from the same

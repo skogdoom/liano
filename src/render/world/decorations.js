@@ -12,6 +12,7 @@ import {
   MONKEY_TAIL,
   SNAKE_LIMB_REFERENCE,
   SNAKE_MARK_REFERENCE,
+  SNAKE_POLE_THICKNESS,
 } from '../../art/pieces/decorations.js';
 import {
   BAT_LOOKS,
@@ -41,12 +42,12 @@ import {
   perchedSnake,
   perchedSnakePose,
 } from '../../views/obstacles.js';
-import { cubicPoints, quadraticPoints } from './build.js';
+import { atlasStripBatch, cubicPoints, quadraticPoints } from './build.js';
 import { LEG } from '../../views/monkey.js';
 
 // The decorations a branch carries, in the Phaser version (as the Pixi DECORATIONS): each
 // builds its part from pieces (`b`, a Builder) and the decoration's random stream, and
-// returns { part, animate(t) }, as the Pixi ones do.
+// returns { part, animate(t) }, optionally with a rearPart behind the wood.
 
 const under = () => {
   const [box] = OBSTACLE_HITBOXES.branch;
@@ -82,11 +83,21 @@ function snake(b, rand, { hangs = false } = {}) {
       band.bulge[1] = limbThickness / 2;
     }
   }
+  const poleThickness = b.art.catalog.presentation?.snakePoleThickness;
+  if (coil.pole && poleThickness !== undefined) {
+    coil.thick = poleThickness;
+    for (const band of coil.bands) {
+      band.from[0] = -poleThickness / 2 - 1;
+      band.to[0] = poleThickness / 2 + 1;
+    }
+  }
   const part = b.container(coil.x, coil.y).setScale(coil.dir, 1);
   const art = b.art;
   const continuous = art.catalog.presentation?.perchedSnakeContinuous;
+  const tapered = art.catalog.presentation?.perchedSnakeTaperedEnd;
+  const rearPart = tapered ? b.container(coil.x, coil.y).setScale(coil.dir, 1) : null;
   const tail = b.image('perchedSnake.tail', coil.pole ? 0 : 1).setPosition(...coil.tailRoot);
-  if (continuous) {
+  if (continuous && !tapered) {
     const band = coil.bands[0], dx = band.to[0] - band.bulge[0], dy = band.to[1] - band.bulge[1], length = Math.hypot(dx, dy);
     // The painted tail leaves its socket along +y. Continue the coil's tangent
     // without reflecting its belly, with the socket buried beneath the coil cap.
@@ -97,11 +108,32 @@ function snake(b, rand, { hangs = false } = {}) {
   for (const [k, band] of coil.bands.entries()) {
     // The band's piece starts at its top: the trunk's runs across, the limb's down, and is
     // stretched to the limb's thickness.
-    const image = b.image('perchedSnake.band', coil.pole ? 0 : 1);
-    if (coil.pole) image.setPosition(0, band.from[1]);
-    else {
-      image.setPosition(band.from[0] + 4, band.from[1]);
-      image.scaleY = (art.unit('perchedSnake.band') * (band.to[1] - band.from[1])) / (SNAKE_LIMB_REFERENCE + 2);
+    let image;
+    if (tapered && k === 0) {
+      [image] = b.curve('perchedSnake.neck', quadraticPoints([band.from, band.bulge, band.to]), false);
+      image.updateVertices();
+      for (let i = 0; i < image.points.length; i++) {
+        const u = Math.max(0, Math.min(1, (i - 1) / (image.points.length - 3)));
+        const width = 1 - .6 * u * u, point = image.points[i];
+        for (let side = 0; side < 2; side++) {
+          const v = i * 4 + side * 2;
+          image.vertices[v] = point.x + (image.vertices[v] - point.x) * width;
+          image.vertices[v + 1] = point.y + (image.vertices[v + 1] - point.y) * width;
+        }
+      }
+      image.dirty = false;
+      image.setRenderNodeRole('BatchHandler', atlasStripBatch);
+      pieces.push(b.image('perchedSnake.neckEnd').setPosition(...band.from)
+        .setRotation(Math.atan2(band.bulge[1] - band.from[1], band.bulge[0] - band.from[0])));
+    } else {
+      image = b.image('perchedSnake.band', coil.pole ? 0 : 1);
+      if (coil.pole) {
+        image.setPosition(0, band.from[1]);
+        if (poleThickness !== undefined) image.scaleX *= (poleThickness + 2) / (SNAKE_POLE_THICKNESS + 2);
+      } else {
+        image.setPosition(band.from[0] + 4, band.from[1]);
+        image.scaleY = (art.unit('perchedSnake.band') * (band.to[1] - band.from[1])) / (SNAKE_LIMB_REFERENCE + 2);
+      }
     }
     const mid = [(band.from[0] + band.to[0]) / 2 + (coil.pole ? 0 : 0.5), (band.from[1] + band.to[1]) / 2];
     pieces.push(image);
@@ -113,26 +145,34 @@ function snake(b, rand, { hangs = false } = {}) {
   head.add([b.image('perchedSnake.head'), tongue]);
   if (continuous) head.scaleX = -1;
   const neckSocket = art.catalog.presentation?.perchedSnakeNeckSocket;
-  // Painted coils cover the neck's root; the head covers its registered end.
-  part.add(neckSocket ? [neck, ...pieces, head] : [...pieces, neck, head]);
+  // The wood hides the rear neck root; the head covers its registered end.
+  if (tapered) {
+    rearPart.add(neck);
+    part.add([...pieces, head]);
+  } else part.add(neckSocket ? [neck, ...pieces, head] : [...pieces, neck, head]);
   return {
-    part,
-    // The tail is the lowest part through the full head-sway cycle. Keep pole
-    // foliage and stubs beneath this conservative envelope, including limb wraps.
+    part, rearPart,
+    // Keep pole foliage and stubs beneath a conservative envelope of the
+    // entire snake, including the tapered tail and rear neck.
     poleClearance: coil.y + Math.max(...coil.bands.map(band => band.to[1])) + (continuous ? 30 : 20),
     animate(t) {
       const pose = perchedSnakePose(coil, t);
       let points;
       if (continuous) {
         const sway = Math.sin(t * 1.5 + coil.phase), band = coil.bands.at(-1);
-        const [rx, ry] = band.from;
-        pose.head = { x: rx - (coil.pole ? 15 : 11) - 1.5 * sway, y: ry - 20 + 1.2 * sway, rotation: .08 + .06 * sway };
+        // The strand crosses the rear of the wood before rising beyond the
+        // headward coil: above it on a pole, farther along it on a limb.
+        const root = tapered ? (coil.pole ? [0, band.from[1] + 1] : [band.from[0] + 9, band.from[1] + 2]) : band.from;
+        const [rx, ry] = root;
+        pose.head = { x: (coil.pole && tapered ? band.from[0] : rx) - (coil.pole ? 15 : 16) - 1.5 * sway, y: ry - 17 + 1.2 * sway, rotation: (coil.pole ? .08 : .28) + .06 * sway };
         const [sx, sy] = neckSocket, { x, y, rotation: angle } = pose.head;
         const end = [x - sx * Math.cos(angle) - sy * Math.sin(angle), y - sx * Math.sin(angle) + sy * Math.cos(angle)];
-        const control = [rx - .75 * (band.bulge[0] - rx), ry - .75 * (band.bulge[1] - ry)];
+        const control = tapered ? (coil.pole ? [band.from[0] - 6, ry - 6] : [rx + 2, ry - 11])
+          : [rx - .75 * (band.bulge[0] - rx), ry - .75 * (band.bulge[1] - ry)];
         // Trace head-to-body so the skin's belly stays on the same side of the
         // continuous body direction, instead of rolling over at the neck root.
-        points = cubicPoints([band.from, control, [end[0] + 6, end[1] + 1], end]).reverse();
+        const approach = coil.pole ? [end[0] + 6, end[1] + 1] : [end[0] + 6 * Math.cos(angle), end[1] + 6 * Math.sin(angle)];
+        points = cubicPoints([root, control, approach, end]).reverse();
       } else if (neckSocket) {
         const [x, y] = neckSocket, { rotation, x: hx, y: hy } = pose.head;
         pose.neck.to = [hx + x * Math.cos(rotation) - y * Math.sin(rotation), hy + x * Math.sin(rotation) + y * Math.cos(rotation)];

@@ -57,6 +57,7 @@ function branch(b, o, rand, hangs, view) {
     const details = join.details ? branchPoleDetails(b, o, decoration?.poleClearance) : { behind: [], front: [] };
     parts.push(...details.behind, trunk, ...details.front);
   }
+  if (decoration?.rearPart) parts.unshift(decoration.rearPart);
   view.add(parts);
   if (!decoration) return null;
   const { part, animate, behindBranch } = decoration;

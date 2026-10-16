@@ -1,15 +1,6 @@
 import { mixSeed, mulberry32 } from '../../sim/rng.js';
 import { BRANCH_TRUNK_X, trunkBottom } from '../../views/obstacles.js';
-import { cubicPoints, quadraticPoints } from './build.js';
-
-// Phaser's strip renderer passes multi-atlas page zero. These stubs reuse a
-// frame on a later page, so forward its actual source to the stock batch node.
-const stubBatch = {
-  name: 'liano.branchStub',
-  batchStrip(context, object, matrix, _texture, ...args) {
-    object.defaultRenderNodes.BatchHandler.batchStrip(context, object, matrix, object.frame.source.glTexture, ...args);
-  },
-};
+import { atlasStripBatch, cubicPoints, quadraticPoints } from './build.js';
 
 // Small, static details built from the painted pack's existing pieces. Their
 // own seed keeps bark, animals and gameplay generation independent of them.
@@ -35,7 +26,7 @@ export function branchPoleDetails(b, o, occupiedBottom = 0) {
       wood.uv[0] = wood.uv[2] = u0;
       wood.uv[4] = wood.uv[6] = endU;
       wood.dirty = false;
-      wood.setRenderNodeRole('BatchHandler', stubBatch);
+      wood.setRenderNodeRole('BatchHandler', atlasStripBatch);
       const size = .42 + rand() * .16;
       const tilt = (rand() < .5 ? -1 : 1) * (Math.PI / 4 + (rand() - .5) * .16);
       detail.setScale(side * size, size).setRotation(tilt);

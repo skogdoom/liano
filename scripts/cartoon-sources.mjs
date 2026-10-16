@@ -335,21 +335,27 @@ function paintedSnakeBand(frame) {
     const t = i / 24, u = 1 - t;
     return [u * u * a[0] + 2 * u * t * c[0] + t * t * z[0], u * u * a[1] + 2 * u * t * c[1] + t * t * z[1]];
   });
+  return paintedSnakeStrip(points);
+}
+
+function paintedSnakeStrip(points, widthAt = () => 7) {
   const lengths = points.slice(1).map((p, i) => Math.hypot(p[0] - points[i][0], p[1] - points[i][1]));
   const total = lengths.reduce((sum, v) => sum + v, 0);
   const skin = picture('perched-snake-skin', { x: 0, y: -3.5, w: 20, h: 7 }, 0);
   const caps = [0, 24].map((index, cap) => {
     const [x, y] = points[index], a = points[cap ? 23 : 0], z = points[cap ? 24 : 1];
     const angle = Math.atan2(z[1] - a[1], z[0] - a[0]) * 180 / Math.PI;
-    const id = `coil-cap-${frame}-${cap}`;
-    return `<g transform="translate(${x} ${y}) rotate(${angle})">${ellipse(0, 0, 3.5, 3.5, '#4d230d')}<defs><clipPath id="${id}"><circle r="3.1"/></clipPath></defs><g clip-path="url(#${id})">${picture('perched-snake-skin', { x: -3.5, y: -3.5, w: 20, h: 7 }, 0)}</g></g>`;
+    const id = `coil-cap-${cap}`;
+    const scale = widthAt(cap) / 7;
+    return `<g transform="translate(${x} ${y}) rotate(${angle}) scale(${scale})">${ellipse(0, 0, 3.5, 3.5, '#4d230d')}<defs><clipPath id="${id}"><circle r="3.1"/></clipPath></defs><g clip-path="url(#${id})">${picture('perched-snake-skin', { x: -3.5, y: -3.5, w: 20, h: 7 }, 0)}</g></g>`;
   }).join('');
   let along = 0;
   return caps + lengths.map((length, i) => {
     const [x, y] = points[i], to = points[i + 1], angle = Math.atan2(to[1] - y, to[0] - x) * 180 / Math.PI;
     const u = along * 20 / total, width = length * 20 / total;
     along += length;
-    return `<g transform="translate(${x} ${y}) rotate(${angle})"><svg x="0" y="-3.5" width="${length + .08}" height="7" viewBox="${u} -3.5 ${width + .08 * 20 / total} 7" preserveAspectRatio="none">${skin}</svg></g>`;
+    const height = widthAt((i + .5) / lengths.length);
+    return `<g transform="translate(${x} ${y}) rotate(${angle})"><svg x="0" y="${-height / 2}" width="${length + .08}" height="${height}" viewBox="${u} -3.5 ${width + .08 * 20 / total} 7" preserveAspectRatio="none">${skin}</svg></g>`;
   }).join('');
 }
 
@@ -435,21 +441,21 @@ function creature(p, frame) {
     // painted climbing-snake body here produces several overlapping snakes.
     if (component === 'band') return paintedSnakeBand(frame);
     if (component === 'neck') return picture('perched-snake-skin', p.box, 0);
-    if (component === 'neckEnd') return ellipse(0, 0, 3, 3, '#ed7c13');
+    if (component === 'neckEnd') return `<defs><clipPath id="neck-cap"><circle r="3.1"/></clipPath></defs>${ellipse(0, 0, 3.5, 3.5, '#4d230d')}<g clip-path="url(#neck-cap)">${picture('perched-snake-skin', { x: -3.5, y: -3.5, w: 20, h: 7 }, 0)}</g>`;
     if (component === 'head') return picture('perched-snake-head', p.box, 0);
     if (component === 'tail') {
-      const tail = pictures.get('perched-snake-tail'), { root: [x, y], rootTop, rootBottom } = tail.landmarks;
-      // Export the hook along +y with a body-width root. The rig rotates this
-      // socket to the coil tangent; no reflection or unequal scaling twists it.
-      const diameter = Math.hypot(rootBottom[0] - rootTop[0], rootBottom[1] - rootTop[1]);
-      const scale = Math.min(7 / diameter, 18 / (tail.h - y), 19 / (tail.w - x));
-      return `<use href="#picture-perched-snake-tail" transform="matrix(0 ${scale} ${-scale} 0 ${y * scale} ${-x * scale})"/>`;
+      const [a, b, c, d] = frame ? [[0, 0], [.5, 2], [-3.5, 2.5], [-5, -1]] : [[0, 0], [2.5, .3], [2, 3], [-3, 3]];
+      const points = Array.from({ length: 25 }, (_, i) => {
+        const t = i / 24, u = 1 - t;
+        return [0, 1].map(j => u ** 3 * a[j] + 3 * u * u * t * b[j] + 3 * u * t * t * c[j] + t ** 3 * d[j]);
+      });
+      return paintedSnakeStrip(points, t => 2.8 - 2.45 * t);
     }
     if (component === 'tongue') {
       const head = pictures.get('perched-snake-head'), [mx, my] = head.landmarks.mouth;
       const box = baseline.pieces.find(piece => piece.key === 'perchedSnake.head').box;
       const x = box.x + mx / head.w * box.w, y = box.y + my / head.h * box.h;
-      return line(`M${x} ${y} Q12 4 14.5 3.7 L17.5 1.8 M14.5 3.7 L17.3 5.1`, '#d97769', .75);
+      return line(`M${x} ${y} Q12 4.9 14.1 5.1 L16.8 3.9 M14.1 5.1 L16.9 5.55`, '#d97769', .75);
     }
   }
   if (family === 'perchedSnake' && component === 'mark') return body + path('M-2 0L0 -2 2 0 0 2Z', '#8f431e', 'none');
@@ -647,7 +653,7 @@ writeFileSync(new URL(wordmark.frames[0], root), document(letters + guideLayer(w
 manifest.pieces.push(wordmark);
 const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
-  title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10,
+  title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, snakePoleThickness: 19, perchedSnakeTaperedEnd: true,
   standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1], perchedSnakePaintedSkin: true, perchedSnakeContinuous: true,
   pantherSeatY: 2, hangingBatRootY: 1,
   climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
