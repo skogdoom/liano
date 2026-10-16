@@ -3822,6 +3822,10 @@
     "standingBranchJoin": {
       "top": -12
     },
+    "perchedSnakeNeckSocket": [
+      -3,
+      1
+    ],
     "pantherSeatY": 2,
     "hangingBatRootY": 1,
     "climbingSnake": "articulated",

@@ -85,6 +85,11 @@ used as a fallback. The classic manifest supplies only rendering/hitbox contract
 
 Branch snakes use single-strand band recipes with separate animated neck/head and
 tail; the climbing snake's full coil image is not a repeatable branch band. The
+painted `perched-snake-tail` has a registered root and a slender curved taper;
+its source and head share a copper/orange-and-cream palette with the band and
+neck recipes. Branch foliage stays green. `presentation.perchedSnakeNeckSocket`
+registers the animated neck inside the rear of the head and selects neck-root
+occlusion beneath the final coil, without round joint caps. The
 pack's `presentation.snakeLimbThickness` fits wraps to the painted wood, and
 `presentation.coconutRootY` sets where coconuts meet it. Packs without those values
 retain classic placement. `presentation.standingRockY` seats each standing stone

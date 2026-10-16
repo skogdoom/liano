@@ -846,6 +846,8 @@ Add a clearly labelled **Classic graphics: On/Off** row inside the existing titl
 
 - Branch-join/hive-tie follow-up: low cartoon branches hide their sawn end beneath a foreground pole, while hanging branches and classic retain their existing ends and order. The hive tie now draws behind the crossbar and emerges from its underside. Native high/low rigs at both obstacle scales, 22 fixture captures, 19 focused tests, source/inventory checks, the production build and three browser checks pass. Review fixtures and world views are refreshed; 36 source/atlas flags remain visible (1.43% aggregate). Owner artwork/device acceptance remains pending.
 
+- Perched-snake anatomy follow-up: a slender curved painted tail replaces the leaf-like triangle; foliage remains green. Coils and neck share the head/tail’s orange-and-cream palette. The animated neck registers inside the rear of the head, with its root behind the coil and no exposed circular caps. Classic retains its placement and layers. Six native limb/pole poses, refreshed day/night context, 19 focused tests, source/inventory checks, the production build and three browser checks pass. The same 36 comparison frames remain visible (1.44% aggregate); owner artwork/device acceptance remains pending.
+
 ### M9. Cleanup and release (S)
 
 - Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables, the art pipeline), the README's technology section and a short "Custom art" section pointing to `art/README.md`, and the `package.json` description; set the version to 3.0.0.

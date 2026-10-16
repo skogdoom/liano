@@ -169,3 +169,10 @@ from behind the pole without a sawn end; hanging and classic branches retain
 their existing ends. Hive ties now emerge below their crossbars. The affected
 branch, decoration and hive fixtures use refreshed 2× captures; final review
 world views are refreshed too. These remain review candidates.
+
+Perched-snake follow-up on `5d82498`: replaced the broad leaf-like tail with a
+slender curved painted tail; foliage stays green. The coils and neck share its
+orange/cream palette, and the neck joins inside the rear of the head with its
+root behind the final coil. The snake fixture, day/night decoration context and
+a six-pose limb/pole sheet are refreshed in the final review. The same 36 source
+comparisons remain flagged (1.44% aggregate); acceptance is pending.

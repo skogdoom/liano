@@ -40,6 +40,7 @@
     "rock-moss": {"source": "masters/rocks.png", "cell": {"x": 512, "y": 512, "w": 512, "h": 512}, "maxWidth": 240},
     "rock-limestone": {"source": "masters/rocks.png", "cell": {"x": 1024, "y": 512, "w": 512, "h": 512}, "maxWidth": 240},
     "perched-snake-head": {"source": "masters/perched-snake-head.png", "cell": {"x": 0, "y": 0, "w": 1518, "h": 1036}, "maxWidth": 360},
+    "perched-snake-tail": {"source": "masters/perched-snake-tail.png", "cell": {"x": 0, "y": 0, "w": 1967, "h": 799}, "maxWidth": 360, "landmarks": {"root": [0.98, 0.30]}},
     "wood-platform": {"source": "masters/wood-platform.png", "cell": {"x": 0, "y": 0, "w": 2171, "h": 724}, "maxWidth": 480},
     "wood-pillar": {"source": "masters/wood-pillar.png", "cell": {"x": 0, "y": 0, "w": 809, "h": 1942}, "maxWidth": 128}
   }

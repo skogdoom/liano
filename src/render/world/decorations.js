@@ -102,13 +102,19 @@ function snake(b, rand, { hangs = false } = {}) {
   const head = b.container();
   const tongue = b.image('perchedSnake.tongue');
   head.add([b.image('perchedSnake.head'), tongue]);
-  part.add([...pieces, neck, head]);
+  const neckSocket = art.catalog.presentation?.perchedSnakeNeckSocket;
+  // Painted coils cover the neck's root; the head covers its registered end.
+  part.add(neckSocket ? [neck, ...pieces, head] : [...pieces, neck, head]);
   return {
     part,
     animate(t) {
       const pose = perchedSnakePose(coil, t);
+      if (neckSocket) {
+        const [x, y] = neckSocket, { rotation, x: hx, y: hy } = pose.head;
+        pose.neck.to = [hx + x * Math.cos(rotation) - y * Math.sin(rotation), hy + x * Math.sin(rotation) + y * Math.cos(rotation)];
+      }
       neck.removeAll(true);
-      neck.add(b.curve('perchedSnake.neck', quadraticPoints([pose.neck.from, pose.neck.control, pose.neck.to])));
+      neck.add(b.curve('perchedSnake.neck', quadraticPoints([pose.neck.from, pose.neck.control, pose.neck.to]), !neckSocket));
       head.setPosition(pose.head.x, pose.head.y).setRotation(pose.head.rotation);
       tongue.visible = pose.tongue;
     },

@@ -2696,6 +2696,84 @@
           "4": 22028015
         }
       }
+    },
+    {
+      "change": "Perched-snake tail silhouette, unified skin and neck attachment",
+      "baseCommit": "5d82498",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.decoration.snake at 1\u00d7/2\u00d7",
+        "perched-snake-poses: six limb/pole poses",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night"
+      ],
+      "changes": [
+        "A slender curved painted tail replaces the broad leaf-shaped tail; branch foliage stays green.",
+        "Coils and neck share an orange-and-cream palette matching the painted head and tail.",
+        "The neck joins the rear of the painted head, with the root covered by the final coil and no exposed round endpoint caps. Classic retains its original neck placement and layers."
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 3,
+        "native": "Six limb/pole poses in both directions; two native fixture captures, day/night context and whole-world views.",
+        "reviewPage": "Passed: eight tabs, image zoom, video playback, all comparisons, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "share": 0.014400784627976436,
+        "flags": [
+          "backdrop.canopy",
+          "perchedBird.red.head",
+          "perchedBird.purple.head",
+          "perchedSnake.head",
+          "thornBush.mound",
+          "rock.ledge",
+          "snake.coil",
+          "snake.head",
+          "bird.red.body",
+          "bird.blue.body",
+          "bird.blue.wing.1",
+          "bird.blue.wing.2",
+          "bird.blue.wing.3",
+          "bird.blue.wing.4",
+          "bird.blue.wing.6",
+          "bird.blue.wing.7",
+          "bird.blue.wing.8",
+          "bird.blue.wing.9",
+          "bird.blue.wing.10",
+          "bird.blue.wing.11",
+          "bird.blue.wing.13",
+          "bird.blue.wing.14",
+          "bird.blue.wing.15",
+          "bird.blue.wing.16",
+          "bird.blue.wing.18",
+          "bird.blue.wing.19",
+          "bird.blue.wing.20",
+          "bird.blue.wing.21",
+          "bird.blue.wing.22",
+          "bird.blue.wing.23",
+          "bird.blue.wing.24",
+          "bird.blue.wing.25",
+          "bird.blue.wing.26",
+          "bird.blue.wing.28",
+          "bird.blue.wing.31",
+          "bird.purple.body"
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110788608,
+          "4": 282001408
+        },
+        "downloadBytes": {
+          "1": 7386945,
+          "2": 11123866,
+          "4": 22047339
+        }
+      }
     }
   ]
 }
