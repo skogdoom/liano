@@ -41,6 +41,36 @@ describe('complete cartoon pack contracts', () => {
     }
   });
 
+  it('keeps green snake silhouettes and pale details aligned with copper', () => {
+    for (const green of cartoon.pieces.filter(p => p.key.startsWith('perchedSnake.green.'))) {
+      const copper = cartoon.pieces.find(p => p.key === green.key.replace('.green.', '.'));
+      expect(green.box).toEqual(copper.box);
+      for (let frame = 0; frame < green.frames.length; frame++) {
+        const render = p => new Resvg(readFileSync(new URL(`../art/packs/cartoon/${p.frames[frame]}`, import.meta.url)),
+          { fitTo: { mode: 'width', value: p.box.w * 4 } }).render();
+        const original = render(copper), variant = render(green);
+        const a = original.pixels, b = variant.pixels;
+        expect([variant.width, variant.height]).toEqual([original.width, original.height]);
+        let greenPixels = 0, palePixels = 0;
+        for (let i = 0; i < a.length; i += 4) {
+          expect(Math.abs(a[i + 3] - b[i + 3]), green.frames[frame]).toBeLessThanOrEqual(1);
+          if (b[i + 3] > 200 && b[i + 1] > b[i] * 1.2 && b[i + 1] > b[i + 2] * 1.2) greenPixels++;
+          if (a[i + 3] > 250 && a[i] > 210 && a[i + 1] > a[i] * .85 && a[i + 2] > 100) {
+            expect(Math.max(...[0, 1, 2].map(c => Math.abs(a[i + c] - b[i + c])))).toBeLessThanOrEqual(2);
+            palePixels++;
+          }
+        }
+        expect(greenPixels, green.frames[frame]).toBeGreaterThan(2);
+        if (green.key.endsWith('.head')) expect(palePixels).toBeGreaterThan(10);
+      }
+    }
+    const broken = structuredClone(cartoon);
+    broken.pieces.find(p => p.key === 'perchedSnake.green.head').box.y++;
+    expect(validatePack(classic, broken, 'cartoon')).toContain('perchedSnake.green.head: incompatible box');
+    broken.pieces = broken.pieces.filter(p => p.key !== 'perchedSnake.green.tail');
+    expect(validatePack(classic, broken, 'cartoon')).toContain('Missing piece: perchedSnake.green.tail');
+  });
+
   it('retains full painted wings throughout the flap without clipping atlas edges', () => {
     for (const piece of cartoon.pieces.filter(p => /^(bird|bat)\.[^.]+\.wing$/.test(p.key))) {
       const areas = [];
@@ -93,10 +123,10 @@ describe('complete cartoon pack contracts', () => {
     }
   });
 
-  it('covers every required frame plus the explicitly allowed title artwork', () => {
+  it('covers every required frame plus the title and green snake palette', () => {
     expect(validatePack(classic, cartoon, 'cartoon')).toEqual([]);
-    expect(cartoon.pieces).toHaveLength(176);
-    expect(cartoon.pieces.reduce((sum, p) => sum + p.frames.length, 0)).toBe(577);
+    expect(cartoon.pieces).toHaveLength(181);
+    expect(cartoon.pieces.reduce((sum, p) => sum + p.frames.length, 0)).toBe(584);
     const reordered = structuredClone(cartoon);
     const piece = reordered.pieces[0];
     piece.box = Object.fromEntries(Object.entries(piece.box).reverse());

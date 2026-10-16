@@ -1,6 +1,6 @@
 import { ATLAS_SCALES, cellOf } from './catalog.js';
 import { frameName } from './piece.js';
-import { packAlpha, packFrameCount } from './packs.js';
+import { packAlpha, packFrameCount, packPieces } from './packs.js';
 
 export const FRAME_STATUSES = ['pending', 'painted', 'reviewed'];
 
@@ -17,7 +17,7 @@ export function cartoonInventory(manifest, previous = null) {
   }
   const names = new Set();
   const retired = new Set();
-  const pieces = manifest.pieces.map((piece) => {
+  const pieces = packPieces('cartoon', manifest.pieces).map((piece) => {
     const count = packFrameCount('cartoon', piece);
     // Explicit static-frame retirement must not hide unrelated stale progress.
     for (let i = count; i < piece.frames.length; i++) retired.add(frameName(piece, i));

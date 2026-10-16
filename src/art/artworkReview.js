@@ -52,7 +52,7 @@ for (const field of fields) {
 }
 document.querySelector('#export').onclick = () => {
   const notes = {
-    build: '3f72b69 + tapered snake wraps and rear neck emergence on f8bfa51',
+    build: '3f72b69 + fitted copper/green perched snakes on f46adeb',
     notes: Object.fromEntries(fields.map(field => [field.dataset.notes, field.value])),
   };
   const link = document.createElement('a');

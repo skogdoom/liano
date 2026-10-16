@@ -34,7 +34,7 @@ function vine(b, x, fromY, toY, sway) {
 
 function branch(b, o, rand, hangs, view) {
   const [box] = OBSTACLE_HITBOXES.branch;
-  const decoration = o.decoration ? DECORATION_RIGS[o.decoration](b, mulberry32(mixSeed(0xa11a, o.gap)), { hangs }) : null;
+  const decoration = o.decoration ? DECORATION_RIGS[o.decoration](b, mulberry32(mixSeed(0xa11a, o.gap)), { hangs, gap: o.gap }) : null;
   const join = !hangs && b.art.catalog.presentation?.standingBranchJoin;
   const trunk = hangs ? null : b.stretched('branch.trunk', BRANCH_TRUNK_X, join?.top ?? 0, trunkBottom(o), TRUNK_REFERENCE);
   const parts = hangs

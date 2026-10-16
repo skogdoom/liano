@@ -11,12 +11,25 @@ export const packAlpha = (id, piece) => id === 'cartoon' && piece.key.startsWith
 // Static variation is pack-specific; animation and attachment contracts stay fixed.
 export const packFrameCount = (id, piece) => id === 'cartoon' && piece.key === 'rock.body' ? 6 : piece.frames.length;
 
+// The green branch snake shares every placement/animation contract with copper.
+const greenSnakeParts = new Set(['perchedSnake.head', 'perchedSnake.neck', 'perchedSnake.neckEnd', 'perchedSnake.band', 'perchedSnake.tail']);
+export function packPieces(id, pieces) {
+  if (id !== 'cartoon') return pieces;
+  return [...pieces, ...pieces.filter(p => greenSnakeParts.has(p.key)).map(piece => {
+    const p = structuredClone(piece);
+    p.key = p.key.replace('perchedSnake.', 'perchedSnake.green.');
+    p.purpose = `Green palette of ${piece.key}; identical geometry and attachment points.`;
+    p.frames = p.frames.map((_, i) => `generated/${frameName(p, i)}.svg`);
+    return p;
+  })];
+}
+
 // Coverage is strict: a partial cartoon pack must never be shipped with an
 // implicit classic fallback. The baseline also fixes all rig/animation contracts.
 export function validatePack(baseline, manifest, id, sidecars = {}) {
   const errors = [];
   const seen = new Set();
-  const byKey = new Map(baseline.pieces.map((p) => [p.key, p]));
+  const byKey = new Map(packPieces(id, baseline.pieces).map((p) => [p.key, p]));
   for (const piece of manifest.pieces) {
     if (seen.has(piece.key)) errors.push(`Duplicate piece: ${piece.key}`);
     seen.add(piece.key);

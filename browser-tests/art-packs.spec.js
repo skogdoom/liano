@@ -119,7 +119,7 @@ test('the cartoon frame gallery covers the complete pack and previews flipbooks'
   await page.goto(`${DEV}art.html?art=cartoon&scale=2`);
   await page.waitForFunction(() => document.documentElement.dataset.gallery === 'done', null, { timeout: 200_000 });
   const gallery = await page.evaluate(() => window.__gallery);
-  expect(gallery.pack).toBe('cartoon'); expect(gallery.frames).toHaveLength(577);
+  expect(gallery.pack).toBe('cartoon'); expect(gallery.frames).toHaveLength(584);
   console.log(`cartoon gallery: ${(gallery.share * 100).toFixed(2)}% differing, ${gallery.frames.filter((f) => !f.pass).length} frames flagged`);
   const wing = page.locator('section').filter({ has: page.locator('h2', { hasText: /^bird\.red\.wing$/ }) });
   await wing.getByRole('slider').fill('32');

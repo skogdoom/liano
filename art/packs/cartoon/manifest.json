@@ -3798,6 +3798,94 @@
       ]
     },
     {
+      "key": "perchedSnake.green.tail",
+      "purpose": "Green palette of perchedSnake.tail; identical geometry and attachment points.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -19,
+        "y": -12,
+        "w": 30,
+        "h": 32
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedSnake.green.tail.0.svg",
+        "generated/perchedSnake.green.tail.1.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.green.band",
+      "purpose": "Green palette of perchedSnake.band; identical geometry and attachment points.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -27,
+        "y": -13,
+        "w": 54,
+        "h": 48
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedSnake.green.band.0.svg",
+        "generated/perchedSnake.green.band.1.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.green.neck",
+      "purpose": "Green palette of perchedSnake.neck; identical geometry and attachment points.",
+      "kind": "strip",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -3.5,
+        "w": 20,
+        "h": 7
+      },
+      "scale": 2.6,
+      "tint": false,
+      "length": 20,
+      "frames": [
+        "generated/perchedSnake.green.neck.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.green.neckEnd",
+      "purpose": "Green palette of perchedSnake.neckEnd; identical geometry and attachment points.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 10,
+        "h": 10
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedSnake.green.neckEnd.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.green.head",
+      "purpose": "Green palette of perchedSnake.head; identical geometry and attachment points.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -6,
+        "y": -6,
+        "w": 16,
+        "h": 12
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedSnake.green.head.svg"
+      ]
+    },
+    {
       "key": "ui.wordmark",
       "purpose": "Cartoon stone title with the concept sun/spiral O.",
       "kind": "sprite",
@@ -3821,6 +3909,7 @@
     "snakeLimbThickness": 10,
     "snakePoleThickness": 19,
     "perchedSnakeTaperedEnd": true,
+    "perchedSnakeGreen": true,
     "standingBranchJoin": {
       "top": -12,
       "details": true

@@ -72,8 +72,8 @@ components and already draws its torso/face over the limb roots. Classic retains
 its original layer order. The replacement component exports retain their previous
 pixel widths; do not embed the full-resolution masters in production frames.
 
-`scripts/cartoon-sources.mjs` produces all **576 required frames** plus the new
-`ui.wordmark`: **176 pieces / 577 frames**. It combines painted components with
+`scripts/cartoon-sources.mjs` produces all **583 required frames** plus the new
+`ui.wordmark`: **181 pieces / 584 frames**. It combines painted components with
 editable vector recipes for bent strips, repeatable stone courses, feather/membrane
 animation, small props and UI. Variants share the same pivots and scale; bird/bat
 wings and fire use the original frame ordering. Player 2 has a distinct ginger
@@ -104,6 +104,18 @@ coils and head remain visible in front. The neck emerges just beyond the headwar
 coil, only slightly higher on poles and farther along horizontal branches. The
 pole neck and head sit lower to keep that rise compact. The horizontal
 head has a shorter rise and a head-aligned neck tangent.
+The rear neck extends into the painted bark; branch wraps sit two world units
+lower, and the pole head sits 1.5 units lower over its neck join. Short tails
+have an open curve and stay visible. The copper geometry was accepted in review.
+
+`presentation.perchedSnakeGreen` adds a green palette with the exact same
+silhouette, geometry and animation. Five extra pieces/seven frames share the
+copper recipes, with a baked scale-color filter that preserves alpha, pale
+undersides and gold eyes. Tongues share the original frame. `packPieces` supplies
+those explicit contracts to generation, inventory and validation. Color alternates
+by branch gap without consuming pose or gameplay randomness; classic stays copper.
+The added palette remains within the texture budgets (112 MB at 2×, 284 MB at 4×).
+
 `presentation.perchedSnakeContinuous` turns the head back over the coils and
 traces the cubic neck head-to-body, preserving belly orientation at the join. `perched-snake-skin` supplies the same painted
 scales and cream belly to neck and coils; coil curves are rasterized at build

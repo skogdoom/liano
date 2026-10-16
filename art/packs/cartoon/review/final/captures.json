@@ -3011,6 +3011,44 @@
       "gallery": {
         "status": "The same 36 comparison flags remain visible, with 1.45% aggregate differing pixels; thresholds unchanged."
       }
+    },
+    {
+      "change": "Fitted branch wraps, open tail tips and identical green snake palette",
+      "baseCommit": "f46adeb",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "Branch neck roots extend into the painted bark, front branch wraps sit two world units lower, and pole heads sit 1.5 units lower over the neck end. Tail tips have a slightly longer, more open curve. A green palette shares all copper geometry and animation, preserving pale details, gold eyes, tongue color and alpha; colors alternate by branch gap independently of pose/gameplay randomness."
+      ],
+      "refreshed": [
+        "world.decoration.snake at 1\u00d7/2\u00d7",
+        "perched-snake-poses",
+        "perched-snake-palettes",
+        "branch-pole-snake-clearance",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 4,
+        "native": "Copper/green limb/pole previews and mirrored poses; 768 clearance poses across 64 gaps/two obstacle scales/six times. Palette tests compare alpha for all seven frames and preserve pale detail colors.",
+        "reviewPage": "Eight tabs, image zoom, videos, comparison images, notes export and mobile layout checked."
+      },
+      "coverage": {
+        "pieces": 181,
+        "frames": 584,
+        "inventoryPieces": 180,
+        "inventoryFrames": 583
+      },
+      "gallery": {
+        "flagged": 37,
+        "differingShare": 0.014647441249548457,
+        "thresholdsChanged": false
+      },
+      "approval": "Copper pose and green palette accepted by the owner."
     }
   ]
 }

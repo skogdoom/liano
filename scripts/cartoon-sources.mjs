@@ -7,7 +7,7 @@ import { frameName } from '../src/art/piece.js';
 import { cartoonInventory } from '../src/art/cartoonInventory.js';
 import { OBSTACLE_HITBOXES } from '../src/config.js';
 import { imageSize } from '../src/art/custom.js';
-import { packAlpha, packFrameCount } from '../src/art/packs.js';
+import { packAlpha, packFrameCount, packPieces } from '../src/art/packs.js';
 import { registerLimb, registerTriangle } from '../src/art/registration.js';
 import { ARM, LEG } from '../src/views/monkey.js';
 import { TEMPLE_BRAZIERS } from '../src/views/obstacles.js';
@@ -130,6 +130,21 @@ const picture = (key, box, margin = 1) => {
 const pillar = box => picture('wood-pillar', { ...box, x: box.x + box.w / 4, w: box.w / 2 }, 0);
 // Filters are baked into the exported images, never applied during gameplay.
 const colorMatrix = (content, id, matrix, box) => `<defs><filter id="${id}"${box ? ` filterUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}"` : ''} color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${matrix}"/></filter></defs><g filter="url(#${id})">${content}</g>`;
+// Palette-only variant: blend green into warm copper scales, preserving pale
+// belly/eye colors and the exact source alpha. Baked once, with no runtime FX.
+const greenSnake = (content, box, head) => {
+  // Protect the painted iris colors as well as the pale muzzle/belly. This mask
+  // changes only the palette blend, never the image's alpha or silhouette.
+  const eyes = head ? `<feImage x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" href="data:image/png;base64,${new Resvg(document(ellipse(2.1, -1.3, 2.15, 2.45, '#fff') + ellipse(7.7, -1.3, .45, .95, '#fff'), box), { fitTo: { mode: 'width', value: box.w * 16 } }).render().asPng().toString('base64')}" result="eyes"/><feComposite in="warm" in2="eyes" operator="out" result="warm"/>` : '';
+  return `<defs><filter id="snake-green" filterUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" color-interpolation-filters="sRGB">
+<feColorMatrix in="SourceGraphic" result="green" type="matrix" values=".15 .65 .05 0 0 .9 .08 .02 0 0 .05 .1 .7 0 0 0 0 0 1 0"/>
+<feColorMatrix in="SourceGraphic" result="warm" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 5 -7 2 0 -.4"/>
+${eyes}
+<feComposite in="green" in2="warm" operator="in" result="scales"/>
+<feComposite in="SourceGraphic" in2="warm" operator="out" result="retained"/>
+<feComposite in="scales" in2="retained" operator="arithmetic" k2="1" k3="1"/>
+</filter></defs><g filter="url(#snake-green)">${content}</g>`;
+};
 const colorize = (content, look, box) => {
   if (!look || look === 'p1' || look === 'red' || look === 'purple') return content;
   const matrix = look === 'p2' ? '1.05 0 0 0 .1 0 1.15 0 0 .06 0 0 .9 0 .04 0 0 0 1 0'
@@ -444,7 +459,7 @@ function creature(p, frame) {
     if (component === 'neckEnd') return `<defs><clipPath id="neck-cap"><circle r="3.1"/></clipPath></defs>${ellipse(0, 0, 3.5, 3.5, '#4d230d')}<g clip-path="url(#neck-cap)">${picture('perched-snake-skin', { x: -3.5, y: -3.5, w: 20, h: 7 }, 0)}</g>`;
     if (component === 'head') return picture('perched-snake-head', p.box, 0);
     if (component === 'tail') {
-      const [a, b, c, d] = frame ? [[0, 0], [.5, 2], [-3.5, 2.5], [-5, -1]] : [[0, 0], [2.5, .3], [2, 3], [-3, 3]];
+      const [a, b, c, d] = frame ? [[0, 0], [.5, 2.5], [-3.2, 3.8], [-6.5, 3.5]] : [[0, 0], [2.8, .5], [3.1, 4.5], [0, 6.5]];
       const points = Array.from({ length: 25 }, (_, i) => {
         const t = i / 24, u = 1 - t;
         return [0, 1].map(j => u ** 3 * a[j] + 3 * u * u * t * b[j] + 3 * u * t * t * c[j] + t ** 3 * d[j]);
@@ -608,6 +623,7 @@ function prop(p, frame) {
 }
 
 const manifest = structuredClone(baseline);
+manifest.pieces = packPieces('cartoon', manifest.pieces);
 const changedFrames = new Set();
 for (const p of manifest.pieces) {
   if (p.alpha !== undefined) p.alpha = packAlpha('cartoon', p);
@@ -623,6 +639,7 @@ for (const p of manifest.pieces) {
     const family = p.key.split('.')[0];
     let body = family === 'monkey' ? monkey(p, i) : family === 'backdrop' ? scenery(p)
       : family === 'temple' ? temple(p, i) : ['panther', 'perchedBird', 'bird', 'hangingBat', 'bat', 'spider', 'snake', 'perchedSnake', 'hangingMonkey'].includes(family) ? creature(p, i) : prop(p, i);
+    if (p.key.startsWith('perchedSnake.green.')) body = greenSnake(body, p.box, p.key.endsWith('.head'));
     const name = `generated/${frameName(p, i)}.svg`;
     const used = [...new Set([...body.matchAll(/href="#picture-([\w-]+)"/g)].map((match) => match[1]))];
     body = `<defs>${used.map((key) => { const pic = pictures.get(key); return `<image id="picture-${key}" width="${pic.w}" height="${pic.h}" href="${pic.uri}"/>`; }).join('')}</defs>` + body;
@@ -653,7 +670,7 @@ writeFileSync(new URL(wordmark.frames[0], root), document(letters + guideLayer(w
 manifest.pieces.push(wordmark);
 const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
-  title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, snakePoleThickness: 19, perchedSnakeTaperedEnd: true,
+  title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, snakePoleThickness: 19, perchedSnakeTaperedEnd: true, perchedSnakeGreen: true,
   standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1], perchedSnakePaintedSkin: true, perchedSnakeContinuous: true,
   pantherSeatY: 2, hangingBatRootY: 1,
   climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,

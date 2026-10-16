@@ -102,3 +102,8 @@ four browser checks, 160 support checks and 768 snake-clearance poses. The same
 Tapered-wrap/neck-emergence follow-up on `f8bfa51`: The final coil tapers from body width into a short painted tail that stays visible and follows the wood closely. Pole wraps fit the painted shaft. The neck crosses behind the wood and emerges just beyond the headward coil (slightly higher on poles). The pole neck/head sit lower for a compact rise; horizontal heads have a gentler angle, and tongues follow the mouth.
 Snake front/rear bounds stay clear of pole details across 768 checked poses.
 Review fixtures, pose sheets, decoration context and world views are refreshed.
+
+Branch-fit/green-palette follow-up on `f46adeb`: Branch neck roots extend into the painted bark, front branch wraps sit two world units lower, and pole heads sit 1.5 units lower over the neck end. Tail tips have a slightly longer, more open curve. A green palette shares all copper geometry and animation, preserving pale details, gold eyes, tongue color and alpha; colors alternate by branch gap independently of pose/gameplay randomness.
+Copper placement and the green palette were accepted by the owner. Validation: 19
+focused tests, four browser checks and 768 native clearance poses. The updated
+2× gallery has 37 flags (1.46% aggregate); thresholds remain unchanged.
