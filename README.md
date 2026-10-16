@@ -31,12 +31,17 @@ Press **1**, **2** or **3** on the title screen for one player, two players on a
 - **H** turns lives on for one player (on the title screen): you get 3, and every fifth banana you take turns the next banana into a heart that gives one more.
 - **S** turns the shadow monkey on (on the title screen, one player): your best earlier game is replayed as a grey, see-through monkey beside you, on the same jungle every game until you reload.
 - **D** shows the debug view: hitboxes, the predicted flight, the release window and the frame rate.
+- **C** opens Config on the title screen. Choose classic or cartoon graphics and the rendering quality there; **X** switches the graphics choice while Config is open.
 
-**H** and **S** are for the desktop, and none of these settings is kept after a reload. Phones and iPads play one player in either orientation. iPhone Safari has no full screen for web pages: add the game to the Home Screen to play it without the browser bars.
+**H** and **S** are for the desktop. Graphics and quality choices persist; changing either in Config reloads the game while preserving the current match options. Phones and iPads play one player in either orientation. iPhone Safari has no full screen for web pages: add the game to the Home Screen to play it without the browser bars.
 
 ## Technology
 
-JavaScript (ES modules), [Phaser](https://phaser.io/) 4 for rendering, input and sound, [Vite](https://vite.dev/) for dev and build, [Vitest](https://vitest.dev/) for tests. Art is generated as SVG and packed into replaceable texture atlases, sounds are synthesized with the Web Audio API, and there is no backend.
+JavaScript (ES modules), [Phaser](https://phaser.io/) 4.2.1 for rendering, scenes, input and sound, [Vite](https://vite.dev/) for dev and build, [Vitest](https://vitest.dev/) for unit tests, and [Playwright](https://playwright.dev/) for browser checks. A fixed-step simulation drives rigs assembled from texture-atlas pieces. Classic art is generated from SVG; the default cartoon pack combines painted masters and vector recipes. The build creates independent packs at 1×, 2× and 4×, and the game downloads only the selected pack and scale. Sounds are synthesized with the Web Audio API through Phaser's audio context. There is no backend.
+
+## Custom art
+
+Replace individual pieces with PNG or SVG files and rebuild the atlases. See the [art guide](art/README.md) for piece names, dimensions, origins and exports, and the [cartoon authoring guide](art/packs/cartoon/README.md) for painted sources and recipes. Config selects between the complete classic and cartoon packs; both use the same gameplay and sounds.
 
 ## Running it
 

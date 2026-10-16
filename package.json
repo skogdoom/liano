@@ -1,5 +1,6 @@
 {
   "name": "liano",
+  "description": "A one-button jungle swinging game built with Phaser, with classic and cartoon art packs.",
   "private": true,
   "version": "3.0.0-dev.9",
   "license": "MIT",

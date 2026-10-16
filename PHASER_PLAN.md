@@ -938,6 +938,8 @@ already passed or leave this report awaiting their results.
 
 ### M9. Cleanup and merge (S)
 
+**Status: cleanup complete; integration PR preparation, awaiting the owner's explicit approval to merge into `master`.** The README now describes Phaser, both art packs and custom artwork; package metadata describes the game. Version remains `3.0.0-dev.9`. The final sync found `master` (`ebc23a7`) already contained in `phaser`, so no conflicts or merge commit were needed. Plan consolidation remains M9b; all remaining testing and verification remains M9c on the new branch created from `master`.
+
 Work takes place on `phaser` after M8a integration. This milestone completes the
 migration cleanup and merge into `master`. Remaining manual and real-device
 verification belongs to M9c after this merge.
