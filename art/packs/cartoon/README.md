@@ -227,3 +227,12 @@ retired cartoon rock frames and preserves inventory progress on retained keys.
 The perched branch snake uses a dedicated copper/orange head master and matching
 copper/gold strips. The hue difference separates it from the green leaves on
 the branch; the climbing snake keeps its green head and coils.
+
+Cartoon hanging stones use only the top support vine; their side sling is hidden
+through `presentation.hangingRockSling: false`. Classic keeps its side sling.
+
+Stone and thorn-bush platforms and the beehive crossbar share the painted
+`wood-platform` component. A separate `wood-pillar` shaft supplies `branch.trunk`,
+`support.stem` and `support.hiveTrunk` without the old stretched branch stub or
+root flare. The stone shelf’s opaque top edge determines each stone’s seating.
+`branch.body` uses 2× raster density while retaining its logical box and pivot.

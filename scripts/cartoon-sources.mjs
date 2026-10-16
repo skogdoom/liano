@@ -50,7 +50,7 @@ for (const [key, { source, cell }] of Object.entries(layout.components)) {
   // Boundary samples fit a whole wing cycle inside its atlas cell and place
   // stone contacts against the actual painted silhouette.
   const outline = [];
-  const samples = key.endsWith('-wing') || key.startsWith('rock-') ? exported.pixels : null;
+  const samples = key.endsWith('-wing') || key.startsWith('rock-') || key === 'wood-platform' ? exported.pixels : null;
   if (samples) for (let y = 0; y < exported.height; y++) {
     let left = exported.width, right = -1;
     for (let x = 0; x < exported.width; x++) if (samples[(y * exported.width + x) * 4 + 3] >= 24) {
@@ -58,7 +58,13 @@ for (const [key, { source, cell }] of Object.entries(layout.components)) {
     }
     if (right >= 0) outline.push([left, y], [right + 1, y + 1]);
   }
-  pictures.set(key, { uri: uri(cropped), w: exported.width, h: exported.height, outline,
+  const top = [];
+  if (key === 'wood-platform') for (let x = 0; x < exported.width; x++) {
+    let y = 0;
+    while (y < exported.height && samples[(y * exported.width + x) * 4 + 3] < 128) y++;
+    top.push(y);
+  }
+  pictures.set(key, { uri: uri(cropped), w: exported.width, h: exported.height, outline, top,
     landmarks: Object.fromEntries(Object.entries(landmarks).map(([name, point]) => [name, [point[0] * exported.width, point[1] * exported.height]])) });
 }
 
@@ -73,6 +79,13 @@ const rockPlacement = (frame) => {
 const rockOutline = (frame) => {
   const { pic, scale, x, y } = rockPlacement(frame);
   return pic.outline.map(([px, py]) => [px * scale + x, py * scale + y]);
+};
+const platformTopAt = (x) => {
+  const pic = pictures.get('wood-platform');
+  const { box } = baseline.pieces.find(p => p.key === 'rock.ledge');
+  const column = Math.floor((x - box.x - 1) * pic.w / (box.w - 2));
+  if (column < 0 || column >= pic.w || pic.top[column] === pic.h) return Infinity;
+  return box.y + 1 + pic.top[column] * (box.h - 2) / pic.h;
 };
 const hangingTorsoMatrix = () => {
   const { landmarks } = pictures.get('monkey-torso');
@@ -113,6 +126,8 @@ const picture = (key, box, margin = 1) => {
   if (!p) throw new Error(`Missing painted component ${key}`);
   return `<use href="#picture-${key}" transform="translate(${box.x + margin} ${box.y + margin}) scale(${(box.w - 2 * margin) / p.w} ${(box.h - 2 * margin) / p.h})"/>`;
 };
+// A straight shaft keeps the old support's approximate width without its root flare.
+const pillar = box => picture('wood-pillar', { ...box, x: box.x + box.w / 4, w: box.w / 2 }, 0);
 // Filters are baked into the exported images, never applied during gameplay.
 const colorMatrix = (content, id, matrix, box) => `<defs><filter id="${id}"${box ? ` filterUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}"` : ''} color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${matrix}"/></filter></defs><g filter="url(#${id})">${content}</g>`;
 const colorize = (content, look, box) => {
@@ -445,18 +460,18 @@ function prop(p, frame) {
   }
   if (family === 'branch') {
     if (part === 'body') return picture('branch', { x: -83, y: -18, w: 164, h: 24 });
-    if (part === 'trunk') return picture('trunk', p.box);
+    if (part === 'trunk') return pillar(p.box);
     if (part === 'barkLine') return line('M0 0 Q6 3 14 0', '#765534', 1.2) + line('M1 -1Q6 1 13 -1', '#d4aa63', .55);
   }
   if (family === 'support') {
-    if (part === 'stem' || part === 'hiveTrunk') return picture('trunk', p.box);
+    if (part === 'stem' || part === 'hiveTrunk') return pillar(p.box);
     if (part === 'vine') return greenRope(p, ['#f0edb4', '#bfce72', '#6d8c42']);
     if (part === 'vineEnd') return ellipse(0, 0, 1.3, 1.3, '#bfce72', 'stroke="#293f28" stroke-width=".5"');
   }
   if (family === 'thornBush') {
     if (part === 'body') return picture('thorn-bush', p.box);
     if (part === 'thorn') return path('M0 -3L7 0 0 3Z', '#eee3af', '#67794b', .7);
-    if (part === 'mound') return body + path('M-30 40Q-20 27 0 32Q17 27 30 40Z');
+    if (part === 'mound') return picture('wood-platform', p.box);
   }
   if (family === 'rock') {
     if (part === 'body') {
@@ -464,7 +479,7 @@ function prop(p, frame) {
       return `<use href="#picture-${key}" transform="translate(${x} ${y}) scale(${scale})"/>`;
     }
     if (part === 'sling') return line('M-34 -6Q-25 13 0 3Q24 10 34 -9', '#97ac56', 4) + line('M-34 -7Q-25 11 0 1Q24 8 34 -10', '#d1cc83', 1);
-    if (part === 'ledge') return body + path('M-39 34Q0 25 39 34L35 39H-35Z');
+    if (part === 'ledge') return picture('wood-platform', p.box);
   }
   if (family === 'beehive') {
     if (part === 'nest') {
@@ -472,9 +487,7 @@ function prop(p, frame) {
       for (const y of [-21, -8, 6, 20, 32]) body += line(`M-17 ${y} Q0 ${y + 5} 17 ${y}`, '#936335', 1.3);
       return body + ellipse(3, 26, 6, 6, '#392d24') + line('M-3 20Q3 18 9 20', '#ffe8a0', .8);
     }
-    return line('M38 -48 Q14 -57 -5 -48', '#433026', 8)
-      + line('M38 -48 Q14 -57 -5 -48', '#91603a', 5.8)
-      + line('M34 -50 Q14 -56 -3 -49', '#d4a366', 1)
+    return picture('wood-platform', { x: -8, y: -56, w: 52, h: 11 }, 0)
       + line('M0 -49 V-32', '#344d29', 3.2) + line('M-.5 -48 V-33', '#a5b957', 1.3);
   }
   if (family === 'bee') {
@@ -607,15 +620,15 @@ manifest.presentation = {
   hangingMonkeyLegTint: hangingMonkeyTint,
   hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),
   batWingOffset: [6, 4], templeFireDaylight: .18,
-  rasterScale: Object.fromEntries(['red', 'blue', 'purple'].map(look => [`bird.${look}.wing`, 2.5])),
+  rasterScale: { 'branch.body': 2, ...Object.fromEntries(['red', 'blue', 'purple'].map(look => [`bird.${look}.wing`, 2.5])) },
   flyingWings: {
     bird: { root: [0, -3], near: { x: 3, y: 0, scale: 3 }, far: { x: 3, y: -2, scale: 2.55, flapRotation: .3, tint: 0xd2d9e3 } },
     bat: { root: [-2, -4], near: { x: 4, y: 0, scale: 1.2 }, far: { x: 5, y: -2, scale: 1.08, flapRotation: .6, tint: 0xd2d9e3 } },
   },
-  // The ledge's quadratic top is y = 29.5 + 4.5 * (x / 39)^2.
-  // Seat only standing stones; outlines already touching the ledge stay put.
+  // Seat stones against the painted shelf's actual upper edge.
   standingRockY: manifest.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) =>
-    n(Math.max(0, Math.min(...rockOutline(frame).map(([x, y]) => 29.5 + 4.5 * (x / 39) ** 2 - y))))),
+    n(Math.min(...rockOutline(frame).map(([x, y]) => platformTopAt(x) - y)))),
+  hangingRockSling: false,
   hangingRockVineY: manifest.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) => {
     const points = rockOutline(frame);
     const crossings = [];

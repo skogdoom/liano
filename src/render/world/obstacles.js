@@ -64,8 +64,9 @@ function rock(b, o, rand, hangs, view) {
   const variant = rockVariant(o.gap, b.art.at('rock.body').frames.length);
   const vineEnd = b.art.catalog.presentation?.hangingRockVineY?.[variant] ?? -r + 4;
   const parts = hangs
-    ? [...vine(b, 0, canopyY(o), vineEnd, 9), b.image('rock.sling')]
+    ? vine(b, 0, canopyY(o), vineEnd, 9)
     : [b.stretched('support.stem', 0, r - 4, trunkBottom(o), STEM_REFERENCE), b.image('rock.ledge')];
+  if (hangs && b.art.catalog.presentation?.hangingRockSling !== false) parts.push(b.image('rock.sling'));
   const stone = b.image('rock.body', variant);
   if (!hangs) stone.setY(b.art.catalog.presentation?.standingRockY?.[variant] ?? 0);
   parts.push(stone);

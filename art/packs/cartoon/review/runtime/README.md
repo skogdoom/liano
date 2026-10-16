@@ -154,3 +154,12 @@ now shows copper perched snakes against green leaves by day/night. There are
 34 current source/atlas flags (1.40% aggregate), including the new head's
 sampling difference. The full 767-test run, 47 focused checks after the palette
 change, production/source/inventory checks and 11 browser checks pass.
+
+Painted-support follow-up on `21f94a1`: stone/thorn-bush shelves and the hive
+crossbar now use painted wood; all three pillar types use a plain bark shaft.
+Horizontal branches have 2× raster density. All 13 affected branch/obstacle
+review fixtures use 2× captures for close inspection; ahead/night world views
+and standing/hanging stone sheets are refreshed. Source/inventory checks,
+production build, 47 focused tests and four browser checks pass. The current
+gallery has 36 flags (1.43% aggregate), including two shelf sampling
+comparisons; these remain review candidates with unchanged thresholds.

@@ -66,6 +66,15 @@ describe('complete cartoon pack contracts', () => {
 
   it('seats every painted stone on its ledge and attaches its hanging vine inside the silhouette', () => {
     const piece = cartoon.pieces.find(p => p.key === 'rock.body');
+    const ledge = cartoon.pieces.find(p => p.key === 'rock.ledge');
+    const platform = new Resvg(readFileSync(new URL(`../art/packs/cartoon/${ledge.frames[0]}`, import.meta.url)),
+      { fitTo: { mode: 'width', value: ledge.box.w * 4 } }).render();
+    const platformPixels = platform.pixels;
+    const top = Array.from({ length: platform.width }, (_, x) => {
+      let y = 0;
+      while (y < platform.height && platformPixels[(y * platform.width + x) * 4 + 3] < 128) y++;
+      return y < platform.height ? y / 4 + ledge.box.y : Infinity;
+    });
     for (let frame = 0; frame < piece.frames.length; frame++) {
       const source = readFileSync(new URL(`../art/packs/cartoon/${piece.frames[frame]}`, import.meta.url));
       const image = new Resvg(source, { fitTo: { mode: 'width', value: piece.box.w * 4 } }).render();
@@ -76,7 +85,8 @@ describe('complete cartoon pack contracts', () => {
       for (let y = 0; y < image.height; y++) for (let x = 0; x < image.width; x++) {
         if (pixels[(y * image.width + x) * 4 + 3] < 128) continue;
         const wx = x / 4 + piece.box.x, wy = y / 4 + piece.box.y + cartoon.presentation.standingRockY[frame];
-        gap = Math.min(gap, 29.5 + 4.5 * (wx / 39) ** 2 - wy);
+        const shelf = top[Math.floor((wx - ledge.box.x) * 4)] ?? Infinity;
+        gap = Math.min(gap, shelf - wy);
       }
       expect(gap, `variant ${frame}: platform contact`).toBeGreaterThan(-1);
       expect(gap, `variant ${frame}: platform gap`).toBeLessThan(1);

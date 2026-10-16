@@ -3842,6 +3842,7 @@
     ],
     "templeFireDaylight": 0.18,
     "rasterScale": {
+      "branch.body": 2,
       "bird.red.wing": 2.5,
       "bird.blue.wing": 2.5,
       "bird.purple.wing": 2.5
@@ -3885,13 +3886,14 @@
       }
     },
     "standingRockY": [
-      1.182,
-      0,
-      0,
-      0,
-      0,
-      0
+      3.057,
+      1.176,
+      1.425,
+      1.176,
+      1.296,
+      1.029
     ],
+    "hangingRockSling": false,
     "hangingRockVineY": [
       -27.033,
       -24.651,
