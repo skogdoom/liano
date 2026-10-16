@@ -2813,6 +2813,89 @@
           "4": 22047354
         }
       }
+    },
+    {
+      "change": "Natural pole details, unified painted snake skin, tucked tail and mouth registration",
+      "baseCommit": "017b24a",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.branches",
+        "all nine world.decoration fixtures",
+        "scene.ahead",
+        "scene.night",
+        "decorations-day",
+        "decorations-night",
+        "branch-pole-variations",
+        "branch-pole-snake-clearance",
+        "perched-snake-poses"
+      ],
+      "changes": [
+        "Sawn branch stubs are longer and tilt about 45 degrees up or down. Fine creepers drop along the pole edge, with attached leaves and concealed roots.",
+        "Perched coils and neck share a painted orange-scale/cream-belly skin; legacy flat stripe and diamond marks are omitted for this pack. Static coils are rasterized at build time.",
+        "The painted tail is shorter and curves back toward the wood, with its root tucked beneath the last coil.",
+        "A painted-head mouth landmark registers the tongue to the mouth opening; head rotation and mirroring move them together.",
+        "Snake rigs provide a conservative occupied lower edge, and pole details reserve space above it plus their own upward reach."
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 3,
+        "native": "Six limb/pole poses; eight plain and eight snake-bearing pole variations; 80 repeatability/support-scope checks and 768 clearance checks across 64 seeds, two obstacle scales and six head poses; 22 fixture captures.",
+        "reviewPage": "Passed: eight tabs, image zoom, video playback, all comparisons, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "share": 0.01450279034514187,
+        "flags": [
+          "backdrop.canopy",
+          "perchedBird.red.head",
+          "perchedBird.purple.head",
+          "perchedSnake.head",
+          "thornBush.mound",
+          "rock.ledge",
+          "snake.coil",
+          "snake.head",
+          "bird.red.body",
+          "bird.blue.body",
+          "bird.blue.wing.1",
+          "bird.blue.wing.2",
+          "bird.blue.wing.3",
+          "bird.blue.wing.4",
+          "bird.blue.wing.6",
+          "bird.blue.wing.7",
+          "bird.blue.wing.8",
+          "bird.blue.wing.9",
+          "bird.blue.wing.10",
+          "bird.blue.wing.11",
+          "bird.blue.wing.13",
+          "bird.blue.wing.14",
+          "bird.blue.wing.15",
+          "bird.blue.wing.16",
+          "bird.blue.wing.18",
+          "bird.blue.wing.19",
+          "bird.blue.wing.20",
+          "bird.blue.wing.21",
+          "bird.blue.wing.22",
+          "bird.blue.wing.23",
+          "bird.blue.wing.24",
+          "bird.blue.wing.25",
+          "bird.blue.wing.26",
+          "bird.blue.wing.28",
+          "bird.blue.wing.31",
+          "bird.purple.body"
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110788608,
+          "4": 282001408
+        },
+        "downloadBytes": {
+          "1": 7394694,
+          "2": 11158302,
+          "4": 22170544
+        }
+      }
     }
   ]
 }

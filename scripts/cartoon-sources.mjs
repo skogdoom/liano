@@ -145,7 +145,6 @@ const leaf = (length, halfWidth, fill = 'url(#paint)') => path(`M0 0 Q${length *
 const roundStrip = (p, colors) => defs(colors) + rect(0, -p.box.h * .36, p.length ?? 20, p.box.h * .72, 'url(#paint)', `rx="${p.box.h * .36}"`) + line(`M0 ${-p.box.h * .13} H${p.length ?? 20}`, colors[0], Math.min(.7, p.box.h * .15));
 const lianaGreen = ['#dce99a', '#a4c859', '#61883c'];
 const spiderLeg = ['#e0cde5', '#ab8caf', '#68546f'];
-const perchedSnakeSkin = { outline: '#58270c', orange: '#ed7c13', light: '#ffb843', belly: '#ffe18a' };
 const batPalettes = {
   purple: ['#e7c9ee', '#b58bc5', '#655175'], brown: ['#ecd6bb', '#b5977f', '#66504b'],
   grey: ['#e5e4e0', '#acaeb3', '#676e7d'], black: ['#c4c4d4', '#828397', '#44465d'],
@@ -327,6 +326,33 @@ function temple(p, frame) {
 }
 
 const flightWingCache = new Map();
+
+// Bend the same painted skin used by the neck into a static coil. Each small
+// slice follows the curve's tangent, with a slight overlap to close raster seams.
+function paintedSnakeBand(frame) {
+  const [a, c, z] = frame ? [[-4, 0], [4, 11], [4, 22]] : [[-14, 0], [0, 5], [14, 6]];
+  const points = Array.from({ length: 25 }, (_, i) => {
+    const t = i / 24, u = 1 - t;
+    return [u * u * a[0] + 2 * u * t * c[0] + t * t * z[0], u * u * a[1] + 2 * u * t * c[1] + t * t * z[1]];
+  });
+  const lengths = points.slice(1).map((p, i) => Math.hypot(p[0] - points[i][0], p[1] - points[i][1]));
+  const total = lengths.reduce((sum, v) => sum + v, 0);
+  const skin = picture('perched-snake-skin', { x: 0, y: -3.5, w: 20, h: 7 }, 0);
+  const caps = [0, 24].map((index, cap) => {
+    const [x, y] = points[index], a = points[cap ? 23 : 0], z = points[cap ? 24 : 1];
+    const angle = Math.atan2(z[1] - a[1], z[0] - a[0]) * 180 / Math.PI;
+    const id = `coil-cap-${frame}-${cap}`;
+    return `<g transform="translate(${x} ${y}) rotate(${angle})">${ellipse(0, 0, 3.5, 3.5, '#4d230d')}<defs><clipPath id="${id}"><circle r="3.1"/></clipPath></defs><g clip-path="url(#${id})">${picture('perched-snake-skin', { x: -3.5, y: -3.5, w: 20, h: 7 }, 0)}</g></g>`;
+  }).join('');
+  let along = 0;
+  return caps + lengths.map((length, i) => {
+    const [x, y] = points[i], to = points[i + 1], angle = Math.atan2(to[1] - y, to[0] - x) * 180 / Math.PI;
+    const u = along * 20 / total, width = length * 20 / total;
+    along += length;
+    return `<g transform="translate(${x} ${y}) rotate(${angle})"><svg x="0" y="-3.5" width="${length + .08}" height="7" viewBox="${u} -3.5 ${width + .08 * 20 / total} 7" preserveAspectRatio="none">${skin}</svg></g>`;
+  }).join('');
+}
+
 function paintedFlightWing(p, frame, key, radius, shoulder) {
   if (!flightWingCache.has(p.key)) {
     const source = pictures.get(key), { joint, tip } = source.landmarks;
@@ -407,23 +433,22 @@ function creature(p, frame) {
   if (family === 'perchedSnake') {
     // A band is one strand crossing the wood, repeated by the rig. An entire
     // painted climbing-snake body here produces several overlapping snakes.
-    if (component === 'band') {
-      const strand = frame ? 'M-4 0 Q4 11 4 22' : 'M-14 0 Q0 5 14 6';
-      return line(strand, perchedSnakeSkin.outline, 8) + line(strand, perchedSnakeSkin.belly, 6.6)
-        + line(strand, perchedSnakeSkin.orange, 4.8) + line(strand, perchedSnakeSkin.light, 1.4);
-    }
-    if (component === 'neck') return `<defs><linearGradient id="neck" gradientUnits="userSpaceOnUse" x1="0" y1="-3" x2="0" y2="3"><stop stop-color="${perchedSnakeSkin.light}"/><stop offset=".3" stop-color="${perchedSnakeSkin.orange}"/><stop offset=".65" stop-color="${perchedSnakeSkin.orange}"/><stop offset=".72" stop-color="${perchedSnakeSkin.belly}"/><stop offset="1" stop-color="#eabf59"/></linearGradient></defs>`
-      + rect(0, -2.8, p.length, 5.6, 'url(#neck)', `stroke="${perchedSnakeSkin.outline}" stroke-width="1.1"`)
-      + [3, 7, 11, 15, 19].map(x => line(`M${x} -2.1q1 1.1 0 2.2`, '#a94e0c', .45)).join('');
-    if (component === 'neckEnd') return ellipse(0, 0, 3, 3, perchedSnakeSkin.orange);
+    if (component === 'band') return paintedSnakeBand(frame);
+    if (component === 'neck') return picture('perched-snake-skin', p.box, 0);
+    if (component === 'neckEnd') return ellipse(0, 0, 3, 3, '#ed7c13');
     if (component === 'head') return picture('perched-snake-head', p.box, 0);
     if (component === 'tail') {
-      const tail = pictures.get('perched-snake-tail'), scale = 20 / tail.w;
+      const tail = pictures.get('perched-snake-tail'), scale = 14 / tail.w;
       const [x, y] = tail.landmarks.root;
-      return `<g transform="rotate(${frame ? 0 : -65})"><use href="#picture-perched-snake-tail" transform="matrix(${scale} 0 0 ${scale} ${-x * scale} ${-y * scale})"/></g>`;
+      return `<g transform="translate(${frame ? 1 : -1} -1) rotate(${frame ? -20 : -45})"><use href="#picture-perched-snake-tail" transform="matrix(${scale} 0 0 ${scale * 1.65} ${-x * scale} ${-y * scale * 1.65})"/></g>`;
+    }
+    if (component === 'tongue') {
+      const head = pictures.get('perched-snake-head'), [mx, my] = head.landmarks.mouth;
+      const box = baseline.pieces.find(piece => piece.key === 'perchedSnake.head').box;
+      const x = box.x + mx / head.w * box.w, y = box.y + my / head.h * box.h;
+      return line(`M${x} ${y} Q12 4 14.5 3.7 L17.5 1.8 M14.5 3.7 L17.3 5.1`, '#d97769', .75);
     }
   }
-  if (family === 'perchedSnake' && component === 'tongue') return line('M8 0H16L19 -3M16 0L19 3', '#d16765', 1.1);
   if (family === 'perchedSnake' && component === 'mark') return body + path('M-2 0L0 -2 2 0 0 2Z', '#8f431e', 'none');
   if ((family === 'snake' && component === 'stalkLeaf')) return `<g transform="scale(${frame ? -1 : 1} 1) translate(0 -3)">${defs()}${leaf(15, 4)}</g>`;
   if (family === 'hangingMonkey') {
@@ -620,7 +645,7 @@ manifest.pieces.push(wordmark);
 const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10,
-  standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1],
+  standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1], perchedSnakePaintedSkin: true,
   pantherSeatY: 2, hangingBatRootY: 1,
   climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
   hangingMonkeyLegTint: hangingMonkeyTint,

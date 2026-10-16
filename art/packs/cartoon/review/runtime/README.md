@@ -182,3 +182,11 @@ seeded leaf sprigs, short vines and cut branch ends, reusing painted pieces.
 Platform/hive supports remain plain. Branch/decorations fixtures and world views
 are refreshed; the final World tab includes eight variations at two obstacle
 scales. Atlas frames and source-comparison flags are unchanged.
+
+Natural-pole/snake follow-up on `017b24a`: longer 45° stubs, finer leafy
+creepers at the pole edge, shared painted skin for snake coils/neck, a tucked
+tail and mouth-registered tongue. Snake-bearing poles reserve clear space around
+the full snake envelope. Refreshed fixtures and context sheets accompany an
+eight-pole snake-clearance sheet. Native checks cover 768 poses across 64 seeds
+and two obstacle scales; 19 focused tests and three browser checks pass. The
+same 36 source-comparison flags remain visible (1.45% aggregate).

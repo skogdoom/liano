@@ -85,15 +85,21 @@ used as a fallback. The classic manifest supplies only rendering/hitbox contract
 
 `presentation.standingBranchJoin.details` adds sparse, static pole decorations
 only to standing branches. `branchPole.js` reuses existing painted leaves, vine
-strips and cropped branch ends, with a separate per-gap random stream. Sprig
-roots and stub roots sit behind the pole; trailing vines sit in front. Platform
-and hive shafts remain plain. No new atlas frames or gameplay shapes are added.
+strips and cropped branch ends, with a separate per-gap random stream. Longer
+stubs tilt roughly 45° up/down. Fine creepers trail along the pole edge, with
+leaves attached along the stem and roots hidden behind the shaft. Snake rigs
+provide `poleClearance`; details leave room above it for their own upward reach.
+Platform and hive shafts remain plain. No new atlas frames or gameplay shapes
+are added.
 
 Branch snakes use single-strand band recipes with separate animated neck/head and
 tail; the climbing snake's full coil image is not a repeatable branch band. The
-painted `perched-snake-tail` has a registered root and a slender curved taper;
-its source and head share a copper/orange-and-cream palette with the band and
-neck recipes. Branch foliage stays green. `presentation.perchedSnakeNeckSocket`
+painted `perched-snake-tail` has a registered root and a shorter curved taper
+tucked back against the wood. `perched-snake-skin` supplies the same painted
+scales and cream belly to neck and coils; coil curves are rasterized at build
+time. `presentation.perchedSnakePaintedSkin` omits classic diamond overlays.
+The head’s normalized `mouth` landmark registers the tongue to its painted
+mouth opening in the same head coordinates. Branch foliage stays green. `presentation.perchedSnakeNeckSocket`
 registers the animated neck inside the rear of the head and selects neck-root
 occlusion beneath the final coil, without round joint caps. The
 pack's `presentation.snakeLimbThickness` fits wraps to the painted wood, and

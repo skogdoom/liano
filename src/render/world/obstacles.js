@@ -34,6 +34,7 @@ function vine(b, x, fromY, toY, sway) {
 
 function branch(b, o, rand, hangs, view) {
   const [box] = OBSTACLE_HITBOXES.branch;
+  const decoration = o.decoration ? DECORATION_RIGS[o.decoration](b, mulberry32(mixSeed(0xa11a, o.gap)), { hangs }) : null;
   const join = !hangs && b.art.catalog.presentation?.standingBranchJoin;
   const trunk = hangs ? null : b.stretched('branch.trunk', BRANCH_TRUNK_X, join?.top ?? 0, trunkBottom(o), TRUNK_REFERENCE);
   const parts = hangs
@@ -53,12 +54,12 @@ function branch(b, o, rand, hangs, view) {
     parts.push(line);
   }
   if (join) {
-    const details = join.details ? branchPoleDetails(b, o) : { behind: [], front: [] };
+    const details = join.details ? branchPoleDetails(b, o, decoration?.poleClearance) : { behind: [], front: [] };
     parts.push(...details.behind, trunk, ...details.front);
   }
   view.add(parts);
-  if (!o.decoration) return null;
-  const { part, animate, behindBranch } = DECORATION_RIGS[o.decoration](b, mulberry32(mixSeed(0xa11a, o.gap)), { hangs });
+  if (!decoration) return null;
+  const { part, animate, behindBranch } = decoration;
   if (behindBranch) view.addAt(part, parts.indexOf(wood));
   else view.add(part);
   return animate;

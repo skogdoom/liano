@@ -1,12 +1,13 @@
 import { mixSeed, mulberry32 } from '../../sim/rng.js';
 import { BRANCH_TRUNK_X, trunkBottom } from '../../views/obstacles.js';
-import { quadraticPoints } from './build.js';
+import { cubicPoints, quadraticPoints } from './build.js';
 
 // Small, static details built from the painted pack's existing pieces. Their
 // own seed keeps bark, animals and gameplay generation independent of them.
-export function branchPoleDetails(b, o) {
+export function branchPoleDetails(b, o, occupiedBottom = 0) {
   const behind = [], front = [];
-  const top = 28, bottom = trunkBottom(o) - 28;
+  // Include the details' upward reach, keeping the snake's entire envelope free.
+  const top = Math.max(28, occupiedBottom + 28), bottom = trunkBottom(o) - 28;
   if (bottom - top < 45) return { behind, front };
   const rand = mulberry32(mixSeed(0x706f6c65, o.gap));
   const count = Math.min(2 + Math.floor(rand() * 2), Math.floor((bottom - top) / 40));
@@ -18,9 +19,10 @@ export function branchPoleDetails(b, o) {
     if (kind === 0) {
       // Reuse only the sharp, sawn end. The pole covers the cropped root.
       const wood = b.image('branch.body'), at = b.art.at('branch.body');
-      wood.setCrop(0, 0, 34 * at.zoom, at.size[1]).setX(49);
+      wood.setCrop(0, 0, 58 * at.zoom, at.size[1]).setX(25);
       const size = .42 + rand() * .16;
-      detail.setScale(side * size, size).setRotation(side * (.1 + rand() * .35));
+      const tilt = (rand() < .5 ? -1 : 1) * (Math.PI / 4 + (rand() - .5) * .16);
+      detail.setScale(side * size, size).setRotation(tilt);
       detail.add(wood);
       behind.push(detail);
     } else if (kind === 1) {
@@ -34,13 +36,17 @@ export function branchPoleDetails(b, o) {
       behind.push(detail);
     } else {
       const length = 26 + rand() * 18;
-      detail.add(b.curve('support.vine', quadraticPoints([[side * 6, -4], [-side * 9, length * .5], [side * 10, length]])));
-      for (const [x, dy, angle] of [[1, length * .45, -side * 1.1], [side * 10, length, side * 2.2]]) {
+      // A fine creeper grows out from behind the pole and drops along its edge.
+      // Leaves share points on the stem rather than floating beside a taut bow.
+      const points = cubicPoints([[side * 5, -4], [side * 14, 0], [side * 17, length * .65], [side * 12, length]]);
+      detail.add(b.curve('temple.vine', points, false));
+      for (const [index, angle, size] of [[7, side * 1.9, .13], [14, -side * 2, .11], [21, side * 2.5, .085]]) {
+        const { x, y } = points[index];
         const leaf = b.image('temple.leaf', Math.floor(rand() * 8));
-        leaf.setPosition(x, dy).setRotation(angle).setScale(b.art.unit('temple.leaf') * .1);
+        leaf.setPosition(x, y).setRotation(angle).setScale(b.art.unit('temple.leaf') * size);
         detail.add(leaf);
       }
-      front.push(detail);
+      behind.push(detail);
     }
   }
   return { behind, front };

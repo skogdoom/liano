@@ -96,7 +96,8 @@ function snake(b, rand, { hangs = false } = {}) {
       image.scaleY = (art.unit('perchedSnake.band') * (band.to[1] - band.from[1])) / (SNAKE_LIMB_REFERENCE + 2);
     }
     const mid = [(band.from[0] + band.to[0]) / 2 + (coil.pole ? 0 : 0.5), (band.from[1] + band.to[1]) / 2];
-    pieces.push(image, mark(mid, 2), mark(k % 2 ? band.from : band.to, 1.6));
+    pieces.push(image);
+    if (!art.catalog.presentation?.perchedSnakePaintedSkin) pieces.push(mark(mid, 2), mark(k % 2 ? band.from : band.to, 1.6));
   }
   const neck = b.container();
   const head = b.container();
@@ -107,6 +108,9 @@ function snake(b, rand, { hangs = false } = {}) {
   part.add(neckSocket ? [neck, ...pieces, head] : [...pieces, neck, head]);
   return {
     part,
+    // The tail is the lowest part through the full head-sway cycle. Keep pole
+    // foliage and stubs beneath this conservative envelope, including limb wraps.
+    poleClearance: coil.y + Math.max(...coil.bands.map(band => band.to[1])) + 20,
     animate(t) {
       const pose = perchedSnakePose(coil, t);
       if (neckSocket) {
