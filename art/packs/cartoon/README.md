@@ -72,8 +72,8 @@ components and already draws its torso/face over the limb roots. Classic retains
 its original layer order. The replacement component exports retain their previous
 pixel widths; do not embed the full-resolution masters in production frames.
 
-`scripts/cartoon-sources.mjs` produces all **583 required frames** plus the new
-`ui.wordmark`: **181 pieces / 584 frames**. It combines painted components with
+`scripts/cartoon-sources.mjs` produces all **607 required frames** plus the new
+`ui.wordmark`: **182 pieces / 608 frames**. It combines painted components with
 editable vector recipes for bent strips, repeatable stone courses, feather/membrane
 animation, small props and UI. Variants share the same pivots and scale; bird/bat
 wings and fire use the original frame ordering. Player 2 has a distinct ginger
@@ -113,6 +113,16 @@ covers the join; classic keeps its original tail and layer/animation behavior.
 The component export is capped at 320 pixels wide; the full master stays out of
 production atlas cells.
 
+
+The spider's brighter lavender body has two widely separated, enlarged yellow
+eyes with small pupils. `spiderLegPoses` selects a cartoon-only `spider.legs`
+flipbook of 24 complete eight-leg poses behind that body. Rasterizing the whole
+outline at each atlas density preserves native 1× antialiasing, replacing the
+undersampled borders of separately rotated, thin strips. `src/art/spiderPose.js`
+shares the cyclic pose definition and time-to-frame selection with the source
+exporter. Eight separate legs remain inside the frame throughout the cycle.
+Classic keeps its original continuous leg rig; movement and collision shapes are
+unchanged. The spider component export is capped at 384 pixels wide.
 
 Branch snakes use single-strand band recipes with separate animated neck/head and
 tail; the climbing snake's full coil image is not a repeatable branch band. The

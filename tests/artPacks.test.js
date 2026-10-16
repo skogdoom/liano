@@ -123,10 +123,38 @@ describe('complete cartoon pack contracts', () => {
     }
   });
 
-  it('covers every required frame plus the title and green snake palette', () => {
+  it('keeps all eight spider legs separate and unclipped throughout their cycle', () => {
+    const piece = cartoon.pieces.find(p => p.key === 'spider.legs');
+    for (const frame of piece.frames) {
+      const image = new Resvg(readFileSync(new URL(`../art/packs/cartoon/${frame}`, import.meta.url)),
+        { fitTo: { mode: 'width', value: piece.box.w * 4 } }).render();
+      const { width, height, pixels } = image;
+      const opaque = new Set();
+      for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+        if (pixels[(y * width + x) * 4 + 3] < 100) continue;
+        expect(x > 0 && x < width - 1 && y > 0 && y < height - 1, frame).toBe(true);
+        opaque.add(y * width + x);
+      }
+      let components = 0;
+      while (opaque.size) {
+        components++;
+        const pending = [opaque.values().next().value];
+        opaque.delete(pending[0]);
+        while (pending.length) {
+          const pixel = pending.pop();
+          for (const offset of [-width, -1, 1, width]) {
+            if (opaque.delete(pixel + offset)) pending.push(pixel + offset);
+          }
+        }
+      }
+      expect(components, frame).toBe(8);
+    }
+  });
+
+  it('covers every required frame plus the title, green snake palette and complete spider leg poses', () => {
     expect(validatePack(classic, cartoon, 'cartoon')).toEqual([]);
-    expect(cartoon.pieces).toHaveLength(181);
-    expect(cartoon.pieces.reduce((sum, p) => sum + p.frames.length, 0)).toBe(584);
+    expect(cartoon.pieces).toHaveLength(182);
+    expect(cartoon.pieces.reduce((sum, p) => sum + p.frames.length, 0)).toBe(608);
     const reordered = structuredClone(cartoon);
     const piece = reordered.pieces[0];
     piece.box = Object.fromEntries(Object.entries(piece.box).reverse());

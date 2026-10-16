@@ -14,6 +14,7 @@ import {
 import { FLOOR_Y } from '../../views/backdrop.js';
 import { Builder, cubicPoints } from './build.js';
 import { paintedSnakePose } from './snakePose.js';
+import { spiderLegFrame } from '../../art/spiderPose.js';
 
 // The moving obstacles in the Phaser version (PHASER_PLAN.md, M5c), as the Pixi
 // ObstacleViews draw them: a body that follows the obstacle (scaled with the hitbox),
@@ -24,6 +25,17 @@ function spider(b, o) {
   // The thread from the canopy down to the spider: a segment, stretched.
   const thread = b.image('spider.thread');
   const body = b.container();
+  if (b.art.catalog.presentation?.spiderLegPoses) {
+    const legs = b.image('spider.legs');
+    body.add([legs, b.image('spider.body')]);
+    return {
+      parts: [thread, body], body,
+      animate(t, position) {
+        b.setSegment(thread, 'spider.thread', [position.x, CANOPY_Y - 40], [position.x, position.y - 14 * o.scale]);
+        b.art.setFrame(legs, 'spider.legs', spiderLegFrame(t));
+      },
+    };
+  }
   const legs = spiderLegs(0).map(({ shoulder, knee, foot }) => b.line('spider.leg', [shoulder, knee, foot]));
   body.add([...legs.flat(), b.image('spider.body')]);
   return {

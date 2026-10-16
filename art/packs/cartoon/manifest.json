@@ -3886,6 +3886,46 @@
       ]
     },
     {
+      "key": "spider.legs",
+      "purpose": "The painted spider's eight legs, antialiased as complete poses rather than rotated strips.",
+      "kind": "sprite",
+      "set": "main",
+      "scale": 1.3,
+      "tint": false,
+      "box": {
+        "x": -32,
+        "y": -22,
+        "w": 64,
+        "h": 54
+      },
+      "frames": [
+        "generated/spider.legs.0.svg",
+        "generated/spider.legs.1.svg",
+        "generated/spider.legs.2.svg",
+        "generated/spider.legs.3.svg",
+        "generated/spider.legs.4.svg",
+        "generated/spider.legs.5.svg",
+        "generated/spider.legs.6.svg",
+        "generated/spider.legs.7.svg",
+        "generated/spider.legs.8.svg",
+        "generated/spider.legs.9.svg",
+        "generated/spider.legs.10.svg",
+        "generated/spider.legs.11.svg",
+        "generated/spider.legs.12.svg",
+        "generated/spider.legs.13.svg",
+        "generated/spider.legs.14.svg",
+        "generated/spider.legs.15.svg",
+        "generated/spider.legs.16.svg",
+        "generated/spider.legs.17.svg",
+        "generated/spider.legs.18.svg",
+        "generated/spider.legs.19.svg",
+        "generated/spider.legs.20.svg",
+        "generated/spider.legs.21.svg",
+        "generated/spider.legs.22.svg",
+        "generated/spider.legs.23.svg"
+      ]
+    },
+    {
       "key": "ui.wordmark",
       "purpose": "Cartoon stone title with the concept sun/spiral O.",
       "kind": "sprite",
@@ -3929,6 +3969,7 @@
     "pantherPaintedTail": true,
     "hangingBatRootY": 1,
     "hangingBatPaintedEars": true,
+    "spiderLegPoses": true,
     "climbingSnake": "articulated",
     "monkeyRootY": -3,
     "monkeyLimbsBehindBody": true,
@@ -3951,6 +3992,7 @@
     "templeFireDaylight": 0.18,
     "rasterScale": {
       "branch.body": 2,
+      "spider.body": 2,
       "bird.red.wing": 2.5,
       "bird.blue.wing": 2.5,
       "bird.purple.wing": 2.5

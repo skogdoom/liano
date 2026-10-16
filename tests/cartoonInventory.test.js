@@ -7,15 +7,15 @@ const manifest = JSON.parse(readFileSync(new URL('../art/manifest.json', import.
 describe('cartoon authoring inventory', () => {
   it('covers every stable frame and preserves the rendering contracts', () => {
     const inventory = cartoonInventory(manifest);
-    expect(inventory.pieceCount).toBe(180);
-    expect(inventory.frameCount).toBe(583);
-    expect(new Set(inventory.pieces.flatMap((p) => p.frames.map((f) => f.key))).size).toBe(583);
+    expect(inventory.pieceCount).toBe(181);
+    expect(inventory.frameCount).toBe(607);
+    expect(new Set(inventory.pieces.flatMap((p) => p.frames.map((f) => f.key))).size).toBe(607);
     const original = manifest.pieces.find((p) => p.key === 'monkey.p1.torso');
     const torso = inventory.pieces.find((p) => p.key === original.key);
     expect(torso).toMatchObject({ box: original.box, attach: original.attach, pivot: [0, 0] });
     expect(inventory.pieces.find((p) => p.key === 'liana.green.rope').length).toBe(420);
     expect(inventory.pieces.find((p) => p.key === 'monkey.shadow.torso').alpha).toBe(0.56);
-    expect(inventorySummary(inventory).totals).toEqual({ pending: 583, painted: 0, reviewed: 0 });
+    expect(inventorySummary(inventory).totals).toEqual({ pending: 607, painted: 0, reviewed: 0 });
   });
 
   it('preserves artist progress while refreshing authoritative contract data', () => {

@@ -1,4 +1,5 @@
 import { frameName } from './piece.js';
+import { SPIDER_LEG_FRAMES } from './spiderPose.js';
 
 const canonical = (value) => Array.isArray(value) ? value.map(canonical)
   : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])])) : value;
@@ -21,7 +22,13 @@ export function packPieces(id, pieces) {
     p.purpose = `Green palette of ${piece.key}; identical geometry and attachment points.`;
     p.frames = p.frames.map((_, i) => `generated/${frameName(p, i)}.svg`);
     return p;
-  })];
+  }), {
+    key: 'spider.legs',
+    purpose: 'The painted spider\'s eight legs, antialiased as complete poses rather than rotated strips.',
+    kind: 'sprite', set: 'main', scale: pieces.find(p => p.key === 'spider.body').scale, tint: false,
+    box: { x: -32, y: -22, w: 64, h: 54 },
+    frames: Array.from({ length: SPIDER_LEG_FRAMES }, (_, i) => `generated/spider.legs.${i}.svg`),
+  }];
 }
 
 // Coverage is strict: a partial cartoon pack must never be shipped with an

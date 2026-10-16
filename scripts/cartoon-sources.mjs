@@ -8,6 +8,7 @@ import { cartoonInventory } from '../src/art/cartoonInventory.js';
 import { OBSTACLE_HITBOXES } from '../src/config.js';
 import { imageSize } from '../src/art/custom.js';
 import { packAlpha, packFrameCount, packPieces } from '../src/art/packs.js';
+import { paintedSpiderLegs } from '../src/art/spiderPose.js';
 import { registerLimb, registerTriangle } from '../src/art/registration.js';
 import { ARM, LEG } from '../src/views/monkey.js';
 import { TEMPLE_BRAZIERS } from '../src/views/obstacles.js';
@@ -161,6 +162,12 @@ const leaf = (length, halfWidth, fill = 'url(#paint)') => path(`M0 0 Q${length *
 const roundStrip = (p, colors) => defs(colors) + rect(0, -p.box.h * .36, p.length ?? 20, p.box.h * .72, 'url(#paint)', `rx="${p.box.h * .36}"`) + line(`M0 ${-p.box.h * .13} H${p.length ?? 20}`, colors[0], Math.min(.7, p.box.h * .15));
 const lianaGreen = ['#dce99a', '#a4c859', '#61883c'];
 const spiderLeg = ['#e0cde5', '#ab8caf', '#68546f'];
+// Rasterize complete rounded polylines at the atlas's game density. Rotating
+// high-density, thin strips at runtime undersampled their borders at 1×.
+const paintedSpiderLegPose = (frame) => paintedSpiderLegs(frame).map(({ shoulder, knee, foot }) => {
+  const d = `M${shoulder.join(' ')}L${knee.join(' ')}L${foot.join(' ')}`;
+  return line(d, '#503660', 2.6) + line(d, '#d6adeb', 1.65);
+}).join('');
 const batPalettes = {
   purple: ['#e7c9ee', '#b58bc5', '#655175'], brown: ['#ecd6bb', '#b5977f', '#66504b'],
   grey: ['#e5e4e0', '#acaeb3', '#676e7d'], black: ['#c4c4d4', '#828397', '#44465d'],
@@ -474,6 +481,7 @@ function creature(p, frame) {
   }
   if (family === 'spider') {
     if (component === 'body') return picture('spider', p.box);
+    if (component === 'legs') return paintedSpiderLegPose(frame);
     if (component === 'leg') return roundStrip(p, spiderLeg);
     if (component === 'legEnd') return defs(spiderLeg) + ellipse(0, 0, 2.4, 2.4);
     if (component === 'thread') return roundStrip(p, ['#e5e2cb', '#bcc9be', '#859f9a']);
@@ -702,11 +710,11 @@ manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, snakePoleThickness: 19, perchedSnakeTaperedEnd: true, perchedSnakeGreen: true,
   standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1], perchedSnakePaintedSkin: true, perchedSnakeContinuous: true,
   pantherSeatY: 2, pantherEyeOffset, pantherPaintedEars: true, pantherPaintedTail: true, hangingBatRootY: 1, hangingBatPaintedEars: true,
-  climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
+  spiderLegPoses: true, climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
   hangingMonkeyLegTint: hangingMonkeyTint,
   hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),
   batWingOffset: [6, 4], templeFireDaylight: .18,
-  rasterScale: { 'branch.body': 2, ...Object.fromEntries(['red', 'blue', 'purple'].map(look => [`bird.${look}.wing`, 2.5])) },
+  rasterScale: { 'branch.body': 2, 'spider.body': 2, ...Object.fromEntries(['red', 'blue', 'purple'].map(look => [`bird.${look}.wing`, 2.5])) },
   flyingWings: {
     bird: { root: [0, -3], near: { x: 3, y: 0, scale: 3 }, far: { x: 3, y: -2, scale: 2.55, flapRotation: .3, tint: 0xd2d9e3 } },
     bat: { root: [-2, -4], near: { x: 4, y: 0, scale: 1.2 }, far: { x: 5, y: -2, scale: 1.08, flapRotation: .6, tint: 0xd2d9e3 } },

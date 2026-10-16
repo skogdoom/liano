@@ -3126,6 +3126,49 @@
         "thresholdsChanged": false
       },
       "approval": "Owner accepted the painted panther tail/attachment and removed bat-ear triangle."
+    },
+    {
+      "change": "Larger yellow spider eyes, brighter body and complete antialiased leg poses",
+      "baseCommit": "10c9b68",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "The spider has brighter lavender fur and two larger, separated yellow eyes with small pupils. Its eight legs use 24 complete antialiased poses, replacing separately rotated narrow strips that appeared jagged at game size. Classic rendering, movement and collision shapes are unchanged."
+      ],
+      "sources": [
+        "masters/spider-clear.png",
+        "components/spider.png",
+        "generated/spider.body.svg",
+        "generated/spider.legs.0.svg through generated/spider.legs.23.svg"
+      ],
+      "refreshed": [
+        "spider-day-night",
+        "spider-motion",
+        "world.moving.spider at 1\u00d7/2\u00d7",
+        "world.moving.spider.1 at 1\u00d7/2\u00d7",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "sourceAndInventory": "Passed",
+        "productionBuild": "Passed",
+        "focusedTests": 16,
+        "browserReferenceTests": 1,
+        "legFramesChecked": 24,
+        "native": "All 24 leg poses by day/night; game-size samples use the 1\u00d7 atlas and enlarged detail uses the 4\u00d7 atlas. Both spider fixtures rendered at 1\u00d7/2\u00d7.",
+        "textureMemoryMB": {
+          "2x": 115,
+          "4x": 293
+        },
+        "reviewPage": "Eight tabs, image zoom, video playback, comparison images, notes export and mobile width checked."
+      },
+      "gallery": {
+        "flagged": 37,
+        "differingShare": 0.01530731452410044,
+        "thresholdsChanged": false
+      },
+      "approval": "Owner accepted the final day/night animation with larger yellow eyes, small pupils and complete antialiased leg poses."
     }
   ]
 }
