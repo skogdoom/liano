@@ -3969,6 +3969,25 @@
     "pantherPaintedTail": true,
     "hangingBatRootY": 1,
     "hangingBatPaintedEars": true,
+    "hangingBatEyeOffsets": {
+      "purple": [
+        0,
+        0.082
+      ],
+      "brown": [
+        0,
+        0.877
+      ],
+      "grey": [
+        0,
+        0.082
+      ],
+      "black": [
+        0,
+        0.082
+      ]
+    },
+    "owlFaceTravel": 0.35,
     "spiderLegPoses": true,
     "climbingSnake": "articulated",
     "monkeyRootY": -3,

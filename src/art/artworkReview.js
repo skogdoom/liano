@@ -52,7 +52,7 @@ for (const field of fields) {
 }
 document.querySelector('#export').onclick = () => {
   const notes = {
-    build: '3f72b69 + accepted spider eyes, contrast and complete leg poses on 10c9b68',
+    build: '3f72b69 + accepted painted owl, hooked beak and registered bat eyes on 62230a2',
     notes: Object.fromEntries(fields.map(field => [field.dataset.notes, field.value])),
   };
   const link = document.createElement('a');

@@ -3169,6 +3169,56 @@
         "thresholdsChanged": false
       },
       "approval": "Owner accepted the final day/night animation with larger yellow eyes, small pupils and complete antialiased leg poses."
+    },
+    {
+      "change": "Painted owl with hooked beak and registered hanging-bat eyes",
+      "baseCommit": "62230a2",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "The owl now matches the painted animals with textured feathers, layered wings, a cream facial disc and a rounded amber beak with a short hooked tip. Its head turns, pupils, blink and breathing remain articulated, with the face kept inside the head and toes meeting the branch. Hanging-bat eyes register to the painted sockets per palette, accounting for the taller brown body frame and removing dark crescents beneath the whites. Classic artwork, movement and collision shapes are unchanged."
+      ],
+      "sources": [
+        "masters/owl-components.png",
+        "masters/owl-beak.png",
+        "components/owl-body.png",
+        "components/owl-head.png",
+        "components/owl-disc.png",
+        "components/owl-beak.png",
+        "bat-hanging eye landmarks in source-layout.json"
+      ],
+      "refreshed": [
+        "owl-day-night",
+        "owl-beak",
+        "brown-bat-eyes",
+        "hanging-bat-eyes",
+        "world.decoration.owl at 1\u00d7/2\u00d7",
+        "world.decoration.hangingBat at 1\u00d7/2\u00d7",
+        "decorations-day",
+        "decorations-night",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "sourceAndInventory": "Passed",
+        "productionBuild": "Passed",
+        "focusedTests": 16,
+        "browserReferenceTests": 1,
+        "atlasMargins": "All four open bat-eye pairs and the owl beak have clear top/bottom margins at 4\u00d7.",
+        "native": "All four bat palettes; owl turns, blink, branch contact and beak in day/night contexts. Game-size owl samples use the 1\u00d7 atlas and enlarged detail uses the 4\u00d7 atlas. Both real fixtures rendered at 1\u00d7/2\u00d7.",
+        "textureMemoryMB": {
+          "2x": 115,
+          "4x": 293
+        },
+        "reviewPage": "Eight tabs, image zoom, video playback, comparison images, notes export, new owl/bat close-ups and mobile width checked."
+      },
+      "gallery": {
+        "flagged": 37,
+        "differingShare": 0.015341115581275794,
+        "thresholdsChanged": false
+      },
+      "approval": "Owner accepted the final beak preview after the combined owl/bat-eye review."
     }
   ]
 }

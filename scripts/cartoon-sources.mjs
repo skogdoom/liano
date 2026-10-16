@@ -200,6 +200,26 @@ const pantherEyes = frame => {
   }).join('');
 };
 
+// The brown body has a taller frame. Register each palette to its painted
+// sockets, keeping the complete whites inside the unchanged eye-frame box.
+const hangingBatEyeOffsets = Object.fromEntries(Object.keys(batPalettes).map(look => {
+  const pic = pictures.get('bat-hanging');
+  const box = baseline.pieces.find(p => p.key === `hangingBat.${look}.body`).box;
+  const socketY = Object.values(pic.landmarks).reduce((sum, [, y]) => sum + y / pic.h, 0) / 2;
+  return [look, [0, n(box.y + 1 + socketY * (box.h - 2) - 30.5)]];
+}));
+const hangingBatEyes = (frame, look) => {
+  const pic = pictures.get('bat-hanging');
+  const box = baseline.pieces.find(p => p.key === `hangingBat.${look}.body`).box;
+  const offset = hangingBatEyeOffsets[look];
+  return [['eyeLeft', -21], ['eyeRight', 20]].map(([name, angle]) => {
+    const [u, v] = pic.landmarks[name];
+    const x = box.x + 1 + u / pic.w * (box.w - 2) - offset[0];
+    const y = box.y + 1 + v / pic.h * (box.h - 2) - offset[1];
+    return `<g transform="translate(${x} ${y}) rotate(${angle}) scale(.7)">${eyePair(frame === 1, [0], 0)}</g>`;
+  }).join('');
+};
+
 // The painted tail's root stays registered inside the rear haunch throughout
 // the flipbook. A small rotation sways the hanging end without sliding the join.
 const paintedPantherTail = frame => {
@@ -468,7 +488,7 @@ function creature(p, frame) {
       return look === 'black' ? colorMatrix(painted, 'charcoal', '.15 .3 .15 0 .08 .15 .3 .15 0 .08 .17 .34 .17 0 .10 0 0 0 1 0') : colorize(painted, look);
     }
     if (component === 'eyes') return family === 'hangingBat'
-      ? [-3, 3].map(x => `<g transform="translate(${x} 30.5) scale(.7)">${eyePair(frame === 1, [0], 0)}</g>`).join('')
+      ? hangingBatEyes(frame, look)
       : eyePair(frame === 1, [-3, 3], 30);
     if (component === 'ear') return body + path(`M2 36 L${6 + frame * .2} ${30 - frame * .2} L9 37Z`, colors[1], colors[2]);
     if (component === 'wing') {
@@ -640,13 +660,13 @@ function prop(p, frame) {
     if (part === 'stem') return roundStrip(p, palettes.brown);
   }
   if (family === 'owl') {
-    if (part === 'body') return body + path('M-12 -25Q0 -31 12 -25Q17 -4 7 2L0 4 -7 2Q-17 -4 -12 -25Z') + path('M-8 -12Q0 -2 8 -12L6 1H-6Z', '#e2cb9a', 'none');
-    if (part === 'skull') return body + path('M-10 -12L-7 -16 0 -11 7 -16 10 -12Q14 4 8 9H-8Q-14 4 -10 -12Z');
-    if (part === 'disc') return defs(['#ffedc0', '#d6b886', '#9c795a']) + ellipse(-5, 0, 6, 6) + ellipse(5, 0, 6, 6);
-    if (part === 'eyeball') return ellipse(0, 0, 4, 4.5, '#e5bb55') + ellipse(-1, -1, 1.5, 1.7, '#f8d787');
+    if (part === 'body') return picture('owl-body', p.box);
+    if (part === 'skull') return picture('owl-head', p.box);
+    if (part === 'disc') return picture('owl-disc', { x: -10.5, y: -6.5, w: 21, h: 14 }, .5);
+    if (part === 'eyeball') return `<defs><radialGradient id="iris" cx=".38" cy=".3" r=".7"><stop stop-color="#fff4a1"/><stop offset=".5" stop-color="#f7cb4a"/><stop offset="1" stop-color="#b87b25"/></radialGradient></defs>` + ellipse(0, 0, 4, 4.5, 'url(#iris)', 'stroke="#55351f" stroke-width=".35"');
     if (part === 'pupil') return ellipse(0, 0, 2.4, 2.8, '#29342c') + ellipse(.6, -.7, .6, .7, '#fff6d5');
     if (part === 'shutEye') return line('M-4 -1Q0 3 4 -1', '#4c3e2d', 1.3);
-    if (part === 'beak') return path('M-2 0L0 5 2 0Z', '#d5a445', '#745637', .5);
+    if (part === 'beak') return picture('owl-beak', { x: -2.3, y: .35, w: 4.6, h: 5.6 }, 0);
   }
   if (family === 'ui') {
     if (part === 'panel') return defs(['#72846a', '#385345', '#19362d']) + path('M18 0H46Q64 0 64 18V46Q64 64 46 64H18Q0 64 0 46V18Q0 0 18 0Z', '#17342be8', '#a7a46b', 1.2) + line('M5 20Q5 5 20 5M44 5Q59 5 59 20M59 44Q59 59 44 59M20 59Q5 59 5 44', '#798b63', 1);
@@ -709,7 +729,7 @@ const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, snakePoleThickness: 19, perchedSnakeTaperedEnd: true, perchedSnakeGreen: true,
   standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1], perchedSnakePaintedSkin: true, perchedSnakeContinuous: true,
-  pantherSeatY: 2, pantherEyeOffset, pantherPaintedEars: true, pantherPaintedTail: true, hangingBatRootY: 1, hangingBatPaintedEars: true,
+  pantherSeatY: 2, pantherEyeOffset, pantherPaintedEars: true, pantherPaintedTail: true, hangingBatRootY: 1, hangingBatPaintedEars: true, hangingBatEyeOffsets, owlFaceTravel: .35,
   spiderLegPoses: true, climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
   hangingMonkeyLegTint: hangingMonkeyTint,
   hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),

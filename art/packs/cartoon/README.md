@@ -94,8 +94,14 @@ provide `poleClearance`; details leave room above it for their own upward reach.
 Platform and hive shafts remain plain. No new atlas frames or gameplay shapes
 are added.
 
-Hanging-bat eye overlays are scaled to 70% around each eye center and centered
-inside their frame, leaving more fur visible. Panther eyes follow `eyeNear` and
+Hanging-bat eye overlays retain their 70% scale and register to `eyeLeft` and
+`eyeRight` landmarks in the trimmed painted body. Each palette maps those
+landmarks through its own body box: brown's box is one unit taller, so reusing the
+other variants' eye placement left dark crescents below the whites.
+`hangingBatEyeOffsets` keeps the registered, tilted whites inside the unchanged
+eye-frame box and places them over the painted sockets in the rig.
+
+Panther eyes follow `eyeNear` and
 `eyeFar` landmarks on the trimmed painted body, with a narrower far eye and a
 sloped near socket. `presentation.pantherEyeOffset` places the exported eyes
 without changing the classic frame contract. `pantherPaintedEars` hides the
@@ -113,6 +119,16 @@ covers the join; classic keeps its original tail and layer/animation behavior.
 The component export is capped at 320 pixels wide; the full master stays out of
 production atlas cells.
 
+
+The owl uses painted body, head and facial-disc components with layered warm
+brown feathers, a cream patterned belly, folded wings and feet resting on the
+branch. A separate painted amber beak has a rounded upper bill, shaded lower
+mandible and short hooked tip. Component exports are capped at 300/288/240
+pixels for body/head/disc and 96 for the beak. Existing pupil, blink, head-turn
+and breathing animation stays articulated; `owlFaceTravel` limits the facial
+disc's sideways motion to 35% so it remains within the feathered head. Classic
+retains its original artwork and face travel; placement and collision contracts
+are unchanged.
 
 The spider's brighter lavender body has two widely separated, enlarged yellow
 eyes with small pupils. `spiderLegPoses` selects a cartoon-only `spider.legs`

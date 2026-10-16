@@ -310,6 +310,8 @@ function hangingBatRig(b, rand) {
   const swing = b.container();
   const ear = b.image(key('ear')).setVisible(!b.art.catalog.presentation?.hangingBatPaintedEars);
   const eyes = b.image(key('eyes'));
+  const eyeOffset = b.art.catalog.presentation?.hangingBatEyeOffsets?.[name];
+  if (eyeOffset) eyes.setPosition(...eyeOffset);
   swing.add([b.image(key('body')), ear, eyes]);
   part.add(swing);
   return {
@@ -341,7 +343,7 @@ function owl(b, rand) {
     animate(t) {
       const pose = owlPose(t, phase);
       body.scaleY = bodyUnit * pose.breath;
-      face.x = pose.faceX;
+      face.x = pose.faceX * (b.art.catalog.presentation?.owlFaceTravel ?? 1);
       head.rotation = pose.head;
       for (const eye of eyes) {
         eye.ball.visible = eye.pupil.visible = !pose.blink;
