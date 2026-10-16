@@ -19,6 +19,7 @@ import {
 } from '../../views/obstacles.js';
 import { Builder, cubicPoints } from './build.js';
 import { DECORATION_RIGS } from './decorations.js';
+import { branchPoleDetails } from './branchPole.js';
 
 // The static obstacles in the Phaser version (PHASER_PLAN.md, M5b), as the Pixi
 // ObstacleViews draw them: built once per obstacle from its pieces, in the local frame the
@@ -51,7 +52,10 @@ function branch(b, o, rand, hangs, view) {
     line.scaleX = (b.art.unit('branch.barkLine') * Math.hypot(x1 - x0, y1 - y0)) / BARK_LINE_LENGTH;
     parts.push(line);
   }
-  if (join) parts.push(trunk);
+  if (join) {
+    const details = join.details ? branchPoleDetails(b, o) : { behind: [], front: [] };
+    parts.push(...details.behind, trunk, ...details.front);
+  }
   view.add(parts);
   if (!o.decoration) return null;
   const { part, animate, behindBranch } = DECORATION_RIGS[o.decoration](b, mulberry32(mixSeed(0xa11a, o.gap)), { hangs });

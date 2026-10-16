@@ -848,6 +848,8 @@ Add a clearly labelled **Classic graphics: On/Off** row inside the existing titl
 
 - Perched-snake anatomy follow-up: a slender curved painted tail replaces the leaf-like triangle; foliage remains green. Coils and neck share the head/tail’s orange-and-cream palette. The animated neck registers inside the rear of the head, with its root behind the coil and no exposed circular caps. Classic retains its placement and layers. Six native limb/pole poses, refreshed day/night context, 19 focused tests, source/inventory checks, the production build and three browser checks pass. The same 36 comparison frames remain visible (1.44% aggregate); owner artwork/device acceptance remains pending.
 
+- Branch-pole detail follow-up: cartoon branch-bearing poles get two or three small, static, seeded leaf sprigs, trailing vines or cut branch ends. Existing painted pieces are reused with roots behind the pole and vines in front; there are no new atlas frames. The detail seed is independent of bark, animals and gameplay. Platform/hive supports, hanging branches and classic stay unchanged. Source/inventory validation, the production build, 13 focused tests, three browser checks and 80 native rig comparisons pass. Review fixtures, world views and an eight-pole sheet are refreshed. Owner artwork/device acceptance remains pending.
+
 ### M9. Cleanup and release (S)
 
 - Rewrite `PLAN.md` (tech stack, performance and hardening, structure, tunables, the art pipeline), the README's technology section and a short "Custom art" section pointing to `art/README.md`, and the `package.json` description; set the version to 3.0.0.

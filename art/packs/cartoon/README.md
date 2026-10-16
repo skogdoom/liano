@@ -83,6 +83,12 @@ inventory and validation (`src/art/packs.js`); classic remains at 36%.
 No classic drawing is read or
 used as a fallback. The classic manifest supplies only rendering/hitbox contracts.
 
+`presentation.standingBranchJoin.details` adds sparse, static pole decorations
+only to standing branches. `branchPole.js` reuses existing painted leaves, vine
+strips and cropped branch ends, with a separate per-gap random stream. Sprig
+roots and stub roots sit behind the pole; trailing vines sit in front. Platform
+and hive shafts remain plain. No new atlas frames or gameplay shapes are added.
+
 Branch snakes use single-strand band recipes with separate animated neck/head and
 tail; the climbing snake's full coil image is not a repeatable branch band. The
 painted `perched-snake-tail` has a registered root and a slender curved taper;

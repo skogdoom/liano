@@ -620,7 +620,7 @@ manifest.pieces.push(wordmark);
 const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10,
-  standingBranchJoin: { top: -12 }, perchedSnakeNeckSocket: [-3, 1],
+  standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1],
   pantherSeatY: 2, hangingBatRootY: 1,
   climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
   hangingMonkeyLegTint: hangingMonkeyTint,

@@ -76,3 +76,9 @@ orange/cream palette, and the neck joins inside the rear of the head with its
 root behind the final coil. The snake fixture, day/night decoration context and
 a six-pose limb/pole sheet are refreshed in the final review. The same 36 source
 comparisons remain flagged (1.44% aggregate); acceptance is pending.
+
+Branch-pole detail follow-up on `a3e97f2`: standing branch poles have sparse,
+seeded leaf sprigs, short vines and cut branch ends, reusing painted pieces.
+Platform/hive supports remain plain. Branch/decorations fixtures and world views
+are refreshed; the final World tab includes eight variations at two obstacle
+scales. Atlas frames and source-comparison flags are unchanged.

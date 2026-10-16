@@ -2774,6 +2774,45 @@
           "4": 22047339
         }
       }
+    },
+    {
+      "change": "Sparse seeded details on branch-bearing poles",
+      "baseCommit": "a3e97f2",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.branches",
+        "all nine world.decoration fixtures",
+        "scene.ahead",
+        "scene.night",
+        "branch-pole-variations: eight poles at two obstacle scales"
+      ],
+      "changes": [
+        "Branch poles receive two or three small seeded leaf sprigs, vines or cut branch ends, built from existing painted atlas pieces.",
+        "Branch ends and sprig roots draw behind the pole; trailing vines draw in front. Details have their own per-gap seed and remain static.",
+        "Details apply only to cartoon standing branches. Platform supports, hive supports, hanging branches and classic retain their existing rendering. No additional atlas frames or textures."
+      ],
+      "validation": {
+        "focusedUnitTests": 13,
+        "browserTests": 3,
+        "native": "80 rigs checked for repeatability and unchanged hanging/platform/hive supports across eight gaps and two obstacle scales; eight-pole sheet and 22 fixture captures.",
+        "reviewPage": "Passed: eight tabs, image zoom, video playback, all comparisons, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "status": "Source frames unchanged; previous 36 flags (1.44% aggregate) remain visible."
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110788608,
+          "4": 282001408
+        },
+        "downloadBytes": {
+          "1": 7386960,
+          "2": 11123881,
+          "4": 22047354
+        }
+      }
     }
   ]
 }

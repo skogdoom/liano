@@ -3820,7 +3820,8 @@
     "coconutRootY": 1,
     "snakeLimbThickness": 10,
     "standingBranchJoin": {
-      "top": -12
+      "top": -12,
+      "details": true
     },
     "perchedSnakeNeckSocket": [
       -3,
