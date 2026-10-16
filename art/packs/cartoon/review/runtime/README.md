@@ -207,3 +207,6 @@ Branch-fit/green-palette follow-up on `f46adeb`: Branch neck roots extend into t
 Copper placement and the green palette were accepted by the owner. Validation: 19
 focused tests, four browser checks and 768 native clearance poses. The updated
 2× gallery has 37 flags (1.46% aggregate); thresholds remain unchanged.
+
+Accepted eye/pole-stub follow-up on `dc446a0`: Hanging-bat eyes are smaller in all four palettes. Panther eyes follow the painted sockets with perspective sizing, and the legacy ear overlay is hidden to remove the gray forehead oval. Cut branch stubs point 45° upward on both sides; later seeded pole decoration choices retain their positions.
+Source/inventory checks and the production build pass, along with unchanged classic references, 80 native support/angle checks and 768 snake-clearance poses. The updated review page and affected fixture/context/world images cover the accepted changes. The same 37 gallery flags remain (1.46% aggregate), with unchanged thresholds.

@@ -28,8 +28,11 @@ export function branchPoleDetails(b, o, occupiedBottom = 0) {
       wood.dirty = false;
       wood.setRenderNodeRole('BatchHandler', atlasStripBatch);
       const size = .42 + rand() * .16;
-      const tilt = (rand() < .5 ? -1 : 1) * (Math.PI / 4 + (rand() - .5) * .16);
-      detail.setScale(side * size, size).setRotation(tilt);
+      // Retire the tilt variation without moving later seeded decorations.
+      rand();
+      rand();
+      // The crop points left before mirroring: both sides must rise outward.
+      detail.setScale(side * size, size).setRotation(side * Math.PI / 4);
       // The unmirrored crop points left; tuck that side farther into the pole.
       if (side > 0) detail.x += 2.5;
       detail.add(wood);

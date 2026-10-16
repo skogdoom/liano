@@ -3049,6 +3049,44 @@
         "thresholdsChanged": false
       },
       "approval": "Copper pose and green palette accepted by the owner."
+    },
+    {
+      "change": "Smaller bat eyes, registered panther eyes, removed forehead oval and upward pole stubs",
+      "baseCommit": "dc446a0",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "changes": [
+        "Hanging-bat eyes are smaller in all four palettes. Panther eyes follow the painted sockets with perspective sizing, and the legacy ear overlay is hidden to remove the gray forehead oval. Cut branch stubs point 45\u00b0 upward on both sides; later seeded pole decoration choices retain their positions."
+      ],
+      "refreshed": [
+        "panther-eyes",
+        "hanging-bat-eyes",
+        "branch-pole-stubs-up",
+        "world.decoration.panther at 1\u00d7/2\u00d7",
+        "world.decoration.hangingBat at 1\u00d7/2\u00d7",
+        "world.branches at 1\u00d7/2\u00d7",
+        "decorations-day",
+        "decorations-night",
+        "branch-pole-variations",
+        "branch-pole-snake-clearance",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night"
+      ],
+      "validation": {
+        "sourceAndInventory": "Passed",
+        "productionBuild": "Passed",
+        "browserReferenceTests": 1,
+        "nativeSupportChecks": 80,
+        "nativeSnakeClearancePoses": 768,
+        "reviewPage": "Eight tabs, image zoom, video playback, comparison images, notes export and mobile width checked."
+      },
+      "gallery": {
+        "flagged": 37,
+        "differingShare": 0.014631134525375938,
+        "thresholdsChanged": false
+      },
+      "approval": "Owner accepted the bat eyes, corrected panther without forehead oval, and upward 45\u00b0 pole stubs."
     }
   ]
 }

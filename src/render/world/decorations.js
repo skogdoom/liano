@@ -280,8 +280,9 @@ function panther(b, rand) {
   const part = b.container(cx, branchTop(cx) + (b.art.catalog.presentation?.pantherSeatY ?? 0)).setScale(facing, 1);
   const tail = b.image('panther.tail');
   const body = b.container();
-  const ear = b.image('panther.ear').setPosition(35.5, -22);
-  const eyes = b.image('panther.eyes');
+  const ear = b.image('panther.ear').setPosition(35.5, -22)
+    .setVisible(!b.art.catalog.presentation?.pantherPaintedEars);
+  const eyes = b.image('panther.eyes').setPosition(...(b.art.catalog.presentation?.pantherEyeOffset ?? [0, 0]));
   body.add([b.image('panther.body'), ear, eyes]);
   part.add([tail, body]);
   const earUnit = b.art.unit('panther.ear');

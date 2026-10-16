@@ -15,6 +15,7 @@ import { TEMPLE_BRAZIERS } from '../src/views/obstacles.js';
 // The hanging decoration shares the painted player limbs, with its own fur.
 // Match this baked multiplier with the runtime tint on those reused leg images.
 const hangingMonkeyTint = 0xffd0c8;
+const pantherEyeOffset = [3, 3];
 const forestFloorColor = '#111c18';
 
 const root = new URL('../art/packs/cartoon/', import.meta.url);
@@ -176,6 +177,21 @@ const greenRope = (p, colors = lianaGreen) => {
 const eyePair = (closed, xs = [-3.5, 3.5], y = -11) => xs.map((x) => closed
   ? line(`M${x - 2} ${y - .5} Q${x} ${y + 1.5} ${x + 2} ${y - .5}`, '#33251e', 1.3)
   : ellipse(x, y, 2.7, 3.5, '#fff4db') + ellipse(x + .7, y + .3, 1.45, 2.1, '#40271d') + ellipse(x + 1, y - .7, .55, .7, '#ffffff')).join('');
+
+// Register both eyes to the painted sockets. The farther eye is narrower in
+// the three-quarter head, and the near socket slopes down toward the muzzle.
+const pantherEyes = frame => {
+  const pic = pictures.get('panther'), box = baseline.pieces.find(p => p.key === 'panther.body').box;
+  return [['eyeNear', 3.1, 1.8, 25, 1.1, 1.4], ['eyeFar', .95, 1.6, 8, .5, 1.2]].map(([name, rx, ry, angle, px, py]) => {
+    const [u, v] = pic.landmarks[name];
+    const x = box.x + 1 + u / pic.w * (box.w - 2) - pantherEyeOffset[0];
+    const y = box.y + 1 + v / pic.h * (box.h - 2) - pantherEyeOffset[1];
+    const pupilX = rx * .16;
+    const eye = frame === 1 ? line(`M${-rx * .8} 0 Q0 1 ${rx * .8} 0`, '#33251e', .8)
+      : ellipse(0, 0, rx, ry, '#fff4db') + ellipse(pupilX, 0, px, py, '#40271d') + ellipse(pupilX + .12, -.5, px * .32, py * .26, '#fff');
+    return `<g transform="translate(${x} ${y}) rotate(${angle})">${eye}</g>`;
+  }).join('');
+};
 
 // Geometry is measured in the trimmed painted head, then transformed with the
 // head itself. Keeping the original whites avoids drawing new eyes over the fur.
@@ -413,7 +429,7 @@ function creature(p, frame) {
   let body = defs(colors);
   if (family === 'panther') {
     if (component === 'body') return picture('panther', p.box);
-    if (component === 'eyes') return eyePair(frame === 1, [28, 36], -18);
+    if (component === 'eyes') return pantherEyes(frame);
     if (component === 'ear') return ellipse(0, 0, 2.1, 2.4, '#ad8585');
     if (component === 'tail') {
       const curl = -6 + frame * 12 / 15;
@@ -433,7 +449,9 @@ function creature(p, frame) {
       const painted = picture(family === 'bat' ? 'bat-flying' : 'bat-hanging', p.box);
       return look === 'black' ? colorMatrix(painted, 'charcoal', '.15 .3 .15 0 .08 .15 .3 .15 0 .08 .17 .34 .17 0 .10 0 0 0 1 0') : colorize(painted, look);
     }
-    if (component === 'eyes') return eyePair(frame === 1, [-3, 3], 30);
+    if (component === 'eyes') return family === 'hangingBat'
+      ? [-3, 3].map(x => `<g transform="translate(${x} 30.5) scale(.7)">${eyePair(frame === 1, [0], 0)}</g>`).join('')
+      : eyePair(frame === 1, [-3, 3], 30);
     if (component === 'ear') return body + path(`M2 36 L${6 + frame * .2} ${30 - frame * .2} L9 37Z`, colors[1], colors[2]);
     if (component === 'wing') {
       const span = look === 'grey' ? 1.1 : look === 'black' ? .9 : 1;
@@ -672,7 +690,7 @@ const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10, snakePoleThickness: 19, perchedSnakeTaperedEnd: true, perchedSnakeGreen: true,
   standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1], perchedSnakePaintedSkin: true, perchedSnakeContinuous: true,
-  pantherSeatY: 2, hangingBatRootY: 1,
+  pantherSeatY: 2, pantherEyeOffset, pantherPaintedEars: true, hangingBatRootY: 1,
   climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
   hangingMonkeyLegTint: hangingMonkeyTint,
   hangingMonkeyHips: [torsoLandmarks.hipBack, torsoLandmarks.hipFront].map((point) => registeredPoint(hangingTorsoMatrix(), point)),

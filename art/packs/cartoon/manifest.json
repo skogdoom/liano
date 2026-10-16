@@ -3921,6 +3921,11 @@
     "perchedSnakePaintedSkin": true,
     "perchedSnakeContinuous": true,
     "pantherSeatY": 2,
+    "pantherEyeOffset": [
+      3,
+      3
+    ],
+    "pantherPaintedEars": true,
     "hangingBatRootY": 1,
     "climbingSnake": "articulated",
     "monkeyRootY": -3,

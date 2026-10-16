@@ -86,13 +86,20 @@ used as a fallback. The classic manifest supplies only rendering/hitbox contract
 `presentation.standingBranchJoin.details` adds sparse, static pole decorations
 only to standing branches. `branchPole.js` reuses existing painted leaves, vine
 strips and cropped branch ends, with a separate per-gap random stream. Longer
-stubs tilt roughly 45° up/down, have a slightly wider base, and tuck 2.5 world
+stubs tilt exactly 45° upward on both sides, have a slightly wider base, and tuck 2.5 world
 pixels farther behind the pole on the left. A static trapezoid samples the
 painted frame from its actual atlas page. Fine creepers trail along the pole edge, with
 leaves attached along the stem and roots hidden behind the shaft. Snake rigs
 provide `poleClearance`; details leave room above it for their own upward reach.
 Platform and hive shafts remain plain. No new atlas frames or gameplay shapes
 are added.
+
+Hanging-bat eye overlays are scaled to 70% around each eye center and centered
+inside their frame, leaving more fur visible. Panther eyes follow `eyeNear` and
+`eyeFar` landmarks on the trimmed painted body, with a narrower far eye and a
+sloped near socket. `presentation.pantherEyeOffset` places the exported eyes
+without changing the classic frame contract. `pantherPaintedEars` hides the
+legacy animated ear patch because the painted body already includes both ears.
 
 Branch snakes use single-strand band recipes with separate animated neck/head and
 tail; the climbing snake's full coil image is not a repeatable branch band. The
