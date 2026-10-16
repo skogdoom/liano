@@ -55,7 +55,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-    needs: test
+    needs: [test, browser]
     runs-on: ubuntu-latest
     permissions:
       pages: write

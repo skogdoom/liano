@@ -172,9 +172,10 @@ function buildPack(id, root, manifest) {
         console.log(`rasterizing ${id} tile ${piece.key} ${scale}×`);
         // The tile between its edge rows (see TILE_EDGE), each a copy of the row next to it:
         // the rendered tile placed again, one pixel row of it showing.
-        // Paint sources with repeated vector groups directly in the root viewport.
-        // resvg 2.6 can panic clipping an off-screen group in a nested SVG viewport.
-        const source = id === 'cartoon'
+        // Paint generated cartoon sources directly in the root viewport: resvg 2.6
+        // can panic clipping their repeated groups in a nested SVG. Custom PNG/SVG
+        // replacements still use cellSvg's replacement and sizing path.
+        const source = id === 'cartoon' && !custom.replace[frameName(piece, 0)]
           ? `<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}" viewBox="${piece.box.x} ${piece.box.y} ${cell.w / cell.zoom} ${cell.h / cell.zoom}">${inner(readFileSync(new URL(piece.frames[0], root), 'utf8'))}</svg>`
           : `<svg xmlns="http://www.w3.org/2000/svg" width="${cell.w}" height="${cell.h}">${cellSvg(piece, 0, cell)}</svg>`;
         const tile = dataUri('tile.png', render(softened(piece, cell, source)));
