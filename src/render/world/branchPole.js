@@ -2,6 +2,15 @@ import { mixSeed, mulberry32 } from '../../sim/rng.js';
 import { BRANCH_TRUNK_X, trunkBottom } from '../../views/obstacles.js';
 import { cubicPoints, quadraticPoints } from './build.js';
 
+// Phaser's strip renderer passes multi-atlas page zero. These stubs reuse a
+// frame on a later page, so forward its actual source to the stock batch node.
+const stubBatch = {
+  name: 'liano.branchStub',
+  batchStrip(context, object, matrix, _texture, ...args) {
+    object.defaultRenderNodes.BatchHandler.batchStrip(context, object, matrix, object.frame.source.glTexture, ...args);
+  },
+};
+
 // Small, static details built from the painted pack's existing pieces. Their
 // own seed keeps bark, animals and gameplay generation independent of them.
 export function branchPoleDetails(b, o, occupiedBottom = 0) {
@@ -17,12 +26,21 @@ export function branchPoleDetails(b, o, occupiedBottom = 0) {
     const kind = Math.floor(rand() * 3);
     const detail = b.container(BRANCH_TRUNK_X, y);
     if (kind === 0) {
-      // Reuse only the sharp, sawn end. The pole covers the cropped root.
-      const wood = b.image('branch.body'), at = b.art.at('branch.body');
-      wood.setCrop(0, 0, 58 * at.zoom, at.size[1]).setX(25);
+      // A static trapezoid reuses the sawn end while gently widening its root.
+      // The bark's painted taper runs the other way, so compensate at the base.
+      const wood = b.art.rope(b.scene, 'branch.body'), { zoom } = b.art.at('branch.body');
+      const { u0, u1 } = wood.frame, endU = u0 + (u1 - u0) * 58 * zoom / wood.frame.width;
+      const edge = (y, width) => -2.5 + (y + 2.5) * width;
+      wood.vertices.set([-58, edge(-25, .96), -58, edge(13, .96), 0, edge(-25, 1.35), 0, edge(13, 1.35)].map(v => v * zoom));
+      wood.uv[0] = wood.uv[2] = u0;
+      wood.uv[4] = wood.uv[6] = endU;
+      wood.dirty = false;
+      wood.setRenderNodeRole('BatchHandler', stubBatch);
       const size = .42 + rand() * .16;
       const tilt = (rand() < .5 ? -1 : 1) * (Math.PI / 4 + (rand() - .5) * .16);
       detail.setScale(side * size, size).setRotation(tilt);
+      // The unmirrored crop points left; tuck that side farther into the pole.
+      if (side > 0) detail.x += 2.5;
       detail.add(wood);
       behind.push(detail);
     } else if (kind === 1) {

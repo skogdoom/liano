@@ -330,7 +330,7 @@ const flightWingCache = new Map();
 // Bend the same painted skin used by the neck into a static coil. Each small
 // slice follows the curve's tangent, with a slight overlap to close raster seams.
 function paintedSnakeBand(frame) {
-  const [a, c, z] = frame ? [[-4, 0], [4, 11], [4, 22]] : [[-14, 0], [0, 5], [14, 6]];
+  const [a, c, z] = frame ? [[-4, 0], [2.5, 11], [4, 22]] : [[-14, 0], [0, 4.5], [14, 6]];
   const points = Array.from({ length: 25 }, (_, i) => {
     const t = i / 24, u = 1 - t;
     return [u * u * a[0] + 2 * u * t * c[0] + t * t * z[0], u * u * a[1] + 2 * u * t * c[1] + t * t * z[1]];
@@ -438,9 +438,12 @@ function creature(p, frame) {
     if (component === 'neckEnd') return ellipse(0, 0, 3, 3, '#ed7c13');
     if (component === 'head') return picture('perched-snake-head', p.box, 0);
     if (component === 'tail') {
-      const tail = pictures.get('perched-snake-tail'), scale = 14 / tail.w;
-      const [x, y] = tail.landmarks.root;
-      return `<g transform="translate(${frame ? 1 : -1} -1) rotate(${frame ? -20 : -45})"><use href="#picture-perched-snake-tail" transform="matrix(${scale} 0 0 ${scale * 1.65} ${-x * scale} ${-y * scale * 1.65})"/></g>`;
+      const tail = pictures.get('perched-snake-tail'), { root: [x, y], rootTop, rootBottom } = tail.landmarks;
+      // Export the hook along +y with a body-width root. The rig rotates this
+      // socket to the coil tangent; no reflection or unequal scaling twists it.
+      const diameter = Math.hypot(rootBottom[0] - rootTop[0], rootBottom[1] - rootTop[1]);
+      const scale = Math.min(7 / diameter, 18 / (tail.h - y), 19 / (tail.w - x));
+      return `<use href="#picture-perched-snake-tail" transform="matrix(0 ${scale} ${-scale} 0 ${y * scale} ${-x * scale})"/>`;
     }
     if (component === 'tongue') {
       const head = pictures.get('perched-snake-head'), [mx, my] = head.landmarks.mouth;
@@ -645,7 +648,7 @@ manifest.pieces.push(wordmark);
 const torsoLandmarks = pictures.get('monkey-torso').landmarks;
 manifest.presentation = {
   title: 'ui.wordmark', coconutRootY: 1, snakeLimbThickness: 10,
-  standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1], perchedSnakePaintedSkin: true,
+  standingBranchJoin: { top: -12, details: true }, perchedSnakeNeckSocket: [-3, 1], perchedSnakePaintedSkin: true, perchedSnakeContinuous: true,
   pantherSeatY: 2, hangingBatRootY: 1,
   climbingSnake: 'articulated', monkeyRootY: -3, monkeyLimbsBehindBody: true, monkeyMirrorFrontLeg: true,
   hangingMonkeyLegTint: hangingMonkeyTint,
@@ -656,9 +659,10 @@ manifest.presentation = {
     bird: { root: [0, -3], near: { x: 3, y: 0, scale: 3 }, far: { x: 3, y: -2, scale: 2.55, flapRotation: .3, tint: 0xd2d9e3 } },
     bat: { root: [-2, -4], near: { x: 4, y: 0, scale: 1.2 }, far: { x: 5, y: -2, scale: 1.08, flapRotation: .6, tint: 0xd2d9e3 } },
   },
-  // Seat stones against the painted shelf's actual upper edge.
+  // Seat stones two world pixels into the painted shelf so the contact feels
+  // planted rather than balancing on the soft outline's first touching pixel.
   standingRockY: manifest.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) =>
-    n(Math.min(...rockOutline(frame).map(([x, y]) => platformTopAt(x) - y)))),
+    n(2 + Math.min(...rockOutline(frame).map(([x, y]) => platformTopAt(x) - y)))),
   hangingRockSling: false,
   hangingRockVineY: manifest.pieces.find((p) => p.key === 'rock.body').frames.map((_, frame) => {
     const points = rockOutline(frame);

@@ -3828,6 +3828,7 @@
       1
     ],
     "perchedSnakePaintedSkin": true,
+    "perchedSnakeContinuous": true,
     "pantherSeatY": 2,
     "hangingBatRootY": 1,
     "climbingSnake": "articulated",
@@ -3895,12 +3896,12 @@
       }
     },
     "standingRockY": [
-      3.057,
-      1.176,
-      1.425,
-      1.176,
-      1.296,
-      1.029
+      5.057,
+      3.176,
+      3.425,
+      3.176,
+      3.296,
+      3.029
     ],
     "hangingRockSling": false,
     "hangingRockVineY": [

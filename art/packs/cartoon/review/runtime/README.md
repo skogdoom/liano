@@ -190,3 +190,11 @@ the full snake envelope. Refreshed fixtures and context sheets accompany an
 eight-pole snake-clearance sheet. Native checks cover 768 poses across 64 seeds
 and two obstacle scales; 19 focused tests and three browser checks pass. The
 same 36 source-comparison flags remain visible (1.45% aggregate).
+
+Snake-continuity/seating follow-up on `0ac207d`: reversed painted head with a
+continuous cubic neck underside, fuller tangent-aligned hook tail, tapered stub
+bases and shorter visible left-side stubs. All six standing rocks sit two world
+pixels deeper into the shelf. Updated snake, pole, rock and world previews cover
+the new placement; hanging rocks stay put. Validation includes 19 focused tests,
+four browser checks, 160 support checks and 768 snake-clearance poses. The same
+36 source-comparison flags remain visible (1.46% aggregate).

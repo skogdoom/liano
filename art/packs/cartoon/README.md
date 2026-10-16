@@ -86,7 +86,9 @@ used as a fallback. The classic manifest supplies only rendering/hitbox contract
 `presentation.standingBranchJoin.details` adds sparse, static pole decorations
 only to standing branches. `branchPole.js` reuses existing painted leaves, vine
 strips and cropped branch ends, with a separate per-gap random stream. Longer
-stubs tilt roughly 45° up/down. Fine creepers trail along the pole edge, with
+stubs tilt roughly 45° up/down, have a slightly wider base, and tuck 2.5 world
+pixels farther behind the pole on the left. A static trapezoid samples the
+painted frame from its actual atlas page. Fine creepers trail along the pole edge, with
 leaves attached along the stem and roots hidden behind the shaft. Snake rigs
 provide `poleClearance`; details leave room above it for their own upward reach.
 Platform and hive shafts remain plain. No new atlas frames or gameplay shapes
@@ -94,8 +96,11 @@ are added.
 
 Branch snakes use single-strand band recipes with separate animated neck/head and
 tail; the climbing snake's full coil image is not a repeatable branch band. The
-painted `perched-snake-tail` has a registered root and a shorter curved taper
-tucked back against the wood. `perched-snake-skin` supplies the same painted
+painted `perched-snake-tail` has a fuller hook with an inner belly stripe and
+`root`/`rootTop`/`rootBottom` landmarks. Its uniform export scale fits a body-width
+root; the rig aligns it to the coil’s exit tangent without a reflection.
+`presentation.perchedSnakeContinuous` turns the head back over the coils and
+traces the cubic neck head-to-body, preserving belly orientation at the join. `perched-snake-skin` supplies the same painted
 scales and cream belly to neck and coils; coil curves are rasterized at build
 time. `presentation.perchedSnakePaintedSkin` omits classic diamond overlays.
 The head’s normalized `mouth` landmark registers the tongue to its painted
@@ -105,8 +110,8 @@ occlusion beneath the final coil, without round joint caps. The
 pack's `presentation.snakeLimbThickness` fits wraps to the painted wood, and
 `presentation.coconutRootY` sets where coconuts meet it. Packs without those values
 retain classic placement. `presentation.standingRockY` seats each standing stone
-against the painted ledge, using offsets derived from the same outline vertices
-and ledge curve. Shapes already touching the platform stay put; hanging stones,
+two world pixels into the painted ledge, using offsets derived from the same
+outline vertices and ledge curve. Shapes already touching the platform stay put; hanging stones,
 classic placement and collision geometry are unchanged.
 `presentation.hangingRockVineY` extends each upper vine into the actual painted
 top edge of its rock, where the stone covers the rope tip, avoiding a gap at

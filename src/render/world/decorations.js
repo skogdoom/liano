@@ -41,7 +41,7 @@ import {
   perchedSnake,
   perchedSnakePose,
 } from '../../views/obstacles.js';
-import { quadraticPoints } from './build.js';
+import { cubicPoints, quadraticPoints } from './build.js';
 import { LEG } from '../../views/monkey.js';
 
 // The decorations a branch carries, in the Phaser version (as the Pixi DECORATIONS): each
@@ -84,7 +84,15 @@ function snake(b, rand, { hangs = false } = {}) {
   }
   const part = b.container(coil.x, coil.y).setScale(coil.dir, 1);
   const art = b.art;
-  const pieces = [b.image('perchedSnake.tail', coil.pole ? 0 : 1).setPosition(...coil.tailRoot)];
+  const continuous = art.catalog.presentation?.perchedSnakeContinuous;
+  const tail = b.image('perchedSnake.tail', coil.pole ? 0 : 1).setPosition(...coil.tailRoot);
+  if (continuous) {
+    const band = coil.bands[0], dx = band.to[0] - band.bulge[0], dy = band.to[1] - band.bulge[1], length = Math.hypot(dx, dy);
+    // The painted tail leaves its socket along +y. Continue the coil's tangent
+    // without reflecting its belly, with the socket buried beneath the coil cap.
+    tail.setPosition(band.to[0] - dx / length, band.to[1] - dy / length).setRotation(Math.atan2(dy, dx) - Math.PI / 2);
+  }
+  const pieces = [tail];
   const mark = (at, r) => b.image('perchedSnake.mark').setPosition(...at).setScale((art.unit('perchedSnake.mark') * r) / SNAKE_MARK_REFERENCE);
   for (const [k, band] of coil.bands.entries()) {
     // The band's piece starts at its top: the trunk's runs across, the limb's down, and is
@@ -103,6 +111,7 @@ function snake(b, rand, { hangs = false } = {}) {
   const head = b.container();
   const tongue = b.image('perchedSnake.tongue');
   head.add([b.image('perchedSnake.head'), tongue]);
+  if (continuous) head.scaleX = -1;
   const neckSocket = art.catalog.presentation?.perchedSnakeNeckSocket;
   // Painted coils cover the neck's root; the head covers its registered end.
   part.add(neckSocket ? [neck, ...pieces, head] : [...pieces, neck, head]);
@@ -110,15 +119,26 @@ function snake(b, rand, { hangs = false } = {}) {
     part,
     // The tail is the lowest part through the full head-sway cycle. Keep pole
     // foliage and stubs beneath this conservative envelope, including limb wraps.
-    poleClearance: coil.y + Math.max(...coil.bands.map(band => band.to[1])) + 20,
+    poleClearance: coil.y + Math.max(...coil.bands.map(band => band.to[1])) + (continuous ? 30 : 20),
     animate(t) {
       const pose = perchedSnakePose(coil, t);
-      if (neckSocket) {
+      let points;
+      if (continuous) {
+        const sway = Math.sin(t * 1.5 + coil.phase), band = coil.bands.at(-1);
+        const [rx, ry] = band.from;
+        pose.head = { x: rx - (coil.pole ? 15 : 11) - 1.5 * sway, y: ry - 20 + 1.2 * sway, rotation: .08 + .06 * sway };
+        const [sx, sy] = neckSocket, { x, y, rotation: angle } = pose.head;
+        const end = [x - sx * Math.cos(angle) - sy * Math.sin(angle), y - sx * Math.sin(angle) + sy * Math.cos(angle)];
+        const control = [rx - .75 * (band.bulge[0] - rx), ry - .75 * (band.bulge[1] - ry)];
+        // Trace head-to-body so the skin's belly stays on the same side of the
+        // continuous body direction, instead of rolling over at the neck root.
+        points = cubicPoints([band.from, control, [end[0] + 6, end[1] + 1], end]).reverse();
+      } else if (neckSocket) {
         const [x, y] = neckSocket, { rotation, x: hx, y: hy } = pose.head;
         pose.neck.to = [hx + x * Math.cos(rotation) - y * Math.sin(rotation), hy + x * Math.sin(rotation) + y * Math.cos(rotation)];
       }
       neck.removeAll(true);
-      neck.add(b.curve('perchedSnake.neck', quadraticPoints([pose.neck.from, pose.neck.control, pose.neck.to]), !neckSocket));
+      neck.add(b.curve('perchedSnake.neck', points ?? quadraticPoints([pose.neck.from, pose.neck.control, pose.neck.to]), !neckSocket));
       head.setPosition(pose.head.x, pose.head.y).setRotation(pose.head.rotation);
       tongue.visible = pose.tongue;
     },

@@ -52,7 +52,7 @@ for (const field of fields) {
 }
 document.querySelector('#export').onclick = () => {
   const notes = {
-    build: '3f72b69 + natural poles and unified snake skin on 017b24a',
+    build: '3f72b69 + snake continuity, tapered stubs and rock seating on 0ac207d',
     notes: Object.fromEntries(fields.map(field => [field.dataset.notes, field.value])),
   };
   const link = document.createElement('a');

@@ -2896,6 +2896,92 @@
           "4": 22170544
         }
       }
+    },
+    {
+      "change": "Continuous snake underside, fuller tail, tapered/tucked branch stubs and lower platform rocks",
+      "baseCommit": "0ac207d",
+      "renderer": "Chromium/SwiftShader, maxTextures: 1",
+      "refreshed": [
+        "world.branches",
+        "all nine world.decoration fixtures",
+        "world.rocks",
+        "scene.ahead",
+        "scene.night",
+        "scene.obstacles.day",
+        "scene.obstacles.night",
+        "decorations-day",
+        "decorations-night",
+        "perched-snake-poses",
+        "branch-pole-variations",
+        "branch-pole-snake-clearance",
+        "six standing stone variants"
+      ],
+      "changes": [
+        "Painted heads face back over the coils. Cubic necks trace head-to-body so their belly side and join tangent follow the coils. Head/tongue mirror together.",
+        "A fuller hook tail has a continuous inner belly stripe, uniform scale and body-width root registered by landmarks. Its root follows the last coil tangent and is covered by the coil cap. Pole clearance includes the larger curl.",
+        "Sawn stubs have a slightly wider base, using a static textured trapezoid and the original painted frame. The custom strip batch forwards the actual atlas page; no new texture or shader. Left-side stubs sit 2.5 world pixels farther behind the pole.",
+        "Every standing stone moves two world pixels deeper into its painted shelf. Hanging stones, classic graphics and collision geometry retain their positions."
+      ],
+      "validation": {
+        "focusedUnitTests": 19,
+        "browserTests": 4,
+        "native": "Six mirrored limb/pole poses; 160 repeatability/support-scope checks at two atlas densities and both obstacle sizes; 768 snake-clearance poses across 64 seeds; eight plain and eight snake-bearing pole previews; 22 fixture captures; all six stone variants. Final left-side placement checked with refreshed pole/branch/world captures.",
+        "reviewPage": "Passed: eight tabs, image zoom, video playback, all comparisons, notes export and mobile width; no browser errors."
+      },
+      "gallery": {
+        "share": 0.014598930733570289,
+        "flags": [
+          "backdrop.canopy",
+          "perchedBird.red.head",
+          "perchedBird.purple.head",
+          "perchedSnake.head",
+          "thornBush.mound",
+          "rock.ledge",
+          "snake.coil",
+          "snake.head",
+          "bird.red.body",
+          "bird.blue.body",
+          "bird.blue.wing.1",
+          "bird.blue.wing.2",
+          "bird.blue.wing.3",
+          "bird.blue.wing.4",
+          "bird.blue.wing.6",
+          "bird.blue.wing.7",
+          "bird.blue.wing.8",
+          "bird.blue.wing.9",
+          "bird.blue.wing.10",
+          "bird.blue.wing.11",
+          "bird.blue.wing.13",
+          "bird.blue.wing.14",
+          "bird.blue.wing.15",
+          "bird.blue.wing.16",
+          "bird.blue.wing.18",
+          "bird.blue.wing.19",
+          "bird.blue.wing.20",
+          "bird.blue.wing.21",
+          "bird.blue.wing.22",
+          "bird.blue.wing.23",
+          "bird.blue.wing.24",
+          "bird.blue.wing.25",
+          "bird.blue.wing.26",
+          "bird.blue.wing.28",
+          "bird.blue.wing.31",
+          "bird.purple.body"
+        ]
+      },
+      "metrics": {
+        "pack": "cartoon",
+        "memory": {
+          "1": 47824896,
+          "2": 110788608,
+          "4": 282001408
+        },
+        "downloadBytes": {
+          "1": 7397344,
+          "2": 11167199,
+          "4": 22262913
+        }
+      }
     }
   ]
 }

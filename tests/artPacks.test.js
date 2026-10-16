@@ -88,8 +88,8 @@ describe('complete cartoon pack contracts', () => {
         const shelf = top[Math.floor((wx - ledge.box.x) * 4)] ?? Infinity;
         gap = Math.min(gap, shelf - wy);
       }
-      expect(gap, `variant ${frame}: platform contact`).toBeGreaterThan(-1);
-      expect(gap, `variant ${frame}: platform gap`).toBeLessThan(1);
+      expect(gap, `variant ${frame}: platform embed depth`).toBeGreaterThan(-3);
+      expect(gap, `variant ${frame}: platform embed depth`).toBeLessThan(-1);
     }
   });
 
