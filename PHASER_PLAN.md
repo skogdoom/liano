@@ -960,7 +960,7 @@ and bring it into `release-verification` before M9c. Final manual and real-devic
 verification remains pending there.
 
 - Determine why 1P fullscreen exposes sky above the canopy, including the interaction between viewport size, camera framing and canopy placement/coverage.
-- In 1P landscape fullscreen, adjust the framing or canopy coverage so no sky is visible above the canopy. In portrait fullscreen/home-screen mode, retain a quarter of the pre-M9a space above the world, following the owner's second request to halve the remaining space. Cover fullscreen entry/exit, resize and rotation, and both classic and cartoon packs without changing gameplay geometry.
+- In 1P landscape fullscreen, adjust the framing or canopy coverage so no sky is visible above the canopy. Regular portrait browser views retain half the pre-M9a space above the world; portrait fullscreen/home-screen mode retains a quarter. Cover fullscreen entry/exit, resize and rotation, and both classic and cartoon packs without changing gameplay geometry.
 - Sky above the canopy remains acceptable in 2P shared mode; preserve its framing and the other supported layouts. On short landscape views, keep the floor at its normal world height and omit ground foliage if the visible bottom is above the ground line; do not raise greenery into the view.
 - Record the chosen approach and affected scenarios for M9c's automated and real-device checks.
 - **Done when:** the 1P fullscreen fix is implemented on `canopy`, focused checks pass and it is ready for integration and M9c verification, with the 2P shared exception documented. Integrate into `master` and sync `release-verification` before M9c.
@@ -971,8 +971,10 @@ That exposed scenery and sky above it in 1P fullscreen. `layoutFor` now anchors
 the solo world band at the top in landscape fullscreen/home-screen mode.
 Following the owner's portrait adjustment, portrait fullscreen/home-screen mode
 retains a quarter of its pre-M9a space above the world (10% of spare height, rather than
-40%). Windowed canopy framing, world scale, horizontal camera targets and
-gameplay geometry stay the same. Fixed multiplayer layouts bypass this adjustment, so
+40%). Regular portrait browser views now use 20% of spare height, down from 40%,
+so the reduction also applies in iPhone Safari without page fullscreen. World
+scale, horizontal camera targets and gameplay geometry stay the same. Fixed
+multiplayer layouts bypass this adjustment, so
 2P shared retains its extra sky and split mode keeps its existing panes.
 Fullscreen entry/exit, resize, rotation and mode changes use the existing layout
 callbacks. The floor fill extends to the actual visible bottom plus the shake
@@ -1009,6 +1011,17 @@ packs. A rendered windowed-phone preview also confirmed the foliage is omitted.
 overhead space. Portrait fullscreen/home-screen mode now uses 10% of spare
 height, down from 20%. The same 55 focused unit tests, three canopy browser
 cases and production build passed again.
+
+**Regular Safari portrait correction (2026-10-17):** the owner's iPhone 13 mini
+screenshot showed the regular browser view, which the earlier fullscreen-only
+reductions had missed. Normal portrait spacing now uses 20% of spare height
+instead of 40%; fullscreen/home-screen spacing stays at 10%. At a 375 × 812 CSS
+viewport, the world-band offset is 113.31 CSS pixels instead of 226.62. A new
+mobile-browser check verifies this without activating fullscreen, including
+shorter viewports representing visible browser bars. Validation: 85 focused
+unit tests, four canopy browser cases and the production build passed; both
+saved portrait menu references match exactly. This is browser emulation; final
+physical-device verification remains in M9c.
 
 ### M9b. Plan consolidation and area plans (M)
 

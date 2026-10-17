@@ -94,11 +94,11 @@ describe('layout', () => {
     expect(l.floorShift).toBe(0);
   });
 
-  it('anchors fullscreen landscape and quarters portrait space above the world without changing scale or horizontal framing', () => {
+  it('anchors fullscreen landscape and halves browser portrait space without changing scale or horizontal framing', () => {
     for (const [w, h] of ALL) {
       const windowed = layoutFor(w, h);
       const full = layoutFor(w, h, undefined, { fullscreen: true });
-      const expectedTop = full.orientation === 'portrait' ? windowed.bandTop / 4 : 0;
+      const expectedTop = full.orientation === 'portrait' ? windowed.bandTop / 2 : 0;
       expect(full.bandTop, `${w}×${h}`).toBe(expectedTop);
       expect(full.view).toEqual(windowed.view);
       expect(full.scale).toBe(windowed.scale);
@@ -132,6 +132,10 @@ describe('layout', () => {
       expect(l.orientation, name).toBe('portrait');
       expect(l.view.width, name).toBe(1100);
       expect(l.camera.follow, name).toBe('anchor');
+      // Regular Safari also needs the compact framing; it has no page fullscreen.
+      const spare = l.view.height - WORLD_HEIGHT;
+      expect(l.bandTop).toBeCloseTo(spare * 0.2, 9);
+      expect(layoutFor(w, h, undefined, { fullscreen: true }).bandTop).toBeCloseTo(spare * 0.1, 9);
       // Text and buttons draw at a readable size, or at the largest allowed.
       expect(l.ui * l.scale >= MIN_UI_CSS_SCALE - 1e-9 || l.ui === MAX_UI_SCALE, name).toBe(true);
       for (const [panel, half] of [

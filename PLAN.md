@@ -625,8 +625,9 @@ are complete and integrated into `phaser` through
   (merge `73a36d0`). Remaining manual/device checks move to M9c.
 - **M9a — Fullscreen canopy coverage: implemented on `canopy`; integration pending.**
   The new branch starts from `master`. 1P landscape fullscreen and home-screen
-  apps anchor the world at the top; portrait retains a quarter of the pre-M9a space
-  above it. Tall portrait views extend the floor fill. Short landscape views
+  apps anchor the world at the top. Portrait browser views retain half the pre-M9a
+  space above it; fullscreen/home-screen mode retains a quarter. Tall portrait
+  views extend the floor fill. Short landscape views
   omit bottom greenery when the ground line is outside the view. Multiplayer
   framing stays the same; sky above the canopy remains acceptable in
   2P shared mode. Integrate into `master` and sync `release-verification` before M9c.

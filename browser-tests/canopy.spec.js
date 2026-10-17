@@ -131,3 +131,29 @@ test('home-screen 1P keeps a quarter of the former portrait space above the cano
   await covered(page, true);
   expect(errors).toEqual([]);
 });
+
+test('iPhone-sized portrait browser halves the old canopy gap with browser bars shown or hidden', async ({ browser }) => {
+  const page = await browser.newPage({ viewport: { width: 375, height: 812 },
+    deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  try {
+    const errors = collectErrors(page);
+    await page.goto(`${DEV}?art=cartoon`);
+    await page.waitForFunction(() => window.__liano?.platform.world?.panes.length);
+    expect(await page.evaluate(() => !!document.fullscreenElement || window.navigator.standalone === true)).toBe(false);
+    for (const height of [812, 660, 600]) {
+      await page.setViewportSize({ width: 375, height });
+      await fitted(page, false);
+      const cssGap = await page.evaluate(() => {
+        const { layout, platform } = window.__liano;
+        return platform.world.panes[0].scene.y * layout.scale;
+      });
+      // Before M9a, 40% of the CSS height left over after the world band sat above it.
+      const oldGap = (height - 720 * 375 / 1100) * 0.4;
+      expect(cssGap).toBeCloseTo(oldGap / 2, 6);
+      await covered(page, true);
+    }
+    expect(errors).toEqual([]);
+  } finally {
+    await page.close();
+  }
+});

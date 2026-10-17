@@ -264,7 +264,7 @@ export const MAX_VIEW_WIDTH = 1600;
 export const PORTRAIT_VIEW_WIDTH = 1100;
 export const PORTRAIT_ANCHOR_X = 0.3;
 // Portrait: share of the spare height (beyond the world band) above the band.
-export const PORTRAIT_SPARE_ABOVE = 0.4;
+export const PORTRAIT_SPARE_ABOVE = 0.2;
 // Portrait text and buttons are enlarged so they draw at least this many CSS pixels per
 // logical pixel, up to MAX_UI_SCALE times their landscape size.
 export const MIN_UI_CSS_SCALE = 0.6;
