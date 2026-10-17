@@ -51,15 +51,23 @@ describe('complete cartoon pack contracts', () => {
         const original = render(copper), variant = render(green);
         const a = original.pixels, b = variant.pixels;
         expect([variant.width, variant.height]).toEqual([original.width, original.height]);
+        // One pass collects the worst alpha and pale-detail differences with where they are;
+        // then one check each.
         let greenPixels = 0, palePixels = 0;
+        const worstAlpha = { delta: 0, at: null }, worstPale = { delta: 0, at: null };
+        const at = (i) => [(i / 4) % original.width, Math.floor(i / 4 / original.width)];
         for (let i = 0; i < a.length; i += 4) {
-          expect(Math.abs(a[i + 3] - b[i + 3]), green.frames[frame]).toBeLessThanOrEqual(1);
+          const alpha = Math.abs(a[i + 3] - b[i + 3]);
+          if (alpha > worstAlpha.delta) Object.assign(worstAlpha, { delta: alpha, at: at(i) });
           if (b[i + 3] > 200 && b[i + 1] > b[i] * 1.2 && b[i + 1] > b[i + 2] * 1.2) greenPixels++;
           if (a[i + 3] > 250 && a[i] > 210 && a[i + 1] > a[i] * .85 && a[i + 2] > 100) {
-            expect(Math.max(...[0, 1, 2].map(c => Math.abs(a[i + c] - b[i + c])))).toBeLessThanOrEqual(2);
+            const pale = Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2]));
+            if (pale > worstPale.delta) Object.assign(worstPale, { delta: pale, at: at(i) });
             palePixels++;
           }
         }
+        expect(worstAlpha.delta, `${green.frames[frame]}: alpha at ${worstAlpha.at}`).toBeLessThanOrEqual(1);
+        expect(worstPale.delta, `${green.frames[frame]}: pale detail at ${worstPale.at}`).toBeLessThanOrEqual(2);
         expect(greenPixels, green.frames[frame]).toBeGreaterThan(2);
         if (green.key.endsWith('.head')) expect(palePixels).toBeGreaterThan(10);
       }
@@ -129,21 +137,32 @@ describe('complete cartoon pack contracts', () => {
       const image = new Resvg(readFileSync(new URL(`../art/packs/cartoon/${frame}`, import.meta.url)),
         { fitTo: { mode: 'width', value: piece.box.w * 4 } }).render();
       const { width, height, pixels } = image;
-      const opaque = new Set();
+      // The opaque pixels, and the first one on the image's edge (clipped), if any.
+      const opaque = new Uint8Array(width * height);
+      let clipped = null;
       for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
         if (pixels[(y * width + x) * 4 + 3] < 100) continue;
-        expect(x > 0 && x < width - 1 && y > 0 && y < height - 1, frame).toBe(true);
-        opaque.add(y * width + x);
+        if (!clipped && (x === 0 || x === width - 1 || y === 0 || y === height - 1)) clipped = [x, y];
+        opaque[y * width + x] = 1;
       }
+      expect(clipped, `${frame}: leg on the edge at ${clipped}`).toBeNull();
+      // Count the separate legs: flood-fill each group of 4-connected opaque pixels. None
+      // is on the edge, so a neighbour never wraps to another row.
       let components = 0;
-      while (opaque.size) {
+      const pending = new Int32Array(width * height);
+      for (let start = 0; start < opaque.length; start++) {
+        if (!opaque[start]) continue;
         components++;
-        const pending = [opaque.values().next().value];
-        opaque.delete(pending[0]);
-        while (pending.length) {
-          const pixel = pending.pop();
-          for (const offset of [-width, -1, 1, width]) {
-            if (opaque.delete(pixel + offset)) pending.push(pixel + offset);
+        opaque[start] = 0;
+        let size = 0;
+        pending[size++] = start;
+        while (size) {
+          const pixel = pending[--size];
+          for (const next of [pixel - width, pixel - 1, pixel + 1, pixel + width]) {
+            if (opaque[next]) {
+              opaque[next] = 0;
+              pending[size++] = next;
+            }
           }
         }
       }

@@ -7,26 +7,37 @@ export const PARITY = { channel: 8, share: 0.01, solidPerMillion: 25 };
 // `a` and `b` are the RGBA bytes of two images of the same size. Returns how many
 // pixels differ by more than `channel` in any channel (alpha included), their share,
 // the largest difference, and a picture of the differences: red where a pixel is over
-// the limit, grey (brighter for larger) where it differs by less.
-export function compareImages(a, b, { channel = PARITY.channel } = {}) {
+// the limit, grey (brighter for larger) where it differs by less. With `alsoOver`, also
+// how many pixels differ by more than that (`differingOver`); `into` is a buffer of the
+// images' size to draw the picture in, for comparing many large images without
+// allocating one each time.
+export function compareImages(a, b, { channel = PARITY.channel, alsoOver = null, into = null } = {}) {
   if (a.length !== b.length || a.length % 4 !== 0) throw new Error('compareImages: the images differ in size');
+  if (into && into.length !== a.length) throw new Error('compareImages: the buffer differs in size');
   const pixels = a.length / 4;
-  const diff = new Uint8ClampedArray(a.length);
+  const diff = into ?? new Uint8ClampedArray(a.length);
   let differing = 0;
+  let differingOver = 0;
   let maxDelta = 0;
   for (let i = 0; i < a.length; i += 4) {
     let delta = 0;
-    for (let c = 0; c < 4; c++) delta = Math.max(delta, Math.abs(a[i + c] - b[i + c]));
-    maxDelta = Math.max(maxDelta, delta);
+    for (let c = 0; c < 4; c++) {
+      const d = Math.abs(a[i + c] - b[i + c]);
+      if (d > delta) delta = d;
+    }
+    if (delta > maxDelta) maxDelta = delta;
+    if (alsoOver !== null && delta > alsoOver) differingOver++;
     if (delta > channel) {
       differing++;
       diff[i] = 255;
+      diff[i + 1] = diff[i + 2] = 0;
     } else {
       diff[i] = diff[i + 1] = diff[i + 2] = Math.min(delta * 16, 160);
     }
     diff[i + 3] = 255;
   }
-  return { pixels, differing, share: pixels ? differing / pixels : 0, maxDelta, diff };
+  return { pixels, differing, share: pixels ? differing / pixels : 0, maxDelta, diff,
+    ...(alsoOver !== null && { differingOver }) };
 }
 
 // How many of the pixels over the limit have all eight neighbours over it too: in a

@@ -27,12 +27,15 @@ for (const art of ['classic', 'cartoon']) for (const [width, height, ratio] of [
       tiles.resize(pane.layout);
       pane.scene.add([tiles.back, tiles.front]);
       const gl = app.renderer.gl;
+      // One buffer for each path's pixels and one for the differences, reused throughout.
+      const size = app.canvas.width * app.canvas.height * 4;
+      const buffers = { images: new Uint8Array(size), tiles: new Uint8Array(size), diff: new Uint8ClampedArray(size) };
       const draw = (rig, cameraX) => {
         images.back.setVisible(rig === images); images.front.setVisible(rig === images);
         tiles.back.setVisible(rig === tiles); tiles.front.setVisible(rig === tiles);
         rig.update(cameraX);
         app.renderer.preRender(); app.scene.render(app.renderer); app.renderer.postRender();
-        const pixels = new Uint8Array(app.canvas.width * app.canvas.height * 4);
+        const pixels = rig === images ? buffers.images : buffers.tiles;
         gl.readPixels(0, 0, app.canvas.width, app.canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
         return pixels;
       };
@@ -43,16 +46,11 @@ for (const art of ['classic', 'cartoon']) for (const [width, height, ratio] of [
         // Mid-layer and foreground wrap boundaries, including backwards movement.
         for (const cameraX of [0, 0.125, -0.125, 2048, midWrap - 0.125, midWrap + 0.125, -midWrap - 0.125]) {
           const a = draw(images, cameraX), b = draw(tiles, cameraX);
-          let different = 0, largest = 0;
-          for (let i = 0; i < a.length; i += 4) {
-            const delta = Math.max(...[0, 1, 2, 3].map((c) => Math.abs(a[i + c] - b[i + c])));
-            if (delta > 3) different++;
-            largest = Math.max(largest, delta);
-          }
-          const comparison = compareImages(a, b);
+          // One pass: the share over 3 (M7's tighter check) and the parity measures.
+          const comparison = compareImages(a, b, { alsoOver: 3, into: buffers.diff });
           const solid = solidPixels(comparison, app.canvas.width);
-          results.push({ cameraX, tint, different: different / (a.length / 4), largest,
-            share: comparison.share, solid, parityPass: passes({ ...comparison, solid }) });
+          results.push({ cameraX, tint, different: comparison.differingOver / comparison.pixels,
+            largest: comparison.maxDelta, share: comparison.share, solid, parityPass: passes({ ...comparison, solid }) });
         }
       }
       return results;

@@ -54,4 +54,23 @@ describe('the parity diff', () => {
     // Only the block's inner 2 × 2 has all eight neighbours over the limit.
     expect(solidPixels(result, width)).toBe(4);
   });
+
+  it('also counts pixels over a second limit, and draws into a reused buffer as into a new one', () => {
+    const width = 6;
+    const a = image(36, [100, 100, 100, 255]);
+    const b = a.slice();
+    // A 4 × 4 block 20 apart, and two pixels 5 apart.
+    for (let y = 1; y < 5; y++) for (let x = 1; x < 5; x++) b[(y * width + x) * 4] = 120;
+    b[0] = b[4 * 5 + 1] = 105;
+    const fresh = compareImages(a, b);
+    // A buffer left over from a different comparison: everything over the limit.
+    const into = new Uint8ClampedArray(a.length).fill(255);
+    const reused = compareImages(a, b, { alsoOver: 3, into });
+    expect(reused.diff).toBe(into);
+    expect([...reused.diff]).toEqual([...fresh.diff]);
+    expect(reused).toMatchObject({ differing: 16, differingOver: 18, maxDelta: 20 });
+    expect(fresh.differingOver).toBeUndefined();
+    expect(solidPixels(reused, width)).toBe(solidPixels(fresh, width));
+    expect(() => compareImages(a, b, { into: new Uint8ClampedArray(4) })).toThrow();
+  });
 });
