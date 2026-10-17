@@ -90,8 +90,8 @@ export class BackdropRig {
     this.shownTint = null;
   }
 
-  // Fits the sky and the layers to the pane (one of paneLayouts()), and lifts the floor to
-  // the bottom edge when the band is cropped (see layout.js).
+  // Fits the sky and layers to the pane (one of paneLayouts()). Short views
+  // leave ground foliage out of the picture instead of lifting it into view.
   resize(pane, zoom = 1) {
     this.density = zoom * pane.scale;
     const top = -pane.bandTop;
@@ -108,6 +108,9 @@ export class BackdropRig {
         art.tint([copies.view], this.color);
       } else art.setTile(tile.setX(-SKY_MARGIN), key, { width });
     }
+    const groundVisible = top + pane.view.height >= FLOOR_Y;
+    this.floor.setVisible(groundVisible);
+    this.layers.find((l) => l.key === 'backdrop.near').view.setVisible(groundVisible);
     const fillTop = FLOOR_Y + FLOOR_DEPTH;
     // Top-anchored fullscreen can put all the portrait spare height below the
     // world band. Cover its bottom, including shake, even beyond EXTEND_DOWN.

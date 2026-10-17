@@ -66,14 +66,14 @@ describe('layout', () => {
     expect(l.scale).toBeCloseTo(340 / MIN_VISIBLE_WORLD_HEIGHT, 9);
     // 26 % larger than the 16:9 frame letterboxed into the same screen.
     expect(l.scale / (340 / 720)).toBeCloseTo(720 / 570, 9);
-    expect(l.floorShift).toBe(MIN_VISIBLE_WORLD_HEIGHT - WORLD_HEIGHT);
+    expect(l.floorShift).toBe(0);
   });
 
   it('only crops a slightly wide screen, keeping the 1280 width', () => {
     const l = layoutFor(1900, 1000);
     expect(l.view.width).toBeCloseTo(1280, 9);
     expect(l.view.height).toBeCloseTo(1280 / 1.9, 9);
-    expect(l.floorShift).toBeCloseTo(1280 / 1.9 - WORLD_HEIGHT, 9);
+    expect(l.floorShift).toBe(0);
     expect(l.x).toBeCloseTo(0, 9);
     expect(l.y).toBeCloseTo(0, 9);
   });

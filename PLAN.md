@@ -626,8 +626,9 @@ are complete and integrated into `phaser` through
 - **M9a — Fullscreen canopy coverage: implemented on `canopy`; integration pending.**
   The new branch starts from `master`. 1P landscape fullscreen and home-screen
   apps anchor the world at the top; portrait retains half the pre-M9a space
-  above it. Tall portrait views extend the floor fill. Windowed and
-  multiplayer framing stay the same; sky above the canopy remains acceptable in
+  above it. Tall portrait views extend the floor fill. Short landscape views
+  omit bottom greenery when the ground line is outside the view. Multiplayer
+  framing stays the same; sky above the canopy remains acceptable in
   2P shared mode. Integrate into `master` and sync `release-verification` before M9c.
 - **M9b — Plan consolidation and area plans:** consolidate `PLAN.md` and
   `PHASER_PLAN.md` into one authoritative plan, with a short `PLAN.md` roadmap

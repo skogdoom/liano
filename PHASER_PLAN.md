@@ -961,7 +961,7 @@ verification remains pending there.
 
 - Determine why 1P fullscreen exposes sky above the canopy, including the interaction between viewport size, camera framing and canopy placement/coverage.
 - In 1P landscape fullscreen, adjust the framing or canopy coverage so no sky is visible above the canopy. In portrait fullscreen/home-screen mode, retain half the pre-M9a space above the world, as requested by the owner. Cover fullscreen entry/exit, resize and rotation, and both classic and cartoon packs without changing gameplay geometry.
-- Sky above the canopy remains acceptable in 2P shared mode; preserve its framing and the other supported layouts.
+- Sky above the canopy remains acceptable in 2P shared mode; preserve its framing and the other supported layouts. On short landscape views, keep the floor at its normal world height and omit ground foliage if the visible bottom is above the ground line; do not raise greenery into the view.
 - Record the chosen approach and affected scenarios for M9c's automated and real-device checks.
 - **Done when:** the 1P fullscreen fix is implemented on `canopy`, focused checks pass and it is ready for integration and M9c verification, with the 2P shared exception documented. Integrate into `master` and sync `release-verification` before M9c.
 
@@ -971,8 +971,8 @@ That exposed scenery and sky above it in 1P fullscreen. `layoutFor` now anchors
 the solo world band at the top in landscape fullscreen/home-screen mode.
 Following the owner's portrait adjustment, portrait fullscreen/home-screen mode
 retains half its pre-M9a space above the world (20% of spare height, rather than
-40%). Windowed framing, world scale, horizontal camera targets and gameplay
-geometry stay the same. Fixed multiplayer layouts bypass this adjustment, so
+40%). Windowed canopy framing, world scale, horizontal camera targets and
+gameplay geometry stay the same. Fixed multiplayer layouts bypass this adjustment, so
 2P shared retains its extra sky and split mode keeps its existing panes.
 Fullscreen entry/exit, resize, rotation and mode changes use the existing layout
 callbacks. The floor fill extends to the actual visible bottom plus the shake
@@ -992,6 +992,18 @@ Safari/iPhone/iPad/Android checks remain pending in M9c.
 former overhead space, the updated framing passed the same 55 focused unit
 tests, all three canopy browser cases and the production build. Landscape and
 multiplayer framing retain their initial M9a behavior.
+
+**Short-landscape follow-up (2026-10-17):** at the owner's request, the floor
+now stays at its normal world height rather than being lifted into cropped
+landscape views. If the screen ends above the ground line (world y=660), both
+the foreground floor and the near ground ferns are hidden, leaving the jungle
+background visible at the bottom. This also applies with browser bars showing;
+foliage returns when resizing/rotation reveals the ground line. Portrait and
+multiplayer layouts keep their existing ground coverage. No gameplay geometry
+or artwork changes. Validation passed: 55 focused unit tests, all three canopy
+browser cases and the production build. Browser checks cover foliage disappearing
+in a short landscape view and returning in a taller landscape view, in both art
+packs. A rendered windowed-phone preview also confirmed the foliage is omitted.
 
 ### M9b. Plan consolidation and area plans (M)
 

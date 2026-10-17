@@ -53,7 +53,9 @@ async function edgeCoverage(page) {
       }
       scene.y = originalY;
       backdrop.front.setVisible(false); draw();
-      return { results, uncovered: row(true) };
+      return { results, uncovered: row(true), groundVisible: backdrop.floor.visible,
+        groundFernsVisible: backdrop.layers.find(l => l.key === 'backdrop.near').view.visible,
+        floorY: backdrop.floor.y };
     } finally {
       backdrop.front.setVisible(true); scene.y = originalY; marker.destroy();
       ui.sys.setVisible(visible[0]); worldLayer.setVisible(visible[1]); pane.overlay.setVisible(visible[2]);
@@ -62,14 +64,20 @@ async function edgeCoverage(page) {
   });
 }
 
-async function covered(page, portrait = false) {
-  const { results, uncovered } = await edgeCoverage(page);
+async function covered(page, portrait = false, short = false) {
+  const { results, uncovered, groundVisible, groundFernsVisible, floorY } = await edgeCoverage(page);
   // Negative control: without foreground coverage the row really is the marker.
   expect(uncovered.markerPixels, JSON.stringify({ results, uncovered })).toBe(uncovered.samples);
-  for (const { top, bottom } of results) for (const edge of [top, bottom]) {
-    expect(edge.markerPixels).toBe(0);
-    expect(edge.transparent).toBe(0);
-    expect(edge.black).toBe(0);
+  expect(groundVisible).toBe(!short);
+  expect(groundFernsVisible).toBe(!short);
+  expect(floorY).toBe(0);
+  for (const { top, bottom } of results) {
+    expect(top.markerPixels).toBe(0);
+    expect(bottom.markerPixels).toBe(short ? bottom.samples : 0);
+    for (const edge of [top, bottom]) {
+      expect(edge.transparent).toBe(0);
+      expect(edge.black).toBe(0);
+    }
   }
   if (portrait) for (const { above } of results) expect(above.markerPixels).toBe(above.samples);
 }
@@ -87,10 +95,10 @@ for (const art of ['classic', 'cartoon']) {
     await fitted(page, true);
     await covered(page);
 
-    for (const [width, height] of [[390, 844], [844, 390]]) {
+    for (const [width, height, short] of [[390, 844, false], [844, 390, true], [844, 450, false]]) {
       await page.setViewportSize({ width, height });
       await fitted(page, true);
-      await covered(page, width < height);
+      await covered(page, width < height, short);
     }
     await page.setViewportSize({ width: 1024, height: 768 });
     await fitted(page, true);

@@ -82,8 +82,9 @@ export function layoutFor(width, height, insets = { top: 0, right: 0, bottom: 0,
     y,
     view: { width: viewWidth, height: viewHeight },
     bandTop,
-    // How far the floor is lifted to stay at the bottom edge when the band is cropped.
-    floorShift: Math.min(viewHeight - bandBottom, 0),
+    // Keep the ground at its world height; short views crop it rather than
+    // lifting foreground greenery into the playable band.
+    floorShift: 0,
     ui,
     insets: {
       top: inset(insets.top, y),
