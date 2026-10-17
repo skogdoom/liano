@@ -2,7 +2,7 @@
 
 A one-button browser game. A monkey swings on lianas through a jungle. It grabs a liana anywhere along its length, slowly slips toward the tip, and the player presses a key (or taps) to let go. The monkey flies ballistically and auto-grabs the next liana it touches. Obstacles sit in the gaps between lianas: static ones first, moving ones from the sixth. Bananas are an extra challenge: each player's are counted against the bananas they passed. Difficulty ramps in stages. Modes: single player, two-player shared screen, two-player split screen.
 
-This is the authoritative plan: the current status, the roadmap and where each part of the design is kept. The live game (https://skogdoom.github.io/liano/) is v2.2.0, built on PixiJS. `master` carries the Phaser version, `3.0.0-dev.9`, to be released as v3.0.0.
+This is the authoritative plan: the current status, the roadmap and where each part of the design is kept. The latest tagged release is v2.2.0, built on PixiJS. `master` carries the Phaser version, `3.0.0-dev.9`, to be released as v3.0.0; GitHub Pages (https://skogdoom.github.io/liano/) follows `master`, so the site shows each successful `master` build.
 
 ## Status (2026-10-17)
 
