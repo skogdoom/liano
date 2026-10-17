@@ -132,6 +132,31 @@ for (const [name, pattern] of [
   });
 }
 
+// Classic has no other pack to fall back to: a failed catalog or boot atlas shows the reload
+// screen, and the reload starts the game again with the same settings.
+for (const [name, pattern] of [
+  ['classic art catalog', '**/art/classic/pieces.json'],
+  ['classic boot atlas', '**/art/classic/boot@*x-0.png'],
+]) {
+  test(`a failed ${name} offers a reload that keeps the settings`, async ({ page }) => {
+    const errors = collectErrors(page);
+    let failing = true;
+    await page.route(pattern, route => (failing ? route.abort() : route.continue()));
+    const url = `${PREVIEW}?art=classic&res=1#keep`;
+    await page.goto(url);
+    await expect(page.locator('#fatal')).toBeVisible();
+    await expect(page.locator('#fatal button')).toHaveText('Reload game');
+    await expect(page.locator('#loading')).toBeHidden();
+    await expect(page.locator('html')).not.toHaveAttribute('data-ready');
+    failing = false;
+    errors.length = 0;
+    await page.locator('#fatal button').click();
+    await started(page, errors);
+    expect(page.url()).toBe(url);
+    await expect(page.locator('#fatal')).not.toHaveClass(/shown/);
+  });
+}
+
 test('a setup error removes loading without marking the game ready', async ({ page }) => {
   await page.route('**/src/render/warmup.js*', route => route.fulfill({ contentType: 'application/javascript',
     body: 'export async function warmObstacleRigs() { throw new Error("setup failure"); }' }));

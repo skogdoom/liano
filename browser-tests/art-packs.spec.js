@@ -30,24 +30,40 @@ for (const art of ['classic', 'cartoon']) test(`${art} loads only its own pack a
   expect(errors).toEqual([]);
 });
 
-test('cartoon textures survive context restore and rotation without restarting the world', async ({ page }) => {
+// Context recovery for each pack explicitly (the generic platform check uses the default).
+for (const art of ['classic', 'cartoon']) test(`${art} textures survive context restore and rotation without restarting the world`, async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto(`${DEV}?art=cartoon`); await started(page, errors);
+  await page.goto(`${DEV}?art=${art}`); await started(page, errors);
   await page.waitForFunction(() => window.__liano?.platform.world);
   await page.keyboard.press('Space');
   await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');
   await page.evaluate(() => {
-    window.originalCartoonWorld = window.__liano.game.world;
-    window.loseCartoonContext = window.__liano.app.renderer.gl.getExtension('WEBGL_lose_context');
-    window.loseCartoonContext.loseContext();
+    window.originalWorld = window.__liano.game.world;
+    window.loseContext = window.__liano.app.renderer.gl.getExtension('WEBGL_lose_context');
+    window.loseContext.loseContext();
   });
   await expect.poll(() => page.evaluate(() => window.__liano.pause.reason)).toBe('graphics');
-  await page.evaluate(() => window.loseCartoonContext.restoreContext());
+  await expect(page.locator('#notice')).toHaveClass(/shown/);
+  await page.evaluate(() => window.loseContext.restoreContext());
   await expect.poll(() => page.evaluate(() => window.__liano.pause.paused)).toBe(false);
+  await expect(page.locator('#notice')).not.toHaveClass(/shown/);
   await page.setViewportSize({ width: 375, height: 812 });
   await expect.poll(() => page.evaluate(() => window.__liano.app.canvas.width)).toBe(375);
-  expect(await page.evaluate(() => window.__liano.game.world === window.originalCartoonWorld)).toBe(true);
-  expect(await page.evaluate(() => window.__liano.platform.artPack)).toBe('cartoon');
+  expect(await page.evaluate(() => window.__liano.game.world === window.originalWorld)).toBe(true);
+  expect(await page.evaluate(() => window.__liano.platform.artPack)).toBe(art);
+  // The restored textures draw: a row across the jungle is neither empty nor black.
+  const row = await page.evaluate(() => {
+    const { app } = window.__liano;
+    app.renderer.preRender(); app.scene.render(app.renderer); app.renderer.postRender();
+    const gl = app.renderer.gl, width = app.canvas.width;
+    const pixels = new Uint8Array(width * 4);
+    gl.readPixels(0, Math.floor(app.canvas.height / 2), width, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    let drawn = 0;
+    for (let i = 0; i < pixels.length; i += 4) if (pixels[i + 3] === 255 && pixels[i] + pixels[i + 1] + pixels[i + 2] > 30) drawn++;
+    return { drawn, width };
+  });
+  expect(row.drawn, JSON.stringify(row)).toBeGreaterThan(row.width * 0.9);
+  await expect(page.locator('#fatal')).not.toHaveClass(/shown/);
   expect(errors).toEqual([]);
 });
 

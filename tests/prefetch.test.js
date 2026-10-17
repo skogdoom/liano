@@ -105,4 +105,28 @@ describe('obstacle prefetch', () => {
     expect(moving).toBeGreaterThan(50);
     expect(slowest).toBeLessThan(20);
   });
+
+  it('falls back to generating on the main thread when the worker fails, with the same level', () => {
+    const { worker, prefetch, world } = prefetchedWorld();
+    prefetch.update(world.obstacles);
+    const asked = worker.inbox.map((m) => m.gap);
+    expect(asked.length).toBe(PREFETCH_AHEAD);
+    // One answer arrives, then the worker breaks (a failed load or an uncaught error).
+    const [first, ...unanswered] = worker.inbox.splice(0);
+    worker.inbox.push(first);
+    worker.flush();
+    worker.onerror(new Event('error'));
+    expect(prefetch.worker).toBeNull();
+    // No more requests, and no misses counted: there is no worker to miss.
+    prefetch.update(world.obstacles);
+    expect(worker.inbox).toEqual([]);
+    for (const { gap } of [first, ...unanswered]) {
+      expect(prefetch.take(SEED, gap)?.toData() ?? null).toEqual(createObstacle(SEED, gap)?.toData() ?? null);
+    }
+    expect(prefetch.misses).toBe(0);
+    // The world goes on generating them itself: the same level as with the worker.
+    for (let gap = 1; gap <= asked.at(-1) + 3; gap++) {
+      expect(prefetch.makeObstacle(SEED, gap)?.toData() ?? null).toEqual(createObstacle(SEED, gap)?.toData() ?? null);
+    }
+  });
 });
