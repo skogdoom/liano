@@ -13,11 +13,22 @@ async function rotate(page, width, height) {
   } finally {
     await cdp.detach();
   }
+  await expect.poll(() => page.evaluate(() => [innerWidth, innerHeight])).toEqual([width, height]);
 }
+
+// What the page and the game see, for failure messages.
+const seen = (page) => page.evaluate(() => {
+  const { app, layout, platform } = window.__liano;
+  return { inner: [innerWidth, innerHeight], visual: [visualViewport?.width, visualViewport?.height],
+    fullscreen: !!document.fullscreenElement, canvas: [app.canvas.width, app.canvas.height],
+    css: [app.canvas.style.width, app.canvas.style.height], bandTop: layout.bandTop, view: layout.view,
+    camera: platform.camera && { x: platform.camera.x, y: platform.camera.y, width: platform.camera.width,
+      height: platform.camera.height, zoom: platform.camera.zoom } };
+});
 
 async function fitted(page, fullscreen, fixed = false) {
   const { width, height } = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
-  await expect.poll(() => page.evaluate(() => window.__liano.layout)).toEqual(
+  await expect.poll(() => page.evaluate(() => window.__liano.layout), { message: JSON.stringify(await seen(page)) }).toEqual(
     layoutFor(width, height, undefined, { fullscreen, fixed }),
   );
   // Layout events precede the scene's next frame and camera render-list update.
@@ -91,7 +102,10 @@ async function covered(page, portrait = false, short = false) {
       expect(edge.black).toBe(0);
     }
   }
-  if (portrait) for (const { above } of results) expect(above.markerPixels).toBe(above.samples);
+  if (portrait) {
+    const state = JSON.stringify({ above: results.map((r) => r.above), ...(await seen(page)) });
+    for (const { above } of results) expect(above.markerPixels, state).toBe(above.samples);
+  }
 }
 
 for (const art of ['classic', 'cartoon']) {

@@ -7,6 +7,11 @@ on:
   push:
     branches: [master]
   workflow_dispatch:
+    inputs:
+      browser_tests:
+        description: Browser checks to run (Playwright file or title filters); empty runs them all
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -60,7 +65,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
       # The build also builds the art (public/art/, not committed) the dev server serves.
       - run: npm run build
-      - run: npm run test:browser
+      - run: npm run test:browser -- $BROWSER_TESTS
+        env:
+          BROWSER_TESTS: ${{ inputs.browser_tests }}
       # Each check's time and attempts (reports/browser.json), and traces of failures.
       - name: Keep the browser timings and failure traces
         if: always()
