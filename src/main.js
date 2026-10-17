@@ -1,155 +1,113 @@
-import { Application, Container, Graphics } from 'pixi.js';
-import {
-  SIM_DT,
-  MAX_FRAME_DT,
-  MAX_RESOLUTION,
-  SHARED_ZOOM,
-} from './config.js';
-import { createFixedStepLoop } from './loop.js';
+import Phaser from 'phaser';
+import { FULLSCREEN_HIT, MUTE_HIT, controlsPoint, inside } from './controls.js';
+import { createDriver } from './driver.js';
+import { PhaserFrameClock } from './platform/frameClock.js';
+import { createFatalOverlay, createNotice, isOwnError } from './fatal.js';
+import { bindFullscreenControls } from './fullscreen.js';
 import { createInput } from './input.js';
-import { Game } from './sim/game.js';
-import { World } from './sim/world.js';
+import { layoutFor } from './layout.js';
 import { ObstaclePrefetch } from './obstaclePrefetch.js';
 import { createPause } from './pause.js';
-import { layoutFor, paneLayouts } from './layout.js';
-import { MODES, MODE_ORDER } from './sim/match.js';
-import { createFullscreen, bindFullscreenControls } from './fullscreen.js';
-import { Overlays } from './render/overlays.js';
-import { Pane } from './render/pane.js';
-import { Hud } from './render/hud.js';
-import { DebugOverlay } from './render/debugOverlay.js';
+import { blockBrowserGestures, isHomeScreenApp, pixelRatio, safeAreaReader, watchScreen } from './screen.js';
+import { Game } from './sim/game.js';
+import { MODES } from './sim/match.js';
+import { World } from './sim/world.js';
+import { SharedView } from './sim/sharedView.js';
 import { FpsMeter } from './render/fpsMeter.js';
-import { MuteButton } from './render/muteButton.js';
-import { FullscreenButton } from './render/fullscreenButton.js';
-import { SoundPlayer } from './audio/player.js';
-import { soundsFor } from './audio/sounds.js';
-import { createFatalOverlay, createNotice, isOwnError } from './fatal.js';
+import { createPhaserFullscreen } from './platform/fullscreen.js';
+import { phaserKeys, phaserPointers } from './platform/input.js';
+import { BootScene, PlayScene, UiScene } from './platform/scenes.js';
+import { createPhaserSoundPlayer } from './audio/manager.js';
+import { canvasSize, resolutionLimit, viewCamera } from './platform/view.js';
+import { oneTexturePerBatch } from './render/shaders.js';
+import { installObstacleBlur } from './platform/obstacleBlur.js';
+import { applyResolutionChoice, rememberResolutionChoice, resolutionChoice } from './platform/resolution.js';
+import { ConfigMenu } from './render/configMenu.js';
+import { visibleMenuArea } from './render/menuLayout.js';
+import { applyArtChoice, artChoice, rememberArtChoice } from './platform/artStyle.js';
 
-// Anything that breaks from here on, startup included, shows a reload message
-// instead of a frozen canvas.
-const fatal = createFatalOverlay(document);
+// The game entry. The platform holds layout, pause, fullscreen, input and sound
+// for the scenes; driver.js advances the fixed-step simulation. The play scene draws
+// the worlds; the UI scene the buttons,
+// the HUD, the panels and the debug view.
+
+let game = null;
+// Anything that breaks from here on, startup included, shows a reload message instead
+// of a frozen canvas, and stops the game's loop rather than failing every frame.
+const artPack = artChoice(location.search, window);
+const currentSettings = () => {
+  const current = game?.registry.get('platform');
+  const state = current?.game;
+  return { mode: state?.mode, muted: current?.sound?.muted,
+    settings: state ? { lives: state.lives, slip: state.slip, shadow: state.shadow } : undefined };
+};
+const fatal = createFatalOverlay(document, { reload: () => artPack === 'cartoon'
+  ? applyArtChoice('classic', window, currentSettings()) : location.reload(),
+  reloadLabel: artPack === 'cartoon' ? 'Reload classic graphics' : 'Reload game' });
+let sound = null;
+const fail = (error) => {
+  game?.loop.sleep();
+  sound?.setPaused(true);
+  fatal.show(error);
+};
 window.addEventListener('error', (event) => {
-  if (isOwnError(event, location.origin)) fatal.show(event.error ?? event.message);
+  if (isOwnError(event, location.origin)) fail(event.error ?? event.message);
 });
-window.addEventListener('unhandledrejection', (event) => fatal.show(event.reason));
+window.addEventListener('unhandledrejection', (event) => fail(event.reason));
 
-const pixelRatio = () => Math.min(window.devicePixelRatio || 1, MAX_RESOLUTION);
-
-const app = new Application();
-await app.init({
-  // WebGPU support is still uneven on mobile browsers.
-  preference: 'webgl',
-  background: 0x000000,
-  antialias: true,
-  autoDensity: true,
-  resolution: pixelRatio(),
-  width: window.innerWidth,
-  height: window.innerHeight,
+const resolutionPreference = resolutionChoice(location.search, window);
+const resolutionCap = resolutionLimit(location.search, {
+  userAgent: navigator.userAgent, preference: resolutionPreference,
 });
-document.body.appendChild(app.canvas);
+const ratio = () => pixelRatio(window, resolutionCap);
+const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+const initial = canvasSize(window.innerWidth, window.innerHeight, ratio());
 
-// Everything is drawn in the logical view inside `root`, which is scaled to fit the
-// window (see layout.js). Black bars on top cover whatever is drawn outside it, when
-// the window is too wide even for the widest view (cheaper than a mask, which costs a
-// stencil pass and breaks batching).
-const root = new Container();
-const letterbox = new Graphics();
-app.stage.addChild(root, letterbox);
+game = new Phaser.Game({
+  type: Phaser.WEBGL,
+  parent: document.body,
+  backgroundColor: '#000000',
+  banner: false,
+  // Available to BootScene before READY resumes this module; resolve storage
+  // once so a preference change in another tab cannot mix startup choices.
+  callbacks: { preBoot: (app) => app.registry.set('artPack', artPack) },
+  render: { antialias: true },
+  // Several fingers each count as a press (2P on one screen), as in the Pixi version.
+  input: { activePointers: 4 },
+  // The game's own fixed-step loop needs the real frame times.
+  fps: { smoothStep: false },
+  // The canvas has `ratio` device pixels per CSS pixel and is shown at its CSS size
+  // (see view.js); the platform sizes it. Full screen takes the whole page, so the HTML
+  // overlays stay visible.
+  scale: {
+    mode: Phaser.Scale.NONE,
+    width: initial.width,
+    height: initial.height,
+    zoom: 1 / ratio(),
+    fullscreenTarget: document.documentElement,
+  },
+  scene: [BootScene, PlayScene, UiScene],
+});
+await new Promise((resolve) => game.events.once(Phaser.Core.Events.READY, resolve));
+oneTexturePerBatch(game.renderer);
 
-// Safe-area insets (notch, home indicator) in CSS pixels, read from a hidden probe.
-const safeAreaProbe = document.createElement('div');
-safeAreaProbe.style.cssText =
-  'position:fixed;visibility:hidden;pointer-events:none;' +
-  'padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
-document.body.appendChild(safeAreaProbe);
-function safeAreaInsets() {
-  const style = getComputedStyle(safeAreaProbe);
-  const px = (value) => parseFloat(value) || 0;
-  return { top: px(style.paddingTop), right: px(style.paddingRight), bottom: px(style.paddingBottom), left: px(style.paddingLeft) };
-}
-
-let current = null; // the current layout
-let layoutMode = null; // the mode it was made for
-function layout() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  app.renderer.resize(w, h, pixelRatio());
-  // The two-player modes use the 16:9 frame.
-  current = layoutFor(w, h, safeAreaInsets(), { fixed: MODES[game.mode].players > 1 });
-  layoutMode = game.mode;
-  const { x, y, scale } = current;
-  root.scale.set(scale);
-  root.position.set(x, y);
-  const right = x + current.view.width * scale;
-  const bottom = y + current.view.height * scale;
-  letterbox
-    .clear()
-    .rect(0, 0, w, y)
-    .rect(0, bottom, w, h - bottom)
-    .rect(0, y, x, bottom - y)
-    .rect(right, y, w - right, bottom - y)
-    .fill(0x000000);
-  // Shared screen shows a wider stretch of the world.
-  const zoom = game.mode === 'shared' ? SHARED_ZOOM : 1;
-  paneLayouts(current, panes.length, zoom).forEach((pane, i) => panes[i].resize(pane));
-  hud.resize(current);
-  overlays.resize(current);
-  controls.position.set(current.insets.left, current.insets.top);
-  controls.scale.set(current.ui);
-  debugOverlay.screenView.position.set(current.insets.left, current.insets.top);
-}
-// Re-layout on window resizes, rotation, and the iOS address bar showing or hiding,
-// at most once per frame.
-let layoutQueued = false;
-function queueLayout() {
-  if (layoutQueued) return;
-  layoutQueued = true;
-  requestAnimationFrame(() => {
-    layoutQueued = false;
-    layout();
-  });
-}
-window.addEventListener('resize', queueLayout);
-window.addEventListener('orientationchange', queueLayout);
-window.visualViewport?.addEventListener('resize', queueLayout);
-// The pixel ratio can change without a resize (a window moved to another screen).
-function watchPixelRatio() {
-  window
-    .matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
-    .addEventListener('change', () => (queueLayout(), watchPixelRatio()), { once: true });
-}
-watchPixelRatio();
-
-// Block browser gestures on the game: double-tap zoom, iOS pinch, and the
-// long-press menu.
-for (const type of ['dblclick', 'gesturestart', 'contextmenu']) {
-  app.canvas.addEventListener(type, (event) => event.preventDefault());
-}
-// iOS Safari still acts on quick taps (in landscape it briefly shifts the page under
-// the tab bar) unless the touch events themselves are cancelled; pointer events,
-// which the game reads, arrive before them and are unaffected.
-for (const type of ['touchstart', 'touchmove', 'touchend']) {
-  app.canvas.addEventListener(type, (event) => event.preventDefault(), { passive: false });
-}
-
-// Back to front: the panes (one per world: the sky and parallax layers, the world,
-// the canopy strip and floor band), then HUD and overlays.
-const paneLayer = new Container();
-root.addChild(paneLayer);
-const panes = [];
-const debugOverlay = new DebugOverlay();
-root.addChild(debugOverlay.screenView);
-
-const hud = new Hud();
-// The buttons, top-left inside the safe area; enlarged with the layout's `ui` scale.
-const controls = new Container();
-const muteButton = new MuteButton();
-const fullscreenButton = new FullscreenButton();
-controls.addChild(muteButton.view, fullscreenButton.view);
-root.addChild(hud.view, controls);
-
-const overlays = new Overlays();
-root.addChild(overlays.view);
+const platform = new Phaser.Events.EventEmitter();
+game.registry.set('platform', platform);
+platform.resolutionLimit = resolutionCap;
+platform.resolutionMode = resolutionPreference;
+platform.artPack = artPack;
+platform.fail = fail;
+platform.mobile = coarsePointer;
+platform.configMenu = new ConfigMenu(resolutionPreference, {
+  apply: (choice) => applyResolutionChoice(choice, window, currentSettings()),
+  remember: rememberResolutionChoice,
+  art: artPack,
+  applyArt: (choice) => applyArtChoice(choice, window, currentSettings()),
+  rememberArt: rememberArtChoice,
+  clear: () => platform.input?.clear(),
+});
+installObstacleBlur(platform);
+blockBrowserGestures(game.canvas);
 
 // Obstacles ahead are generated in a worker (see ObstaclePrefetch).
 function createObstacleWorker() {
@@ -160,194 +118,174 @@ function createObstacleWorker() {
   }
 }
 const prefetch = new ObstaclePrefetch(createObstacleWorker());
-// The game starts without slipping (G turns it on).
-const game = new Game({
-  slip: false,
+// The title starts without slipping or shadow. Preserve current
+// settings when the graphics submenu reloads assets.
+const titleSettings = new URLSearchParams(location.search);
+const theGame = new Game({
+  slip: titleSettings.get('slip') === 'on',
+  lives: titleSettings.get('lives') === 'on',
+  shadow: titleSettings.get('shadow') === 'on',
+  createSharedView: (world) => new SharedView(world, undefined, { smoothCamera: true }),
   // Split screen's worlds share the match seed, and so the prefetched gaps.
   createWorld: (options) => {
     if (options.seed !== prefetch.seed) prefetch.reset(options.seed);
     return new World({ ...options, makeObstacle: prefetch.makeObstacle, makeBanana: prefetch.makeBanana });
   },
 });
+// A graphics change reloads assets, then returns to the selected match mode.
+if (!coarsePointer) theGame.selectMode(titleSettings.get('mode'));
+platform.game = theGame;
+
+// The layout for the window (layout.js) and the camera that shows the view on the
+// canvas (view.js); scenes follow the 'layout' event. The two-player modes use the
+// 16:9 frame.
+const safeAreaInsets = safeAreaReader(document);
+let layoutMode = theGame.mode;
+function layout() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const r = ratio();
+  const size = canvasSize(w, h, r);
+  game.scale.setZoom(1 / r);
+  game.scale.resize(size.width, size.height);
+  // Exactly the window's CSS size (the zoom alone can be a fraction of a pixel off, and
+  // Phaser leaves the style alone when the zoom is 1).
+  game.canvas.style.width = `${w}px`;
+  game.canvas.style.height = `${h}px`;
+  layoutMode = theGame.mode;
+  const insets = safeAreaInsets();
+  platform.menuArea = visibleMenuArea(window, insets);
+  platform.layout = layoutFor(w, h, insets, { fixed: MODES[theGame.mode].players > 1 });
+  platform.camera = viewCamera(platform.layout, r);
+  platform.emit('layout', platform.layout, platform.camera);
+}
+const queueLayout = watchScreen(window, layout);
+window.visualViewport?.addEventListener('scroll', queueLayout);
+layout();
+
+// Paused while the window is unfocused or hidden, the graphics context is lost, or the
+// player pressed P during a run (pause.js, as in the Pixi version). Phaser itself stops
+// its loop while the page is hidden.
 const pause = createPause(window, document);
+platform.pause = pause;
+
 // A lost graphics context (common when a phone backgrounds the page) pauses the game
-// until Pixi restores it; if it does not come back, offer a reload.
+// until Phaser restores it, with its textures; if it does not come back, offer a reload.
 const CONTEXT_RESTORE_TIMEOUT_MS = 5000;
 const notice = createNotice(document);
 let restoreTimer = null;
-app.canvas.addEventListener('webglcontextlost', () => {
+game.renderer.on(Phaser.Renderer.Events.LOSE_WEBGL, () => {
   pause.hold('graphics', true);
   notice.show('Restoring graphics…');
-  restoreTimer = setTimeout(() => fatal.show(new Error('The graphics context was not restored')), CONTEXT_RESTORE_TIMEOUT_MS);
+  restoreTimer = setTimeout(() => fail(new Error('The graphics context was not restored')), CONTEXT_RESTORE_TIMEOUT_MS);
 });
-app.canvas.addEventListener('webglcontextrestored', () => {
+game.renderer.on(Phaser.Renderer.Events.RESTORE_WEBGL, () => {
   clearTimeout(restoreTimer);
   notice.hide();
   pause.hold('graphics', false);
 });
 
-// Screen shake is off for players who ask for reduced motion.
-const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+// Full screen via the button or F, through the Scale Manager, where the browser allows
+// it for pages. The home-screen app is already full screen, so it gets neither.
+const fullscreen = createPhaserFullscreen(game.scale, {
+  onChange: (active) => {
+    platform.emit('fullscreen', active);
+    queueLayout();
+  },
+});
+platform.fullscreen = fullscreen;
+platform.fullscreenButton = fullscreen.supported && !isHomeScreenApp(window);
+if (platform.fullscreenButton) {
+  const onButton = (event) =>
+    inside(FULLSCREEN_HIT, controlsPoint(platform.layout, game.canvas.getBoundingClientRect(), event.clientX, event.clientY));
+  bindFullscreenControls(window, game.canvas, fullscreen, { hit: onButton });
+}
 
-// Sound starts at the first user gesture (browsers block audio before one); later
-// gestures resume it if the browser suspended it.
-const sound = new SoundPlayer();
+// Sound: the recipes through Phaser's sound manager (sound.js). It starts at the first
+// user gesture (browsers block audio before one); later gestures resume it if the
+// browser suspended it, or replace a context that stays stuck.
+sound = createPhaserSoundPlayer(game.sound);
+sound.setMuted(new URLSearchParams(location.search).get('mute') === 'on');
+platform.sound = sound;
+// Rendering does not need a gesture; audible playback still waits for unlock().
+platform.soundReady = sound.prepare();
 for (const type of ['keydown', 'pointerdown', 'pointerup', 'touchend']) {
   window.addEventListener(type, () => sound.unlock(), { capture: true });
 }
 function toggleMute() {
   sound.setMuted(!sound.muted);
-  muteButton.update(sound.muted);
+  platform.emit('mute', sound.muted);
 }
 
-// Position of a pointer event in the buttons' coordinates (see `controls`).
-function controlsPoint(event) {
-  const rect = app.canvas.getBoundingClientRect();
-  const x = (event.clientX - rect.left - root.x) / root.scale.x;
-  const y = (event.clientY - rect.top - root.y) / root.scale.y;
-  return { x: (x - controls.x) / controls.scale.x, y: (y - controls.y) / controls.scale.y };
-}
-
-// Full screen via the button or F, where the browser allows it for pages. The
-// home-screen app is already full screen, so it gets neither.
-const homeScreenApp =
-  window.matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches ||
-  navigator.standalone === true;
-const fullscreen = createFullscreen(document, {
-  onChange: (active) => {
-    fullscreenButton.update(active);
-    queueLayout();
-  },
-});
-fullscreenButton.view.visible = fullscreen.supported && !homeScreenApp;
-const onFullscreenButton = (event) => {
-  const p = controlsPoint(event);
-  return fullscreenButton.contains(p.x, p.y);
-};
-if (fullscreenButton.view.visible) {
-  bindFullscreenControls(window, app.canvas, fullscreen, { hit: onFullscreenButton });
-}
-
-// Presses count only while running, and not just after resuming (see pause.js). A
-// tap on the mute button toggles sound instead, and one on the fullscreen button is
-// handled by its own controls.
-const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-const input = createInput(window, app.canvas, {
-  initialType: coarsePointer ? 'touch' : 'keyboard',
-  accepts: () => pause.acceptsInput(),
+// The game's input on Phaser's keyboard and pointers (input.js), read through the UI
+// scene, which is always running. Manual pause accepts resume/menu controls;
+// gameplay presses wait until the resume grace period ends (see pause.js). A tap on the mute button toggles sound instead, and one on
+// the full-screen button is handled by its own controls.
+const ui = await new Promise((resolve) => platform.once('ui', resolve));
+const buttonAt = (hit, event) =>
+  inside(hit, controlsPoint(platform.layout, game.canvas.getBoundingClientRect(), event.clientX, event.clientY));
+const input = createInput(phaserKeys(ui.input.keyboard, {
   intercept: (event) => {
-    if (onFullscreenButton(event)) return true;
-    const p = controlsPoint(event);
-    if (!muteButton.contains(p.x, p.y)) return false;
-    toggleMute();
-    return true;
+    if (platform.configMenu.interceptKey(event, theGame, pause.acceptsInput())) return true;
+    if (coarsePointer && ['Digit1', 'Digit2', 'Digit3'].includes(event.code)) {
+      event.preventDefault();
+      return true;
+    }
+    return false;
+  },
+}), phaserPointers(ui.input), {
+  initialType: coarsePointer ? 'touch' : 'keyboard',
+  accepts: (role) => pause.acceptsInput(role),
+  intercept: (event) => {
+    if (platform.fullscreenButton && buttonAt(FULLSCREEN_HIT, event)) return true;
+    if (buttonAt(MUTE_HIT, event)) { toggleMute(); return true; }
+    return ui.overlays.interceptConfigPointer(event, theGame, pause.acceptsInput());
   },
 });
+platform.input = input;
 
-// A pane per world; rebuilt when the mode or match changes the worlds. In split screen
-// pane p shows player p; otherwise the one pane shows every player.
-let paneWorlds = null;
-function syncPanes() {
-  if (paneWorlds && paneWorlds.length === game.worlds.length && paneWorlds.every((w, i) => w === game.worlds[i])) return;
-  const relayout = !paneWorlds || paneWorlds.length !== game.worlds.length;
-  while (panes.length < game.worlds.length) {
-    const pane = new Pane();
-    panes.push(pane);
-    paneLayer.addChild(pane.view);
-  }
-  for (const pane of panes.splice(game.worlds.length)) pane.view.destroy({ children: true });
-  game.worlds.forEach((world, i) => {
-    const players = game.worlds.length > 1 ? [i] : world.monkeys.map((_, m) => m);
-    panes[i].setWorld(world, players, game.sharedView?.camera);
-  });
-  // The debug overlay draws over each pane's world.
-  debugOverlay.attach(panes);
-  paneWorlds = [...game.worlds];
-  if (relayout) layout();
-}
-syncPanes();
-
-// Action roles, in the order the loop applies them within a step (see KEYS).
-const ROLES = ['start', 'primary', 'p1', 'p2', 'menu'];
-
-const loop = createFixedStepLoop({
-  dt: SIM_DT,
-  maxFrameDt: MAX_FRAME_DT,
-  step(dt) {
-    const pick = input.consumeModePick();
-    if (pick && game.selectMode(MODE_ORDER[pick - 1])) input.clear();
-    for (const role of ROLES) {
-      // A press that changes the state (starts or restarts a run) is the step's last.
-      if (input.consumePress(role) && game.press(role)) {
-        input.clear();
-        break;
-      }
-    }
-    game.step(dt);
-    syncPanes();
-    // The two-player modes use a different frame.
-    if (game.mode !== layoutMode) {
-      layoutMode = game.mode;
-      layout();
-    }
-    for (const pane of panes) pane.stepCamera(dt);
-  },
-});
-
-// Frame rate and times, for the debug view (D): fed every frame, whether it is shown or not.
+// The game, as in the Pixi version (driver.js), once per Phaser step. The two-player
+// modes change the frame. D shows the debug view.
 const fpsMeter = new FpsMeter();
-
-function frame(ticker) {
+platform.fpsMeter = fpsMeter;
+platform.debug = false;
+const frameClock = new PhaserFrameClock();
+platform.frameClock = frameClock;
+const driver = createDriver({
+  game: theGame,
+  clock: frameClock,
+  input,
+  pause,
+  sound,
+  prefetch,
+  // Presses wait for main art, cached sound and resource preparation.
+  ready: () => platform.world !== undefined,
+  onStep(dt) {
+    platform.world?.sync();
+    if (theGame.mode !== layoutMode) layout();
+    platform.world?.stepCameras(dt);
+  },
+  onDebugToggle: () => (platform.debug = !platform.debug),
+  onMuteToggle: toggleMute,
+});
+game.events.on(Phaser.Core.Events.STEP, (time, delta) => {
   fpsMeter.tick(performance.now());
-  if (input.consumeDebugToggle()) debugOverlay.toggle();
-  if (input.consumeMuteToggle()) toggleMute();
-  // G turns slipping on and off, anywhere (paused too).
-  if (input.consumeSlipToggle()) game.toggleSlip();
-  // H turns lives on and off for single player, on the title screen.
-  if (input.consumeLivesToggle()) game.toggleLives();
-  // S turns the shadow monkey on and off for single player, on the title screen.
-  if (input.consumeShadowToggle()) game.toggleShadow();
-  // P pauses a run, and resumes whatever it paused.
-  if (input.consumePauseToggle() && (game.pausable || pause.reason === 'manual')) pause.toggle('manual');
-  // While paused nothing moves: the sim, the monkey's spin, the shake and the pulsing prompts.
-  const paused = pause.paused;
-  if (paused) input.clear(); // a press made just before pausing must not act on resume
-  const frameDt = paused ? 0 : Math.min(ticker.deltaMS / 1000, MAX_FRAME_DT);
-  // The part of a step the accumulator holds: the camera and monkeys are drawn that far on.
-  const alpha = loop.advance(frameDt);
-  prefetch.update(game.worlds.map((w) => w.obstacles));
-  sound.setPaused(paused);
-  const events = game.takeEvents();
-  for (const recipe of soundsFor(events)) sound.play(recipe);
-  const ghost = game.shadowFrame();
-  // Most frames have no events: do not make an array per pane for nothing.
-  panes.forEach((pane, i) =>
-    pane.update(events.length === 0 ? events : events.filter((e) => e.pane === i), frameDt, !reducedMotion.matches, i === 0 ? ghost : null, alpha),
-  );
-  hud.update(game);
-  overlays.update(game, panes[0].camera.x, { pauseReason: pause.reason, inputType: input.lastType, dt: frameDt });
-  debugOverlay.update(game, sound, fpsMeter);
-}
-
-// Stop at the first error rather than failing every frame.
-app.ticker.add((ticker) => {
-  try {
-    frame(ticker);
-  } catch (error) {
-    app.ticker.stop();
-    sound.setPaused(true);
-    fatal.show(error);
-  }
+  platform.frame = driver.frame(delta);
 });
 
 // Hooks for inspecting and driving the game from the browser console and tests.
 if (import.meta.env.DEV) {
-  const views = { panes, overlays, hud, debugOverlay, loop };
   window.__liano = {
-    app, pause, input, sound, fullscreen, fullscreenButton, fatal, views,
-    get lianaView() { return panes[0].lianaView; },
-    get camera() { return panes[0].camera; },
-    get layout() { return current; },
-    get game() { return game; },
+    app: game, engine: 'phaser', platform, pause, fullscreen, fatal, sound, input, driver,
+    get layout() { return platform.layout; },
+    get camera() { return platform.camera; },
+    get game() { return theGame; },
   };
+}
+
+// Record the real update/render loop on devices with the frame readout enabled.
+// Kept out of normal play.
+if (new URLSearchParams(location.search).get('frames') === '1') {
+  const { installFrameTrace } = await import('./platform/frameTrace.js');
+  installFrameTrace(game, platform);
 }

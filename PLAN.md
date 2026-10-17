@@ -610,6 +610,34 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 - [x] `ShadowRun` records the monkey every sim step; the best run per setting of lives and slipping is the next game's shadow
 - [x] The pane draws the shadow behind the monkey: grey and see-through, on a grey liana of its own while it hangs on one (`ShadowView`)
 
+## Phaser migration (v3.0.0, planned)
+
+The Phaser 4 migration plan, its pre-rendered art pipeline, device budgets,
+risks, milestones M0–M10 (including M8a, M9a, M9b and M9c), and verification strategy
+are in [PHASER_PLAN.md](PHASER_PLAN.md). Development uses the long-lived `phaser`
+branch and versions `3.0.0-dev.N` through M9 integration, M9a and M9b. M0–M8 are
+complete; the M8a cartoon artwork, automated checks and regression references
+are complete and integrated into `phaser` through
+[PR #41](https://github.com/skogdoom/liano/pull/41) (merge `a49b1f2`).
+
+- **M9 — Cleanup and merge:** finish cleanup on `phaser`, then merge it into
+  `master` with the owner's explicit approval. Remaining manual/device checks
+  move to M9c.
+- **M9a — Fullscreen canopy coverage:** create `release-verification` from the
+  updated `master`, then plan and fix sky showing above the canopy in 1P
+  fullscreen. Sky above the canopy is acceptable in 2P shared mode.
+- **M9b — Plan consolidation and area plans:** consolidate `PLAN.md` and
+  `PHASER_PLAN.md` into one authoritative plan, with a short `PLAN.md` roadmap
+  referencing detailed files by area under `docs/plans/`. Preserve requirements,
+  decisions, milestone reports and pending gates, and update existing references.
+- **M9c — Test and verification:** perform all automated, manual and real-device
+  testing and resulting fixes on that new branch. Prepare and verify the final
+  `3.0.0` candidate and artifacts there; document device findings after testing
+  finishes. Integrate the tested result into `master` with the owner's explicit
+  approval before release.
+- **M10 — Release:** publish the tested `3.0.0` result from `master`; the owner
+  tags `v3.0.0` and publishes the prepared release notes and release.
+
 ## Design decisions
 
 1. **Swing starts at vertical, in the direction of travel.** Released lianas settle back to vertical with a damped cosmetic sway.

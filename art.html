@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Liano art gallery</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      body { margin: 24px; background: #10261a; color: #f4e7c5; font: 14px sans-serif; }
+      h1 { font-size: 22px; margin: 0 0 6px; }
+      h2 { font-size: 16px; margin: 0 0 4px; font-family: monospace; }
+      header p { margin: 4px 0 12px; max-width: 70em; }
+      .controls a, .controls label { margin-right: 14px; color: #ffcf4a; }
+      section { border-top: 1px solid #2a4a33; padding: 12px 0; }
+      .purpose { margin: 0 0 6px; max-width: 60em; }
+      .meta { font: 12px monospace; color: #b8c7b0; margin: 0 0 8px; }
+      .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+      figure { margin: 0; }
+      figcaption { font-size: 12px; color: #b8c7b0; margin-top: 2px; }
+      canvas, img { display: block; background: #4a8060; image-rendering: pixelated; }
+      .pass { color: #8fe08f; }
+      .fail { color: #ff8c6b; }
+      .custom { color: #ffcf4a; }
+      #summary { font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Art gallery</h1>
+      <p>
+        Every piece of art (PHASER_PLAN.md, section 5) with its contract, as the game loads it from the atlases (<code>npm run art:build</code>), next to the
+        generated SVG source and the difference. A custom piece (art/custom/) shows beside the generated one. Guides:
+        the box (blue), the origin (magenta), the hitbox (green), attachment points (orange), slices (yellow). Dev only.
+      </p>
+      <p class="controls"></p>
+      <p id="summary">Loading…</p>
+    </header>
+    <main id="pieces"></main>
+    <script type="module" src="/src/art/gallery.js"></script>
+  </body>
+</html>

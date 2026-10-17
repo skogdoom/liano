@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { MonkeyState } from '../src/sim/monkey.js';
 import { LianaState } from '../src/sim/liana.js';
 import { tangentialVelocity, hangingVelocity } from '../src/sim/physics.js';
-import { tipFlashOn } from '../src/render/lianaView.js';
+import { tipFlashOn } from '../src/views/liana.js';
 import { slipSteps, quickSlide } from '../src/sim/monkey.js';
 import { validReleaseSteps } from '../src/sim/feasibility.js';
 import {

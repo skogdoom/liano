@@ -1,0 +1,3819 @@
+{
+  "pieces": [
+    {
+      "key": "backdrop.sky",
+      "purpose": "The sky: 32 bands of colour from the top of the view (dark) to the floor (light), 4 px each and 4 px wide; stretched to the view (the first band carries on above, the last below the floor).",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 128
+      },
+      "scale": 1,
+      "tint": true,
+      "frames": [
+        "generated/backdrop.sky.svg"
+      ]
+    },
+    {
+      "key": "backdrop.far",
+      "purpose": "The far layer of the jungle: hazy tree trunks and canopy masses. One tile, repeating sideways.",
+      "kind": "tile",
+      "set": "boot",
+      "box": {
+        "x": 0,
+        "y": -1130,
+        "w": 2048,
+        "h": 1790
+      },
+      "scale": 1,
+      "tint": true,
+      "frames": [
+        "generated/backdrop.far.svg"
+      ]
+    },
+    {
+      "key": "backdrop.mid",
+      "purpose": "The middle layer: darker trunks with a few branch stubs. One tile, repeating sideways.",
+      "kind": "tile",
+      "set": "boot",
+      "box": {
+        "x": 0,
+        "y": -1000,
+        "w": 2048,
+        "h": 1670
+      },
+      "scale": 1,
+      "tint": true,
+      "frames": [
+        "generated/backdrop.mid.svg"
+      ]
+    },
+    {
+      "key": "backdrop.nearTop",
+      "purpose": "The near layer under the canopy: clumps of leaves hanging down. One tile, repeating sideways.",
+      "kind": "tile",
+      "set": "boot",
+      "box": {
+        "x": 0,
+        "y": 0,
+        "w": 2048,
+        "h": 100
+      },
+      "scale": 2,
+      "tint": true,
+      "frames": [
+        "generated/backdrop.nearTop.svg"
+      ]
+    },
+    {
+      "key": "backdrop.near",
+      "purpose": "The near layer along the floor: ferns. One tile, repeating sideways.",
+      "kind": "tile",
+      "set": "boot",
+      "box": {
+        "x": 0,
+        "y": 560,
+        "w": 2048,
+        "h": 124
+      },
+      "scale": 2,
+      "tint": true,
+      "frames": [
+        "generated/backdrop.near.svg"
+      ]
+    },
+    {
+      "key": "backdrop.canopy",
+      "purpose": "The canopy strip the lianas hang from, in front of the world, with a leafy top edge for taller views. One tile, repeating sideways.",
+      "kind": "tile",
+      "set": "boot",
+      "box": {
+        "x": 0,
+        "y": -54,
+        "w": 2048,
+        "h": 112
+      },
+      "scale": 2,
+      "tint": true,
+      "soften": 0.4,
+      "frames": [
+        "generated/backdrop.canopy.svg"
+      ]
+    },
+    {
+      "key": "backdrop.floor",
+      "purpose": "The top of the dark jungle floor, in front of the world: undergrowth along the floor line. One tile, repeating sideways; below it the floor is backdrop.floorFill, stretched down 1600 px below the band for taller views.",
+      "kind": "tile",
+      "set": "boot",
+      "box": {
+        "x": 0,
+        "y": 626,
+        "w": 2048,
+        "h": 74
+      },
+      "scale": 2,
+      "tint": true,
+      "soften": 0.8,
+      "frames": [
+        "generated/backdrop.floor.svg"
+      ]
+    },
+    {
+      "key": "backdrop.floorFill",
+      "purpose": "The floor's colour below the undergrowth, a small square stretched to fill the rest of the floor.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": 0,
+        "y": 720,
+        "w": 4,
+        "h": 4
+      },
+      "scale": 1,
+      "tint": true,
+      "frames": [
+        "generated/backdrop.floorFill.svg"
+      ]
+    },
+    {
+      "key": "monkey.p1.tail",
+      "purpose": "The tail of player 1, behind everything else.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -41,
+        "y": -19,
+        "w": 40,
+        "h": 50
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/monkey.p1.tail.svg"
+      ]
+    },
+    {
+      "key": "monkey.p1.leg",
+      "purpose": "A leg of player 1, 12 px down from its hip (the origin); it turns about the hip.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -10,
+        "y": -10,
+        "w": 20,
+        "h": 32
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/monkey.p1.leg.svg"
+      ]
+    },
+    {
+      "key": "monkey.p1.arm",
+      "purpose": "An arm of player 1, 21 px down from its shoulder (the origin); it turns about the shoulder.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -9,
+        "y": -9,
+        "w": 18,
+        "h": 39
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/monkey.p1.arm.svg"
+      ]
+    },
+    {
+      "key": "monkey.p1.torso",
+      "purpose": "The body of player 1; its origin is the centre of the monkey's hitbox. The limbs join it at the attachment points.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -14,
+        "y": -9,
+        "w": 28,
+        "h": 30
+      },
+      "scale": 2,
+      "tint": false,
+      "attach": {
+        "armBack": [
+          -7,
+          -1
+        ],
+        "armFront": [
+          7,
+          -1
+        ],
+        "legBack": [
+          -6,
+          15
+        ],
+        "legFront": [
+          6,
+          15
+        ]
+      },
+      "frames": [
+        "generated/monkey.p1.torso.svg"
+      ]
+    },
+    {
+      "key": "monkey.p1.head",
+      "purpose": "The head of player 1 (ears, face, muzzle), over the body.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -17,
+        "y": -22,
+        "w": 34,
+        "h": 24
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/monkey.p1.head.svg"
+      ]
+    },
+    {
+      "key": "monkey.p2.tail",
+      "purpose": "The tail of player 2, behind everything else.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -41,
+        "y": -19,
+        "w": 40,
+        "h": 50
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/monkey.p2.tail.svg"
+      ]
+    },
+    {
+      "key": "monkey.p2.leg",
+      "purpose": "A leg of player 2, 12 px down from its hip (the origin); it turns about the hip.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -10,
+        "y": -10,
+        "w": 20,
+        "h": 32
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/monkey.p2.leg.svg"
+      ]
+    },
+    {
+      "key": "monkey.p2.arm",
+      "purpose": "An arm of player 2, 21 px down from its shoulder (the origin); it turns about the shoulder.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -9,
+        "y": -9,
+        "w": 18,
+        "h": 39
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/monkey.p2.arm.svg"
+      ]
+    },
+    {
+      "key": "monkey.p2.torso",
+      "purpose": "The body of player 2; its origin is the centre of the monkey's hitbox. The limbs join it at the attachment points.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -14,
+        "y": -9,
+        "w": 28,
+        "h": 30
+      },
+      "scale": 2,
+      "tint": false,
+      "attach": {
+        "armBack": [
+          -7,
+          -1
+        ],
+        "armFront": [
+          7,
+          -1
+        ],
+        "legBack": [
+          -6,
+          15
+        ],
+        "legFront": [
+          6,
+          15
+        ]
+      },
+      "frames": [
+        "generated/monkey.p2.torso.svg"
+      ]
+    },
+    {
+      "key": "monkey.p2.head",
+      "purpose": "The head of player 2 (ears, face, muzzle), over the body.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -17,
+        "y": -22,
+        "w": 34,
+        "h": 24
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/monkey.p2.head.svg"
+      ]
+    },
+    {
+      "key": "monkey.shadow.tail",
+      "purpose": "The tail of the shadow monkey, behind everything else.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -41,
+        "y": -19,
+        "w": 40,
+        "h": 50
+      },
+      "scale": 2,
+      "tint": false,
+      "alpha": 0.36,
+      "frames": [
+        "generated/monkey.shadow.tail.svg"
+      ]
+    },
+    {
+      "key": "monkey.shadow.leg",
+      "purpose": "A leg of the shadow monkey, 12 px down from its hip (the origin); it turns about the hip.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -10,
+        "y": -10,
+        "w": 20,
+        "h": 32
+      },
+      "scale": 2,
+      "tint": false,
+      "alpha": 0.36,
+      "frames": [
+        "generated/monkey.shadow.leg.svg"
+      ]
+    },
+    {
+      "key": "monkey.shadow.arm",
+      "purpose": "An arm of the shadow monkey, 21 px down from its shoulder (the origin); it turns about the shoulder.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -9,
+        "y": -9,
+        "w": 18,
+        "h": 39
+      },
+      "scale": 2,
+      "tint": false,
+      "alpha": 0.36,
+      "frames": [
+        "generated/monkey.shadow.arm.svg"
+      ]
+    },
+    {
+      "key": "monkey.shadow.torso",
+      "purpose": "The body of the shadow monkey; its origin is the centre of the monkey's hitbox. The limbs join it at the attachment points.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -14,
+        "y": -9,
+        "w": 28,
+        "h": 30
+      },
+      "scale": 2,
+      "tint": false,
+      "alpha": 0.36,
+      "attach": {
+        "armBack": [
+          -7,
+          -1
+        ],
+        "armFront": [
+          7,
+          -1
+        ],
+        "legBack": [
+          -6,
+          15
+        ],
+        "legFront": [
+          6,
+          15
+        ]
+      },
+      "frames": [
+        "generated/monkey.shadow.torso.svg"
+      ]
+    },
+    {
+      "key": "monkey.shadow.head",
+      "purpose": "The head of the shadow monkey (ears, face, muzzle), over the body.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -17,
+        "y": -22,
+        "w": 34,
+        "h": 24
+      },
+      "scale": 2,
+      "tint": false,
+      "alpha": 0.36,
+      "frames": [
+        "generated/monkey.shadow.head.svg"
+      ]
+    },
+    {
+      "key": "monkey.eyes",
+      "purpose": "The monkey's eyes: open (frame 0), and crossed after a fall (frame 1).",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -9,
+        "y": -17,
+        "w": 18,
+        "h": 12
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/monkey.eyes.0.svg",
+        "generated/monkey.eyes.1.svg"
+      ]
+    },
+    {
+      "key": "monkey.shadow.eyes",
+      "purpose": "The shadow monkey's eyes, see-through: open (frame 0), and crossed after a fall (frame 1).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -9,
+        "y": -17,
+        "w": 18,
+        "h": 12
+      },
+      "scale": 2,
+      "tint": false,
+      "alpha": 0.36,
+      "frames": [
+        "generated/monkey.shadow.eyes.0.svg",
+        "generated/monkey.shadow.eyes.1.svg"
+      ]
+    },
+    {
+      "key": "liana.green.rope",
+      "purpose": "The rope of the lianas: a straight strip 420 px along +x from the anchor (the origin), bent along the swinging rope.",
+      "kind": "strip",
+      "set": "boot",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 430,
+        "h": 10
+      },
+      "scale": 2,
+      "tint": false,
+      "length": 420,
+      "frames": [
+        "generated/liana.green.rope.svg"
+      ]
+    },
+    {
+      "key": "liana.green.leaf",
+      "purpose": "A leaf on the lianas, 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -1,
+        "y": -6,
+        "w": 19,
+        "h": 12
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/liana.green.leaf.0.svg",
+        "generated/liana.green.leaf.1.svg"
+      ]
+    },
+    {
+      "key": "liana.gold.rope",
+      "purpose": "The rope of player 2's own lianas in shared screen: a straight strip 420 px along +x from the anchor (the origin), bent along the swinging rope.",
+      "kind": "strip",
+      "set": "main",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 430,
+        "h": 10
+      },
+      "scale": 2,
+      "tint": false,
+      "length": 420,
+      "frames": [
+        "generated/liana.gold.rope.svg"
+      ]
+    },
+    {
+      "key": "liana.gold.leaf",
+      "purpose": "A leaf on player 2's own lianas in shared screen, 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -1,
+        "y": -6,
+        "w": 19,
+        "h": 12
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/liana.gold.leaf.0.svg",
+        "generated/liana.gold.leaf.1.svg"
+      ]
+    },
+    {
+      "key": "liana.shadow.rope",
+      "purpose": "The rope of the shadow monkey's lianas (see-through): a straight strip 420 px along +x from the anchor (the origin), bent along the swinging rope.",
+      "kind": "strip",
+      "set": "main",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 430,
+        "h": 10
+      },
+      "scale": 2,
+      "tint": false,
+      "alpha": 0.36,
+      "length": 420,
+      "frames": [
+        "generated/liana.shadow.rope.svg"
+      ]
+    },
+    {
+      "key": "liana.shadow.leaf",
+      "purpose": "A leaf on the shadow monkey's lianas (see-through), 17 px from its base (the origin) along +x: light (frame 0) and dark (frame 1). Placed, turned and scaled per leaf.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -1,
+        "y": -6,
+        "w": 19,
+        "h": 12
+      },
+      "scale": 2,
+      "tint": false,
+      "alpha": 0.36,
+      "frames": [
+        "generated/liana.shadow.leaf.0.svg",
+        "generated/liana.shadow.leaf.1.svg"
+      ]
+    },
+    {
+      "key": "liana.flash",
+      "purpose": "The lit lower half of a liana, when the grip is about to slip off the end; bent like the rope.",
+      "kind": "strip",
+      "set": "boot",
+      "box": {
+        "x": -4,
+        "y": -4,
+        "w": 218,
+        "h": 8
+      },
+      "scale": 2,
+      "tint": false,
+      "length": 210,
+      "frames": [
+        "generated/liana.flash.svg"
+      ]
+    },
+    {
+      "key": "banana.body",
+      "purpose": "A banana to take, about its centre (the origin): curved, with a ridge, a stem and a dark tip. It bobs and rocks.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -22,
+        "y": -20,
+        "w": 44,
+        "h": 34
+      },
+      "scale": 2,
+      "tint": false,
+      "attach": {
+        "glint": [
+          13.432498222701705,
+          0.2721418441904957
+        ]
+      },
+      "frames": [
+        "generated/banana.body.svg"
+      ]
+    },
+    {
+      "key": "banana.glint",
+      "purpose": "A four-pointed glint on a banana (or a heart), about its centre; it fades in and out.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -9,
+        "y": -9,
+        "w": 18,
+        "h": 18
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/banana.glint.svg"
+      ]
+    },
+    {
+      "key": "heart.field",
+      "purpose": "A heart to take (a banana turned into a life), 17 px across about its centre.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -20,
+        "y": -15,
+        "w": 40,
+        "h": 32
+      },
+      "scale": 2,
+      "tint": false,
+      "attach": {
+        "glint": [
+          -5,
+          -5
+        ]
+      },
+      "frames": [
+        "generated/heart.field.svg"
+      ]
+    },
+    {
+      "key": "heart.hud",
+      "purpose": "A heart in the HUD, 11 px across about its centre: a life left (frame 0), a life lost (frame 1, an outline).",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -14,
+        "y": -11,
+        "w": 28,
+        "h": 23
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/heart.hud.0.svg",
+        "generated/heart.hud.1.svg"
+      ]
+    },
+    {
+      "key": "banana.hud",
+      "purpose": "The banana by each player's banana count in the HUD (11 px), about its centre.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -14,
+        "y": -12,
+        "w": 27,
+        "h": 21
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/banana.hud.svg"
+      ]
+    },
+    {
+      "key": "banana.results",
+      "purpose": "The banana by the bananas taken on the results (13 px), about its centre.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -16,
+        "y": -14,
+        "w": 31,
+        "h": 24
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/banana.results.svg"
+      ]
+    },
+    {
+      "key": "ui.panel",
+      "purpose": "A panel: a see-through dark rounded rectangle (radius 18) with a faint edge, from its top left (the origin), 64 px square; 9-sliced to each panel's size.",
+      "kind": "slice",
+      "set": "boot",
+      "box": {
+        "x": -1,
+        "y": -1,
+        "w": 66,
+        "h": 66
+      },
+      "scale": 2,
+      "tint": false,
+      "slices": {
+        "left": 20,
+        "right": 20,
+        "top": 20,
+        "bottom": 20
+      },
+      "frames": [
+        "generated/ui.panel.svg"
+      ]
+    },
+    {
+      "key": "ui.arrow",
+      "purpose": "The arrow at the top edge pointing up at a monkey above the view; its tip at the origin.",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -13,
+        "y": -2,
+        "w": 26,
+        "h": 30
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/ui.arrow.svg"
+      ]
+    },
+    {
+      "key": "ui.speaker",
+      "purpose": "The mute button: a speaker, from its top left (the origin).",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -2,
+        "y": 0,
+        "w": 26,
+        "h": 40
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/ui.speaker.svg"
+      ]
+    },
+    {
+      "key": "ui.speakerWaves",
+      "purpose": "The speaker's sound waves, while the sound is on (in the speaker's coordinates).",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": 3,
+        "y": -1,
+        "w": 42,
+        "h": 42
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/ui.speakerWaves.svg"
+      ]
+    },
+    {
+      "key": "ui.speakerCross",
+      "purpose": "The cross by the speaker, while muted (in its coordinates).",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": 21,
+        "y": 5,
+        "w": 28,
+        "h": 30
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/ui.speakerCross.svg"
+      ]
+    },
+    {
+      "key": "ui.fullscreen",
+      "purpose": "The full-screen button, from its top left (the origin): corner brackets pointing out to enter full screen (frame 0), pulled in to leave it (frame 1).",
+      "kind": "sprite",
+      "set": "boot",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 48,
+        "h": 48
+      },
+      "scale": 2,
+      "tint": false,
+      "frames": [
+        "generated/ui.fullscreen.0.svg",
+        "generated/ui.fullscreen.1.svg"
+      ]
+    },
+    {
+      "key": "support.vine",
+      "purpose": "The vine a high obstacle hangs from, from the canopy down to it. A straight strip 20 px along +x from the origin, 3 px across; bent along the curve.",
+      "kind": "strip",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -1.5,
+        "w": 20,
+        "h": 3
+      },
+      "scale": 1.3,
+      "tint": false,
+      "length": 20,
+      "frames": [
+        "generated/support.vine.svg"
+      ]
+    },
+    {
+      "key": "support.vineEnd",
+      "purpose": "A round end or joint of support.vine: a disc 3 px across about the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -3,
+        "y": -3,
+        "w": 6,
+        "h": 6
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/support.vineEnd.svg"
+      ]
+    },
+    {
+      "key": "support.stem",
+      "purpose": "The stem a low thorn bush or rock stands on, from its top (the origin) 100 px down; stretched to reach below the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -9,
+        "y": -1,
+        "w": 18,
+        "h": 102
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/support.stem.svg"
+      ]
+    },
+    {
+      "key": "support.hiveTrunk",
+      "purpose": "The trunk beside a low beehive, from its top (the origin) 480 px down; shrunk to reach below the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -11,
+        "y": -1,
+        "w": 22,
+        "h": 482
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/support.hiveTrunk.svg"
+      ]
+    },
+    {
+      "key": "branch.body",
+      "purpose": "The branch: a limb from a cut stub, with a leaf tuft near the tip. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -83,
+        "y": -25,
+        "w": 164,
+        "h": 38
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "rect",
+          "dx": -80,
+          "dy": -12,
+          "w": 160,
+          "h": 24
+        }
+      ],
+      "frames": [
+        "generated/branch.body.svg"
+      ]
+    },
+    {
+      "key": "branch.barkLine",
+      "purpose": "A dark line in the bark, 14 px along +x; four per branch, placed, turned and stretched.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -4,
+        "y": -4,
+        "w": 22,
+        "h": 8
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/branch.barkLine.svg"
+      ]
+    },
+    {
+      "key": "branch.trunk",
+      "purpose": "The trunk a low branch stands on, from its top (the origin) 100 px down; stretched to reach below the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -19,
+        "y": -1,
+        "w": 38,
+        "h": 102
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/branch.trunk.svg"
+      ]
+    },
+    {
+      "key": "panther.body",
+      "purpose": "A black panther lying on the branch, head up: the body and head. It breathes (scaled up and down).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -37,
+        "y": -28,
+        "w": 88,
+        "h": 31
+      },
+      "scale": 2.6,
+      "tint": false,
+      "attach": {
+        "ear": [
+          35.5,
+          -22
+        ]
+      },
+      "frames": [
+        "generated/panther.body.svg"
+      ]
+    },
+    {
+      "key": "panther.ear",
+      "purpose": "The inside of the ear that flicks, about its own centre (folded by scaling).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -3,
+        "y": -3,
+        "w": 6,
+        "h": 6
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/panther.ear.svg"
+      ]
+    },
+    {
+      "key": "panther.eyes",
+      "purpose": "The eyes: open (frame 0) and shut (frame 1).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 24,
+        "y": -21,
+        "w": 16,
+        "h": 7
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/panther.eyes.0.svg",
+        "generated/panther.eyes.1.svg"
+      ]
+    },
+    {
+      "key": "panther.tail",
+      "purpose": "The tail hanging off the end of the branch, in 16 frames from its tip swung 6 px one way to as far the other.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -59,
+        "y": -18,
+        "w": 39,
+        "h": 46
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/panther.tail.0.svg",
+        "generated/panther.tail.1.svg",
+        "generated/panther.tail.2.svg",
+        "generated/panther.tail.3.svg",
+        "generated/panther.tail.4.svg",
+        "generated/panther.tail.5.svg",
+        "generated/panther.tail.6.svg",
+        "generated/panther.tail.7.svg",
+        "generated/panther.tail.8.svg",
+        "generated/panther.tail.9.svg",
+        "generated/panther.tail.10.svg",
+        "generated/panther.tail.11.svg",
+        "generated/panther.tail.12.svg",
+        "generated/panther.tail.13.svg",
+        "generated/panther.tail.14.svg",
+        "generated/panther.tail.15.svg"
+      ]
+    },
+    {
+      "key": "perchedBird.red.body",
+      "purpose": "A small red bird perched on the branch: the body, its feet at the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -11,
+        "y": -18,
+        "w": 22,
+        "h": 22
+      },
+      "scale": 2.6,
+      "tint": false,
+      "attach": {
+        "tail": [
+          -7,
+          -10
+        ],
+        "head": [
+          6,
+          -16
+        ]
+      },
+      "frames": [
+        "generated/perchedBird.red.body.svg"
+      ]
+    },
+    {
+      "key": "perchedBird.red.tail",
+      "purpose": "The red perched bird's tail, from its root (the origin); it flicks about the root.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -12,
+        "y": -4,
+        "w": 13,
+        "h": 8
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedBird.red.tail.svg"
+      ]
+    },
+    {
+      "key": "perchedBird.red.head",
+      "purpose": "The red perched bird's head about its centre (the origin); it dips to peck.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -7,
+        "y": -7,
+        "w": 19,
+        "h": 14
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedBird.red.head.svg"
+      ]
+    },
+    {
+      "key": "perchedBird.blue.body",
+      "purpose": "A small blue bird perched on the branch: the body, its feet at the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -11,
+        "y": -18,
+        "w": 22,
+        "h": 22
+      },
+      "scale": 2.6,
+      "tint": false,
+      "attach": {
+        "tail": [
+          -7,
+          -10
+        ],
+        "head": [
+          6,
+          -16
+        ]
+      },
+      "frames": [
+        "generated/perchedBird.blue.body.svg"
+      ]
+    },
+    {
+      "key": "perchedBird.blue.tail",
+      "purpose": "The blue perched bird's tail, from its root (the origin); it flicks about the root.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -12,
+        "y": -4,
+        "w": 13,
+        "h": 8
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedBird.blue.tail.svg"
+      ]
+    },
+    {
+      "key": "perchedBird.blue.head",
+      "purpose": "The blue perched bird's head about its centre (the origin); it dips to peck.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -7,
+        "y": -7,
+        "w": 19,
+        "h": 14
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedBird.blue.head.svg"
+      ]
+    },
+    {
+      "key": "perchedBird.purple.body",
+      "purpose": "A small purple bird perched on the branch: the body, its feet at the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -11,
+        "y": -18,
+        "w": 22,
+        "h": 22
+      },
+      "scale": 2.6,
+      "tint": false,
+      "attach": {
+        "tail": [
+          -7,
+          -10
+        ],
+        "head": [
+          6,
+          -16
+        ]
+      },
+      "frames": [
+        "generated/perchedBird.purple.body.svg"
+      ]
+    },
+    {
+      "key": "perchedBird.purple.tail",
+      "purpose": "The purple perched bird's tail, from its root (the origin); it flicks about the root.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -12,
+        "y": -4,
+        "w": 13,
+        "h": 8
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedBird.purple.tail.svg"
+      ]
+    },
+    {
+      "key": "perchedBird.purple.head",
+      "purpose": "The purple perched bird's head about its centre (the origin); it dips to peck.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -7,
+        "y": -7,
+        "w": 19,
+        "h": 14
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedBird.purple.head.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.tail",
+      "purpose": "The tail of a snake coiled round the branch, tapering from its root (the origin) past the last coil: round the trunk (frame 0) or the limb (frame 1).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -19,
+        "y": -12,
+        "w": 30,
+        "h": 32
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedSnake.tail.0.svg",
+        "generated/perchedSnake.tail.1.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.band",
+      "purpose": "The front of a coil, slanting across the wood from its top (the origin): round the trunk (frame 0, 26 px thick), or round the limb (frame 1, for a limb 20 px thick, stretched across to the limb's thickness).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -27,
+        "y": -13,
+        "w": 54,
+        "h": 48
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedSnake.band.0.svg",
+        "generated/perchedSnake.band.1.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.mark",
+      "purpose": "A dark scale mark on a coil, 2 px in radius about the origin; scaled.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -3,
+        "y": -3,
+        "w": 6,
+        "h": 6
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedSnake.mark.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.neck",
+      "purpose": "The neck of the coiled snake, rising from the last coil to the head. A straight strip 20 px along +x from the origin, 7 px across; bent along the curve.",
+      "kind": "strip",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -3.5,
+        "w": 20,
+        "h": 7
+      },
+      "scale": 2.6,
+      "tint": false,
+      "length": 20,
+      "frames": [
+        "generated/perchedSnake.neck.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.neckEnd",
+      "purpose": "A round end or joint of perchedSnake.neck: a disc 7 px across about the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 10,
+        "h": 10
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedSnake.neckEnd.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.head",
+      "purpose": "The coiled snake's head, about the end of its neck (the origin), facing +x; it sways and turns.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -6,
+        "y": -6,
+        "w": 16,
+        "h": 12
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedSnake.head.svg"
+      ]
+    },
+    {
+      "key": "perchedSnake.tongue",
+      "purpose": "Its tongue, flicking now and then (in the head's coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 6,
+        "y": -6,
+        "w": 15,
+        "h": 12
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/perchedSnake.tongue.svg"
+      ]
+    },
+    {
+      "key": "hangingMonkey.arms",
+      "purpose": "A grey monkey hanging under the branch: the arms, its hands at the origin (it swings about them).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -15,
+        "y": -7,
+        "w": 30,
+        "h": 33
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingMonkey.arms.svg"
+      ]
+    },
+    {
+      "key": "hangingMonkey.body",
+      "purpose": "The hanging monkey's body and head (in the hands' coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -13,
+        "y": 11,
+        "w": 26,
+        "h": 39
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingMonkey.body.svg"
+      ]
+    },
+    {
+      "key": "hangingMonkey.leg",
+      "purpose": "A leg of the hanging monkey, from its hip, kicking. A straight segment 20 px along +x from the origin, 4.2 px across; stretched to each length and turned.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -2.1,
+        "w": 20,
+        "h": 4.2
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingMonkey.leg.svg"
+      ]
+    },
+    {
+      "key": "hangingMonkey.legEnd",
+      "purpose": "A round end or joint of hangingMonkey.leg: a disc 4.2 px across about the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -4,
+        "y": -4,
+        "w": 8,
+        "h": 8
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingMonkey.legEnd.svg"
+      ]
+    },
+    {
+      "key": "hangingMonkey.tail",
+      "purpose": "The hanging monkey's tail curling out and up, in 13 frames from the least curled to the most (in the hands' coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -2,
+        "y": 24,
+        "w": 33,
+        "h": 30
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingMonkey.tail.0.svg",
+        "generated/hangingMonkey.tail.1.svg",
+        "generated/hangingMonkey.tail.2.svg",
+        "generated/hangingMonkey.tail.3.svg",
+        "generated/hangingMonkey.tail.4.svg",
+        "generated/hangingMonkey.tail.5.svg",
+        "generated/hangingMonkey.tail.6.svg",
+        "generated/hangingMonkey.tail.7.svg",
+        "generated/hangingMonkey.tail.8.svg",
+        "generated/hangingMonkey.tail.9.svg",
+        "generated/hangingMonkey.tail.10.svg",
+        "generated/hangingMonkey.tail.11.svg",
+        "generated/hangingMonkey.tail.12.svg"
+      ]
+    },
+    {
+      "key": "hangingMonkey.eyes",
+      "purpose": "Its eyes: open (frame 0) and shut (frame 1).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -8,
+        "y": 18,
+        "w": 16,
+        "h": 5
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingMonkey.eyes.0.svg",
+        "generated/hangingMonkey.eyes.1.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.purple.body",
+      "purpose": "A purple bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -12,
+        "y": -3,
+        "w": 24,
+        "h": 43
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.purple.body.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.purple.eyes",
+      "purpose": "The purple hanging bat's eyes: shut (frame 0) and open (frame 1).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -7,
+        "y": 28,
+        "w": 14,
+        "h": 5
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.purple.eyes.0.svg",
+        "generated/hangingBat.purple.eyes.1.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.purple.ear",
+      "purpose": "The purple hanging bat's ear that twitches, in 9 frames from still to the full twitch.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 1,
+        "y": 28,
+        "w": 11,
+        "h": 11
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.purple.ear.0.svg",
+        "generated/hangingBat.purple.ear.1.svg",
+        "generated/hangingBat.purple.ear.2.svg",
+        "generated/hangingBat.purple.ear.3.svg",
+        "generated/hangingBat.purple.ear.4.svg",
+        "generated/hangingBat.purple.ear.5.svg",
+        "generated/hangingBat.purple.ear.6.svg",
+        "generated/hangingBat.purple.ear.7.svg",
+        "generated/hangingBat.purple.ear.8.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.brown.body",
+      "purpose": "A brown bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -12,
+        "y": -3,
+        "w": 24,
+        "h": 44
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.brown.body.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.brown.eyes",
+      "purpose": "The brown hanging bat's eyes: shut (frame 0) and open (frame 1).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -7,
+        "y": 28,
+        "w": 14,
+        "h": 5
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.brown.eyes.0.svg",
+        "generated/hangingBat.brown.eyes.1.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.brown.ear",
+      "purpose": "The brown hanging bat's ear that twitches, in 9 frames from still to the full twitch.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 1,
+        "y": 28,
+        "w": 11,
+        "h": 13
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.brown.ear.0.svg",
+        "generated/hangingBat.brown.ear.1.svg",
+        "generated/hangingBat.brown.ear.2.svg",
+        "generated/hangingBat.brown.ear.3.svg",
+        "generated/hangingBat.brown.ear.4.svg",
+        "generated/hangingBat.brown.ear.5.svg",
+        "generated/hangingBat.brown.ear.6.svg",
+        "generated/hangingBat.brown.ear.7.svg",
+        "generated/hangingBat.brown.ear.8.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.grey.body",
+      "purpose": "A grey bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -12,
+        "y": -3,
+        "w": 24,
+        "h": 43
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.grey.body.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.grey.eyes",
+      "purpose": "The grey hanging bat's eyes: shut (frame 0) and open (frame 1).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -7,
+        "y": 28,
+        "w": 14,
+        "h": 5
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.grey.eyes.0.svg",
+        "generated/hangingBat.grey.eyes.1.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.grey.ear",
+      "purpose": "The grey hanging bat's ear that twitches, in 9 frames from still to the full twitch.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 1,
+        "y": 28,
+        "w": 11,
+        "h": 10
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.grey.ear.0.svg",
+        "generated/hangingBat.grey.ear.1.svg",
+        "generated/hangingBat.grey.ear.2.svg",
+        "generated/hangingBat.grey.ear.3.svg",
+        "generated/hangingBat.grey.ear.4.svg",
+        "generated/hangingBat.grey.ear.5.svg",
+        "generated/hangingBat.grey.ear.6.svg",
+        "generated/hangingBat.grey.ear.7.svg",
+        "generated/hangingBat.grey.ear.8.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.black.body",
+      "purpose": "A black bat hanging upside down under the branch, wrapped in its wings; its feet at the origin (it sways about them).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -12,
+        "y": -3,
+        "w": 24,
+        "h": 43
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.black.body.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.black.eyes",
+      "purpose": "The black hanging bat's eyes: shut (frame 0) and open (frame 1).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -7,
+        "y": 28,
+        "w": 14,
+        "h": 5
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.black.eyes.0.svg",
+        "generated/hangingBat.black.eyes.1.svg"
+      ]
+    },
+    {
+      "key": "hangingBat.black.ear",
+      "purpose": "The black hanging bat's ear that twitches, in 9 frames from still to the full twitch.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 1,
+        "y": 28,
+        "w": 11,
+        "h": 12
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/hangingBat.black.ear.0.svg",
+        "generated/hangingBat.black.ear.1.svg",
+        "generated/hangingBat.black.ear.2.svg",
+        "generated/hangingBat.black.ear.3.svg",
+        "generated/hangingBat.black.ear.4.svg",
+        "generated/hangingBat.black.ear.5.svg",
+        "generated/hangingBat.black.ear.6.svg",
+        "generated/hangingBat.black.ear.7.svg",
+        "generated/hangingBat.black.ear.8.svg"
+      ]
+    },
+    {
+      "key": "owl.body",
+      "purpose": "An owl perched on the branch: the body, its feet at the origin; it puffs as it breathes.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -15,
+        "y": -29,
+        "w": 30,
+        "h": 34
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/owl.body.svg"
+      ]
+    },
+    {
+      "key": "owl.skull",
+      "purpose": "The owl's head with its ear tufts, about its centre (the origin); it tilts as it turns.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -12,
+        "y": -16,
+        "w": 24,
+        "h": 28
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/owl.skull.svg"
+      ]
+    },
+    {
+      "key": "owl.disc",
+      "purpose": "The pale face round the eyes (in the head's coordinates); it slides as the head turns.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -12,
+        "y": -7,
+        "w": 24,
+        "h": 15
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/owl.disc.svg"
+      ]
+    },
+    {
+      "key": "owl.beak",
+      "purpose": "The beak (in the face's coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -3,
+        "y": 0,
+        "w": 6,
+        "h": 7
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/owl.beak.svg"
+      ]
+    },
+    {
+      "key": "owl.eyeball",
+      "purpose": "An eye, about its centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 10,
+        "h": 11
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/owl.eyeball.svg"
+      ]
+    },
+    {
+      "key": "owl.pupil",
+      "purpose": "A pupil, about the eye's centre; it leads the turn.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -3,
+        "y": -3,
+        "w": 6,
+        "h": 7
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/owl.pupil.svg"
+      ]
+    },
+    {
+      "key": "owl.shutEye",
+      "purpose": "An eye shut, about its centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -6,
+        "y": -3,
+        "w": 12,
+        "h": 7
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/owl.shutEye.svg"
+      ]
+    },
+    {
+      "key": "nest.back",
+      "purpose": "A nest on the branch: the back of the bowl and its dark inside, its foot at the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -20,
+        "y": -18,
+        "w": 40,
+        "h": 18
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.back.svg"
+      ]
+    },
+    {
+      "key": "nest.front",
+      "purpose": "The front wall of the nest, over its contents (in the nest's coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -22,
+        "y": -10,
+        "w": 44,
+        "h": 15
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.front.svg"
+      ]
+    },
+    {
+      "key": "nest.rim",
+      "purpose": "The rim of the nest, over the front wall and its twigs.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -23,
+        "y": -13,
+        "w": 46,
+        "h": 14
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.rim.svg"
+      ]
+    },
+    {
+      "key": "nest.twig",
+      "purpose": "A dark twig woven across the front of the nest. A straight segment 20 px along +x from the origin, 1.2 px across; stretched to each length and turned.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -0.6,
+        "w": 20,
+        "h": 1.2
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.twig.svg"
+      ]
+    },
+    {
+      "key": "nest.twigEnd",
+      "purpose": "A round end or joint of nest.twig: a disc 1.2 px across about the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -2,
+        "y": -2,
+        "w": 4,
+        "h": 4
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.twigEnd.svg"
+      ]
+    },
+    {
+      "key": "nest.lightTwig",
+      "purpose": "A light twig woven across the front of the nest. A straight segment 20 px along +x from the origin, 1.2 px across; stretched to each length and turned.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -0.6,
+        "w": 20,
+        "h": 1.2
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.lightTwig.svg"
+      ]
+    },
+    {
+      "key": "nest.lightTwigEnd",
+      "purpose": "A round end or joint of nest.lightTwig: a disc 1.2 px across about the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -2,
+        "y": -2,
+        "w": 4,
+        "h": 4
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.lightTwigEnd.svg"
+      ]
+    },
+    {
+      "key": "nest.rimTwig",
+      "purpose": "A twig stuck out of the rim. A straight segment 20 px along +x from the origin, 1.4 px across; stretched to each length and turned.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -0.7,
+        "w": 20,
+        "h": 1.4
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.rimTwig.svg"
+      ]
+    },
+    {
+      "key": "nest.rimTwigEnd",
+      "purpose": "A round end or joint of nest.rimTwig: a disc 1.4 px across about the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -2,
+        "y": -2,
+        "w": 4,
+        "h": 4
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.rimTwigEnd.svg"
+      ]
+    },
+    {
+      "key": "nest.egg",
+      "purpose": "An egg in the nest, about its centre (placed at 0, -11); it rocks now and then.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -7,
+        "y": -9,
+        "w": 14,
+        "h": 18
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.egg.svg"
+      ]
+    },
+    {
+      "key": "nest.shell",
+      "purpose": "The cracked shell a chick hatched from, about its centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -7,
+        "y": -5,
+        "w": 14,
+        "h": 12
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.shell.svg"
+      ]
+    },
+    {
+      "key": "nest.chick",
+      "purpose": "The chick, about its centre; it bobs and tilts.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -8,
+        "y": -11,
+        "w": 16,
+        "h": 19
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.chick.svg"
+      ]
+    },
+    {
+      "key": "nest.chickBeak",
+      "purpose": "The chick's beak, in 9 frames from shut to wide open (in the chick's coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 4,
+        "y": -6,
+        "w": 8,
+        "h": 11
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.chickBeak.0.svg",
+        "generated/nest.chickBeak.1.svg",
+        "generated/nest.chickBeak.2.svg",
+        "generated/nest.chickBeak.3.svg",
+        "generated/nest.chickBeak.4.svg",
+        "generated/nest.chickBeak.5.svg",
+        "generated/nest.chickBeak.6.svg",
+        "generated/nest.chickBeak.7.svg",
+        "generated/nest.chickBeak.8.svg"
+      ]
+    },
+    {
+      "key": "nest.cap",
+      "purpose": "The top of the shell, tipped on the rim.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -7,
+        "y": -6,
+        "w": 14,
+        "h": 10
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.cap.svg"
+      ]
+    },
+    {
+      "key": "nest.leaf",
+      "purpose": "A dry leaf curled in the bottom of an empty nest (in the nest's coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -4,
+        "y": -13,
+        "w": 12,
+        "h": 8
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/nest.leaf.svg"
+      ]
+    },
+    {
+      "key": "flower.stem",
+      "purpose": "A flower's stem, 20 px up from its foot (the origin), curving a little; stretched to each flower's height.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -4,
+        "y": -24,
+        "w": 9,
+        "h": 28
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/flower.stem.svg"
+      ]
+    },
+    {
+      "key": "flower.leaf",
+      "purpose": "A leaf on a stem, 7 px from its base (the origin) along +x: green (frame 0) and dark (frame 1). Placed, turned and scaled per leaf.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -1,
+        "y": -3,
+        "w": 9,
+        "h": 6
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/flower.leaf.0.svg",
+        "generated/flower.leaf.1.svg"
+      ]
+    },
+    {
+      "key": "flower.petal",
+      "purpose": "A petal, 4 px in radius about its centre: white, tinted with the flower's colour, and scaled.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 10,
+        "h": 10
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/flower.petal.svg"
+      ]
+    },
+    {
+      "key": "flower.heart",
+      "purpose": "A flower's heart, 4 px in radius about its centre: white, tinted, and scaled.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 10,
+        "h": 10
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/flower.heart.svg"
+      ]
+    },
+    {
+      "key": "coconut.frond",
+      "purpose": "The frond a bunch of coconuts hangs from, under the branch; the stems spring from the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -17,
+        "y": 0,
+        "w": 34,
+        "h": 16
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/coconut.frond.svg"
+      ]
+    },
+    {
+      "key": "coconut.stem",
+      "purpose": "The stem from the frond to a nut. A straight segment 20 px along +x from the origin, 1.8 px across; stretched to each length and turned.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -0.9,
+        "w": 20,
+        "h": 1.8
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/coconut.stem.svg"
+      ]
+    },
+    {
+      "key": "coconut.stemEnd",
+      "purpose": "A round end or joint of coconut.stem: a disc 1.8 px across about the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -2,
+        "y": -2,
+        "w": 4,
+        "h": 4
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/coconut.stemEnd.svg"
+      ]
+    },
+    {
+      "key": "coconut.nut",
+      "purpose": "A coconut 7 px in radius, its top at the origin: brown, a highlight and three dark eyes; scaled to each nut.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -8,
+        "y": -1,
+        "w": 16,
+        "h": 16
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/coconut.nut.svg"
+      ]
+    },
+    {
+      "key": "coconut.hair",
+      "purpose": "A hair on a nut's outline, at its right (about the nut's centre, which is the origin); turned round the nut.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 4,
+        "y": -3,
+        "w": 7,
+        "h": 6
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/coconut.hair.svg"
+      ]
+    },
+    {
+      "key": "thornBush.body",
+      "purpose": "The thorn bush: three dark circles with a highlight each. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -57,
+        "y": -49,
+        "w": 114,
+        "h": 86
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": -26,
+          "dy": 6,
+          "r": 30
+        },
+        {
+          "kind": "circle",
+          "dx": 26,
+          "dy": 6,
+          "r": 30
+        },
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": -14,
+          "r": 34
+        }
+      ],
+      "frames": [
+        "generated/thornBush.body.svg"
+      ]
+    },
+    {
+      "key": "thornBush.thorn",
+      "purpose": "A thorn, its base at the origin, pointing along +x; placed round the outline and turned.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -1,
+        "y": -5,
+        "w": 9,
+        "h": 10
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/thornBush.thorn.svg"
+      ]
+    },
+    {
+      "key": "thornBush.mound",
+      "purpose": "The mound a low thorn bush grows from (in the bush's coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -31,
+        "y": 29,
+        "w": 62,
+        "h": 14
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/thornBush.mound.svg"
+      ]
+    },
+    {
+      "key": "rock.body",
+      "purpose": "The rock, in 24 outlines (one frame each, picked by gap): grey, with a lit and a shaded facet. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -38,
+        "y": -38,
+        "w": 76,
+        "h": 76
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 0,
+          "r": 36
+        }
+      ],
+      "frames": [
+        "generated/rock.body.0.svg",
+        "generated/rock.body.1.svg",
+        "generated/rock.body.2.svg",
+        "generated/rock.body.3.svg",
+        "generated/rock.body.4.svg",
+        "generated/rock.body.5.svg",
+        "generated/rock.body.6.svg",
+        "generated/rock.body.7.svg",
+        "generated/rock.body.8.svg",
+        "generated/rock.body.9.svg",
+        "generated/rock.body.10.svg",
+        "generated/rock.body.11.svg",
+        "generated/rock.body.12.svg",
+        "generated/rock.body.13.svg",
+        "generated/rock.body.14.svg",
+        "generated/rock.body.15.svg",
+        "generated/rock.body.16.svg",
+        "generated/rock.body.17.svg",
+        "generated/rock.body.18.svg",
+        "generated/rock.body.19.svg",
+        "generated/rock.body.20.svg",
+        "generated/rock.body.21.svg",
+        "generated/rock.body.22.svg",
+        "generated/rock.body.23.svg"
+      ]
+    },
+    {
+      "key": "rock.sling",
+      "purpose": "The vine's loop round a hanging rock (in the rock's coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -39,
+        "y": -14,
+        "w": 78,
+        "h": 22
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/rock.sling.svg"
+      ]
+    },
+    {
+      "key": "rock.ledge",
+      "purpose": "The ledge a low rock sits on (in the rock's coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -41,
+        "y": 29,
+        "w": 82,
+        "h": 12
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/rock.ledge.svg"
+      ]
+    },
+    {
+      "key": "beehive.nest",
+      "purpose": "The beehive: a teardrop in gold paper bands with a dark entrance at the bottom. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -26,
+        "y": -36,
+        "w": 52,
+        "h": 79
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": -16,
+          "r": 18
+        },
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 2,
+          "r": 24
+        },
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 22,
+          "r": 18
+        }
+      ],
+      "frames": [
+        "generated/beehive.nest.svg"
+      ]
+    },
+    {
+      "key": "beehive.arm",
+      "purpose": "The arm over a low beehive from the trunk beside it, and the rope the nest hangs on (in the hive's coordinates).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -16,
+        "y": -66,
+        "w": 62,
+        "h": 40
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/beehive.arm.svg"
+      ]
+    },
+    {
+      "key": "bee.body",
+      "purpose": "A bee: a round yellow body with a dark stripe, about the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -5,
+        "y": -4,
+        "w": 10,
+        "h": 8
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/bee.body.svg"
+      ]
+    },
+    {
+      "key": "bee.wing",
+      "purpose": "A bee's wing at its widest (2.6 px half height), about its centre; squeezed as it beats.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -4,
+        "y": -4,
+        "w": 8,
+        "h": 8
+      },
+      "scale": 2.6,
+      "tint": false,
+      "frames": [
+        "generated/bee.wing.svg"
+      ]
+    },
+    {
+      "key": "temple.limestone.top",
+      "purpose": "The limestone temple down to the top of its base: the shrine, the three tiers and the stairs on them, a stepped fret on the shrine. Its origin is the top centre of the shrine (the hitbox's).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -188,
+        "y": -4,
+        "w": 376,
+        "h": 206
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "hitbox": [
+        {
+          "kind": "rect",
+          "dx": -50,
+          "dy": 0,
+          "w": 100,
+          "h": 64
+        },
+        {
+          "kind": "rect",
+          "dx": -90,
+          "dy": 64,
+          "w": 180,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -136,
+          "dy": 110,
+          "w": 272,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -184,
+          "dy": 156,
+          "w": 368,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -236,
+          "dy": 202,
+          "w": 472,
+          "h": 420
+        }
+      ],
+      "frames": [
+        "generated/temple.limestone.top.svg"
+      ]
+    },
+    {
+      "key": "temple.limestone.baseTop",
+      "purpose": "The first 92 px of the limestone temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -238,
+        "y": 202,
+        "w": 476,
+        "h": 92
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.limestone.baseTop.svg"
+      ]
+    },
+    {
+      "key": "temple.limestone.base",
+      "purpose": "The limestone temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -238,
+        "y": 0,
+        "w": 476,
+        "h": 92
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.limestone.base.svg"
+      ]
+    },
+    {
+      "key": "temple.limestone.stairs",
+      "purpose": "The limestone temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -40,
+        "y": 0,
+        "w": 80,
+        "h": 96
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.limestone.stairs.svg"
+      ]
+    },
+    {
+      "key": "temple.sandstone.top",
+      "purpose": "The sandstone temple down to the top of its base: the shrine, the three tiers and the stairs on them, a roof comb over the shrine. Its origin is the top centre of the shrine (the hitbox's).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -188,
+        "y": -4,
+        "w": 376,
+        "h": 206
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "hitbox": [
+        {
+          "kind": "rect",
+          "dx": -50,
+          "dy": 0,
+          "w": 100,
+          "h": 64
+        },
+        {
+          "kind": "rect",
+          "dx": -90,
+          "dy": 64,
+          "w": 180,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -136,
+          "dy": 110,
+          "w": 272,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -184,
+          "dy": 156,
+          "w": 368,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -236,
+          "dy": 202,
+          "w": 472,
+          "h": 420
+        }
+      ],
+      "frames": [
+        "generated/temple.sandstone.top.svg"
+      ]
+    },
+    {
+      "key": "temple.sandstone.baseTop",
+      "purpose": "The first 92 px of the sandstone temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -238,
+        "y": 202,
+        "w": 476,
+        "h": 92
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.sandstone.baseTop.svg"
+      ]
+    },
+    {
+      "key": "temple.sandstone.base",
+      "purpose": "The sandstone temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -238,
+        "y": 0,
+        "w": 476,
+        "h": 92
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.sandstone.base.svg"
+      ]
+    },
+    {
+      "key": "temple.sandstone.stairs",
+      "purpose": "The sandstone temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -40,
+        "y": 0,
+        "w": 80,
+        "h": 96
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.sandstone.stairs.svg"
+      ]
+    },
+    {
+      "key": "temple.mossy.top",
+      "purpose": "The mossy temple down to the top of its base: the shrine, the three tiers and the stairs on them, serpent heads on the stairs and moss. Its origin is the top centre of the shrine (the hitbox's).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -188,
+        "y": -4,
+        "w": 376,
+        "h": 206
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "hitbox": [
+        {
+          "kind": "rect",
+          "dx": -50,
+          "dy": 0,
+          "w": 100,
+          "h": 64
+        },
+        {
+          "kind": "rect",
+          "dx": -90,
+          "dy": 64,
+          "w": 180,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -136,
+          "dy": 110,
+          "w": 272,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -184,
+          "dy": 156,
+          "w": 368,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -236,
+          "dy": 202,
+          "w": 472,
+          "h": 420
+        }
+      ],
+      "frames": [
+        "generated/temple.mossy.top.svg"
+      ]
+    },
+    {
+      "key": "temple.mossy.baseTop",
+      "purpose": "The first 92 px of the mossy temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -238,
+        "y": 202,
+        "w": 476,
+        "h": 92
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.mossy.baseTop.svg"
+      ]
+    },
+    {
+      "key": "temple.mossy.base",
+      "purpose": "The mossy temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -238,
+        "y": 0,
+        "w": 476,
+        "h": 92
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.mossy.base.svg"
+      ]
+    },
+    {
+      "key": "temple.mossy.stairs",
+      "purpose": "The mossy temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -40,
+        "y": 0,
+        "w": 80,
+        "h": 96
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.mossy.stairs.svg"
+      ]
+    },
+    {
+      "key": "temple.basalt.top",
+      "purpose": "The basalt temple down to the top of its base: the shrine, the three tiers and the stairs on them, gold inlay and two braziers. Its origin is the top centre of the shrine (the hitbox's).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -188,
+        "y": -4,
+        "w": 376,
+        "h": 206
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "hitbox": [
+        {
+          "kind": "rect",
+          "dx": -50,
+          "dy": 0,
+          "w": 100,
+          "h": 64
+        },
+        {
+          "kind": "rect",
+          "dx": -90,
+          "dy": 64,
+          "w": 180,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -136,
+          "dy": 110,
+          "w": 272,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -184,
+          "dy": 156,
+          "w": 368,
+          "h": 46
+        },
+        {
+          "kind": "rect",
+          "dx": -236,
+          "dy": 202,
+          "w": 472,
+          "h": 420
+        }
+      ],
+      "frames": [
+        "generated/temple.basalt.top.svg"
+      ]
+    },
+    {
+      "key": "temple.basalt.baseTop",
+      "purpose": "The first 92 px of the basalt temple's base, from its lit top edge (at y 202): courses of blocks and a row of panels.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -238,
+        "y": 202,
+        "w": 476,
+        "h": 92
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.basalt.baseTop.svg"
+      ]
+    },
+    {
+      "key": "temple.basalt.base",
+      "purpose": "The basalt temple's base below that: 92 px, from its top (the origin's y), that repeat down to the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -238,
+        "y": 0,
+        "w": 476,
+        "h": 92
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.basalt.base.svg"
+      ]
+    },
+    {
+      "key": "temple.basalt.stairs",
+      "purpose": "The basalt temple's stairs below the tiers, with their low walls: 8 steps (96 px, from the top of a step at the origin's y) that repeat down to the floor.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -40,
+        "y": 0,
+        "w": 80,
+        "h": 96
+      },
+      "scale": 1.3,
+      "tint": true,
+      "soften": 0.2,
+      "frames": [
+        "generated/temple.basalt.stairs.svg"
+      ]
+    },
+    {
+      "key": "temple.leaf",
+      "purpose": "A leaf on a temple (the fringe of ferns at its foot, and on the corners of the tiers), 86 px from its base (the origin) along +x, in the greens FRINGE_DEEP, BUSH, FRINGE, BUSH_LIGHT, LEAF_DARK, LEAF, MOSS, MOSS_LIGHT (one frame each); placed, turned and scaled per leaf.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -1,
+        "y": -23,
+        "w": 88,
+        "h": 46
+      },
+      "scale": 1.3,
+      "tint": true,
+      "density": 2,
+      "frames": [
+        "generated/temple.leaf.0.svg",
+        "generated/temple.leaf.1.svg",
+        "generated/temple.leaf.2.svg",
+        "generated/temple.leaf.3.svg",
+        "generated/temple.leaf.4.svg",
+        "generated/temple.leaf.5.svg",
+        "generated/temple.leaf.6.svg",
+        "generated/temple.leaf.7.svg"
+      ]
+    },
+    {
+      "key": "temple.moss",
+      "purpose": "A patch of moss on a tier, 22 by 4.5 px (half) about its centre: dark (frame 0) and light (frame 1); stretched sideways.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -23,
+        "y": -6,
+        "w": 46,
+        "h": 12
+      },
+      "scale": 1.3,
+      "tint": true,
+      "frames": [
+        "generated/temple.moss.0.svg",
+        "generated/temple.moss.1.svg"
+      ]
+    },
+    {
+      "key": "temple.vine",
+      "purpose": "A vine hanging from a patch of moss. A straight strip 20 px along +x from the origin, 2 px across; bent along the curve.",
+      "kind": "strip",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -1,
+        "w": 20,
+        "h": 2
+      },
+      "scale": 1.3,
+      "tint": true,
+      "density": 2,
+      "length": 20,
+      "frames": [
+        "generated/temple.vine.svg"
+      ]
+    },
+    {
+      "key": "temple.haze",
+      "purpose": "The green haze over the foot of the temple: the top half of nested soft ellipses, about their centre (the origin, 30 px below the temple's floor), down to 40 px above it, where the jungle floor covers it.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -331,
+        "y": -281,
+        "w": 662,
+        "h": 241
+      },
+      "scale": 0.65,
+      "tint": true,
+      "frames": [
+        "generated/temple.haze.svg"
+      ]
+    },
+    {
+      "key": "temple.flame",
+      "purpose": "A brazier's flame (in the temple's coordinates, its brazier at x 0), in 7 × 7 frames: swayed from 3 px left to 3 px right, each from the lowest to the highest.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -9,
+        "y": 18,
+        "w": 18,
+        "h": 31
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/temple.flame.0.svg",
+        "generated/temple.flame.1.svg",
+        "generated/temple.flame.2.svg",
+        "generated/temple.flame.3.svg",
+        "generated/temple.flame.4.svg",
+        "generated/temple.flame.5.svg",
+        "generated/temple.flame.6.svg",
+        "generated/temple.flame.7.svg",
+        "generated/temple.flame.8.svg",
+        "generated/temple.flame.9.svg",
+        "generated/temple.flame.10.svg",
+        "generated/temple.flame.11.svg",
+        "generated/temple.flame.12.svg",
+        "generated/temple.flame.13.svg",
+        "generated/temple.flame.14.svg",
+        "generated/temple.flame.15.svg",
+        "generated/temple.flame.16.svg",
+        "generated/temple.flame.17.svg",
+        "generated/temple.flame.18.svg",
+        "generated/temple.flame.19.svg",
+        "generated/temple.flame.20.svg",
+        "generated/temple.flame.21.svg",
+        "generated/temple.flame.22.svg",
+        "generated/temple.flame.23.svg",
+        "generated/temple.flame.24.svg",
+        "generated/temple.flame.25.svg",
+        "generated/temple.flame.26.svg",
+        "generated/temple.flame.27.svg",
+        "generated/temple.flame.28.svg",
+        "generated/temple.flame.29.svg",
+        "generated/temple.flame.30.svg",
+        "generated/temple.flame.31.svg",
+        "generated/temple.flame.32.svg",
+        "generated/temple.flame.33.svg",
+        "generated/temple.flame.34.svg",
+        "generated/temple.flame.35.svg",
+        "generated/temple.flame.36.svg",
+        "generated/temple.flame.37.svg",
+        "generated/temple.flame.38.svg",
+        "generated/temple.flame.39.svg",
+        "generated/temple.flame.40.svg",
+        "generated/temple.flame.41.svg",
+        "generated/temple.flame.42.svg",
+        "generated/temple.flame.43.svg",
+        "generated/temple.flame.44.svg",
+        "generated/temple.flame.45.svg",
+        "generated/temple.flame.46.svg",
+        "generated/temple.flame.47.svg",
+        "generated/temple.flame.48.svg"
+      ]
+    },
+    {
+      "key": "temple.glow",
+      "purpose": "A layer of the warm light round a brazier in the dark stages: a disc about its centre, at its largest. The glow is sixteen of them, each scaled and faded, added to what is behind it.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -74,
+        "y": -74,
+        "w": 148,
+        "h": 148
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/temple.glow.svg"
+      ]
+    },
+    {
+      "key": "spider.body",
+      "purpose": "The spider: abdomen, head, a red mark and four eyes. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -14,
+        "y": -18,
+        "w": 28,
+        "h": 37
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 0,
+          "r": 18
+        }
+      ],
+      "frames": [
+        "generated/spider.body.svg"
+      ]
+    },
+    {
+      "key": "spider.leg",
+      "purpose": "A spider's leg, from the body out to the knee or from the knee down to the foot. A straight segment 20 px along +x from the origin, 2.5 px across; stretched to each length and turned.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -1.25,
+        "w": 20,
+        "h": 2.5
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/spider.leg.svg"
+      ]
+    },
+    {
+      "key": "spider.legEnd",
+      "purpose": "A round end or joint of spider.leg: a disc 2.5 px across about the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -3,
+        "y": -3,
+        "w": 6,
+        "h": 6
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/spider.legEnd.svg"
+      ]
+    },
+    {
+      "key": "spider.thread",
+      "purpose": "The thread from the canopy down to the spider. A straight segment 20 px along +x from the origin, 1.5 px across; stretched to each length and turned.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -0.75,
+        "w": 20,
+        "h": 1.5
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/spider.thread.svg"
+      ]
+    },
+    {
+      "key": "snake.stalk",
+      "purpose": "The stalk a snake climbs, from the floor up to the top of its climb. A straight strip 20 px along +x from the origin, 7 px across; bent along the curve.",
+      "kind": "strip",
+      "set": "main",
+      "box": {
+        "x": 0,
+        "y": -3.5,
+        "w": 20,
+        "h": 7
+      },
+      "scale": 1.3,
+      "tint": false,
+      "length": 20,
+      "frames": [
+        "generated/snake.stalk.svg"
+      ]
+    },
+    {
+      "key": "snake.stalkEnd",
+      "purpose": "A round end or joint of snake.stalk: a disc 7 px across about the origin.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -5,
+        "y": -5,
+        "w": 10,
+        "h": 10
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/snake.stalkEnd.svg"
+      ]
+    },
+    {
+      "key": "snake.stalkLeaf",
+      "purpose": "A leaf on the stalk, from its base on the stalk (the origin): pointing up and right (frame 0) and up and left (frame 1).",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -16,
+        "y": -10,
+        "w": 32,
+        "h": 13
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/snake.stalkLeaf.0.svg",
+        "generated/snake.stalkLeaf.1.svg"
+      ]
+    },
+    {
+      "key": "snake.coil",
+      "purpose": "The climbing snake's coils round the stalk. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -30,
+        "y": -23,
+        "w": 60,
+        "h": 55
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 0,
+          "r": 18
+        }
+      ],
+      "frames": [
+        "generated/snake.coil.svg"
+      ]
+    },
+    {
+      "key": "snake.head",
+      "purpose": "Its neck and head, pointing up (in the coil's coordinates); flipped to point down.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -28,
+        "y": -31,
+        "w": 52,
+        "h": 36
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/snake.head.svg"
+      ]
+    },
+    {
+      "key": "bird.red.body",
+      "purpose": "The red bird, facing +x: tail, body, belly, head, beak and eye. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -23,
+        "y": -13,
+        "w": 46,
+        "h": 24
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 0,
+          "r": 16
+        }
+      ],
+      "frames": [
+        "generated/bird.red.body.svg"
+      ]
+    },
+    {
+      "key": "bird.red.wing",
+      "purpose": "The red bird's wing (in the body's coordinates), in 33 frames from all the way down to all the way up.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -9,
+        "y": -18,
+        "w": 14,
+        "h": 30
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/bird.red.wing.0.svg",
+        "generated/bird.red.wing.1.svg",
+        "generated/bird.red.wing.2.svg",
+        "generated/bird.red.wing.3.svg",
+        "generated/bird.red.wing.4.svg",
+        "generated/bird.red.wing.5.svg",
+        "generated/bird.red.wing.6.svg",
+        "generated/bird.red.wing.7.svg",
+        "generated/bird.red.wing.8.svg",
+        "generated/bird.red.wing.9.svg",
+        "generated/bird.red.wing.10.svg",
+        "generated/bird.red.wing.11.svg",
+        "generated/bird.red.wing.12.svg",
+        "generated/bird.red.wing.13.svg",
+        "generated/bird.red.wing.14.svg",
+        "generated/bird.red.wing.15.svg",
+        "generated/bird.red.wing.16.svg",
+        "generated/bird.red.wing.17.svg",
+        "generated/bird.red.wing.18.svg",
+        "generated/bird.red.wing.19.svg",
+        "generated/bird.red.wing.20.svg",
+        "generated/bird.red.wing.21.svg",
+        "generated/bird.red.wing.22.svg",
+        "generated/bird.red.wing.23.svg",
+        "generated/bird.red.wing.24.svg",
+        "generated/bird.red.wing.25.svg",
+        "generated/bird.red.wing.26.svg",
+        "generated/bird.red.wing.27.svg",
+        "generated/bird.red.wing.28.svg",
+        "generated/bird.red.wing.29.svg",
+        "generated/bird.red.wing.30.svg",
+        "generated/bird.red.wing.31.svg",
+        "generated/bird.red.wing.32.svg"
+      ]
+    },
+    {
+      "key": "bird.blue.body",
+      "purpose": "The blue bird, facing +x: tail, body, belly, crest, head, beak and eye. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -24,
+        "y": -19,
+        "w": 47,
+        "h": 30
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 0,
+          "r": 16
+        }
+      ],
+      "frames": [
+        "generated/bird.blue.body.svg"
+      ]
+    },
+    {
+      "key": "bird.blue.wing",
+      "purpose": "The blue bird's wing (in the body's coordinates), in 33 frames from all the way down to all the way up.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -10,
+        "y": -20,
+        "w": 16,
+        "h": 34
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/bird.blue.wing.0.svg",
+        "generated/bird.blue.wing.1.svg",
+        "generated/bird.blue.wing.2.svg",
+        "generated/bird.blue.wing.3.svg",
+        "generated/bird.blue.wing.4.svg",
+        "generated/bird.blue.wing.5.svg",
+        "generated/bird.blue.wing.6.svg",
+        "generated/bird.blue.wing.7.svg",
+        "generated/bird.blue.wing.8.svg",
+        "generated/bird.blue.wing.9.svg",
+        "generated/bird.blue.wing.10.svg",
+        "generated/bird.blue.wing.11.svg",
+        "generated/bird.blue.wing.12.svg",
+        "generated/bird.blue.wing.13.svg",
+        "generated/bird.blue.wing.14.svg",
+        "generated/bird.blue.wing.15.svg",
+        "generated/bird.blue.wing.16.svg",
+        "generated/bird.blue.wing.17.svg",
+        "generated/bird.blue.wing.18.svg",
+        "generated/bird.blue.wing.19.svg",
+        "generated/bird.blue.wing.20.svg",
+        "generated/bird.blue.wing.21.svg",
+        "generated/bird.blue.wing.22.svg",
+        "generated/bird.blue.wing.23.svg",
+        "generated/bird.blue.wing.24.svg",
+        "generated/bird.blue.wing.25.svg",
+        "generated/bird.blue.wing.26.svg",
+        "generated/bird.blue.wing.27.svg",
+        "generated/bird.blue.wing.28.svg",
+        "generated/bird.blue.wing.29.svg",
+        "generated/bird.blue.wing.30.svg",
+        "generated/bird.blue.wing.31.svg",
+        "generated/bird.blue.wing.32.svg"
+      ]
+    },
+    {
+      "key": "bird.purple.body",
+      "purpose": "The purple bird, facing +x: tail, body, belly, crest, head, beak and eye. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -25,
+        "y": -18,
+        "w": 48,
+        "h": 29
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 0,
+          "r": 16
+        }
+      ],
+      "frames": [
+        "generated/bird.purple.body.svg"
+      ]
+    },
+    {
+      "key": "bird.purple.wing",
+      "purpose": "The purple bird's wing (in the body's coordinates), in 33 frames from all the way down to all the way up.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -10,
+        "y": -19,
+        "w": 16,
+        "h": 32
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/bird.purple.wing.0.svg",
+        "generated/bird.purple.wing.1.svg",
+        "generated/bird.purple.wing.2.svg",
+        "generated/bird.purple.wing.3.svg",
+        "generated/bird.purple.wing.4.svg",
+        "generated/bird.purple.wing.5.svg",
+        "generated/bird.purple.wing.6.svg",
+        "generated/bird.purple.wing.7.svg",
+        "generated/bird.purple.wing.8.svg",
+        "generated/bird.purple.wing.9.svg",
+        "generated/bird.purple.wing.10.svg",
+        "generated/bird.purple.wing.11.svg",
+        "generated/bird.purple.wing.12.svg",
+        "generated/bird.purple.wing.13.svg",
+        "generated/bird.purple.wing.14.svg",
+        "generated/bird.purple.wing.15.svg",
+        "generated/bird.purple.wing.16.svg",
+        "generated/bird.purple.wing.17.svg",
+        "generated/bird.purple.wing.18.svg",
+        "generated/bird.purple.wing.19.svg",
+        "generated/bird.purple.wing.20.svg",
+        "generated/bird.purple.wing.21.svg",
+        "generated/bird.purple.wing.22.svg",
+        "generated/bird.purple.wing.23.svg",
+        "generated/bird.purple.wing.24.svg",
+        "generated/bird.purple.wing.25.svg",
+        "generated/bird.purple.wing.26.svg",
+        "generated/bird.purple.wing.27.svg",
+        "generated/bird.purple.wing.28.svg",
+        "generated/bird.purple.wing.29.svg",
+        "generated/bird.purple.wing.30.svg",
+        "generated/bird.purple.wing.31.svg",
+        "generated/bird.purple.wing.32.svg"
+      ]
+    },
+    {
+      "key": "bat.purple.body",
+      "purpose": "A purple bat flying, facing +x: body, ears, eye and feet. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -19,
+        "y": -15,
+        "w": 39,
+        "h": 25
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 0,
+          "r": 16
+        }
+      ],
+      "frames": [
+        "generated/bat.purple.body.svg"
+      ]
+    },
+    {
+      "key": "bat.purple.wing",
+      "purpose": "The purple bat's wing (in the body's coordinates, behind it), in 41 frames from all the way down to all the way up.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -29,
+        "y": -30,
+        "w": 32,
+        "h": 52
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/bat.purple.wing.0.svg",
+        "generated/bat.purple.wing.1.svg",
+        "generated/bat.purple.wing.2.svg",
+        "generated/bat.purple.wing.3.svg",
+        "generated/bat.purple.wing.4.svg",
+        "generated/bat.purple.wing.5.svg",
+        "generated/bat.purple.wing.6.svg",
+        "generated/bat.purple.wing.7.svg",
+        "generated/bat.purple.wing.8.svg",
+        "generated/bat.purple.wing.9.svg",
+        "generated/bat.purple.wing.10.svg",
+        "generated/bat.purple.wing.11.svg",
+        "generated/bat.purple.wing.12.svg",
+        "generated/bat.purple.wing.13.svg",
+        "generated/bat.purple.wing.14.svg",
+        "generated/bat.purple.wing.15.svg",
+        "generated/bat.purple.wing.16.svg",
+        "generated/bat.purple.wing.17.svg",
+        "generated/bat.purple.wing.18.svg",
+        "generated/bat.purple.wing.19.svg",
+        "generated/bat.purple.wing.20.svg",
+        "generated/bat.purple.wing.21.svg",
+        "generated/bat.purple.wing.22.svg",
+        "generated/bat.purple.wing.23.svg",
+        "generated/bat.purple.wing.24.svg",
+        "generated/bat.purple.wing.25.svg",
+        "generated/bat.purple.wing.26.svg",
+        "generated/bat.purple.wing.27.svg",
+        "generated/bat.purple.wing.28.svg",
+        "generated/bat.purple.wing.29.svg",
+        "generated/bat.purple.wing.30.svg",
+        "generated/bat.purple.wing.31.svg",
+        "generated/bat.purple.wing.32.svg",
+        "generated/bat.purple.wing.33.svg",
+        "generated/bat.purple.wing.34.svg",
+        "generated/bat.purple.wing.35.svg",
+        "generated/bat.purple.wing.36.svg",
+        "generated/bat.purple.wing.37.svg",
+        "generated/bat.purple.wing.38.svg",
+        "generated/bat.purple.wing.39.svg",
+        "generated/bat.purple.wing.40.svg"
+      ]
+    },
+    {
+      "key": "bat.brown.body",
+      "purpose": "A brown bat flying, facing +x: body, ears, eye and feet. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -19,
+        "y": -17,
+        "w": 39,
+        "h": 27
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 0,
+          "r": 16
+        }
+      ],
+      "frames": [
+        "generated/bat.brown.body.svg"
+      ]
+    },
+    {
+      "key": "bat.brown.wing",
+      "purpose": "The brown bat's wing (in the body's coordinates, behind it), in 41 frames from all the way down to all the way up.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -27,
+        "y": -28,
+        "w": 30,
+        "h": 49
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/bat.brown.wing.0.svg",
+        "generated/bat.brown.wing.1.svg",
+        "generated/bat.brown.wing.2.svg",
+        "generated/bat.brown.wing.3.svg",
+        "generated/bat.brown.wing.4.svg",
+        "generated/bat.brown.wing.5.svg",
+        "generated/bat.brown.wing.6.svg",
+        "generated/bat.brown.wing.7.svg",
+        "generated/bat.brown.wing.8.svg",
+        "generated/bat.brown.wing.9.svg",
+        "generated/bat.brown.wing.10.svg",
+        "generated/bat.brown.wing.11.svg",
+        "generated/bat.brown.wing.12.svg",
+        "generated/bat.brown.wing.13.svg",
+        "generated/bat.brown.wing.14.svg",
+        "generated/bat.brown.wing.15.svg",
+        "generated/bat.brown.wing.16.svg",
+        "generated/bat.brown.wing.17.svg",
+        "generated/bat.brown.wing.18.svg",
+        "generated/bat.brown.wing.19.svg",
+        "generated/bat.brown.wing.20.svg",
+        "generated/bat.brown.wing.21.svg",
+        "generated/bat.brown.wing.22.svg",
+        "generated/bat.brown.wing.23.svg",
+        "generated/bat.brown.wing.24.svg",
+        "generated/bat.brown.wing.25.svg",
+        "generated/bat.brown.wing.26.svg",
+        "generated/bat.brown.wing.27.svg",
+        "generated/bat.brown.wing.28.svg",
+        "generated/bat.brown.wing.29.svg",
+        "generated/bat.brown.wing.30.svg",
+        "generated/bat.brown.wing.31.svg",
+        "generated/bat.brown.wing.32.svg",
+        "generated/bat.brown.wing.33.svg",
+        "generated/bat.brown.wing.34.svg",
+        "generated/bat.brown.wing.35.svg",
+        "generated/bat.brown.wing.36.svg",
+        "generated/bat.brown.wing.37.svg",
+        "generated/bat.brown.wing.38.svg",
+        "generated/bat.brown.wing.39.svg",
+        "generated/bat.brown.wing.40.svg"
+      ]
+    },
+    {
+      "key": "bat.grey.body",
+      "purpose": "A grey bat flying, facing +x: body, ears, eye and feet. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -19,
+        "y": -14,
+        "w": 39,
+        "h": 24
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 0,
+          "r": 16
+        }
+      ],
+      "frames": [
+        "generated/bat.grey.body.svg"
+      ]
+    },
+    {
+      "key": "bat.grey.wing",
+      "purpose": "The grey bat's wing (in the body's coordinates, behind it), in 41 frames from all the way down to all the way up.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -32,
+        "y": -33,
+        "w": 35,
+        "h": 56
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/bat.grey.wing.0.svg",
+        "generated/bat.grey.wing.1.svg",
+        "generated/bat.grey.wing.2.svg",
+        "generated/bat.grey.wing.3.svg",
+        "generated/bat.grey.wing.4.svg",
+        "generated/bat.grey.wing.5.svg",
+        "generated/bat.grey.wing.6.svg",
+        "generated/bat.grey.wing.7.svg",
+        "generated/bat.grey.wing.8.svg",
+        "generated/bat.grey.wing.9.svg",
+        "generated/bat.grey.wing.10.svg",
+        "generated/bat.grey.wing.11.svg",
+        "generated/bat.grey.wing.12.svg",
+        "generated/bat.grey.wing.13.svg",
+        "generated/bat.grey.wing.14.svg",
+        "generated/bat.grey.wing.15.svg",
+        "generated/bat.grey.wing.16.svg",
+        "generated/bat.grey.wing.17.svg",
+        "generated/bat.grey.wing.18.svg",
+        "generated/bat.grey.wing.19.svg",
+        "generated/bat.grey.wing.20.svg",
+        "generated/bat.grey.wing.21.svg",
+        "generated/bat.grey.wing.22.svg",
+        "generated/bat.grey.wing.23.svg",
+        "generated/bat.grey.wing.24.svg",
+        "generated/bat.grey.wing.25.svg",
+        "generated/bat.grey.wing.26.svg",
+        "generated/bat.grey.wing.27.svg",
+        "generated/bat.grey.wing.28.svg",
+        "generated/bat.grey.wing.29.svg",
+        "generated/bat.grey.wing.30.svg",
+        "generated/bat.grey.wing.31.svg",
+        "generated/bat.grey.wing.32.svg",
+        "generated/bat.grey.wing.33.svg",
+        "generated/bat.grey.wing.34.svg",
+        "generated/bat.grey.wing.35.svg",
+        "generated/bat.grey.wing.36.svg",
+        "generated/bat.grey.wing.37.svg",
+        "generated/bat.grey.wing.38.svg",
+        "generated/bat.grey.wing.39.svg",
+        "generated/bat.grey.wing.40.svg"
+      ]
+    },
+    {
+      "key": "bat.black.body",
+      "purpose": "A black bat flying, facing +x: body, ears, eye and feet. Its origin is the hitbox centre.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -19,
+        "y": -16,
+        "w": 39,
+        "h": 26
+      },
+      "scale": 1.3,
+      "tint": false,
+      "hitbox": [
+        {
+          "kind": "circle",
+          "dx": 0,
+          "dy": 0,
+          "r": 16
+        }
+      ],
+      "frames": [
+        "generated/bat.black.body.svg"
+      ]
+    },
+    {
+      "key": "bat.black.wing",
+      "purpose": "The black bat's wing (in the body's coordinates, behind it), in 41 frames from all the way down to all the way up.",
+      "kind": "sprite",
+      "set": "main",
+      "box": {
+        "x": -26,
+        "y": -27,
+        "w": 29,
+        "h": 48
+      },
+      "scale": 1.3,
+      "tint": false,
+      "frames": [
+        "generated/bat.black.wing.0.svg",
+        "generated/bat.black.wing.1.svg",
+        "generated/bat.black.wing.2.svg",
+        "generated/bat.black.wing.3.svg",
+        "generated/bat.black.wing.4.svg",
+        "generated/bat.black.wing.5.svg",
+        "generated/bat.black.wing.6.svg",
+        "generated/bat.black.wing.7.svg",
+        "generated/bat.black.wing.8.svg",
+        "generated/bat.black.wing.9.svg",
+        "generated/bat.black.wing.10.svg",
+        "generated/bat.black.wing.11.svg",
+        "generated/bat.black.wing.12.svg",
+        "generated/bat.black.wing.13.svg",
+        "generated/bat.black.wing.14.svg",
+        "generated/bat.black.wing.15.svg",
+        "generated/bat.black.wing.16.svg",
+        "generated/bat.black.wing.17.svg",
+        "generated/bat.black.wing.18.svg",
+        "generated/bat.black.wing.19.svg",
+        "generated/bat.black.wing.20.svg",
+        "generated/bat.black.wing.21.svg",
+        "generated/bat.black.wing.22.svg",
+        "generated/bat.black.wing.23.svg",
+        "generated/bat.black.wing.24.svg",
+        "generated/bat.black.wing.25.svg",
+        "generated/bat.black.wing.26.svg",
+        "generated/bat.black.wing.27.svg",
+        "generated/bat.black.wing.28.svg",
+        "generated/bat.black.wing.29.svg",
+        "generated/bat.black.wing.30.svg",
+        "generated/bat.black.wing.31.svg",
+        "generated/bat.black.wing.32.svg",
+        "generated/bat.black.wing.33.svg",
+        "generated/bat.black.wing.34.svg",
+        "generated/bat.black.wing.35.svg",
+        "generated/bat.black.wing.36.svg",
+        "generated/bat.black.wing.37.svg",
+        "generated/bat.black.wing.38.svg",
+        "generated/bat.black.wing.39.svg",
+        "generated/bat.black.wing.40.svg"
+      ]
+    }
+  ]
+}

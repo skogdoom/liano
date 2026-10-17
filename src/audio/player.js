@@ -6,6 +6,9 @@
 // suspended while the game is paused or muted. A context that then does not come back
 // (the browser or the audio device left it stuck after a window switch) is replaced at
 // the next gesture.
+//
+// The game's manager adapter (audio/manager.js) uses Phaser's context and output.
+// The defaults also support standalone and offline synthesis.
 
 const MASTER_GAIN = 0.6;
 const STOP_FADE = 0.05; // s
@@ -14,12 +17,29 @@ const STOP_FADE = 0.05; // s
 const STUCK_MS = 1500;
 
 export class SoundPlayer {
+  // `createContext()` gives the context to play on (at the first gesture, and again for
+  // each rebuild); `output(ctx)` the node the sounds go to; `closeContext(ctx)` closes a
+  // context replaced by a rebuild. `applyMute(muted)`, if given, mutes somewhere else
+  // than the player's own gain; `onRun(run)` hears, at every sync, whether the context
+  // should be running.
   constructor({
     createContext = () => new (globalThis.AudioContext || globalThis.webkitAudioContext)(),
     now = () => performance.now(),
+    output = (ctx) => ctx.destination,
+    closeContext = (ctx) => ctx.close?.()?.catch?.(() => {}),
+    applyMute = null,
+    onRun = () => {},
+    noiseFor = whiteNoise,
+    bufferFor = () => null,
   } = {}) {
     this.createContext = createContext;
     this.now = now;
+    this.output = output;
+    this.closeContext = closeContext;
+    this.applyMute = applyMute;
+    this.onRun = onRun;
+    this.noiseFor = noiseFor;
+    this.bufferFor = bufferFor;
     this.ctx = null;
     this.rebuilds = 0;
     this.played = 0;
@@ -44,12 +64,13 @@ export class SoundPlayer {
 
   #create() {
     const ctx = this.createContext();
+    if (!ctx) return; // Phaser can have no audio manager on this browser.
     this.master = ctx.createGain();
-    this.master.gain.value = this.muted ? 0 : MASTER_GAIN;
     const compressor = ctx.createDynamicsCompressor();
     this.master.connect(compressor);
-    compressor.connect(ctx.destination);
-    this.noise = whiteNoise(ctx);
+    compressor.connect(this.output(ctx));
+    this.#applyMute();
+    this.noise = this.noiseFor(ctx);
     this.ctx = ctx;
     this.stuckSince = null;
     this.lastTime = null;
@@ -63,7 +84,7 @@ export class SoundPlayer {
     const old = this.ctx;
     old.onstatechange = null;
     try {
-      old.close?.()?.catch?.(() => {});
+      this.closeContext(old);
     } catch {
       // Already closed.
     }
@@ -90,9 +111,16 @@ export class SoundPlayer {
 
   setMuted(muted) {
     this.muted = muted;
-    if (this.master) this.master.gain.value = muted ? 0 : MASTER_GAIN;
+    if (this.master) this.#applyMute();
     if (muted) this.stopAll();
     this.#sync();
+  }
+
+  #applyMute() {
+    if (this.applyMute) {
+      this.master.gain.value = MASTER_GAIN;
+      this.applyMute(this.muted);
+    } else this.master.gain.value = this.muted ? 0 : MASTER_GAIN;
   }
 
   // Called every frame, so a resume the browser refused is tried again.
@@ -107,21 +135,11 @@ export class SoundPlayer {
     if (!ctx || this.muted || this.paused) return false;
     const t0 = ctx.currentTime;
     const sound = { name: recipe.name, outputs: [], sources: [] };
-    let running = recipe.voices.length;
-    for (const voice of recipe.voices) {
-      const out = ctx.createGain();
-      out.gain.value = 0;
-      schedule(out.gain, voice.gain, t0);
-      out.connect(this.master);
-
-      const source = this.#source(voice.source, t0);
-      let node = source;
-      for (const f of voice.filters ?? []) {
-        const filter = biquad(ctx, f.type, f.q, f.freq, t0);
-        node.connect(filter);
-        node = filter;
-      }
-      node.connect(out);
+    const buffer = this.bufferFor(recipe);
+    const voices = buffer ? [{ source: { kind: 'buffer', buffer }, gain: [{ t: 0, v: 1, ramp: 'set' }] }] : recipe.voices;
+    let running = voices.length;
+    for (const voice of voices) {
+      const { out, source } = recipeVoice(ctx, voice, this.master, t0, this.noise);
 
       source.start(t0);
       source.stop(t0 + recipe.duration);
@@ -151,21 +169,6 @@ export class SoundPlayer {
     for (const s of sound.sources) stopSafely(s, now + STOP_FADE);
   }
 
-  // Oscillator or looping noise.
-  #source(spec, t0) {
-    const { ctx } = this;
-    if (spec.kind === 'noise') {
-      const noise = ctx.createBufferSource();
-      noise.buffer = this.noise;
-      noise.loop = true;
-      return noise;
-    }
-    const osc = ctx.createOscillator();
-    osc.type = spec.wave;
-    schedule(osc.frequency, spec.freq, t0);
-    return osc;
-  }
-
   // Whether the context has been stuck for STUCK_MS while it should be running: not in the
   // 'running' state, or running with its clock standing still.
   #stuck(ctx) {
@@ -187,6 +190,7 @@ export class SoundPlayer {
     const { ctx } = this;
     if (!ctx) return;
     const run = !this.muted && !this.paused;
+    this.onRun(run);
     if (!run) {
       this.stuckSince = null;
       this.lastTime = null;
@@ -229,9 +233,35 @@ function biquad(ctx, type, q, freq, t0) {
   return filter;
 }
 
-function whiteNoise(ctx) {
+export function whiteNoise(ctx) {
   const buffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   return buffer;
+}
+
+// The dry recipe graph, shared by live synthesis and Phaser's startup rendering.
+// Master gain and compression stay live, so overlapping cached sounds mix as before.
+export function recipeVoice(ctx, voice, destination, t0, noise) {
+  const out = ctx.createGain();
+  out.gain.value = 0;
+  schedule(out.gain, voice.gain, t0);
+  out.connect(destination);
+  const spec = voice.source;
+  const source = spec.kind === 'osc' ? ctx.createOscillator() : ctx.createBufferSource();
+  if (spec.kind === 'osc') {
+    source.type = spec.wave;
+    schedule(source.frequency, spec.freq, t0);
+  } else {
+    source.buffer = spec.kind === 'noise' ? noise : spec.buffer;
+    source.loop = spec.kind === 'noise';
+  }
+  let node = source;
+  for (const f of voice.filters ?? []) {
+    const filter = biquad(ctx, f.type, f.q, f.freq, t0);
+    node.connect(filter);
+    node = filter;
+  }
+  node.connect(out);
+  return { out, source };
 }

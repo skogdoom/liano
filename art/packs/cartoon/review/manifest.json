@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "status": "style-approved-production-review",
+  "image": "review/style-study.png",
+  "references": [
+    "docs/cover_day.png",
+    "docs/cover_night.png"
+  ],
+  "classicRigBounds": {
+    "hanging": {
+      "x": -44.92307302355766,
+      "y": -32.93807905554771,
+      "w": 73.90914232883092,
+      "h": 75.4218316936493
+    },
+    "flying": {
+      "x": -44.74667301774025,
+      "y": -31.104308777474444,
+      "w": 78.24981305314161,
+      "h": 72.65531291904358
+    }
+  },
+  "samples": [
+    {
+      "id": "hanging",
+      "title": "Hanging monkey",
+      "source": {
+        "x": 36,
+        "y": 10,
+        "w": 361,
+        "h": 332
+      },
+      "note": "Review the gripping hand: opposing thumb and curled fingers around the vine."
+    },
+    {
+      "id": "flying",
+      "title": "Flying monkey",
+      "source": {
+        "x": 408,
+        "y": 50,
+        "w": 394,
+        "h": 292
+      },
+      "note": "Review the silhouette: two visible arms, two legs and a curled tail."
+    },
+    {
+      "id": "grip",
+      "title": "Gripping-hand detail",
+      "source": {
+        "x": 247,
+        "y": 20,
+        "w": 66,
+        "h": 61
+      },
+      "note": "Check which side of the vine the curled fingers and thumb grip."
+    },
+    {
+      "id": "far-arm",
+      "title": "Restored arm and hand detail",
+      "source": {
+        "x": 518,
+        "y": 50,
+        "w": 148,
+        "h": 151
+      },
+      "note": "Check the restored arm and complete ring finger: four separated fingers and an opposing thumb."
+    },
+    {
+      "id": "branch",
+      "title": "Liana and panther on a branch",
+      "source": {
+        "x": 806,
+        "y": 0,
+        "w": 716,
+        "h": 344
+      },
+      "note": "Painted foliage, vine material and a readable creature silhouette."
+    },
+    {
+      "id": "day",
+      "title": "Day scenery",
+      "source": {
+        "x": 14,
+        "y": 352,
+        "w": 740,
+        "h": 278
+      },
+      "note": "Warm sunlight, layered blue-green distance and broad cartoon foliage."
+    },
+    {
+      "id": "night",
+      "title": "Night scenery",
+      "source": {
+        "x": 782,
+        "y": 352,
+        "w": 740,
+        "h": 278
+      },
+      "note": "Same jungle composition with cool moonlight and readable contrast."
+    },
+    {
+      "id": "temple",
+      "title": "Temple",
+      "source": {
+        "x": 24,
+        "y": 640,
+        "w": 741,
+        "h": 373
+      },
+      "note": "Simple carved stone, greenery and warm torch light."
+    },
+    {
+      "id": "menu",
+      "title": "Menu treatment",
+      "source": {
+        "x": 788,
+        "y": 640,
+        "w": 732,
+        "h": 375
+      },
+      "note": "Stone wordmark and leafy panel; menu wording stays live text."
+    }
+  ],
+  "grip": {
+    "x": 281,
+    "y": 49
+  },
+  "transparentChecks": [
+    {
+      "x": 200,
+      "y": 50
+    },
+    {
+      "x": 400,
+      "y": 300
+    },
+    {
+      "x": 690,
+      "y": 80
+    },
+    {
+      "x": 70,
+      "y": 680
+    },
+    {
+      "x": 780,
+      "y": 800
+    },
+    {
+      "x": 400,
+      "y": 190
+    },
+    {
+      "x": 650,
+      "y": 40
+    }
+  ]
+}

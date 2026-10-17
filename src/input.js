@@ -13,7 +13,7 @@ export function isFreshSpacePress(event) {
 
 // `keyTarget` receives keydown (the window); `pointerTarget` (the canvas) receives
 // pointerdown. `initialType` is the input type assumed before any input: 'keyboard',
-// 'mouse' or 'touch'. `accepts()` is asked when a press happens; a press it rejects
+// 'mouse' or 'touch'. `accepts(role)` is asked when a press happens; a press it rejects
 // (e.g. while paused) is dropped then, not when the loop gets round to it.
 // `intercept(event)` sees each pointerdown first; returning true swallows it (used by
 // on-screen buttons). `keys` maps roles to key codes.
@@ -39,7 +39,7 @@ export function createInput(
       return;
     }
     lastType = 'keyboard';
-    if (!accepts()) return;
+    if (!accepts(role)) return;
     if (role === 'mode') modePick = keys.mode.indexOf(event.code) + 1;
     else pending.add(role);
   };
@@ -50,7 +50,7 @@ export function createInput(
     event.preventDefault(); // no text selection, focus changes or emulated mouse events
     lastType = event.pointerType === 'mouse' ? 'mouse' : 'touch';
     if (intercept(event)) return;
-    if (accepts()) pending.add('primary');
+    if (accepts('primary')) pending.add('primary');
   };
 
   const consumeToggle = (role) => {

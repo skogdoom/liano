@@ -1,0 +1,92 @@
+{
+  "sourceCommit": "7abe519c71fede8796601be6146ee22cf5e98b48",
+  "approvalDate": "2026-10-16",
+  "approval": "Owner accepted the cartoon appearance after the centered hatchling review.",
+  "renderer": "Phaser 4.2.1 / Chromium 154 / SwiftShader / maxTextures: 1",
+  "version": "3.0.0-dev.9",
+  "atlasScale": 1,
+  "references": [
+    {
+      "id": "world.monkeys",
+      "width": 640,
+      "height": 220,
+      "sha256": "7f79d8929d3968b9d6742effb07fd84559add6a0d93d561e0dd8f6b1d9cb3540"
+    },
+    {
+      "id": "world.shadow",
+      "width": 560,
+      "height": 470,
+      "sha256": "9c5827d9649fa37732b0b1f5c90132f09232ea9428f2831558b8dc815128ef07"
+    },
+    {
+      "id": "world.moving.snake",
+      "width": 1080,
+      "height": 626,
+      "sha256": "6ffac63f937a085f744f97f1b1801f579ac658d02b89d6fb99a35db3c1c0eaed"
+    },
+    {
+      "id": "world.decoration.nest",
+      "width": 1200,
+      "height": 626,
+      "sha256": "4fe6399e8f256174de68d2dc9ced98e13e2fa2260a3d165aec6f2febe4c10b03"
+    },
+    {
+      "id": "scene.day",
+      "width": 1280,
+      "height": 720,
+      "sha256": "63cba9d77b770363006e341c957467c7968857347720ea7a5fc4037d6d466c6a"
+    },
+    {
+      "id": "scene.night",
+      "width": 1280,
+      "height": 720,
+      "sha256": "3cbb952ef308e8406ff0a3692c9c63a1598cdb2db4b2ecba020503592aac7ea3"
+    },
+    {
+      "id": "scene.temple.3.dusk",
+      "width": 1280,
+      "height": 720,
+      "sha256": "d0670fc23e013a972ae62e9ccb0c0a77d88c4e14690bd3b72373355a0f01ea75"
+    },
+    {
+      "id": "ui.hud.shared",
+      "width": 640,
+      "height": 160,
+      "sha256": "2c33847157bbc158fb2aa8791a37ce3a8bcdf0fbb137f918f1318098bd8b9c8b"
+    },
+    {
+      "id": "ui.results.2p",
+      "width": 560,
+      "height": 420,
+      "sha256": "9b428b164d0e12b1563023a76887e64fa7f095ff3993dc77fa7b84d482cf3a81"
+    },
+    {
+      "id": "ui.menu.title.portrait",
+      "width": 375,
+      "height": 600,
+      "menu": "title",
+      "sha256": "ba12b665d005cb0d8569c9c8f726dc651f9347cc95d0ae7e5493c66da046fc6f"
+    },
+    {
+      "id": "ui.menu.config.portrait",
+      "width": 375,
+      "height": 600,
+      "menu": "config",
+      "sha256": "8a37dc9eaffababccb56411262f041a6fdf028963b01529bba4c4231079d212d"
+    },
+    {
+      "id": "ui.menu.title.landscape",
+      "width": 812,
+      "height": 250,
+      "menu": "title",
+      "sha256": "6bd3ca55a8f51c033b3ef7e06f0989048404a3a2e026d6a5847c9260f614aabc"
+    },
+    {
+      "id": "ui.menu.config.landscape",
+      "width": 812,
+      "height": 250,
+      "menu": "config",
+      "sha256": "c9a336ba1af4b41ebff3aea924fdf49397aeb5797976fd810d1e1e1b4d855d66"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { bannerAlpha, STAGE_NAMES } from '../src/render/overlays.js';
-import { Background, tintBetween, STAGE_TINTS } from '../src/render/background.js';
+import { bannerAlpha, STAGE_NAMES } from '../src/views/overlays.js';
+import { StageTint, tintBetween, STAGE_TINTS } from '../src/views/backdrop.js';
 import { STAGES } from '../src/config.js';
 import { TimeOfDay } from '../src/sim/stages.js';
 
@@ -26,12 +26,12 @@ describe('stage banner and tint', () => {
   });
 
   it('starts the sky over after dawn, easing to the day tint', () => {
-    const background = new Background();
+    const background = new StageTint();
     const world = {};
     const tints = [];
     for (const stage of [4, 5, 6, 9, 10]) {
-      background.setStage(stage, world, 100);
-      tints.push(background.back.tint);
+      background.update(stage, world, 100);
+      tints.push(background.color);
     }
     expect(tints).toEqual([STAGE_TINTS[3], STAGE_TINTS[4], STAGE_TINTS[0], STAGE_TINTS[3], STAGE_TINTS[4]]);
   });

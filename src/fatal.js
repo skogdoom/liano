@@ -7,9 +7,10 @@ export function isOwnError(event, origin) {
   return typeof event.filename === 'string' && event.filename.startsWith(origin);
 }
 
-export function createFatalOverlay(doc, { reload = () => location.reload() } = {}) {
+export function createFatalOverlay(doc, { reload = () => location.reload(), reloadLabel } = {}) {
   const el = doc.getElementById('fatal');
   el.querySelector('button').addEventListener('click', reload);
+  if (reloadLabel) el.querySelector('button').textContent = reloadLabel;
   let shown = false;
   return {
     get shown() {
@@ -19,6 +20,7 @@ export function createFatalOverlay(doc, { reload = () => location.reload() } = {
       if (shown) return;
       shown = true;
       console.error(error);
+      if (error?.name === 'ArtLoadError') el.querySelector('#fatal-message').textContent = error.message;
       el.classList.add('shown');
     },
   };

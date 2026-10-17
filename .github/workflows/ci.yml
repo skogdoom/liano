@@ -1,5 +1,5 @@
-# Tests and builds every pull request and push to master; pushes to master are
-# also published to GitHub Pages (https://skogdoom.github.io/liano/).
+# Tests and builds every pull request and push to master, and runs the browser tests;
+# pushes to master are also published to GitHub Pages (https://skogdoom.github.io/liano/).
 name: CI
 
 on:
@@ -23,6 +23,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: Check the custom art
+        run: npm run art:check
       - run: npm run build
       # The build regenerates the release-window table; it must match the committed one.
       - name: Check the window table is up to date
@@ -33,10 +35,27 @@ jobs:
         with:
           path: dist
 
+  # Smoke tests of the game in Chromium (see playwright.config.js). Separate from the
+  # unit tests, which stay fast and Node-only.
+  browser:
+    name: Browser tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # The build also builds the art (public/art/, not committed) the dev server serves.
+      - run: npm run build
+      - run: npm run test:browser
+
   deploy:
     name: Deploy to GitHub Pages
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-    needs: test
+    needs: [test, browser]
     runs-on: ubuntu-latest
     permissions:
       pages: write

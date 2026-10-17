@@ -4,7 +4,7 @@ import { Game } from '../src/sim/game.js';
 import { Banana } from '../src/sim/banana.js';
 import { Obstacle } from '../src/sim/obstacle.js';
 import { MonkeyState } from '../src/sim/monkey.js';
-import { bananaLine } from '../src/render/hud.js';
+import { bananaLine } from '../src/views/hud.js';
 import { createBanana, createObstacle, hasBanana } from '../src/sim/generator.js';
 import { emptyGapFlights, flightHits } from '../src/sim/feasibility.js';
 import { ENTRY_RADII, LIANA_SPACING, SIM_DT, SWING_PERIOD } from '../src/config.js';

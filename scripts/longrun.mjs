@@ -1,9 +1,18 @@
 // A long-run check of the real game in headless Chromium: a bot plays perfectly (it solves each
 // grab's release window) while the frame loop is fed `frameMs` of game time per frame as fast as it
-// will go, with performance.now() following the game time so Pixi's time-based clean-up runs as in
+// will go, with performance.now() following the game time so resource timing runs as in
 // play. Every `every` game seconds it samples the heap (after a GC every GC_EVERY samples), the
-// frame times (JS side; the renderer runs every RENDER_EVERY-th frame) and counts of what the game
-// and Pixi hold, to see leaks and slowdowns. See PLAN.md, "Performance and hardening".
+// frame times (JS side; the renderer runs every RENDER_EVERY-th frame), the GPU work of the drawn
+// frames (counted at the WebGL calls) and counts of what the game and the renderer hold, to see
+// leaks and slowdowns. See PLAN.md, "Performance and hardening", and PHASER_PLAN.md, M7.
+//
+// The game loop is stopped and stepped by hand: `game.step` on drawn frames,
+// `game.headlessStep` on the others.
+//
+// HITCHES=1 times every frame (use RENDER_EVERY=1) and, at the end, sets those that built the
+// view of an obstacle seen for the first time against the others. MOTION=1 counts the drawn
+// frames, during play, in which neither the camera nor player 1's monkey moved on screen (with
+// frameMs 1000/90, 1000/144: a screen of that rate).
 //
 // Needs `playwright-core` (`npm i --no-save playwright-core`) and a Chromium (set CHROMIUM, default
 // /opt/pw-browsers/chromium), and the dev server running (`npm run dev -- --port 5199`: the game's `window.__liano` hooks are dev-only).
@@ -20,31 +29,65 @@ const page = await (await browser.newContext({ viewport: { width: 640, height: 3
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 await page.goto(process.env.URL ?? 'http://localhost:5199/');
-await page.waitForFunction(() => window.__liano?.game, null, { timeout: 90000 });
+// The Phaser version plays once its main art set is in.
+await page.waitForFunction(() => window.__liano?.platform.world, null, { timeout: 90000 });
 const cdp = await page.context().newCDPSession(page);
 await cdp.send('HeapProfiler.enable');
 await page.waitForTimeout(500);
 
 await page.evaluate(({ keys, every }) => { window.__keys = keys; window.__renderEvery = every; }, { keys: (process.env.KEYS ?? '').split(',').filter(Boolean), every: +(process.env.RENDER_EVERY ?? 8) });
-await page.evaluate(async ({ frameMs, mode }) => {
+await page.evaluate(async ({ frameMs, mode, hitches, motion }) => {
   const L = window.__liano;
   const { app, game } = L;
   const F = await import('/src/sim/feasibility.js');
   const SIM_DT = 1 / 120;
-  app.ticker.stop();
-  const bot = (window.__bot = { t: performance.now(), key: null, target: null, frames: [], render: [], deaths: 0, pressed: 0, renderMs: 0, frameMs });
-  app.ticker.lastTime = bot.t;
-  // Pixi's resource clean-up goes by performance.now(): make it follow the game's fast-forwarded time.
+  const bot = (window.__bot = { t: performance.now(), key: null, target: null, frames: [], render: [], deaths: 0, pressed: 0, renderMs: 0, frameMs, draws: 0, drawn: 0, hitches, motion });
+  // What the first pane draws: its obstacles' views, the camera, player 1's monkey.
+  const pane = () => L.platform.world.panes[0];
+  const obstacleViews = () => pane().obstacles.rigs;
+  const drawnAt = () => {
+    const p = pane();
+    const monkey = p.monkeys[0]?.view;
+    return [p.worldLayer.x, monkey?.x ?? 0, monkey?.y ?? 0];
+  };
+  bot.seen = new Set();
+  bot.frameLog = []; // HITCHES: [ms, a new obstacle view]
+  bot.still = 0; bot.moving = 0; bot.last = null; // MOTION
+  app.loop.sleep();
+  // Make resource timing follow the game's fast-forwarded time.
   const real = performance.now.bind(performance);
   performance.now = () => bot.t;
   // Time the renderer apart from the rest of the frame.
-  const r = app.renderer;
-  const orig = r.render.bind(r);
   bot.renderEvery = +(window.__renderEvery ?? 8); bot.n = 0;
-  r.render = (...a) => { if (bot.n++ % bot.renderEvery) return; const t0 = real(); orig(...a); bot.renderMs += real() - t0; };
-  const press = () => { window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' })); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space' })); bot.pressed++; };
-  for (const code of (window.__keys ?? [])) { window.dispatchEvent(new KeyboardEvent('keydown', { code })); window.dispatchEvent(new KeyboardEvent('keyup', { code })); }
-  if (mode !== 'solo') { window.dispatchEvent(new KeyboardEvent('keydown', { code: mode === 'shared' ? 'Digit2' : 'Digit3' })); }
+  const timed = (render) => (...a) => { const t0 = real(); render(...a); bot.renderMs += real() - t0; bot.drawn++; };
+  const r = app.renderer;
+  app.scene.render = timed(app.scene.render.bind(app.scene));
+  // The GPU work, at the WebGL calls: draw calls, and the textures alive.
+  const gl = r.gl;
+  for (const name of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced']) {
+    const f = gl[name]?.bind(gl);
+    // HITCHES: the draw calls are counted but not made, so software GL cannot swamp the timing.
+    if (f) gl[name] = (...a) => { bot.draws++; return hitches ? undefined : f(...a); };
+  }
+  bot.liveTextures = 0;
+  const create = gl.createTexture.bind(gl);
+  const remove = gl.deleteTexture.bind(gl);
+  gl.createTexture = () => { bot.liveTextures++; return create(); };
+  gl.deleteTexture = (t) => { if (t) bot.liveTextures--; return remove(t); };
+  // HITCHES: the texture uploads in a frame (a text redrawn, a texture made).
+  bot.uploads = 0;
+  for (const name of ['texImage2D', 'texSubImage2D']) {
+    const f = gl[name].bind(gl);
+    gl[name] = (...a) => { bot.uploads++; return f(...a); };
+  }
+  // A key press as the browser gives it (Phaser reads the key code).
+  const KEY_CODES = { Space: 32, KeyA: 65, KeyL: 76, KeyG: 71, KeyH: 72, KeyS: 83, Digit2: 50, Digit3: 51 };
+  const tap = (code) => {
+    for (const type of ['keydown', 'keyup']) window.dispatchEvent(new KeyboardEvent(type, { code, key: code === 'Space' ? ' ' : code.slice(-1).toLowerCase(), keyCode: KEY_CODES[code] }));
+  };
+  const press = () => { tap('Space'); bot.pressed++; };
+  for (const code of (window.__keys ?? [])) tap(code);
+  if (mode !== 'solo') tap(mode === 'shared' ? 'Digit2' : 'Digit3');
   bot.step = () => {
     const w = game.world;
     if (game.state === 'TITLE') press();
@@ -69,44 +112,65 @@ await page.evaluate(async ({ frameMs, mode }) => {
         if (m.gripTime / SIM_DT >= bot.target[p]) {
           const roles = { solo: 'Space', shared: ['KeyA', 'KeyL'][p], split: ['KeyA', 'KeyL'][p] };
           const code = game.players === 1 ? 'Space' : roles[mode];
-          window.dispatchEvent(new KeyboardEvent('keydown', { code })); window.dispatchEvent(new KeyboardEvent('keyup', { code }));
+          tap(code);
           bot.target[p] = Infinity;
         }
       }
     }
   };
-  bot.pump = (n) => {
+  // HITCHES: each frame yields to the event loop, so the obstacle worker delivers as in play.
+  const yieldFrame = () => new Promise((resolve) => setTimeout(resolve, 0));
+  bot.pump = async (n) => {
     const times = [];
     const r0 = bot.renderMs;
+    const d0 = bot.draws;
+    const f0 = bot.drawn;
     for (let i = 0; i < n; i++) {
+      if (bot.hitches) await yieldFrame();
       bot.step();
       bot.t += bot.frameMs;
+      const hanging = game.world.monkey.state === 'HANGING';
+      const u0 = bot.uploads;
       const t0 = real();
-      app.ticker.update(bot.t);
-      times.push(real() - t0);
+      if (bot.n++ % bot.renderEvery) app.headlessStep(bot.t, bot.frameMs);
+      else app.step(bot.t, bot.frameMs);
+      const ms = real() - t0;
+      times.push(ms);
+      if (bot.hitches) {
+        let fresh = false;
+        for (const o of obstacleViews().keys()) if (!bot.seen.has(o)) { bot.seen.add(o); fresh = true; }
+        const grabbed = game.world.monkey.state === 'HANGING' && !hanging;
+        bot.frameLog.push([ms, fresh, grabbed, bot.uploads - u0]);
+      }
+      if (bot.motion && game.state === 'PLAYING' && game.world.monkey.state !== 'DEAD') {
+        const at = drawnAt();
+        if (bot.last && at.every((v, k) => v === bot.last[k])) bot.still++; else bot.moving++;
+        bot.last = at;
+      } else bot.last = null;
     }
     times.sort((a, b) => a - b);
     const q = (p) => times[Math.min(times.length - 1, Math.floor(p * times.length))];
-    return { n, median: q(0.5), p95: q(0.95), p99: q(0.99), max: times[times.length - 1], mean: times.reduce((a, b) => a + b, 0) / times.length, renderMean: (bot.renderMs - r0) / Math.max(1, Math.floor(n / bot.renderEvery)) };
+    const drawn = Math.max(1, bot.drawn - f0);
+    return { n, median: q(0.5), p95: q(0.95), p99: q(0.99), max: times[times.length - 1], mean: times.reduce((a, b) => a + b, 0) / times.length, renderMean: (bot.renderMs - r0) / drawn, drawCalls: (bot.draws - d0) / drawn };
   };
   bot.census = () => {
     let nodes = 0; const types = {};
-    const walk = (c) => { nodes++; const n = c.constructor.name; types[n] = (types[n] ?? 0) + 1; for (const ch of c.children ?? []) walk(ch); };
-    walk(app.stage);
+    const walk = (c) => { nodes++; const n = c.constructor.name; types[n] = (types[n] ?? 0) + 1; for (const ch of c.list ?? []) walk(ch); };
+    for (const scene of app.scene.getScenes(true)) for (const o of scene.children.list) walk(o);
     const w = game.world;
-    const v = L.views.panes[0];
-    const gc = r.graphicsContext;
+    const p = pane();
+    const counts = { obstacleViews: p.obstacles.rigs.size, bananaViews: p.bananas.entries.size,
+      textures: app.textures.getTextureKeys().length };
     return {
       nodes, types,
       lianas: w.lianas.size, obstacles: w.obstacles.size, bananas: w.bananas.size,
       taken: w.takenBananas.size, bananaGaps: w.bananaGaps.size, scored: w.scoredGapsBy[0].size,
-      obstacleViews: v.obstacleViews.views.size, bananaViews: v.bananaViews.views.size,
-      gpuContexts: gc?._gpuContextHash ? Object.keys(gc._gpuContextHash).length : null,
-      textures: r.texture?.managedTextures?.length ?? null,
+      ...counts,
+      glTextures: bot.liveTextures,
       score: game.score, stage: game.stage, liana: w.monkey.liana?.index ?? null,
     };
   };
-}, { frameMs: +frameMs, mode });
+}, { frameMs: +frameMs, mode, hitches: !!process.env.HITCHES, motion: !!process.env.MOTION });
 
 const chunkFrames = Math.round((+every * 1000) / +frameMs);
 const total = Math.round((+minutes * 60 * 1000) / +frameMs);
@@ -121,8 +185,32 @@ for (let done = 0; done < total; done += chunkFrames) {
   const deaths = await page.evaluate(() => window.__bot.deaths);
   const row = { gameSec: Math.round(((done + chunkFrames) * +frameMs) / 1000), wallSec: Math.round((Date.now() - started) / 1000), ...stats, heapUsed: heap.used, heapTotal: heap.total, deaths, ...census };
   rows.push(row);
-  console.log(JSON.stringify({ gameSec: row.gameSec, wall: row.wallSec, med: +row.median.toFixed(1), p95: +row.p95.toFixed(1), max: +row.max.toFixed(0), render: +row.renderMean.toFixed(1), heap: +row.heapUsed.toFixed(1), nodes: row.nodes, score: row.score, deaths, taken: row.taken, ov: row.obstacleViews, bv: row.bananaViews, gpu: row.gpuContexts, tex: row.textures }));
+  console.log(JSON.stringify({ gameSec: row.gameSec, wall: row.wallSec, med: +row.median.toFixed(1), p95: +row.p95.toFixed(1), max: +row.max.toFixed(0), render: +row.renderMean.toFixed(1), draws: +row.drawCalls.toFixed(0), heap: +row.heapUsed.toFixed(1), nodes: row.nodes, score: row.score, deaths, taken: row.taken, ov: row.obstacleViews, bv: row.bananaViews, gpu: row.gpuContexts, tex: row.textures, glTex: row.glTextures }));
   writeFileSync(outFile, JSON.stringify(rows));
 }
+const summary = await page.evaluate(() => {
+  const bot = window.__bot;
+  const out = {};
+  if (bot.hitches) {
+    const stats = (list) => {
+      const t = list.map(([ms]) => ms).sort((a, b) => a - b);
+      const q = (p) => +(t[Math.min(t.length - 1, Math.floor(p * t.length))] ?? 0).toFixed(1);
+      return { frames: t.length, median: q(0.5), p99: q(0.99), max: q(1), over8: t.filter((ms) => ms > 8).length, over16: t.filter((ms) => ms > 16).length };
+    };
+    out.newView = stats(bot.frameLog.filter(([, fresh]) => fresh));
+    out.others = stats(bot.frameLog.filter(([, fresh]) => !fresh));
+    out.grab = stats(bot.frameLog.filter(([, , grabbed]) => grabbed));
+    out.upload = stats(bot.frameLog.filter(([, , , uploads]) => uploads > 0));
+    out.plain = stats(bot.frameLog.filter(([, fresh, grabbed, uploads]) => !fresh && !grabbed && !uploads));
+    // Frames just after a grab (the next 1..8), in case the cost lands there.
+    const after = [];
+    bot.frameLog.forEach(([, , grabbed], i) => { if (grabbed) for (let k = 1; k <= 8; k++) if (bot.frameLog[i + k]) after.push(bot.frameLog[i + k]); });
+    out.afterGrab = stats(after);
+    out.uploadsAtGrab = bot.frameLog.filter(([, , grabbed]) => grabbed).reduce((a, [, , , u]) => a + u, 0);
+  }
+  if (bot.motion) out.motion = { still: bot.still, moving: bot.moving, share: +(bot.still / Math.max(1, bot.still + bot.moving)).toFixed(4) };
+  return out;
+});
+if (Object.keys(summary).length) console.log('summary', JSON.stringify(summary));
 console.log('errors', errors);
 await browser.close();

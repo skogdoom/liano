@@ -1,24 +1,36 @@
 {
   "name": "liano",
+  "description": "A one-button jungle swinging game built with Phaser, with classic and cartoon art packs.",
   "private": true,
-  "version": "2.3.0-dev.0",
+  "version": "3.0.0-dev.9",
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "predev": "npm run art:build",
     "dev": "vite",
+    "predev:host": "npm run art:build",
     "dev:host": "vite --host",
     "icons": "node scripts/make-icons.mjs",
     "windows": "node scripts/build-windows.mjs",
-    "prebuild": "node scripts/build-windows.mjs",
+    "art": "node --import ./scripts/lib/json.mjs scripts/art.mjs",
+    "art:build": "node scripts/build-art.mjs",
+    "art:check": "node scripts/art-check.mjs",
+    "art:cartoon:inventory": "node scripts/cartoon-inventory.mjs",
+    "art:cartoon:sources": "node scripts/cartoon-sources.mjs",
+    "art:cartoon:check": "node scripts/cartoon-inventory.mjs --check",
+    "prebuild": "node scripts/build-windows.mjs && npm run art:build",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:browser": "playwright test"
   },
   "dependencies": {
-    "pixi.js": "^8.21.0"
+    "phaser": "4.2.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@resvg/resvg-js": "2.6.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
   }

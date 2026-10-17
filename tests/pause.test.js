@@ -121,6 +121,22 @@ describe('input after resuming', () => {
     expect(pause.acceptsInput()).toBe(true);
   });
 
+  it('allows resume/menu roles only for a manual pause with no other holds', () => {
+    const win = new EventTarget(), doc = fakeDocument();
+    const pause = createPause(win, doc);
+    pause.hold('manual', true);
+    for (const role of ['primary', 'start', 'menu']) expect(pause.acceptsInput(role)).toBe(true);
+    expect(pause.acceptsInput('p1')).toBe(false);
+    expect(pause.acceptsInput()).toBe(false);
+    pause.hold('graphics', true);
+    expect(pause.acceptsInput('primary')).toBe(false);
+    pause.hold('graphics', false);
+    win.dispatchEvent(new Event('blur'));
+    expect(pause.acceptsInput('menu')).toBe(false);
+    win.dispatchEvent(new Event('focus'));
+    expect(pause.acceptsInput('menu')).toBe(true);
+  });
+
   it('does not start the grace period when nothing was paused', () => {
     const win = new EventTarget();
     const c = clock();
@@ -135,7 +151,7 @@ describe('input after resuming', () => {
       const canvas = new EventTarget();
       const c = clock();
       const pause = createPause(win, fakeDocument(), { now: c.now });
-      const input = createInput(win, canvas, { accepts: () => pause.acceptsInput() });
+      const input = createInput(win, canvas, { accepts: (role) => pause.acceptsInput(role) });
       const tap = () =>
         canvas.dispatchEvent(Object.assign(new Event('pointerdown', { cancelable: true }), { pointerType: 'touch', button: 0 }));
       return { win, c, input, tap };
