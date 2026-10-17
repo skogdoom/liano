@@ -5,6 +5,10 @@ documentation only. Its improvements are planned in
 [M9b.1](plans/testing.md#m9b1-test-suite-coverage-and-performance-m), immediately
 before M9c final testing and verification on `release-verification`.
 
+**Followed up in M9b.1:** what changed, the measurements after it and the coverage limits
+that remain are in the [M9b.1 record](plans/testing.md#m9b1-test-suite-coverage-and-performance-m)
+and [Coverage](plans/testing.md#coverage). This audit stays as measured at `668dd2a`.
+
 ## Coverage: what the measurements mean
 
 The repository has no configured coverage provider, persisted line/branch report
