@@ -81,6 +81,8 @@ Everything below must work on the Phaser renderer as on v2.3:
 
 ## M9b.1. Test suite coverage and performance (M)
 
+**Status: done on `release-verification` (2026-10-17); M9c verifies it.** The record is at the end of this section.
+
 Work on `release-verification` after M9b and before M9c. Use the
 [test-suite audit](../TEST_SUITE_AUDIT.md) as the starting point. Improve test
 coverage and speed without changing gameplay or weakening the checks.
@@ -94,6 +96,44 @@ coverage and speed without changing gameplay or weakening the checks.
 - Benchmark sharing or caching identical art/build outputs between CI jobs, keyed by all relevant inputs/tool versions. Preserve cold-build coverage, freshness checks and both deployment gates; avoid serializing browser startup behind the entire unit suite unless the measured critical path improves. Add durable timing/failure artifacts so later regressions are visible.
 - **Done when:** before/after measurements demonstrate faster stable checks, every removed or combined check has a documented replacement, critical gaps are covered, known bad cases still fail, and the complete retained suite passes with unchanged thresholds and references. Record remaining coverage limits and carry them into M9c.
 
+**Implementation record (2026-10-17, on `release-verification`).** Measured on GitHub's runners: before, run [141](https://github.com/skogdoom/liano/actions/runs/39022092330) (`32a7f58`, the last green full run on `master`) and the audit's runs 136–137; after, runs [39031871095](https://github.com/skogdoom/liano/actions/runs/39031871095) (`f00ba1f`) and [39033232994](https://github.com/skogdoom/liano/actions/runs/39033232994) (`eb68c31`).
+
+| | Before | After |
+|---|---|---|
+| Unit suite (`npm test`) | 113 s (run 141), 109 s (run 137) | 54 s, 53 s |
+| Unit job | 3.5 min | 5.1 min: the suite, then a coverage run with floors (2.7 min) |
+| Browser job's build | 74 s | 64 s on a cache miss, 4 s on a hit |
+| Browser checks | 90–102 checks; 12.6–14.5 min, 2–3 retries a run | 105 checks; 18.1 min with no retries (traces recorded for every attempt), 16.0 min with 2 retries (traces on retries only) |
+| Browser job | 14.7 min (run 141) | 16.8 min (run 2) |
+
+What changed:
+
+- **Unit runtime.** Vitest imports the modules natively: Vite's module runner made the solver about three times slower (the window table took 32 s to compute in a test, 9 s in a script). Grade and generator tests share their generated obstacles within a file, frozen (`tests/corpus.js`); a new check compares the shared obstacles with fresh ones, and the uncached determinism checks stay. Locally the suite went from 79 s to 46 s.
+- **Coverage and records** (see [Test layers](#test-layers), [Coverage](#coverage)): Node coverage of every `src/` module with floors for the rules, sound and core modules; JSON timing reports, coverage and traces of retries kept by CI; a summary and notice of the slowest and retried tests on each run; Vitest failures as annotations; a filter to rerun chosen browser checks by hand.
+- **Browser stability.** Pages a check opens itself are closed after it, passed or failed. The two full-screen canopy checks had failed on `master` since M9a: CI's headless Chromium sizes a full-screen page to its screen and will not resize it, so each shape now gets its own page and screen (rotating a real phone in full screen is listed under [devices](#device-verification-pending)).
+- **Pixel checks.** One allocation-free pass with reused buffers (`compareImages` gained `alsoOver` and `into`; unit-checked, a stale reused buffer included); per-pixel assertions in the snake and spider art checks became one assertion per frame naming the failing pixel; the spider's legs are counted with a typed-array flood fill. Locally the 1920 × 800, 2× backdrop case went from 28.3 s to 20.9 s. No scenario, limit, solid-patch check or reference changed.
+- **Gaps closed:** the production build at `/liano/` for each pack (only its own art, the built worker answering once a key starts a run); the worker-error fallback (unit); context recovery for classic as well as cartoon, now checking that the restored textures draw; a failed classic catalog or boot atlas, and the reload that follows. The stale-table check now uses a table whose row lies, so it also proves a fresh table is trusted.
+- **Build reuse.** The browser job restores the built art from a cache keyed on its inputs (`art/`, `src/art/`, `scripts/build-art.mjs`, the lockfile) and uses the committed window table. The unit job still builds everything cold, checks the art and the table, and builds the site Pages publishes. Sharing a build artifact between the jobs was not adopted: the browser job would wait for the unit job's 5 minutes instead of building in parallel.
+
+Removed or combined, with their replacements:
+
+| Was | Now |
+|---|---|
+| `game.spec.js`: Space starts a run, Esc goes back, 2 picks a mode and the 16:9 frame | `art-packs.spec.js`: every mode for each pack, now also checking the two-player modes' 16:9 frame |
+| `smoke.spec.js`: the production build starts without errors | `production.spec.js`: for each pack, started, one canvas, no errors, its own art, the worker and a run |
+| `canopy.spec.js`: rotating one full-screen page through four shapes | A full-screen page for each shape, both packs, then 2P framing and leaving full screen |
+| `windowTable.test.js`: the stale table, by mocking the module | `windowLookups` built from a stale table whose row lies: falls back to the solver, warns once; a fresh one is trusted |
+| Timing budgets in every unit run | Checked in the plain run (CI's first step); skipped under coverage instrumentation |
+
+Known bad cases still fail: the coverage floors fail a run that misses them; the cartoon reference check still rejects its incorrect image; the link check reported six broken links before they were fixed; the new production check fails if the worker never answers or nothing is asked before a run.
+
+Remaining limits, carried into M9c:
+
+- **Browser context creation still times out now and then.** In the second run, two checks timed out while setting up their context and passed on the retry (2 min lost); the first run had none. Earlier runs on `master` showed the same in other checks. The cause is not established: CI now keeps a trace of each retry and lists retries with their first error, to compare over runs. Failed cases are retried once; nothing was given a longer timeout.
+- **The browser job is not faster overall:** its pixel checks are, but it now runs more checks (the production, recovery, load-failure and per-shape canopy checks), and the canopy checks alone take 70–80 s each. Recording a trace of every attempt cost about 4 minutes (18.1 min without retries, against about 14 min once the second run's 2 min of retries are taken out), so only retries are traced.
+- **No browser coverage figure.** Browser checks run the rendering, platform and entry modules but collect no coverage; the [requirement-to-test map](#requirement-to-test-map) says which guard what.
+- **Rotation in full screen** can only be checked on a real device.
+
 ## Device verification (pending)
 
 Every check below needs real devices and is still open. Nothing here is recorded as passed until it is tested in [M9c](release.md#m9c-test-and-verification-m); the source of each item is linked.
@@ -101,7 +141,7 @@ Every check below needs real devices and is still open. Nothing here is recorded
 - **Sound** (M3): the pling, and sound surviving tab switches, phone lock and reloads, in desktop Chrome and Firefox and on the iPhone 13 mini ([M3 report](history/phaser-migration.md#m3-input-and-audio-on-phaser-m), the steps listed there). Safari on macOS passed.
 - **Performance and the real-device pass** (M7): desktop Chrome, Firefox and Safari, an iPad and an Android phone; portrait and landscape; split and shared. The start within 1.5 s and the frame budgets on the iPhone 13 mini; perceived background and whole-scene smoothness in Safari ([M7 report](history/phaser-migration.md#m7-parity-performance-and-polish-ml), [background-motion.md](background-motion.md)). The owner finds the iPhone 13 mini's performance OK.
 - **Art packs** (M8a): in Safari on the MacBook Air M1 and on the iPhone 13 mini, with both packs at the default quality: startup and decode time, texture and frame budgets, fast swings, catches, large temples, moving obstacles, lianas and foreground shrubs, rotation, menus and switching graphics. Add the dated follow-up to the [M8a final report](history/phaser-migration.md#m8a-cartoon-sprite-sheets-and-the-classic-graphics-toggle-l).
-- **Canopy framing** (M9a): 1P full screen with both packs, entering and leaving full screen, resize and rotation; the regular Safari portrait view; home-screen mode; 2P shared and the other layouts as regressions ([M9a record](history/phaser-migration.md#m9a-fullscreen-canopy-coverage-s)).
+- **Canopy framing** (M9a): 1P full screen with both packs, entering and leaving full screen, resize and rotation (rotating while in full screen cannot be emulated in CI's Chromium); the regular Safari portrait view; home-screen mode; 2P shared and the other layouts as regressions ([M9a record](history/phaser-migration.md#m9a-fullscreen-canopy-coverage-s)).
 - **Loading indicator** (M9b.2): cold and cached starts, slow downloads and failures, rotation, both packs; the reduced-motion pulse on the iPhone 13 mini ([M9b.2 record](history/phaser-migration.md#m9b2-startup-loading-indicator-s)).
 - **From v1 and v2** (the open items in [history/v1-v2.md](history/v1-v2.md)): a stable 60 fps on a mid-range laptop; taps on an iPad; per-frame work under 6 ms at p95 at 4× CPU throttling on a device; full screen by button and `F` in desktop Chrome, Firefox and Safari, Android Chrome and iPad, with the icon following the state; the button hidden on iPhone Safari and in the home-screen app; the game filling the screen after full screen and rotation; a phone and an iPad playing a full run upright; a landscape phone with its browser bars showing filling the screen; the monkey readable on a real phone in portrait (design decision 11). The heap over restarts, open in v1, is now flat after 15 restarts (M7).
 
