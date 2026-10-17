@@ -940,6 +940,8 @@ its detailed content into referenced files by area to keep the main file short.
 
 **Implementation record (2026-10-17).** Done on `consolidate-plans`, from `master` at `987b5f7`, at the owner's request (instead of `release-verification`). `PLAN.md` is now the compact roadmap; the detail is split by area under `docs/plans/`: gameplay, architecture and performance, art pipeline, testing and device verification, release, and the history files. Sections moved verbatim; the tech stack, runtime structure, project tree, tunables (`CAMERA_EASE`, `CAMERA_SWAY`, `PORTRAIT_SPARE_ABOVE` and others), performance requirements and art pipeline were brought up to date. `PHASER_PLAN.md` is a pointer; `BACKGROUND_MOTION.md` moved to `docs/plans/background-motion.md`. References in code comments, scripts, tests, dev pages, review metadata and docs point to the new files. A unit test (`tests/docLinks.test.js`) checks every relative link and anchor in the repository's Markdown. M9c verifies the restructuring.
 
+**Integration (2026-10-17).** The owner merged [PR #43](https://github.com/skogdoom/liano/pull/43) into `master` (merge `0e076bf`), with two review corrections: the startup warmup guarantee narrowed to what is prepared, and v2.2.0 described as the latest tagged release while Pages follows `master`. `release-verification` was then synced with `master`.
+
 ### M9b.2. Startup loading indicator (S)
 
 **Status: complete and integrated into `master`.** The branch was created from
