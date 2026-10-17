@@ -68,8 +68,12 @@
       }
       @keyframes loading-show { to { visibility: visible; } }
       @keyframes loading-spin { to { transform: rotate(360deg); } }
+      @keyframes loading-pulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
+      }
       @media (prefers-reduced-motion: reduce) {
-        .loading-spinner { animation: none; }
+        .loading-spinner { animation: loading-pulse 1600ms ease-in-out infinite; }
       }
       /* Full-screen messages over the canvas: a passing notice (e.g. restoring
          graphics) and a fatal error. */

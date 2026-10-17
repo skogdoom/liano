@@ -1069,8 +1069,9 @@ Version remains `3.0.0-dev.9`.
 
 **Implementation record (2026-10-17).** The initial HTML/CSS shell shows a
 honey-gold spinner and "Loading…" after 250 ms, without downloading another
-asset or font. It has a status announcement, safe-area padding and a static
-reduced-motion alternative. Fast completion removes it before its display delay.
+asset or font. It has a status announcement, safe-area padding and a gentle
+opacity pulse instead of rotation with reduced motion. Fast completion removes
+it before its display delay.
 
 `src/startup.js` owns one readiness promise shared by the boot entry, scene and
 input gate. It resolves after main art, sound preparation, all 37 warmup rigs,
@@ -1094,6 +1095,13 @@ failures, classic recovery, existing pause controls, audio equivalence, context
 restoration and the frame readout. Tests use controlled gates rather than slow
 network sleeps. Full verification and real-device cold/warm startup remain M9c;
 M9b.1 should reuse these cases when improving production-startup coverage.
+
+**Reduced-motion follow-up (2026-10-17):** The owner confirmed Reduce Motion
+was enabled on the iPhone 13 mini when the indicator appeared static. Replace
+the static alternative with a gentle 1.6-second opacity pulse, without rotation.
+Both targeted browser cases passed, checking live rotation in normal mode and
+live opacity changes without rotation in reduced-motion mode; the production
+build also passed. Confirm the pulse on the device during M9c.
 
 ### M9c. Test and verification (M)
 

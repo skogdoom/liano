@@ -17,6 +17,9 @@ test('production loading feedback appears before the large game download and cle
     await bundle.requested;
     await expect(page.getByRole('status')).toHaveText('Loading…');
     await expect(page.locator('#loading')).toBeVisible();
+    const spinner = page.locator('.loading-spinner');
+    const initialRotation = await spinner.evaluate(el => getComputedStyle(el).transform);
+    await expect.poll(() => spinner.evaluate(el => getComputedStyle(el).transform)).not.toBe(initialRotation);
     await expect(page.locator('html')).not.toHaveAttribute('data-ready');
     await page.keyboard.press('Space');
     await page.locator('#loading').click();
@@ -80,6 +83,9 @@ test('the initial shell delays display, avoids a fast-load flash and respects re
   });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(DEV);
+  const spinner = page.locator('.loading-spinner');
+  const initialOpacity = await spinner.evaluate(el => getComputedStyle(el).opacity);
+  await expect.poll(() => spinner.evaluate(el => getComputedStyle(el).opacity)).not.toBe(initialOpacity);
   const result = await page.evaluate(async () => {
     const { createStartup } = await import('/src/startup.js');
     const loading = document.getElementById('loading');
@@ -88,17 +94,25 @@ test('the initial shell delays display, avoids a fast-load flash and respects re
     const beforeDelay = getComputedStyle(loading).visibility;
     animation.currentTime = 250;
     const afterDelay = getComputedStyle(loading).visibility;
-    const reducedMotion = getComputedStyle(loading.querySelector('.loading-spinner')).animationName;
+    const spinner = loading.querySelector('.loading-spinner');
+    const reducedMotion = getComputedStyle(spinner).animationName;
+    const pulse = spinner.getAnimations().find(a => a.animationName === 'loading-pulse');
+    pulse.pause(); pulse.currentTime = 0;
+    const dim = getComputedStyle(spinner).opacity;
+    pulse.currentTime = 800;
+    const bright = getComputedStyle(spinner).opacity;
+    const rotation = getComputedStyle(spinner).transform;
     // A subsequent fast/cached startup completes before its display deadline.
     animation.currentTime = 0;
     const startup = createStartup(document);
     startup.finish();
     animation.currentTime = 1000;
-    return { beforeDelay, afterDelay, reducedMotion, ready: await startup.ready,
+    return { beforeDelay, afterDelay, reducedMotion, dim, bright, rotation, ready: await startup.ready,
       hidden: loading.hidden, display: getComputedStyle(loading).display,
       cleaned: window.__loadingErrorController === undefined };
   });
-  expect(result).toEqual({ beforeDelay: 'hidden', afterDelay: 'visible', reducedMotion: 'none',
+  expect(result).toEqual({ beforeDelay: 'hidden', afterDelay: 'visible', reducedMotion: 'loading-pulse',
+    dim: '0.4', bright: '1', rotation: 'none',
     ready: true, hidden: true, display: 'none', cleaned: true });
 });
 
