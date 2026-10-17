@@ -1,4 +1,4 @@
-// What a piece of art is (PHASER_PLAN.md, section 5): its contract, from which the
+// What a piece of art is (docs/plans/art-pipeline.md): its contract, from which the
 // generator draws it, the build packs it and the game places it.
 //
 //   key       stable name: `object.part` or `object.part.variant` (lower camel case
@@ -18,7 +18,8 @@
 //             placed between pixels would blur
 //   soften    for a 'tile' or 'sprite': a sideways blur of this many units (its standard deviation),
 //             for a layer whose hard edges move fast across the screen: moving several
-//             pixels a frame, a hard edge looks stepped at 60 Hz (PHASER_PLAN.md, M7)
+//             pixels a frame, a hard edge looks stepped at 60 Hz
+//             (docs/plans/history/phaser-migration.md, M7)
 //   alpha     for a piece drawn see-through (the shadow monkey): every shape in it at
 //             this share of its alpha, each blending on its own as the game draws them
 //   box       the picture's box in the piece's own units (default: around the drawing)

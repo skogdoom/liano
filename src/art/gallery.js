@@ -7,12 +7,12 @@ import { artChoice } from '../platform/artStyle.js';
 // to the game's drawing of it, the difference between them, the
 // contract and the guides. Results on `window.__gallery` for the browser tests.
 //
-// What counts as identical (PHASER_PLAN.md, section 1) is for scenes. A small piece's cell
-// is mostly antialiased edge, where rasterizers always differ a little, so the pieces are
-// judged as if they covered a scene together: the share of differing pixels and the solid
-// patches per million over all frames. A frame fails on its own if its solid patches
-// alone would fail a scene: a 1280 × 720 view at the atlas's density (per million of its
-// own few pixels, a single solid pixel would).
+// What counts as identical (docs/plans/testing.md, decisions) is for scenes. A small piece's
+// cell is mostly antialiased edge, where rasterizers always differ a little, so the pieces
+// are judged as if they covered a scene together: the share of differing pixels and the solid
+// patches per million over all frames. A frame fails on its own if its solid patches alone
+// would fail a scene: a 1280 × 720 view at the atlas's density (per million of its own few
+// pixels, a single solid pixel would).
 const SCENE_PIXELS = 1280 * 720;
 
 const params = new URLSearchParams(location.search);

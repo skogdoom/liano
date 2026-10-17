@@ -4,8 +4,8 @@ import { layoutFor } from '../src/layout.js';
 import { canvasSize, viewCamera } from '../src/platform/view.js';
 import { collectErrors, started } from './helpers.js';
 
-// The platform (PHASER_PLAN.md, M2): layouts, full screen, a lost graphics context and
-// pause, on the dev server (for the `window.__liano` hooks).
+// The platform (docs/plans/history/phaser-migration.md, M2): layouts, full screen, a lost
+// graphics context and pause, on the dev server (for the `window.__liano` hooks).
 
 // The Phaser canvas's RGBA at device-pixel points, from a snapshot of the next frame.
 function pixelsAt(page, points) {

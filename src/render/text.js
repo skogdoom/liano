@@ -1,7 +1,8 @@
-// Text in the Phaser version, laid out as the Pixi version lays it out (PHASER_PLAN.md,
-// M5c): Pixi measures a font's height on '|ÉqÅM', Phaser on '|MÉqgy' by default, so the
-// same text came out a pixel taller or shorter and, centred, half a pixel off. Phaser
-// also rounds a text's width up, where Pixi centres on the measured width.
+// Text in the Phaser version, laid out as the Pixi version lays it out
+// (docs/plans/history/phaser-migration.md, M5c): Pixi measures a font's height on '|ÉqÅM',
+// Phaser on '|MÉqgy' by default, so the same text came out a pixel taller or shorter and,
+// centred, half a pixel off. Phaser also rounds a text's width up, where Pixi centres on the
+// measured width.
 export const PIXI_TEST_STRING = '|ÉqÅM';
 
 const css = (color) => `#${color.toString(16).padStart(6, '0')}`;

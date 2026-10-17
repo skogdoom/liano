@@ -1,5 +1,5 @@
 // Comparing generated art or deterministic game frames with their references. The agreed meaning of
-// "identical" (PHASER_PLAN.md, section 1): under PARITY.share of the pixels differ by
+// "identical" (docs/plans/testing.md, decisions): under PARITY.share of the pixels differ by
 // more than PARITY.channel (out of 255) in a colour channel, and no more than
 // PARITY.solidPerMillion of the pixels are in solid patches of difference.
 export const PARITY = { channel: 8, share: 0.01, solidPerMillion: 25 };
@@ -32,7 +32,8 @@ export function compareImages(a, b, { channel = PARITY.channel } = {}) {
 // How many of the pixels over the limit have all eight neighbours over it too: in a
 // solid patch of difference rather than on an edge. Antialiasing differences are rims a
 // pixel or two wide and leave next to none; a missing or wrong part leaves a patch, which
-// the share alone lets through for a small object on a large picture (PHASER_PLAN.md, M1).
+// the share alone lets through for a small object on a large picture
+// (docs/plans/history/phaser-migration.md, M1).
 export function solidPixels({ diff }, width) {
   const height = diff.length / 4 / width;
   const over = (x, y) => diff[(y * width + x) * 4 + 1] === 0 && diff[(y * width + x) * 4] === 255;

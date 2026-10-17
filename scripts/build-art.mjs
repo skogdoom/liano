@@ -1,4 +1,4 @@
-// Builds the art the game loads (PHASER_PLAN.md, section 5) into public/art/: each
+// Builds the art the game loads (docs/plans/art-pipeline.md) into public/art/: each
 // piece's frames (the custom picture from art/custom/ where there is one, else the
 // generated SVG) rasterized by resvg and packed into atlases per set (boot, main) and
 // scale (1×, 2×, 4×); the backdrop tiles as images of their own; and pieces.json,
@@ -19,7 +19,7 @@ const EXTRUSION = 1; // One texel per side covers bilinear sampling without shar
 const MAX_PAGE = 4096;
 // Texture memory (RGBA, 4 bytes a pixel) the game may load at an atlas scale, every set
 // and tile together. The build fails over a limit: 120 MB at 2× is the budget for the
-// iPhone 13 mini (PHASER_PLAN.md, section 6).
+// iPhone 13 mini (docs/plans/architecture.md, budgets).
 // Only large desktop windows load the 4× set; its ceiling keeps it from growing unnoticed.
 const LIMITS_MB = { 2: 120, 4: 300 };
 

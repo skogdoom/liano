@@ -20,7 +20,8 @@ import { layoutFor, paneLayouts } from '../src/layout.js';
 import { GameState } from '../src/sim/game.js';
 import { MONKEY_RADIUS } from '../src/config.js';
 
-// The overlays' view-model (PHASER_PLAN.md, M6): both versions draw them from these.
+// The overlays' view-model (docs/plans/history/phaser-migration.md, M6): both versions draw
+// them from these.
 
 const game = (over = {}) => ({
   mode: 'solo',

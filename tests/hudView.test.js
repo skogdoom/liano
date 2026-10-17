@@ -4,7 +4,8 @@ import { layoutFor, paneLayouts } from '../src/layout.js';
 import { GameState } from '../src/sim/game.js';
 import { MAX_SHOWN } from '../src/views/hearts.js';
 
-// The HUD's view-model (PHASER_PLAN.md, M6): both versions draw it from these.
+// The HUD's view-model (docs/plans/history/phaser-migration.md, M6): both versions draw it
+// from these.
 
 const game = (over = {}) => ({
   players: 1,

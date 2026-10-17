@@ -10,7 +10,8 @@ import { BEEHIVE_PIECES, ROCK_PIECES, SUPPORT_PIECES, THORN_BUSH_PIECES } from '
 import { TEMPLE_PIECES } from './temple.js';
 import { UI_PIECES } from './ui.js';
 
-// Every piece of art in the game (PHASER_PLAN.md, section 5 and the M4 inventory).
+// Every piece of art in the game (docs/plans/art-pipeline.md; the M4 inventory in
+// docs/plans/history/phaser-migration.md).
 export const PIECES = definePieces([
   ...BACKDROP_PIECES,
   ...MONKEY_PIECES,

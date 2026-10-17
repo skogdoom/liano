@@ -1,6 +1,6 @@
 // A stand-in for a Pixi `Graphics` (or `GraphicsContext`) that records the drawing calls
 // the game's art uses, so the same drawing functions that draw the Pixi version can also
-// write the pre-rendered art (see svg.js and PHASER_PLAN.md, section 5).
+// write the pre-rendered art (see svg.js and docs/plans/art-pipeline.md).
 //
 // It follows Pixi 8's rules for paths: shape calls add to the current path; `fill` and
 // `stroke` take a copy of it and start a new one from its last point; a `stroke` right

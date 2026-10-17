@@ -3360,7 +3360,7 @@
   "report": {
     "status": "finalized for integration",
     "date": "2026-10-16",
-    "location": "PHASER_PLAN.md: M8a final report",
+    "location": "docs/plans/history/phaser-migration.md: M8a final report",
     "scope": "Accepted artwork, completed implementation, automated verification, regression references and build measurements before integration.",
     "deviceFollowUp": {
       "branch": "release-verification",

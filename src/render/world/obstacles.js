@@ -22,10 +22,10 @@ import { Builder, cubicPoints } from './build.js';
 import { DECORATION_RIGS } from './decorations.js';
 import { branchPoleDetails } from './branchPole.js';
 
-// The static obstacles in the Phaser version (PHASER_PLAN.md, M5b), as the Pixi
-// ObstacleViews draw them: built once per obstacle from its pieces, in the local frame the
-// drawing code uses (scaled with the hitbox), in the same order; animate(t) moves what
-// moves with the world time.
+// The static obstacles in the Phaser version (docs/plans/history/phaser-migration.md, M5b),
+// as the Pixi ObstacleViews draw them: built once per obstacle from its pieces, in the local
+// frame the drawing code uses (scaled with the hitbox), in the same order; animate(t) moves
+// what moves with the world time.
 
 // A vine from the canopy (`fromY`) down to `toY`, swaying by `sway`: a strip along the
 // curve and its round ends.

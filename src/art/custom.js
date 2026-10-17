@@ -1,4 +1,4 @@
-// Custom art (PHASER_PLAN.md, section 5): art/custom/<key>.svg or .png replaces a piece
+// Custom art (docs/plans/art-pipeline.md): art/custom/<key>.svg or .png replaces a piece
 // (<key>.<frame>.svg or .png one frame of a flipbook), and an optional <key>.json beside
 // it may change the pivot and, for a flipbook, the frame rate. Pure: the scripts read the
 // files and pass them in (name -> Buffer).

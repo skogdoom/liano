@@ -1,5 +1,5 @@
 // Checks the custom art in art/custom/ against the pieces' contracts (art/manifest.json;
-// PHASER_PLAN.md, section 5): names, sizes, aspects and sidecars (errors), and how far an
+// docs/plans/art-pipeline.md): names, sizes, aspects and sidecars (errors), and how far an
 // obstacle's art strays from its hitbox (warnings: the hitbox is gameplay and does not
 // follow the art). `npm run art:check`; CI runs it too.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';

@@ -1,7 +1,7 @@
-// The replacement drill (PHASER_PLAN.md, M4 and M7): swaps one piece of each kind for
-// placeholder art in art/custom/, so a build shows them in the gallery (art.html) and on
-// the reference page (reference.html) with no code change. Then `npm run art:check` and
-// `npm run art:build`, and look; `--revert` removes the placeholders again.
+// The replacement drill (docs/plans/history/phaser-migration.md, M4 and M7): swaps one piece
+// of each kind for placeholder art in art/custom/, so a build shows them in the gallery
+// (art.html) and on the reference page (reference.html) with no code change. Then `npm run
+// art:check` and `npm run art:build`, and look; `--revert` removes the placeholders again.
 //
 //   node scripts/dev/replacement-drill.mjs           write the placeholders
 //   node scripts/dev/replacement-drill.mjs --bad     also a picture in the wrong aspect,

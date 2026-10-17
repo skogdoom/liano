@@ -10,10 +10,10 @@ import { Overlays } from '../render/overlays.js';
 import { WorldPane } from '../render/world/pane.js';
 import { warmObstacleRigs } from '../render/warmup.js';
 
-// The Phaser version's scenes (PHASER_PLAN.md, M2): Boot loads the art and starts the
-// others; Play draws the worlds (M5), UI the HUD, panels and buttons (M6). Each scene's
-// camera shows the logical view as the layout places it (see view.js). The platform
-// (main.js) holds the layout, pause and full screen; scenes find it in the game's
+// The Phaser version's scenes (docs/plans/history/phaser-migration.md, M2): Boot loads the
+// art and starts the others; Play draws the worlds (M5), UI the HUD, panels and buttons (M6).
+// Each scene's camera shows the logical view as the layout places it (see view.js). The
+// platform (main.js) holds the layout, pause and full screen; scenes find it in the game's
 // registry.
 //
 // UI draws the buttons, the HUD, the overlays and the debug view (D).

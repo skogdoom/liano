@@ -1,7 +1,8 @@
-// How the Phaser version puts the logical view on the screen (PHASER_PLAN.md, M1 report:
-// the HiDPI method). Phaser has no resolution setting: the canvas has `ratio` device
-// pixels per CSS pixel and is shown at its CSS size, and each camera zooms by the
-// layout's scale times the ratio. Pure, so it is tested in Node.
+// How the Phaser version puts the logical view on the screen
+// (docs/plans/history/phaser-migration.md, M1 report: the HiDPI method). Phaser has no
+// resolution setting: the canvas has `ratio` device pixels per CSS pixel and is shown at its
+// CSS size, and each camera zooms by the layout's scale times the ratio. Pure, so it is
+// tested in Node.
 
 export { resolutionLimit } from './resolution.js';
 

@@ -59,7 +59,7 @@ The Codex 20% speed reduction, separate scenery follower and later moving-edge
 exposure each received browser/unit validation but did not resolve the owner's
 Safari symptom. They should not be treated as evidence of a completed fix.
 The owner subsequently selected the substantially slower factors and reduced
-camera sway now integrated here (see `PHASER_PLAN.md`, M7).
+camera sway now integrated here (see the [M7 report](history/phaser-migration.md#m7-parity-performance-and-polish-ml)).
 
 ## Validation and reproduction
 

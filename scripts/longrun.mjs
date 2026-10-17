@@ -4,7 +4,8 @@
 // play. Every `every` game seconds it samples the heap (after a GC every GC_EVERY samples), the
 // frame times (JS side; the renderer runs every RENDER_EVERY-th frame), the GPU work of the drawn
 // frames (counted at the WebGL calls) and counts of what the game and the renderer hold, to see
-// leaks and slowdowns. See PLAN.md, "Performance and hardening", and PHASER_PLAN.md, M7.
+// leaks and slowdowns. See docs/plans/architecture.md, "Performance and hardening", and
+// the M7 report in docs/plans/history/phaser-migration.md.
 //
 // The game loop is stopped and stepped by hand: `game.step` on drawn frames,
 // `game.headlessStep` on the others.

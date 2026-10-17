@@ -2,7 +2,7 @@ import { frameName } from './piece.js';
 import { RecordingGraphics } from './recorder.js';
 import { bounds, guideLayer, toSvg, unionBox } from './svg.js';
 
-// The pre-rendered art's sources (PHASER_PLAN.md, section 5): each piece's drawing code
+// The pre-rendered art's sources (docs/plans/art-pipeline.md): each piece's drawing code
 // run through a RecordingGraphics, its frames as SVG documents with the piece's guides in
 // a hidden layer. Returns the files (name under art/generated/ -> SVG) and the manifest:
 // each piece's contract, which the build, the validator, the game and the art guide read.
