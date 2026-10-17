@@ -124,12 +124,13 @@ Removed or combined, with their replacements:
 | `canopy.spec.js`: rotating one full-screen page through four shapes | A full-screen page for each shape, both packs, then 2P framing and leaving full screen |
 | `windowTable.test.js`: the stale table, by mocking the module | `windowLookups` built from a stale table whose row lies: falls back to the solver, warns once; a fresh one is trusted |
 | Timing budgets in every unit run | Checked in the plain run (CI's first step); skipped under coverage instrumentation |
+| One 30 s limit per unit test | 30 s in the plain run; 120 s under coverage, whose instrumentation made a solver-heavy test overrun it in CI |
 
 Known bad cases still fail: the coverage floors fail a run that misses them; the cartoon reference check still rejects its incorrect image; the link check reported six broken links before they were fixed; the new production check fails if the worker never answers or nothing is asked before a run.
 
 Remaining limits, carried into M9c:
 
-- **Browser context creation still times out now and then.** In the second run, two checks timed out while setting up their context and passed on the retry (2 min lost); the first run had none. Earlier runs on `master` showed the same in other checks. The cause is not established: CI now keeps a trace of each retry and lists retries with their first error, to compare over runs. Failed cases are retried once; nothing was given a longer timeout.
+- **Browser context creation still times out now and then.** In the second run, two checks timed out while setting up their context and passed on the retry (2 min lost); the first run had none. Earlier runs on `master` showed the same in other checks. Over the four full runs since, three retried a check after `Failed to find browser context` (Browser.setDownloadBehavior) or a timeout while setting up its context, each time `obstacle-motion.spec.js`'s second (obstacle exposure) variant, right after its first, once with `game.spec.js`'s key-press check too: the next thing to look at in M9c. The cause is not established: CI now keeps a trace of each retry and lists retries with their first error, to compare over runs. Failed cases are retried once; nothing was given a longer timeout.
 - **The browser job is not faster overall:** its pixel checks are, but it now runs more checks (the production, recovery, load-failure and per-shape canopy checks), and the canopy checks alone take 70–80 s each. Recording a trace of every attempt cost about 4 minutes (18.1 min without retries, against about 14 min once the second run's 2 min of retries are taken out), so only retries are traced.
 - **No browser coverage figure.** Browser checks run the rendering, platform and entry modules but collect no coverage; the [requirement-to-test map](#requirement-to-test-map) says which guard what.
 - **Rotation in full screen** can only be checked on a real device.

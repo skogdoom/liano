@@ -64,7 +64,8 @@ export default defineConfig(({ command, isPreview }) => ({
         'src/{driver,input,layout,loop,pause,startup,frameClock,obstaclePrefetch}.js': { lines: 97, branches: 87 },
       },
     },
-    // The heaviest tests take 3–5 s here; CI runners are slower.
-    testTimeout: 30000,
+    // The heaviest tests take 3–5 s here; CI runners are slower. Coverage instrumentation
+    // (npm run coverage) makes the solver-heavy ones several times slower again.
+    testTimeout: process.env.COVERAGE ? 120000 : 30000,
   },
 }));
