@@ -4,12 +4,14 @@ import { layoutFor } from '../src/layout.js';
 import { collectErrors, test } from './helpers.js';
 
 // A full-screen window cannot be resized: CI's headless Chromium refuses (Browser.setWindowBounds),
-// as a phone's browser does. So rotate it as a phone does, changing the viewport the page sees
-// while the window stays full screen.
+// and a full-screen page there is as large as the screen whatever its viewport. So rotate it
+// as a phone does: the screen turns, and the viewport with it, while the window stays full
+// screen.
 async function rotate(page, width, height) {
   const cdp = await page.context().newCDPSession(page);
   try {
-    await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false,
+      screenWidth: width, screenHeight: height });
   } finally {
     await cdp.detach();
   }
