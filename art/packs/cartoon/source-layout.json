@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "description": "Production component master crops in source pixels; exports trim transparent padding before fitting the rig boxes.",
   "components": {
+    "beehive": { "source": "masters/beehive.png", "cell": { "x": 0, "y": 0, "w": 971, "h": 1619 }, "maxWidth": 256 },
     "far-jungle": { "source": "masters/far-jungle.png", "cell": { "x": 0, "y": 0, "w": 1536, "h": 1024 } },
     "waterfall-big": { "source": "masters/waterfalls.png", "cell": { "x": 0, "y": 0, "w": 768, "h": 1024 } },
     "waterfall-small": { "source": "masters/waterfalls.png", "cell": { "x": 768, "y": 0, "w": 768, "h": 1024 } },

@@ -613,9 +613,9 @@ function prop(p, frame) {
   }
   if (family === 'beehive') {
     if (part === 'nest') {
-      body += path('M0 -34Q23 -22 20 -7Q30 8 20 25Q16 42 0 40Q-17 39 -19 24Q-30 8 -20 -8Q-23 -24 0 -34Z', 'url(#paint)', '#865b32', 1.1);
-      for (const y of [-21, -8, 6, 20, 32]) body += line(`M-17 ${y} Q0 ${y + 5} 17 ${y}`, '#936335', 1.3);
-      return body + ellipse(3, 26, 6, 6, '#392d24') + line('M-3 20Q3 18 9 20', '#ffe8a0', .8);
+      // Register the painted tip and rounded base to the original hive's
+      // attachment and collision bounds; preserve its proportions in between.
+      return picture('beehive', { x: -24, y: -34, w: 48, h: 74 }, 0);
     }
     return line('M0 -49 V-32', '#344d29', 3.2) + line('M-.5 -48 V-33', '#a5b957', 1.3)
       + picture('wood-platform', { x: -8, y: -56, w: 52, h: 11 }, 0);

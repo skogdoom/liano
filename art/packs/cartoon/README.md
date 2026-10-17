@@ -293,6 +293,11 @@ npm run art:cartoon:check
 ```
 
 Commit masters, layout, components, generated SVGs, manifest and inventory together.
+The beehive uses `masters/beehive.png` for rounded honey-gold bands, painted
+texture and a shaded entrance that match the surrounding wood. Its tip and base
+retain the original attachment and collision bounds. The runtime omits the
+buzzing swarm for night-stage hives in both art packs; dusk and dawn remain
+active. `world.beehives.night` previews the empty hanging and standing rigs.
 The build writes both complete packs into `public/art/classic/` and
 `public/art/cartoon/`: catalog, boot/main sheets, standalone tiles, metadata and
 `metrics.json` with texture bytes and compressed downloads per scale. Outputs are

@@ -2,6 +2,7 @@ import { HIGH_BELOW_Y, OBSTACLE_HITBOXES } from '../../config.js';
 import { BARK_LINE_LENGTH, TRUNK_REFERENCE } from '../../art/pieces/branch.js';
 import { HIVE_TRUNK_REFERENCE, STEM_REFERENCE } from '../../art/pieces/obstacles.js';
 import { mixSeed, mulberry32 } from '../../sim/rng.js';
+import { timeOfDayFor, TimeOfDay } from '../../sim/stages.js';
 import {
   BEE_WING_MAX,
   BRANCH_TRUNK_X,
@@ -97,6 +98,9 @@ function beehive(b, o, rand, hangs, view) {
     : [b.stretched('support.hiveTrunk', HIVE_TRUNK.x, armY - 6, trunkBottom(o), HIVE_TRUNK_REFERENCE), b.image('beehive.arm')];
   parts.push(b.image('beehive.nest'));
   view.add(parts);
+  // Like the other creatures, activity follows the obstacle's stage. Keep the
+  // hive and its collision shape, but don't create a swarm at night.
+  if (timeOfDayFor(o.gap) === TimeOfDay.NIGHT) return null;
   // The bees: two wings that beat (squeezed) and the body, each on its own loop.
   const wingUnit = b.art.unit('bee.wing');
   const bees = beeSwarm(rand).map((bee) => ({ bee, wings: [b.image('bee.wing'), b.image('bee.wing')], body: b.image('bee.body') }));

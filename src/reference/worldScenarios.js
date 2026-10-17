@@ -1,4 +1,4 @@
-import { LIANA_SPACING, SIM_DT } from '../config.js';
+import { LIANA_SPACING, SIM_DT, STAGES } from '../config.js';
 import { CANOPY_BOTTOM, FLOOR_Y } from '../views/backdrop.js';
 import { Art, CATALOG, queueArt } from '../render/art.js';
 import { LianaSetRig } from '../render/world/lianas.js';
@@ -58,14 +58,14 @@ function monkeys() {
 // below the canopy strip and above the floor, which are drawn over the world (the vines
 // start under one and the trunks end under the other).
 const OBSTACLE_SPACING = 300;
-function obstacleRow(type, decoration = null) {
+function obstacleRow(type, decoration = null, firstGap = 3) {
   const row = [];
   for (const [i, [y, scale]] of [[200, 1], [330, 1], [190, 1.3], [340, 1.3]].entries()) {
-    row.push(new Obstacle(i + 3, type, 150 + i * OBSTACLE_SPACING, y, null, scale, decoration));
+    row.push(new Obstacle(i + firstGap, type, 150 + i * OBSTACLE_SPACING, y, null, scale, decoration));
   }
   return row;
 }
-const obstacleScenario = (id, title, type, decoration, t = 1.37) =>
+const obstacleScenario = (id, title, type, decoration, t = 1.37, firstGap = 3) =>
   withArt({
     id,
     title,
@@ -74,7 +74,7 @@ const obstacleScenario = (id, title, type, decoration, t = 1.37) =>
     height: FLOOR_Y - CANOPY_BOTTOM,
     draw(scene, zoom) {
       const layer = new ObstacleLayer(scene, artFor(scene, zoom));
-      layer.update(obstacleRow(type, decoration), t);
+      layer.update(obstacleRow(type, decoration, firstGap), t);
       scene.add.existing(layer.view);
     },
   });
@@ -275,6 +275,7 @@ export const WORLD_SCENARIOS = [
   obstacleScenario('world.thornBushes', 'Thorn bushes, hanging and standing', 'thornBush', null),
   obstacleScenario('world.rocks', 'Rocks, hanging and standing', 'rock', null),
   obstacleScenario('world.beehives', 'Beehives with their bees, hanging and standing', 'beehive', null),
+  obstacleScenario('world.beehives.night', 'Empty beehives at night, hanging and standing', 'beehive', null, 1.37, STAGES[3].first),
   ...BRANCH_DECORATIONS.map((decoration) => obstacleScenario(`world.decoration.${decoration}`, `Branches with a ${decoration}`, 'branch', decoration)),
   ...MOVING_TYPES.flatMap((type) => [0, 1].map((k) => movingScenario(type, k))),
   bananaScenario(),
