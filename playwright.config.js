@@ -26,9 +26,10 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['list'], ['json', { outputFile: 'reports/browser.json' }]] : 'line',
   use: {
     browserName: 'chromium',
-    // A failed attempt keeps its trace (test-results/, kept by CI): its actions, console
-    // and network, to tell context creation, navigation, loading and the test apart.
-    trace: process.env.CI ? 'retain-on-failure' : 'off',
+    // A retried check records a trace of its retry (test-results/, kept by CI): actions,
+    // console and network, to tell context creation, navigation, loading and the test
+    // apart. Recording every attempt made the suite about a third slower.
+    trace: process.env.CI ? 'on-first-retry' : 'off',
     launchOptions: {
       executablePath: process.env.CHROMIUM || undefined,
       // WebGL without a GPU: SwiftShader, which headless Chromium no longer picks by itself.
