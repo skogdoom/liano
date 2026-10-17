@@ -1,8 +1,8 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (M8a cartoon pack, M9 cleanup and merge, M9a fullscreen canopy, M9b plan consolidation, M9b.1 test-suite improvements, M9c test and verification, M10 release). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a is complete and integrated into `phaser` through PR #41 (merge `a49b1f2`). The owner accepted the cartoon artwork; automated verification, regression references and the report are complete. After M9 merges into `master`, M9a fixes 1P fullscreen canopy coverage on a new `release-verification` branch created from `master`. M9b consolidates and splits the plans by area on the same branch; M9b.1 improves test coverage and speed. Final testing and verification, including real-device checks, follows there in M9c. M10 releases the tested result from `master`.**
+Status: **agreed plan (M8a cartoon pack, M9 cleanup and merge, M9a fullscreen canopy, M9b plan consolidation, M9b.1 test-suite improvements, M9c test and verification, M10 release). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a is complete and integrated into `phaser` through PR #41 (merge `a49b1f2`). The owner accepted the cartoon artwork; automated verification, regression references and the report are complete. M9 is complete: the owner merged PR #42 into `master` on 2026-10-17 (merge `73a36d0`). The `release-verification` branch is created from that merged `master`; M9a fixes 1P fullscreen canopy coverage there next. M9b consolidates and splits the plans by area on the same branch; M9b.1 improves test coverage and speed. Final testing and verification, including real-device checks, follows there in M9c. M10 releases the tested result from `master`.**
 
-**The migration merge into master requires M0–M8a and M9 cleanup to be complete, and the owner to explicitly say to merge.** Implementation milestone PRs target `phaser`; M9 ends with the `phaser` → `master` merge. After that merge, create a new `release-verification` branch from the updated `master` for M9a's fullscreen canopy fix, M9b's plan consolidation, M9b.1's test-suite improvements and all M9c testing and verification. M10 publishes the tested result on `master` only after M9c is complete and its changes are integrated.
+**M9's migration merge into master is complete.** Implementation milestone PRs targeted `phaser`; the owner merged `phaser` into `master` through [PR #42](https://github.com/skogdoom/liano/pull/42) (merge `73a36d0`). Follow-up work uses `release-verification`, created from that merged `master`, for M9a's fullscreen canopy fix, M9b's plan consolidation, M9b.1's test-suite improvements and all M9c testing and verification. M10 publishes the tested result on `master` only after M9c is complete and its changes are integrated.
 
 The goal is to replace PixiJS 8 with Phaser, and to keep every bit of the game as it is: the gameplay, all three modes, every feature and setting, the graphics, and the sounds. The classic appearance remains the migration reference. M8a adds an optional cartoon art pack based on the two concepts in `docs/`; cartoon graphics are now the default. Gameplay and sounds stay the same with either pack.
 
@@ -938,9 +938,11 @@ already passed or leave this report awaiting their results.
 
 ### M9. Cleanup and merge (S)
 
-**Status: cleanup complete; integration PR preparation, awaiting the owner's explicit approval to merge into `master`.** The README now describes Phaser, both art packs and custom artwork; package metadata describes the game. Version remains `3.0.0-dev.9`. The final sync found `master` (`ebc23a7`) already contained in `phaser`, so no conflicts or merge commit were needed. Plan consolidation remains M9b; all remaining testing and verification remains M9c on the new branch created from `master`.
+**Status: complete; the owner merged [PR #42](https://github.com/skogdoom/liano/pull/42) into `master` on 2026-10-17 (merge `73a36d0`).** The README now describes Phaser, both art packs and custom artwork; package metadata describes the game. Version remains `3.0.0-dev.9`. The final sync found `master` (`ebc23a7`) already contained in `phaser`, so no conflicts or merge commit were needed. Plan consolidation remains M9b; all remaining testing and verification remains M9c on the new branch created from `master`.
 
-Work takes place on `phaser` after M8a integration. This milestone completes the
+**Integration follow-up.** The merged tree matches the reviewed `668dd2a`, including the custom-tile replacement fix and the Pages dependency on both CI jobs. The local audit/M9b.1 plan commit `28d5015` was not part of PR #42; it is preserved as `9f5a925` on `release-verification`, created from merge `73a36d0`. Real-device verification remains pending; this records integration, not release acceptance.
+
+Work took place on `phaser` after M8a integration. This milestone completed the
 migration cleanup and merge into `master`. Remaining manual and real-device
 verification belongs to M9c after this merge.
 
@@ -951,7 +953,7 @@ verification belongs to M9c after this merge.
 
 ### M9a. Fullscreen canopy coverage (S)
 
-After M9, create a new `release-verification` branch from the updated `master`.
+**Status: next; branch prepared, canopy fix pending.** `release-verification` was created from `master` at merge `73a36d0`.
 Plan and implement this fix there before M9b plan consolidation and M9c testing and verification.
 
 - Determine why 1P fullscreen exposes sky above the canopy, including the interaction between viewport size, camera framing and canopy placement/coverage.

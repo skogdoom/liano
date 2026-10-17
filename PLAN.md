@@ -614,17 +614,17 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 
 The Phaser 4 migration plan, its pre-rendered art pipeline, device budgets,
 risks, milestones M0–M10 (including M8a, M9a, M9b, M9b.1 and M9c), and verification strategy
-are in [PHASER_PLAN.md](PHASER_PLAN.md). Development uses the long-lived `phaser`
-branch and versions `3.0.0-dev.N` through M9 integration, M9a, M9b and M9b.1. M0–M8 are
+are in [PHASER_PLAN.md](PHASER_PLAN.md). Migration work used the long-lived `phaser`
+branch; follow-up work uses `release-verification`, created from the merged `master`, and versions `3.0.0-dev.N` through M9 integration, M9a, M9b and M9b.1. M0–M8 are
 complete; the M8a cartoon artwork, automated checks and regression references
 are complete and integrated into `phaser` through
 [PR #41](https://github.com/skogdoom/liano/pull/41) (merge `a49b1f2`).
 
-- **M9 — Cleanup and merge:** finish cleanup on `phaser`, then merge it into
-  `master` with the owner's explicit approval. Remaining manual/device checks
-  move to M9c.
-- **M9a — Fullscreen canopy coverage:** create `release-verification` from the
-  updated `master`, then plan and fix sky showing above the canopy in 1P
+- **M9 — Cleanup and merge: complete.** The owner merged
+  [PR #42](https://github.com/skogdoom/liano/pull/42) into `master` on 2026-10-17
+  (merge `73a36d0`). Remaining manual/device checks move to M9c.
+- **M9a — Fullscreen canopy coverage: next.** The `release-verification` branch
+  is prepared from merged `master`; plan and fix sky showing above the canopy in 1P
   fullscreen. Sky above the canopy is acceptable in 2P shared mode.
 - **M9b — Plan consolidation and area plans:** consolidate `PLAN.md` and
   `PHASER_PLAN.md` into one authoritative plan, with a short `PLAN.md` roadmap
