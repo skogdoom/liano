@@ -3,6 +3,18 @@ import { DEV } from '../playwright.config.js';
 import { layoutFor } from '../src/layout.js';
 import { collectErrors } from './helpers.js';
 
+// A full-screen window cannot be resized: CI's headless Chromium refuses (Browser.setWindowBounds),
+// as a phone's browser does. So rotate it as a phone does, changing the viewport the page sees
+// while the window stays full screen.
+async function rotate(page, width, height) {
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
+  } finally {
+    await cdp.detach();
+  }
+}
+
 async function fitted(page, fullscreen, fixed = false) {
   const { width, height } = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
   await expect.poll(() => page.evaluate(() => window.__liano.layout)).toEqual(
@@ -96,11 +108,11 @@ for (const art of ['classic', 'cartoon']) {
     await covered(page);
 
     for (const [width, height, short] of [[390, 844, false], [844, 390, true], [844, 450, false]]) {
-      await page.setViewportSize({ width, height });
+      await rotate(page, width, height);
       await fitted(page, true);
       await covered(page, width < height, short);
     }
-    await page.setViewportSize({ width: 1024, height: 768 });
+    await rotate(page, 1024, 768);
     await fitted(page, true);
     await page.keyboard.press('Digit2');
     await page.waitForFunction(() => window.__liano.game.mode === 'shared');
