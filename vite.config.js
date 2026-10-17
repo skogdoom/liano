@@ -47,6 +47,15 @@ export default defineConfig(({ command, isPreview }) => ({
     // rewritten imports made the solver-heavy tests about three times slower (M9b.1).
     // So source imports JSON with `with { type: 'json' }` and nothing mocks modules.
     experimental: { viteModuleRunner: false },
+    // `npm run coverage`: Node line and branch coverage of every module under src/,
+    // those no unit test imports included (they count as uncovered). Browser checks and
+    // real devices cover more; see docs/plans/testing.md.
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.js'],
+      reporter: ['text-summary', 'json-summary', 'html'],
+      reportsDirectory: 'coverage',
+    },
     // The heaviest tests take 3–5 s here; CI runners are slower.
     testTimeout: 30000,
   },

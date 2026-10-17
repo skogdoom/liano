@@ -5,3 +5,5 @@ test-results/
 playwright-report/
 art/build/
 public/art/
+coverage/
+reports/

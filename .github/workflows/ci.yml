@@ -22,7 +22,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
+      # The unit tests with Node coverage, and each test's time (reports/unit.json).
+      - run: npm run coverage -- --reporter=default --reporter=json --outputFile.json=reports/unit.json
+      - name: Keep the unit timings and coverage
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-report
+          path: |
+            reports/
+            coverage/
+          retention-days: 30
       - name: Check the custom art
         run: npm run art:check
       - run: npm run build
@@ -51,6 +61,16 @@ jobs:
       # The build also builds the art (public/art/, not committed) the dev server serves.
       - run: npm run build
       - run: npm run test:browser
+      # Each check's time and attempts (reports/browser.json), and traces of failures.
+      - name: Keep the browser timings and failure traces
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-report
+          path: |
+            reports/
+            test-results/
+          retention-days: 30
 
   deploy:
     name: Deploy to GitHub Pages

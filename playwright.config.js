@@ -22,9 +22,13 @@ export default defineConfig({
   // timeouts stay unchanged, and persistent failures still fail the job.
   retries: process.env.CI ? 1 : 0,
   // On GitHub the failures also become annotations on the check run.
-  reporter: process.env.CI ? [['github'], ['list']] : 'line',
+  // Each check's time, attempts and failure (reports/browser.json, kept by CI) too.
+  reporter: process.env.CI ? [['github'], ['list'], ['json', { outputFile: 'reports/browser.json' }]] : 'line',
   use: {
     browserName: 'chromium',
+    // A failed attempt keeps its trace (test-results/, kept by CI): its actions, console
+    // and network, to tell context creation, navigation, loading and the test apart.
+    trace: process.env.CI ? 'retain-on-failure' : 'off',
     launchOptions: {
       executablePath: process.env.CHROMIUM || undefined,
       // WebGL without a GPU: SwiftShader, which headless Chromium no longer picks by itself.
