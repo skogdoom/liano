@@ -94,6 +94,24 @@ describe('layout', () => {
     expect(l.floorShift).toBe(0);
   });
 
+  it('keeps the canopy at the top in single-player fullscreen without changing world scale or horizontal framing', () => {
+    for (const [w, h] of ALL) {
+      const windowed = layoutFor(w, h);
+      const full = layoutFor(w, h, undefined, { fullscreen: true });
+      expect(full.bandTop, `${w}×${h}`).toBe(0);
+      expect(full.view).toEqual(windowed.view);
+      expect(full.scale).toBe(windowed.scale);
+      expect(full.camera).toEqual(windowed.camera);
+      expect(full.floorShift).toBe(windowed.floorShift);
+      expect(paneLayouts(full)[0].bandTop).toBe(0);
+      if (windowed.bandTop === 0) expect(full).toEqual(windowed);
+      if (full.orientation === 'portrait') {
+        expect(full.panels.title.y - 175 * full.ui).toBeGreaterThan(WORLD_HEIGHT);
+        expect(full.panels.title.y + 175 * full.ui).toBeLessThanOrEqual(full.view.height - 16);
+      }
+    }
+  });
+
   it('fills every screen without bars up to the widest view', () => {
     for (const [w, h] of ALL) {
       const l = layoutFor(w, h);
@@ -190,6 +208,18 @@ describe('camera target', () => {
 });
 
 describe('two-player layout', () => {
+  it('preserves shared and split framing in fullscreen, including the space above the shared canopy', () => {
+    for (const [w, h] of ALL) {
+      const windowed = layoutFor(w, h, undefined, { fixed: true });
+      const full = layoutFor(w, h, undefined, { fixed: true, fullscreen: true });
+      expect(full).toEqual(windowed);
+      expect(paneLayouts(full, 2)).toEqual(paneLayouts(windowed, 2));
+      const shared = paneLayouts(full, 1, 0.75);
+      expect(shared).toEqual(paneLayouts(windowed, 1, 0.75));
+      expect(shared[0].bandTop).toBeGreaterThan(0);
+    }
+  });
+
   it('always uses the 1280 × 720 frame, with bars', () => {
     for (const [w, h] of [[1280, 720], [2400, 1080], [1024, 768], [390, 844]]) {
       const l = layoutFor(w, h, undefined, { fixed: true });

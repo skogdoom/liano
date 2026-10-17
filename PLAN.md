@@ -615,7 +615,7 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 The Phaser 4 migration plan, its pre-rendered art pipeline, device budgets,
 risks, milestones M0–M10 (including M8a, M9a, M9b, M9b.1, M9b.2 and M9c), and verification strategy
 are in [PHASER_PLAN.md](PHASER_PLAN.md). Migration work used the long-lived `phaser`
-branch; follow-up work uses `release-verification`, created from the merged `master`, with M9b.2 implemented separately on a new `loading-indicator` branch from `master` and integrated before verification. Keep versions `3.0.0-dev.N` through M9 integration, M9a, M9b, M9b.1 and M9b.2. M0–M8 are
+branch; follow-up work uses `release-verification`, created from the merged `master`, with M9a implemented separately on `canopy` and M9b.2 on a new `loading-indicator` branch from `master`, both integrated before verification. Keep versions `3.0.0-dev.N` through M9 integration, M9a, M9b, M9b.1 and M9b.2. M0–M8 are
 complete; the M8a cartoon artwork, automated checks and regression references
 are complete and integrated into `phaser` through
 [PR #41](https://github.com/skogdoom/liano/pull/41) (merge `a49b1f2`).
@@ -623,9 +623,11 @@ are complete and integrated into `phaser` through
 - **M9 — Cleanup and merge: complete.** The owner merged
   [PR #42](https://github.com/skogdoom/liano/pull/42) into `master` on 2026-10-17
   (merge `73a36d0`). Remaining manual/device checks move to M9c.
-- **M9a — Fullscreen canopy coverage: next.** The `release-verification` branch
-  is prepared from merged `master`; plan and fix sky showing above the canopy in 1P
-  fullscreen. Sky above the canopy is acceptable in 2P shared mode.
+- **M9a — Fullscreen canopy coverage: implemented on `canopy`; integration pending.**
+  The new branch starts from `master`. 1P fullscreen and home-screen apps anchor
+  the world at the top; tall portrait views extend the floor fill. Windowed and
+  multiplayer framing stay the same; sky above the canopy remains acceptable in
+  2P shared mode. Integrate into `master` and sync `release-verification` before M9c.
 - **M9b — Plan consolidation and area plans:** consolidate `PLAN.md` and
   `PHASER_PLAN.md` into one authoritative plan, with a short `PLAN.md` roadmap
   referencing detailed files by area under `docs/plans/`. Preserve requirements,

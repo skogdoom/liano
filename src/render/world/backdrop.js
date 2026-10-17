@@ -109,7 +109,10 @@ export class BackdropRig {
       } else art.setTile(tile.setX(-SKY_MARGIN), key, { width });
     }
     const fillTop = FLOOR_Y + FLOOR_DEPTH;
-    art.stretch(this.floorFill, 'backdrop.floorFill', { x: -SKY_MARGIN, y: fillTop, w: width, h: WORLD_HEIGHT + EXTEND_DOWN - fillTop });
+    // Top-anchored fullscreen can put all the portrait spare height below the
+    // world band. Cover its bottom, including shake, even beyond EXTEND_DOWN.
+    const fillBottom = Math.max(WORLD_HEIGHT + EXTEND_DOWN, top + pane.view.height - pane.floorShift + SKY_MARGIN);
+    art.stretch(this.floorFill, 'backdrop.floorFill', { x: -SKY_MARGIN, y: fillTop, w: width, h: fillBottom - fillTop });
     this.floor.y = pane.floorShift;
     this.resetMotion();
   }

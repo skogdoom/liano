@@ -155,7 +155,10 @@ function layout() {
   layoutMode = theGame.mode;
   const insets = safeAreaInsets();
   platform.menuArea = visibleMenuArea(window, insets);
-  platform.layout = layoutFor(w, h, insets, { fixed: MODES[theGame.mode].players > 1 });
+  platform.layout = layoutFor(w, h, insets, {
+    fixed: MODES[theGame.mode].players > 1,
+    fullscreen: game.scale.fullscreen.active || isHomeScreenApp(window),
+  });
   platform.camera = viewCamera(platform.layout, r);
   platform.emit('layout', platform.layout, platform.camera);
 }
