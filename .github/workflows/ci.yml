@@ -29,6 +29,9 @@ jobs:
       - run: npm ci
       # The unit tests with Node coverage, and each test's time (reports/unit.json).
       - run: npm run coverage -- --reporter=default --reporter=json --outputFile.json=reports/unit.json
+      - name: Summarize the unit timings
+        if: always()
+        run: node scripts/report-timings.mjs unit
       - name: Keep the unit timings and coverage
         if: always()
         uses: actions/upload-artifact@v7
@@ -69,6 +72,9 @@ jobs:
         env:
           BROWSER_TESTS: ${{ inputs.browser_tests }}
       # Each check's time and attempts (reports/browser.json), and traces of failures.
+      - name: Summarize the browser timings and retries
+        if: always()
+        run: node scripts/report-timings.mjs browser
       - name: Keep the browser timings and failure traces
         if: always()
         uses: actions/upload-artifact@v7
