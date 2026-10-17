@@ -228,6 +228,17 @@ function toggleMute() {
 // scene, which is always running. Manual pause accepts resume/menu controls;
 // gameplay presses wait until the resume grace period ends (see pause.js). A tap on the mute button toggles sound instead, and one on
 // the full-screen button is handled by its own controls.
+// Hooks for inspecting and driving the game from the browser console and tests. Set before
+// waiting for the UI scene, so they are there even when startup fails before it.
+if (import.meta.env.DEV) {
+  window.__liano = {
+    app: game, engine: 'phaser', platform, pause, fullscreen, fatal, sound,
+    get layout() { return platform.layout; },
+    get camera() { return platform.camera; },
+    get game() { return theGame; },
+  };
+}
+
 const ui = await new Promise((resolve) => platform.once('ui', resolve));
 const buttonAt = (hit, event) =>
   inside(hit, controlsPoint(platform.layout, game.canvas.getBoundingClientRect(), event.clientX, event.clientY));
@@ -282,15 +293,8 @@ game.events.on(Phaser.Core.Events.STEP, (time, delta) => {
   platform.frame = driver.frame(delta);
 });
 
-// Hooks for inspecting and driving the game from the browser console and tests.
-if (import.meta.env.DEV) {
-  window.__liano = {
-    app: game, engine: 'phaser', platform, pause, fullscreen, fatal, sound, input, driver,
-    get layout() { return platform.layout; },
-    get camera() { return platform.camera; },
-    get game() { return theGame; },
-  };
-}
+// The input and driver, once the UI scene is up, for the hooks (see above).
+if (import.meta.env.DEV) Object.assign(window.__liano, { input, driver });
 
 // Record the real update/render loop on devices with the frame readout enabled.
 // Kept out of normal play.
