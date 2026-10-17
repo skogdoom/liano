@@ -7,6 +7,10 @@ import { MonkeyState } from '../src/sim/monkey.js';
 import { SIM_DT } from '../src/config.js';
 import { windowForGrab } from './helpers.js';
 
+// Time budgets mean nothing under coverage's instrumentation (npm run coverage); the plain
+// run (npm test, also in CI) checks them.
+const timed = process.env.COVERAGE ? it.skip : it;
+
 // Runs obstacleWorker.js's job when flushed, the way the real worker answers later.
 class FakeWorker {
   constructor() {
@@ -86,11 +90,11 @@ describe('obstacle prefetch', () => {
     expect(prefetch.misses).toBe(0);
     expect(mainThreadRuns).toBe(0);
     expect([...world.obstacles.values()].some((o) => o?.moving)).toBe(true);
-    // No frame spends a frame's worth of time on generation.
-    expect(slowest).toBeLessThan(16);
+    // No frame spends a frame's worth of time on generation (not measured under coverage).
+    if (!process.env.COVERAGE) expect(slowest).toBeLessThan(16);
   });
 
-  it('stays within 20 ms per moving gap in the worker', () => {
+  timed('stays within 20 ms per moving gap in the worker', () => {
     createObstacle(1, 60); // warms the empty-gap flight cache
     let slowest = 0;
     let moving = 0;

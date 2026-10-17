@@ -3,19 +3,22 @@ import { DEV } from '../playwright.config.js';
 import { layoutFor } from '../src/layout.js';
 import { collectErrors, test } from './helpers.js';
 
-// A full-screen window cannot be resized: CI's headless Chromium refuses (Browser.setWindowBounds),
-// and a full-screen page there is as large as the screen whatever its viewport. So rotate it
-// as a phone does: the screen turns, and the viewport with it, while the window stays full
-// screen.
-async function rotate(page, width, height) {
-  const cdp = await page.context().newCDPSession(page);
-  try {
-    await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false,
-      screenWidth: width, screenHeight: height });
-  } finally {
-    await cdp.detach();
-  }
+// A full-screen page takes the size of the screen. CI's headless Chromium will not resize a
+// full-screen window (Browser.setWindowBounds) or let a viewport override change it, so a
+// phone's rotation cannot be played there: each shape gets a page whose screen is that shape,
+// and goes full screen in it. A resize while full screen runs the same layout as any resize
+// (checked elsewhere); rotating a real phone in full screen is checked on devices (M9c).
+async function fullscreenAt(browserPages, art, width, height) {
+  const page = await browserPages.newPage({ viewport: { width, height }, screen: { width, height } });
+  const errors = collectErrors(page);
+  await page.goto(`${DEV}?art=${art}`);
+  await page.waitForFunction(() => window.__liano?.platform.world?.panes.length);
+  await fitted(page, false);
+  await page.keyboard.press('KeyF');
+  await page.waitForFunction(() => !!document.fullscreenElement);
   await expect.poll(() => page.evaluate(() => [innerWidth, innerHeight])).toEqual([width, height]);
+  await fitted(page, true);
+  return { page, errors };
 }
 
 // What the page and the game see, for failure messages.
@@ -111,25 +114,17 @@ async function covered(page, portrait = false, short = false) {
 }
 
 for (const art of ['classic', 'cartoon']) {
-  test(`${art} canopy covers 1P fullscreen after resize and rotation while 2P keeps its framing`, async ({ page }) => {
-    const errors = collectErrors(page);
-    await page.setViewportSize({ width: 1024, height: 768 });
-    await page.goto(`${DEV}?art=${art}`);
-    await page.waitForFunction(() => window.__liano?.platform.world?.panes.length);
-    await fitted(page, false);
-    expect(await page.evaluate(() => window.__liano.layout.bandTop)).toBe(120);
-    await page.keyboard.press('KeyF');
-    await page.waitForFunction(() => !!document.fullscreenElement);
-    await fitted(page, true);
-    await covered(page);
-
+  test(`${art} canopy covers 1P fullscreen in landscape, portrait and short views while 2P keeps its framing`, async ({ browserPages }) => {
+    test.setTimeout(180_000); // four pages, each started cold
     for (const [width, height, short] of [[390, 844, false], [844, 390, true], [844, 450, false]]) {
-      await rotate(page, width, height);
-      await fitted(page, true);
+      const { page, errors } = await fullscreenAt(browserPages, art, width, height);
       await covered(page, width < height, short);
+      expect(errors).toEqual([]);
+      await page.close();
     }
-    await rotate(page, 1024, 768);
-    await fitted(page, true);
+
+    const { page, errors } = await fullscreenAt(browserPages, art, 1024, 768);
+    await covered(page);
     await page.keyboard.press('Digit2');
     await page.waitForFunction(() => window.__liano.game.mode === 'shared');
     await fitted(page, true, true);
@@ -144,6 +139,7 @@ for (const art of ['classic', 'cartoon']) {
     await page.keyboard.press('KeyF');
     await page.waitForFunction(() => !document.fullscreenElement);
     await fitted(page, false);
+    expect(await page.evaluate(() => window.__liano.layout.bandTop)).toBe(120);
     expect(errors).toEqual([]);
   });
 }

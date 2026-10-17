@@ -27,8 +27,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # The unit tests with Node coverage, and each test's time (reports/unit.json).
-      - run: npm run coverage -- --reporter=default --reporter=json --outputFile.json=reports/unit.json
+      # The unit tests with each test's time (reports/unit.json) and failures as annotations,
+      # then again with Node coverage and its floors (time budgets are skipped there).
+      - run: npm test -- --reporter=default --reporter=github-actions --reporter=json --outputFile.json=reports/unit.json
+      - run: npm run coverage
       - name: Summarize the unit timings
         if: always()
         run: node scripts/report-timings.mjs unit

@@ -22,7 +22,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "coverage": "vitest run --coverage",
+    "coverage": "COVERAGE=1 vitest run --coverage",
     "test:watch": "vitest",
     "test:browser": "playwright test"
   },
