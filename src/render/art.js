@@ -1,7 +1,7 @@
 import { TILE_EDGE, atlasScaleFor } from '../art/catalog.js';
 import { validArtChoice } from '../platform/artStyle.js';
 
-// The pre-rendered art in the Phaser version (PHASER_PLAN.md, section 5): loading the
+// The pre-rendered art in the Phaser version (docs/plans/art-pipeline.md): loading the
 // atlases built into public/art/ (scripts/build-art.mjs) and making pieces from them.
 // public/art/<pack>/pieces.json says where its frames are, its anchor
 // and its zoom at each atlas scale.

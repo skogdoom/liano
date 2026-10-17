@@ -774,8 +774,9 @@ export function drawThornBushBody(g) {
   return g;
 }
 
-// Rocks come in ROCK_VARIANTS outlines, one picked per gap (PHASER_PLAN.md, M4: a random
-// outline per gap could not be pre-rendered).
+// Rocks come in ROCK_VARIANTS outlines, one picked per gap
+// (docs/plans/history/phaser-migration.md, M4: a random outline per gap could not be
+// pre-rendered).
 export const ROCK_VARIANTS = 24;
 export const rockVariant = (gap, count = ROCK_VARIANTS) => Math.floor(mulberry32(mixSeed(0x70c4, gap))() * count);
 
@@ -1332,7 +1333,7 @@ export function drawFlyingBatWing(g, look, lift) {
 }
 
 // The colours of the lines that pieces build from straight segments and round joints
-// (PHASER_PLAN.md, M4): legs, twigs, stems, vines and threads.
+// (docs/plans/history/phaser-migration.md, M4): legs, twigs, stems, vines and threads.
 export const LINE_COLORS = {
   vine: VINE,
   stalk: STALK,

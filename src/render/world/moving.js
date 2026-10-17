@@ -16,9 +16,9 @@ import { Builder, cubicPoints } from './build.js';
 import { paintedSnakePose } from './snakePose.js';
 import { spiderLegFrame } from '../../art/spiderPose.js';
 
-// The moving obstacles in the Phaser version (PHASER_PLAN.md, M5c), as the Pixi
-// ObstacleViews draw them: a body that follows the obstacle (scaled with the hitbox),
-// parts animated from its time, and scenery in world units: the spider's thread, the
+// The moving obstacles in the Phaser version (docs/plans/history/phaser-migration.md, M5c),
+// as the Pixi ObstacleViews draw them: a body that follows the obstacle (scaled with the
+// hitbox), parts animated from its time, and scenery in world units: the spider's thread, the
 // snake's stalk. Each returns { parts, body, animate(t) }.
 
 function spider(b, o) {

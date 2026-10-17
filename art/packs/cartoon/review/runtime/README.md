@@ -50,7 +50,7 @@ source/contract checks, nine focused unit tests and nine pack browser checks pas
 
 Approve the artwork before promoting selected fixed fixtures to automated cartoon
 references. Eight raw source/atlas edge comparisons remain recorded in
-`PHASER_PLAN.md`; no comparison threshold has been changed to hide them.
+the M8a report (`docs/plans/history/phaser-migration.md`); no comparison threshold has been changed to hide them.
 
 The snake, shadow and button fixtures show the transparency/legibility repairs at
 native 2×: clean snake silhouettes, the more visible ghost monkey, and separate

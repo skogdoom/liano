@@ -2,7 +2,7 @@
 
 Audited commit: `668dd2a`, before implementation of M9b.1. This audit changes
 documentation only. Its improvements are planned in
-[M9b.1](../PHASER_PLAN.md#m9b1-test-suite-coverage-and-performance-m), immediately
+[M9b.1](plans/testing.md#m9b1-test-suite-coverage-and-performance-m), immediately
 before M9c final testing and verification on `release-verification`.
 
 ## Coverage: what the measurements mean

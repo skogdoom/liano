@@ -2,11 +2,11 @@ import { LEAF_REFERENCE } from '../../art/pieces/liana.js';
 import { drawnState, flashingLianas, leafLayout, lianaPlacement, lianaShape, lianaVisible } from '../../views/liana.js';
 import { makeContainer } from './build.js';
 
-// The lianas of one set in the Phaser version (PHASER_PLAN.md, M5a), in one colouring of
-// the liana pieces: 'green', 'gold' (player 2's own in shared screen) or 'shadow'. Per
-// liana the rope (a strip bent along it), its leaves and the lit end. The ropes, the
-// leaves and the lit ends each go in a layer of their own, so the pieces of one kind are
-// drawn together; a set's lianas are far enough apart not to overlap.
+// The lianas of one set in the Phaser version (docs/plans/history/phaser-migration.md, M5a),
+// in one colouring of the liana pieces: 'green', 'gold' (player 2's own in shared screen) or
+// 'shadow'. Per liana the rope (a strip bent along it), its leaves and the lit end. The
+// ropes, the leaves and the lit ends each go in a layer of their own, so the pieces of one
+// kind are drawn together; a set's lianas are far enough apart not to overlap.
 export class LianaSetRig {
   // `side`: for one of a pair of liana sets (shared screen), the side its lianas bow to
   // at rest; 0 for a single set.

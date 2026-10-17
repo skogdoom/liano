@@ -2,8 +2,8 @@ import { ARM, LIMBS, MonkeyPose } from '../../views/monkey.js';
 import { MonkeyState } from '../../sim/monkey.js';
 import { makeContainer } from './build.js';
 
-// A monkey in the Phaser version (PHASER_PLAN.md, M5a): the pieces of one fur (p1, p2 or
-// shadow), posed by MonkeyPose. Painted bodies can cover the limb roots.
+// A monkey in the Phaser version (docs/plans/history/phaser-migration.md, M5a): the pieces of
+// one fur (p1, p2 or shadow), posed by MonkeyPose. Painted bodies can cover the limb roots.
 export class MonkeyRig {
   constructor(scene, art, fur) {
     const piece = (part, frame = 0) => art.image(scene, `monkey.${fur}.${part}`, frame);

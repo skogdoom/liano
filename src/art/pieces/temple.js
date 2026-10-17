@@ -140,8 +140,8 @@ export const TEMPLE_PIECES = [
   {
     ...temple,
     key: 'temple.haze',
-    // Soft, so rasterized at half the scale (PHASER_PLAN.md, R2); only its top half shows,
-    // the rest is behind the floor.
+    // Soft, so rasterized at half the scale (docs/plans/architecture.md, risk R2); only its
+    // top half shows, the rest is behind the floor.
     scale: OBSTACLE_SCALE / 2,
     purpose: `The green haze over the foot of the temple: the top half of nested soft ellipses, about their centre (the origin, 30 px below the temple's floor), down to ${HAZE_FLOOR} px above it, where the jungle floor covers it.`,
     box: { x: -TEMPLE_HAZE.rx - 1, y: -TEMPLE_HAZE.ry - 1, w: 2 * TEMPLE_HAZE.rx + 2, h: TEMPLE_HAZE.ry + 1 - HAZE_FLOOR },

@@ -25,10 +25,11 @@ const tile = { kind: 'tile', set: 'boot', tint: true };
 // and middle layers are soft, and stay at 1×).
 const sharp = { scale: 2 };
 // The canopy and the floor move with the world, as fast as the camera: in a fast flight
-// their hard edges moved 10–12 points a frame and looked stepped at 60 Hz (PHASER_PLAN.md,
-// M7), so the build softens them sideways. The canopy's 0.4 units is a little under
-// one pixel at 2×. The floor's thin, high-contrast shrubs need a little more softening
-// (Safari follow-up, BACKGROUND_MOTION.md); their 0.8 units is 1.6 pixels at 2×.
+// their hard edges moved 10–12 points a frame and looked stepped at 60 Hz
+// (docs/plans/history/phaser-migration.md, M7), so the build softens them sideways. The
+// canopy's 0.4 units is a little under one pixel at 2×. The floor's thin, high-contrast
+// shrubs need a little more softening (Safari follow-up, docs/plans/background-motion.md);
+// their 0.8 units is 1.6 pixels at 2×.
 const CANOPY_SOFTEN = 0.4;
 const FLOOR_SOFTEN = 0.8;
 // The near layer: its leaf clumps reach this far down from the top of the band, and its

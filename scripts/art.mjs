@@ -1,4 +1,4 @@
-// Writes the pre-rendered art's sources (PHASER_PLAN.md, section 5): each piece's frames
+// Writes the pre-rendered art's sources (docs/plans/art-pipeline.md): each piece's frames
 // as SVG into art/generated/, with art/manifest.json describing them and art/README.md,
 // the guide for whoever replaces them (src/art/generate.js,
 // the pieces in src/art/pieces/). `npm run art` after changing a piece's drawing code;

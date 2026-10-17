@@ -1,7 +1,7 @@
 // Drawing calls recorded in Pixi's terms (art/recorder.js) replayed on a Phaser Graphics.
 // Only for the debug view (dev only): Phaser rebuilds a Graphics' geometry every frame,
-// and it has no round caps or joins (PHASER_PLAN.md, M1), which hitboxes and paths can do
-// without. Curves are drawn as lines between points along them.
+// and it has no round caps or joins (docs/plans/history/phaser-migration.md, M1), which
+// hitboxes and paths can do without. Curves are drawn as lines between points along them.
 const CURVE_STEPS = 12;
 
 function subpathPoints({ start, segments }) {

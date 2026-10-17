@@ -1,10 +1,11 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
-// Phaser built from its source, without what the game does not use (PHASER_PLAN.md, M0
-// and M7): no physics (its no-physics entry) and WebGL only. Phaser's code tests its
-// feature flags as `if (typeof CANVAS_RENDERER)`, which its own webpack build replaces;
-// here a transform does, in the build and in the dev server's pre-bundling alike.
+// Phaser built from its source, without what the game does not use
+// (docs/plans/history/phaser-migration.md, M0 and M7): no physics (its no-physics entry) and
+// WebGL only. Phaser's code tests its feature flags as `if (typeof CANVAS_RENDERER)`, which
+// its own webpack build replaces; here a transform does, in the build and in the dev server's
+// pre-bundling alike.
 const PHASER_ENTRY = fileURLToPath(new URL('./node_modules/phaser/src/phaser-no-physics.js', import.meta.url));
 const PHASER_SOURCE = /[\\/]node_modules[\\/]phaser[\\/]src[\\/].*\.js$/;
 const PHASER_FLAGS = {

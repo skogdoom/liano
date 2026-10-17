@@ -22,10 +22,10 @@ import {
 } from '../../views/obstacles.js';
 import { quadraticPoints } from './build.js';
 
-// The temple in the Phaser version (PHASER_PLAN.md, M5d), as the Pixi view draws it: the
-// stone and greenery take the stage tint (Art.tint), the braziers' fire does not, and in
-// the dark stages each brazier lights the stone round it with a glow added to what is
-// behind it. `b` is a Builder; returns { view, update(t, tint) }.
+// The temple in the Phaser version (docs/plans/history/phaser-migration.md, M5d), as the Pixi
+// view draws it: the stone and greenery take the stage tint (Art.tint), the braziers' fire
+// does not, and in the dark stages each brazier lights the stone round it with a glow added
+// to what is behind it. `b` is a Builder; returns { view, update(t, tint) }.
 const GREENS = Object.values(TEMPLE_GREENS);
 const [, tierA, tierB, tierC, base] = OBSTACLE_HITBOXES.temple;
 

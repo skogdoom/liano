@@ -3,7 +3,8 @@ import { RecordingGraphics } from '../src/art/recorder.js';
 import { replay } from '../src/render/graphics.js';
 
 // The debug view's drawing, recorded in Pixi's terms and replayed on a Phaser Graphics
-// (PHASER_PLAN.md, M6). A stand-in records what the replay asks of Phaser.
+// (docs/plans/history/phaser-migration.md, M6). A stand-in records what the replay asks of
+// Phaser.
 function phaserGraphics() {
   const calls = [];
   return new Proxy(

@@ -57,7 +57,7 @@ export function drawSky(g, top, width, bottom) {
 
 // How fast the far layer scrolls, as a share of the camera's speed. The layers are slow:
 // a layer's hard-edged trees moving several pixels a frame look stepped on a 60 Hz
-// screen however smoothly the frames come (PHASER_PLAN.md, M7).
+// screen however smoothly the frames come (docs/plans/history/phaser-migration.md, M7).
 export const FAR_FACTOR = 0.06;
 
 // One tile (TILE wide, repeating) of the far layer (also as a piece for the Phaser version).
