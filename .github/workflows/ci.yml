@@ -67,7 +67,21 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       # The build also builds the art (public/art/, not committed) the dev server serves.
-      - run: npm run build
+      # The art depends only on art/, src/art/ and its build script with their packages,
+      # so it is cached on those; the unit job above always builds it from scratch, checks
+      # it, and builds the site Pages publishes. The window table is the committed one,
+      # whose freshness the unit job checks.
+      - name: Restore the built art
+        id: art
+        uses: actions/cache@v6
+        with:
+          path: public/art
+          key: art-${{ runner.os }}-${{ hashFiles('art/**', 'src/art/**', 'scripts/build-art.mjs', 'package-lock.json') }}
+      - name: Build the art
+        if: steps.art.outputs.cache-hit != 'true'
+        run: npm run art:build
+      - name: Build the game
+        run: npx vite build
       - run: npm run test:browser -- $BROWSER_TESTS
         env:
           BROWSER_TESTS: ${{ inputs.browser_tests }}
