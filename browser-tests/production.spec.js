@@ -13,6 +13,7 @@ for (const art of ['cartoon', 'classic']) {
     const workerStarted = page.waitForEvent('worker');
     await page.goto(art === 'cartoon' ? PREVIEW : `${PREVIEW}?art=classic`);
     await started(page, errors);
+    await expect(page.locator('canvas')).toHaveCount(1);
     await expect(page.locator('#loading')).toBeHidden();
 
     // Only this pack's catalog, boot and main sets, under /liano/.

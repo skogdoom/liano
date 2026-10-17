@@ -16,19 +16,8 @@ async function phaser(page) {
 
 const state = (page) => page.evaluate(() => window.__liano.game.state);
 
-test('the Phaser version plays: Space starts a run, Esc goes back to the title, 2 picks a mode', async ({ page }) => {
-  const errors = await phaser(page);
-  expect(await state(page)).toBe('TITLE');
-  await page.keyboard.press('Space');
-  await expect.poll(() => state(page)).toBe('PLAYING');
-  await page.keyboard.press('Escape');
-  await expect.poll(() => state(page)).toBe('TITLE');
-  await page.keyboard.press('Digit2');
-  await expect.poll(() => page.evaluate(() => window.__liano.game.mode)).toBe('shared');
-  // The two-player modes use the 16:9 frame.
-  await expect.poll(() => page.evaluate(() => window.__liano.layout.view)).toEqual({ width: 1280, height: 720 });
-  expect(errors).toEqual([]);
-});
+// Space starting a run, Esc back to the title and the modes' 16:9 frame are checked for
+// each art pack in art-packs.spec.js.
 
 test('the Phaser version counts each key press once, two in one frame too', async ({ page }) => {
   const errors = await phaser(page);

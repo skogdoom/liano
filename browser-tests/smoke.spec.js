@@ -2,14 +2,7 @@ import { test, expect } from '@playwright/test';
 import { DEV, PREVIEW } from '../playwright.config.js';
 import { collectErrors, started } from './helpers.js';
 
-test('the production build starts without errors', async ({ page }) => {
-  const errors = collectErrors(page);
-  await page.goto(PREVIEW);
-  await started(page, errors);
-  await expect(page.locator('canvas')).toHaveCount(1);
-  await expect(page.locator('#fatal')).not.toHaveClass(/shown/);
-  expect(errors).toEqual([]);
-});
+// The production build's start, art, worker and first run: production.spec.js.
 
 // Retired engine URLs must still open the game rather than a removed script.
 test('an old engine URL still starts the Phaser game', async ({ page }) => {

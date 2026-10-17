@@ -19,6 +19,8 @@ for (const art of ['classic', 'cartoon']) test(`${art} loads only its own pack a
     // consumed; selecting a mode intentionally clears other presses in that step.
     if (await page.evaluate(() => window.__liano.game.mode) !== mode) await page.keyboard.press(key);
     await expect.poll(() => page.evaluate(() => window.__liano.game.mode)).toBe(mode);
+    // The two-player modes use the 16:9 frame (formerly game.spec.js's first check).
+    if (mode !== 'solo') await expect.poll(() => page.evaluate(() => window.__liano.layout.view)).toEqual({ width: 1280, height: 720 });
     await page.keyboard.press('Space');
     await expect.poll(() => page.evaluate(() => window.__liano.game.state)).toBe('PLAYING');
     await page.keyboard.press('KeyA');
