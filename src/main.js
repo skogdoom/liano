@@ -25,12 +25,14 @@ import { applyResolutionChoice, rememberResolutionChoice, resolutionChoice } fro
 import { ConfigMenu } from './render/configMenu.js';
 import { visibleMenuArea } from './render/menuLayout.js';
 import { applyArtChoice, artChoice, rememberArtChoice } from './platform/artStyle.js';
+import { createStartup } from './startup.js';
 
 // The game entry. The platform holds layout, pause, fullscreen, input and sound
 // for the scenes; driver.js advances the fixed-step simulation. The play scene draws
 // the worlds; the UI scene the buttons,
 // the HUD, the panels and the debug view.
 
+export const startup = createStartup(document);
 let game = null;
 // Anything that breaks from here on, startup included, shows a reload message instead
 // of a frozen canvas, and stops the game's loop rather than failing every frame.
@@ -46,6 +48,7 @@ const fatal = createFatalOverlay(document, { reload: () => artPack === 'cartoon'
   reloadLabel: artPack === 'cartoon' ? 'Reload classic graphics' : 'Reload game' });
 let sound = null;
 const fail = (error) => {
+  startup.fail();
   game?.loop.sleep();
   sound?.setPaused(true);
   fatal.show(error);
@@ -97,6 +100,7 @@ platform.resolutionLimit = resolutionCap;
 platform.resolutionMode = resolutionPreference;
 platform.artPack = artPack;
 platform.fail = fail;
+platform.startup = startup;
 platform.mobile = coarsePointer;
 platform.configMenu = new ConfigMenu(resolutionPreference, {
   apply: (choice) => applyResolutionChoice(choice, window, currentSettings()),
@@ -229,6 +233,7 @@ const buttonAt = (hit, event) =>
   inside(hit, controlsPoint(platform.layout, game.canvas.getBoundingClientRect(), event.clientX, event.clientY));
 const input = createInput(phaserKeys(ui.input.keyboard, {
   intercept: (event) => {
+    if (!startup.complete) { event.preventDefault(); return true; }
     if (platform.configMenu.interceptKey(event, theGame, pause.acceptsInput())) return true;
     if (coarsePointer && ['Digit1', 'Digit2', 'Digit3'].includes(event.code)) {
       event.preventDefault();
@@ -238,8 +243,9 @@ const input = createInput(phaserKeys(ui.input.keyboard, {
   },
 }), phaserPointers(ui.input), {
   initialType: coarsePointer ? 'touch' : 'keyboard',
-  accepts: (role) => pause.acceptsInput(role),
+  accepts: (role) => startup.complete && pause.acceptsInput(role),
   intercept: (event) => {
+    if (!startup.complete) return true;
     if (platform.fullscreenButton && buttonAt(FULLSCREEN_HIT, event)) return true;
     if (buttonAt(MUTE_HIT, event)) { toggleMute(); return true; }
     return ui.overlays.interceptConfigPointer(event, theGame, pause.acceptsInput());
@@ -261,8 +267,8 @@ const driver = createDriver({
   pause,
   sound,
   prefetch,
-  // Presses wait for main art, cached sound and resource preparation.
-  ready: () => platform.world !== undefined,
+  // Loading presses are discarded, and play starts after the prepared frame.
+  ready: () => startup.complete,
   onStep(dt) {
     platform.world?.sync();
     if (theGame.mode !== layoutMode) layout();

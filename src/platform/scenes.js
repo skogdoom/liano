@@ -55,6 +55,7 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     const platform = platformOf(this);
+    if (platform.startup.failed) return;
     const catalog = this.cache.json.get(CATALOG);
     if (catalog.pack !== platform.artPack) throw new Error('The loaded graphics catalog does not match the selected pack');
     const scale = Art.scaleFor(platform.camera.zoom);
@@ -63,6 +64,7 @@ export class BootScene extends Phaser.Scene {
     const loadSet = (set, then) => {
       queueSet(this.load, catalog, set, scale);
       this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+        if (platform.startup.failed) return;
         platform.artLoad.sets.push({ set, ms: Math.round(performance.now() - this.started) });
         platform.emit('art', set);
         then?.();
@@ -95,15 +97,30 @@ export class PlayScene extends Phaser.Scene {
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     followLayout(this, () => this.layoutPanes());
     // The world is drawn once the main set of the art is in (obstacles are in it); until
-    // then the game holds presses (see main.js).
+    // then gameplay presses are ignored (see main.js).
     const start = async () => {
-      await platform.soundReady;
-      const started = performance.now();
-      const rigs = warmObstacleRigs(this, platform.art);
-      platform.prepared = { rigs, ms: performance.now() - started, sounds: platform.sound.cache?.buffers.size ?? 0, soundBytes: platform.sound.cache?.bytes ?? 0 };
-      this.ready = true;
-      platform.world = this;
-      this.sync();
+      try {
+        await platform.soundReady;
+        if (platform.startup.failed) return;
+        const started = performance.now();
+        const rigs = await warmObstacleRigs(this, platform.art);
+        if (platform.startup.failed) return;
+        platform.prepared = { rigs, ms: performance.now() - started, sounds: platform.sound.cache?.buffers.size ?? 0, soundBytes: platform.sound.cache?.bytes ?? 0 };
+        this.ready = true;
+        this.sync();
+        const onFrame = () => {
+          if (platform.startup.failed) return;
+          if (this.game.renderer.contextLost) return;
+          platform.input.clear();
+          platform.world = this;
+          platform.startup.finish();
+        };
+        this.game.events.on(Phaser.Core.Events.POST_RENDER, onFrame);
+        // Also clean up if a failure stops the loop before another frame renders.
+        platform.startup.ready.then(() => this.game.events.off(Phaser.Core.Events.POST_RENDER, onFrame));
+      } catch (error) {
+        platform.fail(error);
+      }
     };
     if (platform.artLoad.sets.some((s) => s.set === 'main')) start();
     else {

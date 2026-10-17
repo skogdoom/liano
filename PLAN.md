@@ -640,11 +640,11 @@ are complete and integrated into `phaser` through
   final verification. Improve timeout diagnostics, reuse deterministic fixtures,
   optimize pixel checks and CI builds, and cover production/recovery gaps while
   preserving the suite's distinct guarantees, thresholds and negative controls.
-- **M9b.2 — Startup loading indicator:** on a new `loading-indicator` branch
-  created from the latest `master`, show a game-styled indicator during slow
+- **M9b.2 — Startup loading indicator: implemented on `loading-indicator`; integration pending.**
+  The branch starts from `master` at `82cf3b5`. A delayed indicator covers slow
   resource downloads and setup, from before the game bundle loads until the
-  first ready game frame. Avoid flashing on fast loads; preserve error messages
-  and input gating. Integrate into `master` and bring it into
+  first ready game frame. Fast loads avoid a flash; errors hand over to reload
+  and early gameplay presses are discarded. Integrate into `master` and bring it into
   `release-verification` before M9c.
 - **M9c — Test and verification:** after M9a, M9b, M9b.1 and M9b.2, perform all
   final automated, manual and real-device testing and resulting fixes on

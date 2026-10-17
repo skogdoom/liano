@@ -41,6 +41,36 @@
         display: block;
         touch-action: none;
       }
+      #loading {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 18px;
+        padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+        background: #0b1a10;
+        color: #f4e7c5;
+        font: bold 20px system-ui, sans-serif;
+        visibility: hidden;
+        animation: loading-show 0s 250ms forwards;
+      }
+      #loading[hidden] { display: none; }
+      .loading-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid #354b2d;
+        border-top-color: #e7b854;
+        border-radius: 50%;
+        animation: loading-spin 900ms linear infinite;
+      }
+      @keyframes loading-show { to { visibility: visible; } }
+      @keyframes loading-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) {
+        .loading-spinner { animation: none; }
+      }
       /* Full-screen messages over the canvas: a passing notice (e.g. restoring
          graphics) and a fatal error. */
       #notice,
@@ -80,8 +110,32 @@
         cursor: pointer;
       }
     </style>
+    <script>
+      // The bundled entry can fail before its own error boundary downloads.
+      {
+        const controller = new AbortController();
+        window.__loadingErrorController = controller;
+        window.addEventListener('error', (event) => {
+          const script = event.target;
+          if (script?.tagName !== 'SCRIPT' || script.type !== 'module' || new URL(script.src).origin !== location.origin) return;
+          const show = () => {
+            document.getElementById('loading').hidden = true;
+            document.getElementById('fatal').classList.add('shown');
+            document.querySelector('#fatal button').onclick = () => location.reload();
+            controller.abort();
+            delete window.__loadingErrorController;
+          };
+          if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show, { once: true });
+          else show();
+        }, { capture: true, signal: controller.signal });
+      }
+    </script>
   </head>
   <body>
+    <div id="loading" role="status" aria-live="polite">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <span>Loading…</span>
+    </div>
     <div id="notice" role="status"></div>
     <div id="fatal" role="alert">
       <span id="fatal-message">Something went wrong.</span>

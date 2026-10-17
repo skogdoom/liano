@@ -1054,18 +1054,46 @@ coverage and speed without changing gameplay or weakening the checks.
 
 ### M9b.2. Startup loading indicator (S)
 
-**Status: planned; implementation and branch creation pending.** After M9b.1 and
-before M9c, create a new `loading-indicator` branch from the latest `master`.
-Implement the indicator there, integrate the completed change into `master`,
-then bring the updated `master` into `release-verification` before final testing.
-Keep the version in the `3.0.0-dev.N` series.
+**Status: implemented on `loading-indicator`; integration pending.** The branch
+was created from `master` at `82cf3b5`. The owner requested implementation on
+2026-10-17 before M9b/M9b.1; those milestones remain pending. Integrate the
+completed change into `master`, then sync `release-verification` before M9c.
+Version remains `3.0.0-dev.9`.
 
 - Show a small loading indicator when opening the game takes noticeable time, covering resource downloads and setup. Start with a short delay (around 250 ms) to avoid a flash on fast or cached loads. Make the shell available from the initial HTML/CSS, before the large game module, art catalog or atlases have downloaded; do not require another image, font or script download to display it.
-- Keep it visible through the boot and main art sets, sound preparation and initial world/rig setup, until the first fully prepared title/game frame has rendered and input can be handled. The current `src/boot.js` `data-ready` flag follows the `main.js` import and fires too early for this purpose; use a readiness signal shared with the existing startup checks rather than another independent timer. Keep animation responsive during lengthy setup, yielding between setup batches if needed.
+- Keep it visible through the boot and main art sets, sound preparation and initial world/rig setup, until the first fully prepared title/game frame has rendered and input can be handled. Before M9b.2, the `src/boot.js` `data-ready` flag followed the `main.js` import and fired too early for this purpose; use a readiness signal shared with the existing startup checks rather than another independent timer. Keep animation responsive during lengthy setup, yielding between setup batches if needed.
 - Match the jungle game's palette and keep the presentation simple and readable in portrait, landscape, fullscreen, safe areas and both graphics modes. Use an accessible status announcement and respect reduced motion. Use indeterminate progress or truthful phase text when total work is unknown; never show a fabricated percentage or imply completion while setup continues.
 - Preserve existing startup input gating and audio-unlock behavior. An input during loading must not accidentally start or release the monkey. Remove the indicator and its timers/listeners when ready. Failed script, catalog or atlas loads and setup errors must hand over to the existing error/reload interface; preserve worker fallback and graphics-restoration notices.
 - Add focused checks using controlled delayed downloads/setup, not long sleeps: slow game-bundle and main-art loading keep the indicator visible until actual readiness; fast/cached startup avoids a flash; a failed resource shows the existing error interface; startup input remains gated. Reuse the M9b.1 production-startup readiness coverage at `/liano/` and exercise both packs without duplicating the full browser matrix. Carry cold/warm mobile startup, rotation and visual checks into M9c.
 - **Done when:** slow startup has visible feedback throughout downloads and setup, fast startup stays unobtrusive, failure and input behavior remain correct, focused checks pass, and the change is present on `master` and `release-verification` before M9c.
+
+**Implementation record (2026-10-17).** The initial HTML/CSS shell shows a
+honey-gold spinner and "Loading…" after 250 ms, without downloading another
+asset or font. It has a status announcement, safe-area padding and a static
+reduced-motion alternative. Fast completion removes it before its display delay.
+
+`src/startup.js` owns one readiness promise shared by the boot entry, scene and
+input gate. It resolves after main art, sound preparation, all 37 warmup rigs,
+world setup and the first prepared render; `data-ready` now reflects that same
+point. Early gameplay input is discarded, while user-gesture audio unlock stays
+available. Warmup yields between batches after roughly 8 ms of work. Readiness
+waits while the graphics context is lost, preserving the restoration notice.
+
+Loading is removed on script/catalog/atlas/setup failures before the existing
+reload interface appears. An inline boundary covers entry-bundle failure before
+the bundled handlers exist; its listener is aborted on success or failure. The
+prepared-frame listener is also removed when startup settles. No additional
+asset requests, artwork changes or regression-reference updates are needed.
+
+**Focused validation:** 24 startup/driver/error/audio/import unit tests and 17
+Chromium browser cases passed, along with the Vite production build. Coverage
+includes delayed production-bundle loading under `/liano/`, delayed classic art
+and sound setup, discarded loading input, first-frame readiness, the 250 ms
+threshold and fast completion, reduced motion, entry/game/catalog/atlas/setup
+failures, classic recovery, existing pause controls, audio equivalence, context
+restoration and the frame readout. Tests use controlled gates rather than slow
+network sleeps. Full verification and real-device cold/warm startup remain M9c;
+M9b.1 should reuse these cases when improving production-startup coverage.
 
 ### M9c. Test and verification (M)
 

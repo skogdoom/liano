@@ -1,5 +1,6 @@
 // When something breaks, show a message with a reload button instead of leaving a
 // frozen canvas. Also a smaller notice for passing states (restoring graphics).
+import { hideLoading } from './startup.js';
 
 // Errors from our own scripts only: extensions and cross-origin scripts ("Script
 // error." with no file) must not take the game down.
@@ -19,6 +20,7 @@ export function createFatalOverlay(doc, { reload = () => location.reload(), relo
     show(error) {
       if (shown) return;
       shown = true;
+      hideLoading(doc);
       console.error(error);
       if (error?.name === 'ArtLoadError') el.querySelector('#fatal-message').textContent = error.message;
       el.classList.add('shown');
