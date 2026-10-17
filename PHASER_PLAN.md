@@ -1054,10 +1054,11 @@ coverage and speed without changing gameplay or weakening the checks.
 
 ### M9b.2. Startup loading indicator (S)
 
-**Status: implemented on `loading-indicator`; integration pending.** The branch
-was created from `master` at `82cf3b5`. The owner requested implementation on
-2026-10-17 before M9b/M9b.1; those milestones remain pending. Integrate the
-completed change into `master`, then sync `release-verification` before M9c.
+**Status: complete and integrated into `master`.** The branch was created from
+`master` at `82cf3b5` and integrated by owner request through `1c97afc` on
+2026-10-17, including the reduced-motion pulse follow-up. The merge was a
+fast-forward of the validated feature commits. M9b/M9b.1 remain pending;
+sync the updated `master` into `release-verification` before M9c.
 Version remains `3.0.0-dev.9`.
 
 - Show a small loading indicator when opening the game takes noticeable time, covering resource downloads and setup. Start with a short delay (around 250 ms) to avoid a flash on fast or cached loads. Make the shell available from the initial HTML/CSS, before the large game module, art catalog or atlases have downloaded; do not require another image, font or script download to display it.
