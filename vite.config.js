@@ -55,6 +55,14 @@ export default defineConfig(({ command, isPreview }) => ({
       include: ['src/**/*.js'],
       reporter: ['text-summary', 'json-summary', 'html'],
       reportsDirectory: 'coverage',
+      // Floors where Node tests are the guarantee (M9b.1, a little under the measured
+      // coverage): the rules, the sound, and the pure modules the game is driven by.
+      // Rendering and the platform are covered by the browser checks instead.
+      thresholds: {
+        'src/sim/**': { lines: 98, branches: 94 },
+        'src/audio/**': { lines: 95, branches: 88 },
+        'src/{driver,input,layout,loop,pause,startup,frameClock,obstaclePrefetch}.js': { lines: 97, branches: 87 },
+      },
     },
     // The heaviest tests take 3–5 s here; CI runners are slower.
     testTimeout: 30000,
