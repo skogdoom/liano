@@ -81,7 +81,7 @@ Everything below must work on the Phaser renderer as on v2.3:
 
 ## M9b.1. Test suite coverage and performance (M)
 
-**Status: done on `release-verification` (2026-10-17); M9c verifies it.** The record is at the end of this section.
+**Status: done on `release-verification` and integrated into `master` (fast-forward to `d50e5d6`, 2026-10-17); M9c verifies it.** The record is at the end of this section.
 
 Work on `release-verification` after M9b and before M9c. Use the
 [test-suite audit](../TEST_SUITE_AUDIT.md) as the starting point. Improve test
