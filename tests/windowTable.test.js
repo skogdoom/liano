@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import table from '../src/sim/windowTable.json';
-import { isPassable, tableIsFresh } from '../src/sim/windowTable.js';
-import { computeWindowTable, isFeasible, solverStats, windowSteps, STAGE_SCALES } from '../src/sim/feasibility.js';
+import table from '../src/sim/windowTable.json' with { type: 'json' };
+import { isPassable, tableIsFresh, windowLookups } from '../src/sim/windowTable.js';
+import { computeWindowTable, isFeasible, solverStats, windowSteps, MIN_WINDOW_STEPS, STAGE_SCALES } from '../src/sim/feasibility.js';
 import { createObstacle } from '../src/sim/generator.js';
 import { World } from '../src/sim/world.js';
 import { STATIC_TYPES } from '../src/sim/obstacle.js';
@@ -55,16 +55,18 @@ describe('play does not run the solver', () => {
 });
 
 describe('a stale table', () => {
-  it('is ignored with a warning, and passability falls back to the solver', async () => {
-    vi.resetModules();
-    const stale = { ...table, inputs: { ...table.inputs, GRAVITY: table.inputs.GRAVITY + 1 } };
-    vi.doMock('../src/sim/windowTable.json', () => ({ default: stale }));
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const mod = await import('../src/sim/windowTable.js');
-    expect(mod.tableIsFresh).toBe(false);
+  it('is ignored with a warning, and passability falls back to the solver', () => {
+    // A row that lies about rock at 150, so following the table would give the wrong answer.
+    const solver = isFeasible('rock', 150);
+    const lying = structuredClone(table);
+    lying.windows[1].rock[150 - table.minY] = solver ? 0 : MIN_WINDOW_STEPS;
+    const warn = vi.fn();
+    const stale = windowLookups({ ...lying, inputs: { ...table.inputs, GRAVITY: table.inputs.GRAVITY + 1 } }, warn);
+    expect(stale.fresh).toBe(false);
     expect(warn).toHaveBeenCalledOnce();
-    expect(mod.isPassable('rock', 150)).toBe(isFeasible('rock', 150));
-    warn.mockRestore();
-    vi.doUnmock('../src/sim/windowTable.json');
+    expect(stale.isPassable('rock', 150)).toBe(solver);
+    // With current inputs the same table is trusted, without a warning.
+    expect(windowLookups(lying, warn).isPassable('rock', 150)).toBe(!solver);
+    expect(warn).toHaveBeenCalledOnce();
   });
 });

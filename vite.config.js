@@ -43,6 +43,10 @@ export default defineConfig(({ command, isPreview }) => ({
   test: {
     include: ['tests/**/*.test.js'],
     environment: 'node',
+    // Run the modules as Node imports them, not through Vite's module runner, whose
+    // rewritten imports made the solver-heavy tests about three times slower (M9b.1).
+    // So source imports JSON with `with { type: 'json' }` and nothing mocks modules.
+    experimental: { viteModuleRunner: false },
     // The heaviest tests take 3–5 s here; CI runners are slower.
     testTimeout: 30000,
   },

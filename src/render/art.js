@@ -6,7 +6,8 @@ import { validArtChoice } from '../platform/artStyle.js';
 // public/art/<pack>/pieces.json says where its frames are, its anchor
 // and its zoom at each atlas scale.
 
-const BASE = `${import.meta.env.BASE_URL}art/`;
+// Node (the unit tests) has no import.meta.env; the art is only loaded in a browser.
+const BASE = `${import.meta.env?.BASE_URL ?? '/'}art/`;
 export const CATALOG = 'art.catalog';
 const atlasKey = (set) => `art.${set}`;
 const tileKey = (key) => `tile.${key}`;

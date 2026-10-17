@@ -3,7 +3,7 @@ import { GRADES, aimsHigh, gradeOf, isHigh, maxGradeFor, targetGradeFor } from '
 import { createObstacle } from '../src/sim/generator.js';
 import { stageFor } from '../src/sim/stages.js';
 import { blockedShare } from '../src/sim/windowTable.js';
-import table from '../src/sim/windowTable.json';
+import table from '../src/sim/windowTable.json' with { type: 'json' };
 import { isClearOfLianas, movingBlockedShare, releaseWindow } from '../src/sim/feasibility.js';
 import { Obstacle, ObstacleType } from '../src/sim/obstacle.js';
 import { GRADE_BOUNDS, HIGH_BELOW_Y, LATER_GRADE_ODDS, LIANA_SPACING, LATER_GRADE_STAGES, STAGES, STAGE_LENGTH_AFTER } from '../src/config.js';
