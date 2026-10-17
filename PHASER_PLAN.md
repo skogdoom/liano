@@ -960,7 +960,7 @@ and bring it into `release-verification` before M9c. Final manual and real-devic
 verification remains pending there.
 
 - Determine why 1P fullscreen exposes sky above the canopy, including the interaction between viewport size, camera framing and canopy placement/coverage.
-- Adjust the framing or canopy coverage so no sky is visible above the canopy during 1P fullscreen play. Cover fullscreen entry/exit, resize and rotation, and both classic and cartoon packs without changing gameplay geometry.
+- In 1P landscape fullscreen, adjust the framing or canopy coverage so no sky is visible above the canopy. In portrait fullscreen/home-screen mode, retain half the pre-M9a space above the world, as requested by the owner. Cover fullscreen entry/exit, resize and rotation, and both classic and cartoon packs without changing gameplay geometry.
 - Sky above the canopy remains acceptable in 2P shared mode; preserve its framing and the other supported layouts.
 - Record the chosen approach and affected scenarios for M9c's automated and real-device checks.
 - **Done when:** the 1P fullscreen fix is implemented on `canopy`, focused checks pass and it is ready for integration and M9c verification, with the 2P shared exception documented. Integrate into `master` and sync `release-verification` before M9c.
@@ -968,8 +968,10 @@ verification remains pending there.
 **Implementation record (2026-10-17).** Taller layouts reserved a positive
 `bandTop` above the world, while the canopy remained a fixed strip at world y=0.
 That exposed scenery and sky above it in 1P fullscreen. `layoutFor` now anchors
-the solo world band at the top during browser fullscreen and in home-screen
-apps. Windowed framing, world scale, horizontal camera targets and gameplay
+the solo world band at the top in landscape fullscreen/home-screen mode.
+Following the owner's portrait adjustment, portrait fullscreen/home-screen mode
+retains half its pre-M9a space above the world (20% of spare height, rather than
+40%). Windowed framing, world scale, horizontal camera targets and gameplay
 geometry stay the same. Fixed multiplayer layouts bypass this adjustment, so
 2P shared retains its extra sky and split mode keeps its existing panes.
 Fullscreen entry/exit, resize, rotation and mode changes use the existing layout
@@ -981,9 +983,15 @@ No artwork or regression references changed.
 along with six Chromium browser cases and the Vite production build. The new
 browser checks exercise both art packs through fullscreen entry/exit, 4:3 and
 phone portrait/landscape resizing, mode changes and home-screen startup. They
-check actual top/bottom pixels with a visible-background negative control and
-the full ±9-unit death-shake offset. Home-screen coverage is emulation; physical
+check actual canopy/floor pixels with a visible-background negative control and
+the full ±9-unit death-shake offset. Portrait checks also verify that the restored
+space above the canopy remains visible. Home-screen coverage is emulation; physical
 Safari/iPhone/iPad/Android checks remain pending in M9c.
+
+**Portrait follow-up (2026-10-17):** after the owner's request to keep half the
+former overhead space, the updated framing passed the same 55 focused unit
+tests, all three canopy browser cases and the production build. Landscape and
+multiplayer framing retain their initial M9a behavior.
 
 ### M9b. Plan consolidation and area plans (M)
 

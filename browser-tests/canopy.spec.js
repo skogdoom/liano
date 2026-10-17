@@ -13,7 +13,8 @@ async function fitted(page, fullscreen, fixed = false) {
 }
 
 // Put a bright marker behind the canopy/floor, hiding the rest of the world.
-// Actual submitted pixels must cover it at both edges, including during shake.
+// Check the canopy at the world's top and the floor at the screen's bottom,
+// including shake. Portrait's restored space above the canopy stays visible.
 async function edgeCoverage(page) {
   return page.evaluate(() => {
     const { app, platform } = window.__liano;
@@ -33,7 +34,8 @@ async function edgeCoverage(page) {
     const row = (fromTop) => {
       const { x, y, width, height } = platform.camera;
       const pixels = new Uint8Array((width - 4) * 4);
-      gl.readPixels(x + 2, app.canvas.height - y - (fromTop ? 3 : height - 3) - 1,
+      const offset = fromTop === 'sky' ? 3 : fromTop ? 3 + Math.round(bandTop * platform.camera.zoom) : height - 3;
+      gl.readPixels(x + 2, app.canvas.height - y - offset - 1,
         width - 4, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
       let markerPixels = 0, transparent = 0, black = 0;
       for (let i = 0; i < pixels.length; i += 4) {
@@ -47,7 +49,7 @@ async function edgeCoverage(page) {
       const results = [];
       for (const shake of [-9, 0, 9]) {
         scene.y = originalY + shake; draw();
-        results.push({ shake, top: row(true), bottom: row(false) });
+        results.push({ shake, top: row(true), bottom: row(false), above: row('sky') });
       }
       scene.y = originalY;
       backdrop.front.setVisible(false); draw();
@@ -60,7 +62,7 @@ async function edgeCoverage(page) {
   });
 }
 
-async function covered(page) {
+async function covered(page, portrait = false) {
   const { results, uncovered } = await edgeCoverage(page);
   // Negative control: without foreground coverage the row really is the marker.
   expect(uncovered.markerPixels, JSON.stringify({ results, uncovered })).toBe(uncovered.samples);
@@ -69,6 +71,7 @@ async function covered(page) {
     expect(edge.transparent).toBe(0);
     expect(edge.black).toBe(0);
   }
+  if (portrait) for (const { above } of results) expect(above.markerPixels).toBe(above.samples);
 }
 
 for (const art of ['classic', 'cartoon']) {
@@ -87,7 +90,7 @@ for (const art of ['classic', 'cartoon']) {
     for (const [width, height] of [[390, 844], [844, 390]]) {
       await page.setViewportSize({ width, height });
       await fitted(page, true);
-      await covered(page);
+      await covered(page, width < height);
     }
     await page.setViewportSize({ width: 1024, height: 768 });
     await fitted(page, true);
@@ -109,7 +112,7 @@ for (const art of ['classic', 'cartoon']) {
   });
 }
 
-test('home-screen 1P uses fullscreen canopy framing from startup', async ({ page }) => {
+test('home-screen 1P keeps half the former portrait space above the canopy from startup', async ({ page }) => {
   const errors = collectErrors(page);
   await page.addInitScript(() => Object.defineProperty(navigator, 'standalone', { value: true }));
   await page.setViewportSize({ width: 390, height: 844 });
@@ -117,6 +120,6 @@ test('home-screen 1P uses fullscreen canopy framing from startup', async ({ page
   await page.waitForFunction(() => window.__liano?.platform.world?.panes.length);
   await fitted(page, true);
   expect(await page.evaluate(() => window.__liano.platform.fullscreenButton)).toBe(false);
-  await covered(page);
+  await covered(page, true);
   expect(errors).toEqual([]);
 });

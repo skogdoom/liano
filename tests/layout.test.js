@@ -94,19 +94,20 @@ describe('layout', () => {
     expect(l.floorShift).toBe(0);
   });
 
-  it('keeps the canopy at the top in single-player fullscreen without changing world scale or horizontal framing', () => {
+  it('anchors fullscreen landscape and halves portrait space above the world without changing scale or horizontal framing', () => {
     for (const [w, h] of ALL) {
       const windowed = layoutFor(w, h);
       const full = layoutFor(w, h, undefined, { fullscreen: true });
-      expect(full.bandTop, `${w}×${h}`).toBe(0);
+      const expectedTop = full.orientation === 'portrait' ? windowed.bandTop / 2 : 0;
+      expect(full.bandTop, `${w}×${h}`).toBe(expectedTop);
       expect(full.view).toEqual(windowed.view);
       expect(full.scale).toBe(windowed.scale);
       expect(full.camera).toEqual(windowed.camera);
       expect(full.floorShift).toBe(windowed.floorShift);
-      expect(paneLayouts(full)[0].bandTop).toBe(0);
+      expect(paneLayouts(full)[0].bandTop).toBe(expectedTop);
       if (windowed.bandTop === 0) expect(full).toEqual(windowed);
       if (full.orientation === 'portrait') {
-        expect(full.panels.title.y - 175 * full.ui).toBeGreaterThan(WORLD_HEIGHT);
+        expect(full.panels.title.y - 175 * full.ui).toBeGreaterThan(full.bandTop + WORLD_HEIGHT);
         expect(full.panels.title.y + 175 * full.ui).toBeLessThanOrEqual(full.view.height - 16);
       }
     }

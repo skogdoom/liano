@@ -34,8 +34,8 @@ const PANEL_HALF_HEIGHT = 175;
 //
 // `insets` are the safe-area insets (notch, home indicator) in CSS pixels. With `fixed`
 // (the two-player modes) the view is always the 1280 × 720 frame, with bars as needed.
-// In single-player fullscreen, anchor the band at the top so taller views never
-// look over the canopy. The spare height goes into the undergrowth instead.
+// Single-player fullscreen anchors landscape at the canopy; portrait retains
+// half its usual space above the world, with the rest below in the undergrowth.
 export function layoutFor(width, height, insets = { top: 0, right: 0, bottom: 0, left: 0 }, { fixed = false, fullscreen = false } = {}) {
   const aspect = width / height;
   const portrait = aspect < 1 && !fixed;
@@ -59,7 +59,7 @@ export function layoutFor(width, height, insets = { top: 0, right: 0, bottom: 0,
     viewWidth = Math.min(viewHeight * aspect, MAX_VIEW_WIDTH);
   }
 
-  if (fullscreen && !fixed) bandTop = 0;
+  if (fullscreen && !fixed) bandTop = portrait ? bandTop / 2 : 0;
 
   const scale = Math.min(width / viewWidth, height / viewHeight);
   const x = (width - viewWidth * scale) / 2;
