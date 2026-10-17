@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { DEV } from '../playwright.config.js';
-import { collectErrors, menuLabelPoint, openConfig, panelPoint } from './helpers.js';
+import { collectErrors, menuLabelPoint, openConfig, panelPoint, test } from './helpers.js';
 
 test('C opens the title submenu, isolates its keys and preserves the selected match mode on reload', async ({ page }) => {
   const errors = collectErrors(page);
@@ -56,7 +56,7 @@ test('config uses the title artwork and shows the selected graphics choice', asy
   expect(errors).toEqual([]);
 });
 
-test('portrait config taps stay inside the game and the panel fits after resizing', async ({ browser }) => {
+test('portrait config taps stay inside the game and the panel fits after resizing', async ({ browserPages: browser }) => {
   const page = await browser.newPage({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const errors = collectErrors(page);
   await page.goto(`${DEV}`);

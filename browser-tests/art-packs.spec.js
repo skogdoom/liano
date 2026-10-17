@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { DEV } from '../playwright.config.js';
-import { collectErrors, started, openConfig, menuLabelPoint } from './helpers.js';
+import { collectErrors, started, openConfig, menuLabelPoint, test } from './helpers.js';
 
 const cartoonManifest = JSON.parse(readFileSync(new URL('../art/packs/cartoon/manifest.json', import.meta.url), 'utf8'));
 
@@ -78,7 +78,7 @@ test('Config switches art once and retains title options, quality, diagnostics a
   expect(errors).toEqual([]);
 });
 
-for (const [width, height] of [[375, 600], [812, 250]]) test(`cartoon Config has usable touch controls at ${width}×${height}`, async ({ browser }) => {
+for (const [width, height] of [[375, 600], [812, 250]]) test(`cartoon Config has usable touch controls at ${width}×${height}`, async ({ browserPages: browser }) => {
   const context = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 });
   try {
     const page = await context.newPage(), errors = collectErrors(page);

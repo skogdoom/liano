@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { DEV } from '../playwright.config.js';
-import { collectErrors } from './helpers.js';
+import { collectErrors, test } from './helpers.js';
 
-for (const touch of [false, true]) test(`${touch ? 'touch' : 'desktop'} pause accepts resume controls and Escape without releasing the monkey`, async ({ browser }) => {
+for (const touch of [false, true]) test(`${touch ? 'touch' : 'desktop'} pause accepts resume controls and Escape without releasing the monkey`, async ({ browserPages: browser }) => {
   const page = await browser.newPage(touch ? { viewport: { width: 375, height: 600 }, isMobile: true, hasTouch: true } : {});
   const errors = collectErrors(page);
   await page.goto(`${DEV}?art=cartoon`);

@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { DEV } from '../playwright.config.js';
 import { layoutFor } from '../src/layout.js';
-import { collectErrors } from './helpers.js';
+import { collectErrors, test } from './helpers.js';
 
 // A full-screen window cannot be resized: CI's headless Chromium refuses (Browser.setWindowBounds),
 // as a phone's browser does. So rotate it as a phone does, changing the viewport the page sees
@@ -144,7 +144,7 @@ test('home-screen 1P keeps a quarter of the former portrait space above the cano
   expect(errors).toEqual([]);
 });
 
-test('iPhone-sized portrait browser halves the old canopy gap with browser bars shown or hidden', async ({ browser }) => {
+test('iPhone-sized portrait browser halves the old canopy gap with browser bars shown or hidden', async ({ browserPages: browser }) => {
   const page = await browser.newPage({ viewport: { width: 375, height: 812 },
     deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   try {

@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { DEV } from '../playwright.config.js';
 import { layoutFor } from '../src/layout.js';
 import { canvasSize, viewCamera } from '../src/platform/view.js';
-import { collectErrors, started } from './helpers.js';
+import { collectErrors, started, test } from './helpers.js';
 
 // The platform (docs/plans/history/phaser-migration.md, M2): layouts, full screen, a lost
 // graphics context and pause, on the dev server (for the `window.__liano` hooks).
@@ -40,7 +40,7 @@ const SHAPES = [
 ];
 
 for (const [width, height, ratio] of SHAPES) {
-  test(`the Phaser version draws the letterboxed view at ${width} × ${height}, ${ratio}×`, async ({ browser }) => {
+  test(`the Phaser version draws the letterboxed view at ${width} × ${height}, ${ratio}×`, async ({ browserPages: browser }) => {
     const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: ratio });
     const errors = collectErrors(page);
     await page.goto(`${DEV}`);
@@ -180,7 +180,7 @@ for (const [ratio, scale] of [
   [1, 1],
   [2, 2],
 ]) {
-  test(`the Phaser version loads its art at ${scale}× on a ${ratio}× screen: the boot set, then the main set`, async ({ browser }) => {
+  test(`the Phaser version loads its art at ${scale}× on a ${ratio}× screen: the boot set, then the main set`, async ({ browserPages: browser }) => {
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: ratio });
     const errors = collectErrors(page);
     await page.goto(`${DEV}`);
@@ -203,7 +203,7 @@ for (const [width, ratio] of [
   [1368, 2],
   [1460, 2],
 ]) {
-  test(`the Phaser version's backdrop tiles show no line at their edges at ${width} px, ${ratio}×`, async ({ browser }) => {
+  test(`the Phaser version's backdrop tiles show no line at their edges at ${width} px, ${ratio}×`, async ({ browserPages: browser }) => {
     const page = await browser.newPage({ viewport: { width, height: Math.round((width * 9) / 16) }, deviceScaleFactor: ratio });
     const errors = collectErrors(page);
     await page.goto(`${DEV}`);

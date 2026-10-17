@@ -1,4 +1,21 @@
-import { expect } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
+
+// The tests, with `browserPages`: browser.newPage and newContext whose pages and contexts
+// are closed after the test, whether it passed or failed (M9b.1).
+export const test = base.extend({
+  browserPages: async ({ browser }, use) => {
+    const opened = [];
+    const track = (made) => {
+      opened.push(made);
+      return made;
+    };
+    await use({
+      newPage: (options) => browser.newPage(options).then(track),
+      newContext: (options) => browser.newContext(options).then(track),
+    });
+    for (const made of opened.reverse()) await made.close().catch(() => {});
+  },
+});
 
 // Errors the page reports: uncaught ones, console errors, and responses that failed
 // (with their URL, which the console message leaves out).

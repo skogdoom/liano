@@ -1,12 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { DEV } from '../playwright.config.js';
-import { collectErrors, started } from './helpers.js';
+import { collectErrors, started, test } from './helpers.js';
 
 // A Safari comparison should keep the picture, parallax, tint and wrapping intact.
 // Compare actual WebGL pixels through both paths, including fractional shifts and
 // wrap boundaries, in landscape, a wide view and an iPhone-sized portrait view.
 for (const art of ['classic', 'cartoon']) for (const [width, height, ratio] of [[1280, 720, 1], [1920, 800, 2], [375, 812, 2]]) {
-  test(`the ${art} image backdrop matches the tiles at ${width} × ${height}, ${ratio}×`, async ({ browser }) => {
+  test(`the ${art} image backdrop matches the tiles at ${width} × ${height}, ${ratio}×`, async ({ browserPages: browser }) => {
     const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: ratio });
     const errors = collectErrors(page);
     await page.goto(`${DEV}?art=${art}`);
@@ -120,7 +120,7 @@ test('Phaser uses phaser-m7 speeds and one interpolated camera for all layers', 
   expect(errors).toEqual([]);
 });
 
-test('moving trees average their exposure without darkening, seams or shader recompiles', async ({ browser }) => {
+test('moving trees average their exposure without darkening, seams or shader recompiles', async ({ browserPages: browser }) => {
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 2 });
   const errors = collectErrors(page);
   await page.goto(`${DEV}?motionblur=on`);

@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { DEV } from '../playwright.config.js';
-import { collectErrors } from './helpers.js';
+import { collectErrors, test } from './helpers.js';
 
 test('obstacle blur is opt-in and toggles without starting/restarting the game', async ({ page }) => {
   const errors = collectErrors(page);
@@ -26,7 +26,7 @@ test('obstacle blur is opt-in and toggles without starting/restarting the game',
   expect(errors).toEqual([]);
 });
 
-for (const ratio of [1, 2]) test(`blurred WebGL pixels match five translated poses at ${ratio}×, without atlas bleed or a stationary smear`, async ({ browser }) => {
+for (const ratio of [1, 2]) test(`blurred WebGL pixels match five translated poses at ${ratio}×, without atlas bleed or a stationary smear`, async ({ browserPages: browser }) => {
   const page = await browser.newPage({ viewport: { width: 640, height: 480 }, deviceScaleFactor: ratio });
   const errors = collectErrors(page);
   await page.goto(`${DEV}`);

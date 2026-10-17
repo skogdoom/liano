@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { DEV } from '../playwright.config.js';
-import { collectErrors, menuLabelPoint, panelPoint } from './helpers.js';
+import { collectErrors, menuLabelPoint, panelPoint, test } from './helpers.js';
 
 const safari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
 
@@ -78,7 +78,7 @@ async function checkPanel(page, name) {
 for (const [orientation, viewport, visibleHeight] of [
   ['portrait', { width: 375, height: 812 }, 600],
   ['landscape', { width: 812, height: 375 }, 250],
-]) test(`small-screen ${orientation} menus fit Safari's visible area and support touch settings`, async ({ browser }) => {
+]) test(`small-screen ${orientation} menus fit Safari's visible area and support touch settings`, async ({ browserPages: browser }) => {
   const { page, errors } = await phone(browser, viewport, visibleHeight);
   await checkPanel(page, 'title');
   expect(await page.evaluate(() => window.__liano.platform.artPack)).toBe('cartoon');
@@ -113,7 +113,7 @@ for (const [orientation, viewport, visibleHeight] of [
   await page.close();
 });
 
-test('mobile stays single-player and preserves settings through graphics reloads', async ({ browser }) => {
+test('mobile stays single-player and preserves settings through graphics reloads', async ({ browserPages: browser }) => {
   const { page, errors } = await phone(browser, { width: 375, height: 812 }, 600, '&mode=split');
   expect(await page.evaluate(() => window.__liano.game.mode)).toBe('solo');
   expect(await page.evaluate(() => window.__liano.game.shadowOn)).toBe(false);
@@ -168,7 +168,7 @@ test('desktop player-mode choices and settings respond to clicks without startin
 for (const [orientation, viewport, visibleHeight] of [
   ['portrait', { width: 375, height: 812 }, 600],
   ['landscape', { width: 812, height: 375 }, 250],
-]) test(`mobile game-over ${orientation} offers distinct replay and title-menu taps`, async ({ browser }) => {
+]) test(`mobile game-over ${orientation} offers distinct replay and title-menu taps`, async ({ browserPages: browser }) => {
   const { page, errors } = await phone(browser, viewport, visibleHeight);
   const finishRun = async () => {
     const start = await menuLabelPoint(page, 'title', 'titlePrompt');
