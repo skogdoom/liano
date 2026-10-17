@@ -623,14 +623,14 @@ are complete and integrated into `phaser` through
 - **M9 — Cleanup and merge: complete.** The owner merged
   [PR #42](https://github.com/skogdoom/liano/pull/42) into `master` on 2026-10-17
   (merge `73a36d0`). Remaining manual/device checks move to M9c.
-- **M9a — Fullscreen canopy coverage: implemented on `canopy`; integration pending.**
-  The new branch starts from `master`. 1P landscape fullscreen and home-screen
+- **M9a — Fullscreen canopy coverage: complete and integrated into `master`.**
+  The owner authorized the `canopy` merge through `d91cfe2` on 2026-10-17. 1P landscape fullscreen and home-screen
   apps anchor the world at the top. Portrait browser views retain half the pre-M9a
   space above it; fullscreen/home-screen mode retains a quarter. Tall portrait
   views extend the floor fill. Short landscape views
   omit bottom greenery when the ground line is outside the view. Multiplayer
   framing stays the same; sky above the canopy remains acceptable in
-  2P shared mode. Integrate into `master` and sync `release-verification` before M9c.
+  2P shared mode. Sync `release-verification` from `master` before M9c.
 - **M9b — Plan consolidation and area plans:** consolidate `PLAN.md` and
   `PHASER_PLAN.md` into one authoritative plan, with a short `PLAN.md` roadmap
   referencing detailed files by area under `docs/plans/`. Preserve requirements,
