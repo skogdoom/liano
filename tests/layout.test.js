@@ -94,11 +94,11 @@ describe('layout', () => {
     expect(l.floorShift).toBe(0);
   });
 
-  it('anchors fullscreen landscape and halves portrait space above the world without changing scale or horizontal framing', () => {
+  it('anchors fullscreen landscape and quarters portrait space above the world without changing scale or horizontal framing', () => {
     for (const [w, h] of ALL) {
       const windowed = layoutFor(w, h);
       const full = layoutFor(w, h, undefined, { fullscreen: true });
-      const expectedTop = full.orientation === 'portrait' ? windowed.bandTop / 2 : 0;
+      const expectedTop = full.orientation === 'portrait' ? windowed.bandTop / 4 : 0;
       expect(full.bandTop, `${w}×${h}`).toBe(expectedTop);
       expect(full.view).toEqual(windowed.view);
       expect(full.scale).toBe(windowed.scale);

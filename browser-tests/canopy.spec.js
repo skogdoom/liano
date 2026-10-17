@@ -120,7 +120,7 @@ for (const art of ['classic', 'cartoon']) {
   });
 }
 
-test('home-screen 1P keeps half the former portrait space above the canopy from startup', async ({ page }) => {
+test('home-screen 1P keeps a quarter of the former portrait space above the canopy from startup', async ({ page }) => {
   const errors = collectErrors(page);
   await page.addInitScript(() => Object.defineProperty(navigator, 'standalone', { value: true }));
   await page.setViewportSize({ width: 390, height: 844 });
