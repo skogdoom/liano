@@ -613,9 +613,9 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 ## Phaser migration (v3.0.0, planned)
 
 The Phaser 4 migration plan, its pre-rendered art pipeline, device budgets,
-risks, milestones M0–M10 (including M8a, M9a, M9b and M9c), and verification strategy
+risks, milestones M0–M10 (including M8a, M9a, M9b, M9b.1 and M9c), and verification strategy
 are in [PHASER_PLAN.md](PHASER_PLAN.md). Development uses the long-lived `phaser`
-branch and versions `3.0.0-dev.N` through M9 integration, M9a and M9b. M0–M8 are
+branch and versions `3.0.0-dev.N` through M9 integration, M9a, M9b and M9b.1. M0–M8 are
 complete; the M8a cartoon artwork, automated checks and regression references
 are complete and integrated into `phaser` through
 [PR #41](https://github.com/skogdoom/liano/pull/41) (merge `a49b1f2`).
@@ -630,6 +630,11 @@ are complete and integrated into `phaser` through
   `PHASER_PLAN.md` into one authoritative plan, with a short `PLAN.md` roadmap
   referencing detailed files by area under `docs/plans/`. Preserve requirements,
   decisions, milestone reports and pending gates, and update existing references.
+- **M9b.1 — Test suite coverage and performance:** address the
+  [test-suite audit](docs/TEST_SUITE_AUDIT.md) on `release-verification` before
+  final verification. Improve timeout diagnostics, reuse deterministic fixtures,
+  optimize pixel checks and CI builds, and cover production/recovery gaps while
+  preserving the suite's distinct guarantees, thresholds and negative controls.
 - **M9c — Test and verification:** perform all automated, manual and real-device
   testing and resulting fixes on that new branch. Prepare and verify the final
   `3.0.0` candidate and artifacts there; document device findings after testing
