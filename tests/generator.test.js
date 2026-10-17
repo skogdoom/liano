@@ -13,6 +13,7 @@ import {
   updateLianas,
   updateObstacles,
 } from '../src/sim/generator.js';
+import { obstacleAt } from './corpus.js';
 import { mulberry32, mixSeed } from '../src/sim/rng.js';
 import {
   BRANCH_DECORATIONS,
@@ -141,7 +142,7 @@ describe('obstacle generation', () => {
   it('puts one obstacle, horizontally centred, in every other gap', () => {
     for (let gap = -50; gap < 300; gap++) {
       if (gap === -1 || gap === 0) continue;
-      const o = createObstacle(SEED, gap);
+      const o = obstacleAt(SEED, gap);
       expect(o.gap).toBe(gap);
       // Moving obstacles move around the gap centre (birds within half a pixel of it).
       expect(Math.abs(o.baseX - (gap + 0.5) * LIANA_SPACING)).toBeLessThanOrEqual(0.5);
@@ -154,7 +155,7 @@ describe('obstacle generation', () => {
 
   it('uses all types, roughly evenly', () => {
     const counts = Object.fromEntries([...STATIC_TYPES, ...MOVING_TYPES].map((t) => [t, 0]));
-    for (let gap = 1; gap <= 3000; gap++) counts[createObstacle(SEED, gap).type]++;
+    for (let gap = 1; gap <= 3000; gap++) counts[obstacleAt(SEED, gap).type]++;
     // Late stages are 80 % moving and half their static gaps aim for the hardest grade, which
     // the branch (mostly an easy obstacle) seldom has; beehives are rarer than the rest, and
     // temples much rarer (one a day/night cycle: see below).
@@ -176,7 +177,7 @@ describe('obstacle generation', () => {
     let decorated = 0;
     for (const seed of [1, 2, 3, 12345]) {
       for (let gap = 1; gap <= 1000; gap++) {
-        const o = createObstacle(seed, gap);
+        const o = obstacleAt(seed, gap);
         if (o.type !== ObstacleType.BRANCH) {
           expect(o.decoration).toBeNull();
           continue;
@@ -203,7 +204,7 @@ describe('obstacle generation', () => {
       for (const seed of [1, 2, 3]) {
         const found = {};
         for (let gap = 1; gap <= lastGap; gap++) {
-          if (createObstacle(seed, gap).type !== ObstacleType.TEMPLE) continue;
+          if (obstacleAt(seed, gap).type !== ObstacleType.TEMPLE) continue;
           const cycle = dayCycleFor(gap);
           (found[cycle] ??= []).push(gap);
         }
@@ -237,7 +238,7 @@ describe('obstacle generation', () => {
       for (let seed = 1; seed <= 30; seed++) {
         for (let cycle = 0; cycle < 6; cycle++) {
           const gap = templeGapFor(seed, cycle);
-          const o = createObstacle(seed, gap);
+          const o = obstacleAt(seed, gap);
           expect(o.type).toBe(ObstacleType.TEMPLE);
           expect(o.moving).toBe(false);
           expect(o.decoration).toBeNull();
@@ -301,7 +302,7 @@ describe('obstacle generation', () => {
   it('hangs beehives among the static obstacles, at heights that can be passed', () => {
     let hives = 0;
     for (let gap = 1; gap <= 800; gap++) {
-      const o = createObstacle(SEED, gap);
+      const o = obstacleAt(SEED, gap);
       if (o.type !== ObstacleType.BEEHIVE) continue;
       hives++;
       expect(o.moving).toBe(false);
@@ -318,7 +319,7 @@ describe('obstacle generation', () => {
       const types = movingTypesFor(gap);
       for (const bird of birds) expect(types.includes(bird)).toBe(!night && (bird !== ObstacleType.BLUE_BIRD || timeOfDayFor(gap) !== TimeOfDay.DUSK));
       expect(types.includes(ObstacleType.CIRCLE_BAT)).toBe(night);
-      const o = createObstacle(SEED, gap);
+      const o = obstacleAt(SEED, gap);
       if (night && o.moving) seen.add(o.type);
       if (night) expect(birds).not.toContain(o.type);
       // And no perched bird on a branch at night.
@@ -346,7 +347,7 @@ describe('obstacle generation', () => {
       const types = movingTypesFor(gap);
       expect(types.includes(ObstacleType.BAT)).toBe(phase === TimeOfDay.NIGHT);
       expect(types.includes(ObstacleType.BIRD)).toBe(phase !== TimeOfDay.NIGHT);
-      const o = createObstacle(SEED, gap);
+      const o = obstacleAt(SEED, gap);
       if (!o.moving) continue;
       if (phase === TimeOfDay.NIGHT) {
         night++;
@@ -366,7 +367,7 @@ describe('obstacle generation', () => {
       const phase = timeOfDayFor(gap);
       const day = phase !== TimeOfDay.DUSK && phase !== TimeOfDay.NIGHT;
       expect(movingTypesFor(gap).includes(ObstacleType.BLUE_BIRD)).toBe(day);
-      const o = createObstacle(SEED, gap);
+      const o = obstacleAt(SEED, gap);
       if (o.type === ObstacleType.BLUE_BIRD) phases.add(phase);
     }
     expect(phases).toEqual(new Set([TimeOfDay.DAY, TimeOfDay.LATE_AFTERNOON, TimeOfDay.DAWN]));
@@ -377,7 +378,7 @@ describe('obstacle generation', () => {
     for (let gap = 1; gap <= 600; gap++) {
       const night = timeOfDayFor(gap) === TimeOfDay.NIGHT;
       expect(movingTypesFor(gap).includes(ObstacleType.PURPLE_BIRD)).toBe(!night);
-      const o = createObstacle(SEED, gap);
+      const o = obstacleAt(SEED, gap);
       if (o?.type === ObstacleType.PURPLE_BIRD) phases.add(timeOfDayFor(gap));
     }
     // Every time of day but night (when a bat takes its place).
@@ -460,7 +461,7 @@ describe('obstacle generation', () => {
       let moving = 0;
       let total = 0;
       for (let seed = 1; seed <= 24; seed++) {
-        for (let gap = from; gap <= to; gap++, total++) if (createObstacle(seed, gap).moving) moving++;
+        for (let gap = from; gap <= to; gap++, total++) if (obstacleAt(seed, gap).moving) moving++;
       }
       return moving / total;
     };
@@ -475,7 +476,7 @@ describe('obstacle generation', () => {
       expect(s).toBeLessThan(stage.movingShare + 0.12);
     }
     // Obstacles behind the start stay static.
-    for (let gap = -200; gap < 0; gap++) if (gap !== -1) expect(createObstacle(SEED, gap).moving).toBe(false);
+    for (let gap = -200; gap < 0; gap++) if (gap !== -1) expect(obstacleAt(SEED, gap).moving).toBe(false);
   });
 
   it('sets bird patrols to the widest range clear of the swings', () => {

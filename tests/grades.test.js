@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { GRADES, aimsHigh, gradeOf, isHigh, maxGradeFor, targetGradeFor } from '../src/sim/grades.js';
 import { createObstacle } from '../src/sim/generator.js';
+import { obstacleAt } from './corpus.js';
 import { stageFor } from '../src/sim/stages.js';
 import { blockedShare } from '../src/sim/windowTable.js';
 import table from '../src/sim/windowTable.json' with { type: 'json' };
@@ -12,12 +13,12 @@ const SEEDS = [1, 2, 3, 4, 5, 6];
 const MANY_SEEDS = Array.from({ length: 40 }, (_, i) => i + 1);
 const firstOfStage = (n) => (n <= STAGES.length ? STAGES[n - 1].first : STAGES.at(-1).first + (n - STAGES.length) * STAGE_LENGTH_AFTER);
 
-// Every obstacle of the gaps from..to for each of SEEDS.
+// Every obstacle of the gaps from..to for each of SEEDS, made once for the whole file.
 function obstacles(from, to, seeds = SEEDS) {
   const list = [];
   for (const seed of seeds) {
     for (let gap = from; gap <= to; gap++) {
-      const o = createObstacle(seed, gap);
+      const o = obstacleAt(seed, gap);
       if (o) list.push({ seed, gap, o });
     }
   }
@@ -71,6 +72,10 @@ describe('obstacle grades', () => {
     expect(share).toBeGreaterThan(0);
     expect(share).toBeLessThan(1);
     expect(movingBlockedShare(high)).toBeLessThan(share);
+  });
+
+  it('shares the obstacles createObstacle makes', () => {
+    for (const { seed, gap, o } of obstacles(1, 60)) expect(o.toData()).toEqual(createObstacle(seed, gap).toData());
   });
 
   it('gives every generated obstacle its grade, in the data sent to the worker too', () => {
