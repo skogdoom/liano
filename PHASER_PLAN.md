@@ -1,8 +1,8 @@
 # Migrating Liano from PixiJS to Phaser (v3.0.0)
 
-Status: **agreed plan (M8a cartoon pack, M9 cleanup and merge, M9a fullscreen canopy, M9b plan consolidation, M9b.1 test-suite improvements, M9c test and verification, M10 release). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a is complete and integrated into `phaser` through PR #41 (merge `a49b1f2`). The owner accepted the cartoon artwork; automated verification, regression references and the report are complete. M9 is complete: the owner merged PR #42 into `master` on 2026-10-17 (merge `73a36d0`). The `release-verification` branch is created from that merged `master`; M9a fixes 1P fullscreen canopy coverage there next. M9b consolidates and splits the plans by area on the same branch; M9b.1 improves test coverage and speed. Final testing and verification, including real-device checks, follows there in M9c. M10 releases the tested result from `master`.**
+Status: **agreed plan (M8a cartoon pack, M9 cleanup and merge, M9a fullscreen canopy, M9b plan consolidation, M9b.1 test-suite improvements, M9b.2 startup loading indicator, M9c test and verification, M10 release). M0, M1 and M2 are done (their reports are under each; M1's go/no-go, measured on the iPhone 13 mini, is a go). M3 is done (the rest of its manual sound pass is due now that M5 draws the bananas). M4 is done. M5 is done (its two parity exceptions accepted). M6 is done (its report). M7 is done (its report; the owner finds the performance on the iPhone 13 mini OK) but for the rest of the real-device pass: Phaser is now the default version. M8 is done and merged into `phaser` in PR #40 (its report). M8a is complete and integrated into `phaser` through PR #41 (merge `a49b1f2`). The owner accepted the cartoon artwork; automated verification, regression references and the report are complete. M9 is complete: the owner merged PR #42 into `master` on 2026-10-17 (merge `73a36d0`). The `release-verification` branch is created from that merged `master`; M9a fixes 1P fullscreen canopy coverage there next. M9b consolidates and splits the plans by area on the same branch; M9b.1 improves test coverage and speed. M9b.2 adds a startup loading indicator on a new `loading-indicator` branch from `master`, integrated into `master` and `release-verification` before M9c. Final testing and verification, including real-device checks, follows there in M9c. M10 releases the tested result from `master`.**
 
-**M9's migration merge into master is complete.** Implementation milestone PRs targeted `phaser`; the owner merged `phaser` into `master` through [PR #42](https://github.com/skogdoom/liano/pull/42) (merge `73a36d0`). Follow-up work uses `release-verification`, created from that merged `master`, for M9a's fullscreen canopy fix, M9b's plan consolidation, M9b.1's test-suite improvements and all M9c testing and verification. M10 publishes the tested result on `master` only after M9c is complete and its changes are integrated.
+**M9's migration merge into master is complete.** Implementation milestone PRs targeted `phaser`; the owner merged `phaser` into `master` through [PR #42](https://github.com/skogdoom/liano/pull/42) (merge `73a36d0`). Follow-up work uses `release-verification`, created from that merged `master`, for M9a's fullscreen canopy fix, M9b's plan consolidation, M9b.1's test-suite improvements and all M9c testing and verification. M9b.2 is implemented separately on `loading-indicator`, created from the latest `master`, and integrated into `master` and `release-verification` before M9c. M10 publishes the tested result on `master` only after M9c is complete and its changes are integrated.
 
 The goal is to replace PixiJS 8 with Phaser, and to keep every bit of the game as it is: the gameplay, all three modes, every feature and setting, the graphics, and the sounds. The classic appearance remains the migration reference. M8a adds an optional cartoon art pack based on the two concepts in `docs/`; cartoon graphics are now the default. Gameplay and sounds stay the same with either pack.
 
@@ -20,7 +20,7 @@ Made with the owner (answers to the planning questions):
 | Cartoon graphics? | **Planned in M8a, before M9.** Replace all visual asset families using `docs/cover_day.png` and `docs/cover_night.png` as the art-direction references. |
 | Classic graphics toggle? | Config shows **Classic graphics: On/Off**. On loads classic, Off loads cartoon. Fresh installs default to Off; deliberate selections persist. Changing the value reloads the game. |
 | How to test the views? | **Pure view-models tested in Node, plus a few browser smoke tests** in CI. |
-| Branching? | **Long-lived `phaser` branch** through M9 cleanup and the owner-approved merge into `master`. Then create `release-verification` from the updated `master`; M9a fixes fullscreen canopy coverage, M9b consolidates the plans by area, M9b.1 improves the test suite, and M9c performs all testing, verification and resulting fixes there. Integrate the tested result into `master` before M10 publishes the release. |
+| Branching? | **Long-lived `phaser` branch** through M9 cleanup and the owner-approved merge into `master`. Then create `release-verification` from the updated `master`; M9a fixes fullscreen canopy coverage, M9b consolidates the plans by area, M9b.1 improves the test suite, and M9c performs all final testing, verification and resulting fixes there. Implement M9b.2 separately on a new `loading-indicator` branch from `master`; integrate it into `master` and sync `release-verification` before M9c. Integrate the tested result into `master` before M10 publishes the release. |
 | Which Phaser? | **Phaser 4.2.1** (the current `latest`), not 3.90. |
 | Sounds? | **Keep the synthesized recipes**: they play through Phaser's audio context and master nodes, so Phaser handles unlock, mute and pause, and every sound stays the same. |
 | Both versions? | **Both stay playable side by side** until the Pixi removal milestone (M8), which comes after parity and performance (M7), so they can be compared at any point. |
@@ -31,7 +31,7 @@ Made with the owner (answers to the planning questions):
 | Download size? | The roughly +150–170 KB gzipped for Phaser is accepted; a custom build is tried in M0 and M7 but not required. |
 | Screen shake? | Our own shake maths drives Phaser's camera, so the death shake stays as it is. |
 | Master meanwhile? | Bug fixes only; new visual features wait until 3.0.0 (a fix that changes `src/render/*` gets a matching change in `src/phaser/`). |
-| Version numbers? | `3.0.0-dev.N` through M9 integration, M9a, M9b and M9b.1; prepare `3.0.0` and its release metadata on `release-verification` in M9c before final verification. M10 publishes that tested version from `master`. |
+| Version numbers? | `3.0.0-dev.N` through M9 integration, M9a, M9b, M9b.1 and M9b.2; prepare `3.0.0` and its release metadata on `release-verification` in M9c before final verification. M10 publishes that tested version from `master`. |
 | Browser tests in CI? | **Chromium only.** WebKit behaviour is checked on the iPhone itself. |
 
 Also agreed:
@@ -949,7 +949,7 @@ verification belongs to M9c after this merge.
 - Update the README's technology section and add a short "Custom art" section pointing to `art/README.md`; update the `package.json` description. Plan consolidation and restructuring belongs to M9b. Keep the version in the `3.0.0-dev.N` series through this milestone.
 - Merge `master` into `phaser` one last time and resolve conflicts. Carry all outstanding manual/device checks and verification work into M9c without marking them passed.
 - Open the `phaser` → `master` PR. Merge only when cleanup is complete and the owner explicitly says to merge. This completes M9; it does not authorize a release.
-- **Done when:** cleanup is complete and the migration has been merged into `master` with the owner's explicit approval. M9a, M9b, M9b.1 and M9c remain required before M10.
+- **Done when:** cleanup is complete and the migration has been merged into `master` with the owner's explicit approval. M9a, M9b, M9b.1, M9b.2 and M9c remain required before M10.
 
 ### M9a. Fullscreen canopy coverage (S)
 
@@ -990,16 +990,33 @@ coverage and speed without changing gameplay or weakening the checks.
 - Benchmark sharing or caching identical art/build outputs between CI jobs, keyed by all relevant inputs/tool versions. Preserve cold-build coverage, freshness checks and both deployment gates; avoid serializing browser startup behind the entire unit suite unless the measured critical path improves. Add durable timing/failure artifacts so later regressions are visible.
 - **Done when:** before/after measurements demonstrate faster stable checks, every removed or combined check has a documented replacement, critical gaps are covered, known bad cases still fail, and the complete retained suite passes with unchanged thresholds and references. Record remaining coverage limits and carry them into M9c.
 
+### M9b.2. Startup loading indicator (S)
+
+**Status: planned; implementation and branch creation pending.** After M9b.1 and
+before M9c, create a new `loading-indicator` branch from the latest `master`.
+Implement the indicator there, integrate the completed change into `master`,
+then bring the updated `master` into `release-verification` before final testing.
+Keep the version in the `3.0.0-dev.N` series.
+
+- Show a small loading indicator when opening the game takes noticeable time, covering resource downloads and setup. Start with a short delay (around 250 ms) to avoid a flash on fast or cached loads. Make the shell available from the initial HTML/CSS, before the large game module, art catalog or atlases have downloaded; do not require another image, font or script download to display it.
+- Keep it visible through the boot and main art sets, sound preparation and initial world/rig setup, until the first fully prepared title/game frame has rendered and input can be handled. The current `src/boot.js` `data-ready` flag follows the `main.js` import and fires too early for this purpose; use a readiness signal shared with the existing startup checks rather than another independent timer. Keep animation responsive during lengthy setup, yielding between setup batches if needed.
+- Match the jungle game's palette and keep the presentation simple and readable in portrait, landscape, fullscreen, safe areas and both graphics modes. Use an accessible status announcement and respect reduced motion. Use indeterminate progress or truthful phase text when total work is unknown; never show a fabricated percentage or imply completion while setup continues.
+- Preserve existing startup input gating and audio-unlock behavior. An input during loading must not accidentally start or release the monkey. Remove the indicator and its timers/listeners when ready. Failed script, catalog or atlas loads and setup errors must hand over to the existing error/reload interface; preserve worker fallback and graphics-restoration notices.
+- Add focused checks using controlled delayed downloads/setup, not long sleeps: slow game-bundle and main-art loading keep the indicator visible until actual readiness; fast/cached startup avoids a flash; a failed resource shows the existing error interface; startup input remains gated. Reuse the M9b.1 production-startup readiness coverage at `/liano/` and exercise both packs without duplicating the full browser matrix. Carry cold/warm mobile startup, rotation and visual checks into M9c.
+- **Done when:** slow startup has visible feedback throughout downloads and setup, fast startup stays unobtrusive, failure and input behavior remain correct, focused checks pass, and the change is present on `master` and `release-verification` before M9c.
+
 ### M9c. Test and verification (M)
 
-Execute after M9a, M9b and M9b.1 and before M10. All testing and verification takes place on
-`release-verification`, the new branch created from `master` after M9. Make
+Execute after M9a, M9b, M9b.1 and M9b.2 and before M10. All final testing and
+verification takes place on `release-verification`, the new branch created from
+`master` after M9. Make
 resulting fixes and document the results on that branch.
 
 - Complete all remaining manual and real-device verification from the migration plan, including the deferred M3 sound, M7 performance and M8a artwork/device checks. Cover desktop browsers, Safari on the MacBook Air M1 and iPhone 13 mini, the remaining iPad/Android checks, supported modes, gameplay, audio, startup/texture/frame budgets, rotation, menus and graphics switching.
 - Verify M9a's canopy fix in 1P fullscreen with both art packs, including fullscreen entry/exit, resize and rotation. Include 2P shared and the other supported layouts in regression coverage; sky above the canopy is allowed in 2P shared.
 - Verify M9b's plan restructuring: references resolve, the main plan links to each area plan, and requirements, reports, acceptance gates and pending work from both original plans remain accounted for.
 - Review M9b.1's coverage map and before/after timing report; confirm critical negative controls, retained regression scenarios and the complete suite still pass, and record any accepted remaining limits.
+- Verify M9b.2's loading indicator on cold and cached startup, slow downloads and resource failures, including real-device setup delays, reduced motion, rotation and both graphics modes. Confirm it covers the whole wait, disappears at actual readiness and leaves no stuck overlay or unintended input.
 - Run the full automated suite, artwork/source validation, classic and cartoon regression comparisons, production build, generated-table checks and CI on this branch. For Chromium context-creation timeouts, rerun only the failed cases rather than the full suite. Resolve failures and repeat checks affected by fixes.
 - Prepare the `3.0.0` version, release-specific documentation and metadata on this branch before the final verification pass. Verify the built game at `/liano/` and record the tested commit and corresponding release artifacts.
 - After real-device testing finishes, add the dated follow-up to the finalized M8a report on this branch: tested commit, devices/browser versions, results, findings that change the implementation or conclusions, resulting changes and validation. Historical M8a reports remain records of the completed work; their earlier instruction to test on `phaser` is superseded by this milestone.
@@ -1008,8 +1025,8 @@ resulting fixes and document the results on that branch.
 
 ### M10. Release (S)
 
-Work takes place on `master` at the end, after M9, M9a, M9b, M9b.1 and M9c are complete and
-the tested release candidate is integrated. All testing and verification was
+Work takes place on `master` at the end, after M9, M9a, M9b, M9b.1, M9b.2 and M9c are complete and
+the tested release candidate is integrated. All final testing and verification was
 performed on the branch created from `master` in M9a.
 
 - Publish the `3.0.0` contents, metadata and artifacts verified in M9c. Any further change requiring testing returns to `release-verification` and M9c before release.

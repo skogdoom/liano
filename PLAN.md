@@ -613,9 +613,9 @@ Each milestone ended in a runnable, tested state, with every v1 feature still wo
 ## Phaser migration (v3.0.0, planned)
 
 The Phaser 4 migration plan, its pre-rendered art pipeline, device budgets,
-risks, milestones M0–M10 (including M8a, M9a, M9b, M9b.1 and M9c), and verification strategy
+risks, milestones M0–M10 (including M8a, M9a, M9b, M9b.1, M9b.2 and M9c), and verification strategy
 are in [PHASER_PLAN.md](PHASER_PLAN.md). Migration work used the long-lived `phaser`
-branch; follow-up work uses `release-verification`, created from the merged `master`, and versions `3.0.0-dev.N` through M9 integration, M9a, M9b and M9b.1. M0–M8 are
+branch; follow-up work uses `release-verification`, created from the merged `master`, with M9b.2 implemented separately on a new `loading-indicator` branch from `master` and integrated before verification. Keep versions `3.0.0-dev.N` through M9 integration, M9a, M9b, M9b.1 and M9b.2. M0–M8 are
 complete; the M8a cartoon artwork, automated checks and regression references
 are complete and integrated into `phaser` through
 [PR #41](https://github.com/skogdoom/liano/pull/41) (merge `a49b1f2`).
@@ -635,8 +635,15 @@ are complete and integrated into `phaser` through
   final verification. Improve timeout diagnostics, reuse deterministic fixtures,
   optimize pixel checks and CI builds, and cover production/recovery gaps while
   preserving the suite's distinct guarantees, thresholds and negative controls.
-- **M9c — Test and verification:** perform all automated, manual and real-device
-  testing and resulting fixes on that new branch. Prepare and verify the final
+- **M9b.2 — Startup loading indicator:** on a new `loading-indicator` branch
+  created from the latest `master`, show a game-styled indicator during slow
+  resource downloads and setup, from before the game bundle loads until the
+  first ready game frame. Avoid flashing on fast loads; preserve error messages
+  and input gating. Integrate into `master` and bring it into
+  `release-verification` before M9c.
+- **M9c — Test and verification:** after M9a, M9b, M9b.1 and M9b.2, perform all
+  final automated, manual and real-device testing and resulting fixes on
+  `release-verification`. Prepare and verify the final
   `3.0.0` candidate and artifacts there; document device findings after testing
   finishes. Integrate the tested result into `master` with the owner's explicit
   approval before release.
